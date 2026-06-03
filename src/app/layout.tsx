@@ -10,7 +10,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Northside Intelligence",
   description:
-    "We find the gaps and make it better. Tech and AI tools built for humans.",
+    "Filling the gaps to build the future. Tech and AI tools built for humans.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "https://northsideintelligence.com"
   ),

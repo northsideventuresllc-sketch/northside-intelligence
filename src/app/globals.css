@@ -21,4 +21,8 @@ body {
   .text-gradient-cyan {
     @apply bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent;
   }
+
+  .glass-panel {
+    @apply rounded-2xl border border-cyan-500/15 bg-ni-navy/40 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(0,212,255,0.12)] backdrop-blur-md;
+  }
 }
