@@ -52,6 +52,15 @@ Middleware checks the `ni_ops_token` httpOnly cookie against `NI_ADMIN_SECRET`. 
 
 Ops revenue fields persist in **localStorage** until database sync is added.
 
+## Sector 3 tools (NI ecosystem)
+
+Canonical wiring lives in `src/lib/sector3-registry.ts` and mirrors `arm3_tools` slugs in NI-Brain.
+
+| Tool | Subdomain | Repo | Supabase table |
+|------|-----------|------|----------------|
+| ReplyFlow | replyflow.northsideintelligence.com | [replyflow](https://github.com/northsideventuresllc-sketch/replyflow) | `replyflow_profiles` |
+| GrantBot | grantbot.northsideintelligence.com | [grantbot](https://github.com/northsideventuresllc-sketch/grantbot) | `grantbot_profiles` |
+
 ## Brand
 
 - Background: `#07080C`

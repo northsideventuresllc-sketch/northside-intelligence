@@ -1,3 +1,5 @@
+import { PORTAL_URL, SECTOR3_REGISTRY } from "@/lib/sector3-registry";
+
 export const BRAND = {
   tagline: "We find the gaps and make it better.",
   motto: "We don't sell out. We are the empire.",
@@ -18,15 +20,17 @@ export interface Sector3Tool {
   github?: string;
 }
 
+const wiredTools: Sector3Tool[] = SECTOR3_REGISTRY.map((t) => ({
+  name: t.name,
+  subdomain: t.subdomain,
+  description: t.description,
+  status: t.status,
+  url: t.appUrl,
+  github: t.github,
+}));
+
 export const SECTOR_3_TOOLS: Sector3Tool[] = [
-  {
-    name: "ReplyFlow",
-    subdomain: "replyflow.northsideintelligence.com",
-    description: "AI-powered reply automation",
-    status: "LIVE",
-    url: "https://replyflow.northsideintelligence.com",
-    github: "https://github.com/northsideventuresllc-sketch",
-  },
+  ...wiredTools,
   {
     name: "SignalDesk",
     subdomain: "Coming soon",
@@ -47,14 +51,13 @@ export const SECTOR_3_TOOLS: Sector3Tool[] = [
   },
 ];
 
-export const OPS_SECTOR_3_ROWS = [
-  {
-    name: "ReplyFlow",
-    status: "LIVE" as const,
-    subdomain: "replyflow.northsideintelligence.com",
-    github: "https://github.com/northsideventuresllc-sketch",
-  },
-];
+export const OPS_SECTOR_3_ROWS = SECTOR3_REGISTRY.map((t) => ({
+  name: t.name,
+  status: t.status,
+  subdomain: t.subdomain,
+  github: t.github,
+  appUrl: t.appUrl,
+}));
 
 export const MATCH_FIT = {
   sector: "Sector 1A",
@@ -62,20 +65,29 @@ export const MATCH_FIT = {
   version: "v1.1.2-BETA",
   appUrl: "https://match-fit.net",
   adminUrl: "https://match-fit.net/admin",
-  github: "https://github.com/northsideventuresllc-sketch",
+  github: "https://github.com/northsideventuresllc-sketch/matchfit",
 };
 
 export const QUICK_LINKS = [
   {
-    label: "GitHub Org",
-    href: "https://github.com/northsideventuresllc-sketch",
+    label: "ReplyFlow Repo",
+    href: "https://github.com/northsideventuresllc-sketch/replyflow",
     icon: "github",
+  },
+  {
+    label: "GrantBot Repo",
+    href: "https://github.com/northsideventuresllc-sketch/grantbot",
+    icon: "github",
+  },
+  {
+    label: "NI Portal",
+    href: PORTAL_URL,
+    icon: "vercel",
   },
   {
     label: "NI-Brain Supabase",
     href: "https://supabase.com/dashboard/project/kxijunwgbrlfzvgkhklo",
     icon: "database",
   },
-  { label: "Vercel", href: "https://vercel.com", icon: "vercel" },
   { label: "Stripe", href: "https://dashboard.stripe.com", icon: "stripe" },
 ] as const;
