@@ -44,6 +44,7 @@ export function Sector3ToolsTable() {
               <th className="px-4 py-3 font-medium">Tool Name</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Subdomain</th>
+              <th className="px-4 py-3 font-medium">App</th>
               <th className="px-4 py-3 font-medium">GitHub</th>
               <th className="px-4 py-3 font-medium">Revenue</th>
             </tr>
@@ -56,6 +57,20 @@ export function Sector3ToolsTable() {
                   <span className="text-emerald-400">{row.status}</span>
                 </td>
                 <td className="px-4 py-3 text-ni-muted">{row.subdomain}</td>
+                <td className="px-4 py-3">
+                  {row.appUrl ? (
+                    <a
+                      href={row.appUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:underline"
+                    >
+                      Live →
+                    </a>
+                  ) : (
+                    <span className="text-ni-muted">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <a
                     href={row.github}
