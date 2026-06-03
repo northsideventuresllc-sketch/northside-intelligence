@@ -1,10 +1,10 @@
 import { PORTAL_URL, SECTOR3_REGISTRY } from "@/lib/sector3-registry";
 
 export const BRAND = {
-  tagline: "We find the gaps and make it better.",
+  tagline: "Filling the gaps to build the future.",
   motto: "We don't sell out. We are the empire.",
   company: "Northside Intelligence",
-  footer: "© 2026 Northside Intelligence | A Northside Ventures Group LLC Company",
+  footer: "© 2026 Northside Intelligence",
 } as const;
 
 export const REVENUE_GOAL_EOY_2026 = 500_000;
