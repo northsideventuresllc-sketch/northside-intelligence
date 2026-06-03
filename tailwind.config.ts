@@ -5,13 +5,6 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-import type { Config } from 'tailwindcss'
-
-const config: Config = {
-  content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -45,12 +38,6 @@ const config: Config = {
       boxShadow: {
         glow: "0 0 40px rgba(0, 212, 255, 0.15)",
         "glow-sm": "0 0 20px rgba(0, 212, 255, 0.2)",
-        background: '#07080C',
-        foreground: '#F4F4F5',
-        muted: '#A1A1AA',
-        accent: '#5B8DEF',
-        card: '#111318',
-        border: '#27272A',
       },
     },
   },
@@ -58,5 +45,3 @@ const config: Config = {
 };
 
 export default config;
-}
-export default config
