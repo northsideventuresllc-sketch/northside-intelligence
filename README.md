@@ -59,3 +59,20 @@ Ops revenue fields persist in **localStorage** until database sync is added.
 - Tagline: *We find the gaps and make it better.*
 
 Replace `/public/logo.png` with the official NI logo when ready.
+# Northside Intelligence
+
+Public landing page for [northsideintelligence.com](https://northsideintelligence.com) — Sector 3 tool directory.
+
+## Stack
+
+- Next.js 14 (App Router)
+- Tailwind CSS
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+Tool metadata lives in `src/lib/tools.ts`.

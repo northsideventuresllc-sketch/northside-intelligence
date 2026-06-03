@@ -1,0 +1,25 @@
+# Northside Intelligence — Sector 3 tool rules
+
+## Scope
+- Snippets only. Minimal diffs. No drive-by refactors.
+- Match existing patterns in this repo before adding abstractions.
+
+## Secrets & logging
+- Never hardcode API keys, tokens, or webhook secrets.
+- No `console.log` / `console.error` in app code. Return structured API errors.
+
+## Supabase
+- Table prefix: `replyflow_` (change prefix when forking).
+- Always check `{ error }` on service-role writes (webhooks, usage updates).
+- Read user `plan` from `replyflow_profiles` — never hardcode tier/plan in routes.
+
+## Stripe
+- Verify webhook signatures with `STRIPE_WEBHOOK_SECRET`.
+- Handle subscription lifecycle: paid → update plan; cancel/unpaid → `free`.
+
+## Stack
+- Next.js 14 App Router, TypeScript, Tailwind.
+- No unnecessary packages.
+
+## PRs
+- Wait for JB approval before merging to `main`.

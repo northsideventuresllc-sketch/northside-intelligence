@@ -1,5 +1,6 @@
 {
   "name": "northside-intelligence",
+  "name": "ni-landing",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -24,5 +25,18 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
+    "react": "^18",
+    "react-dom": "^18",
+    "next": "14.2.30"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.30"
   }
 }

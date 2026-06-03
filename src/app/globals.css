@@ -20,5 +20,22 @@ body {
 @layer utilities {
   .text-gradient-cyan {
     @apply bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent;
+  --background: #07080c;
+  --foreground: #f4f4f5;
+  --muted: #a1a1aa;
+  --accent: #5b8def;
+  --card: #111318;
+  --border: #27272a;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
