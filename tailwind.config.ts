@@ -24,8 +24,12 @@ const config: Config = {
       animation: {
         "grid-pulse": "grid-pulse 8s ease-in-out infinite",
         float: "float 6s ease-in-out infinite",
+        "float-slow": "float-slow 8s ease-in-out infinite",
         "scan-line": "scan-line 8s linear infinite",
         shimmer: "shimmer 3s ease-in-out infinite",
+        orbit: "orbit 24s linear infinite",
+        "orbit-reverse": "orbit-reverse 32s linear infinite",
+        "orbit-slow": "orbit-slow 40s linear infinite",
       },
       keyframes: {
         "grid-pulse": {
@@ -36,6 +40,10 @@ const config: Config = {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-8px)" },
         },
+        "float-slow": {
+          "0%, 100%": { transform: "translateY(0) translateZ(0)" },
+          "50%": { transform: "translateY(-12px) translateZ(20px)" },
+        },
         "scan-line": {
           "0%": { transform: "translateY(-100vh)", opacity: "0" },
           "10%": { opacity: "1" },
@@ -45,6 +53,19 @@ const config: Config = {
         shimmer: {
           "0%, 100%": { opacity: "0.5" },
           "50%": { opacity: "1" },
+        },
+        orbit: {
+          "0%": { transform: "rotate(0deg) scale(1)" },
+          "50%": { transform: "rotate(180deg) scale(1.02)" },
+          "100%": { transform: "rotate(360deg) scale(1)" },
+        },
+        "orbit-reverse": {
+          "0%": { transform: "rotate(360deg)" },
+          "100%": { transform: "rotate(0deg)" },
+        },
+        "orbit-slow": {
+          "0%": { transform: "rotate(0deg) translateZ(0)" },
+          "100%": { transform: "rotate(360deg) translateZ(10px)" },
         },
       },
       boxShadow: {

@@ -20,6 +20,8 @@ export function useTilt({ maxTilt = 12, scale = 1.02 }: TiltOptions = {}) {
       const y = (e.clientY - rect.top) / rect.height - 0.5;
 
       el.style.transform = `perspective(900px) rotateX(${-y * maxTilt}deg) rotateY(${x * maxTilt}deg) scale3d(${scale}, ${scale}, ${scale})`;
+      el.style.setProperty("--mouse-x", `${(x + 0.5) * 100}%`);
+      el.style.setProperty("--mouse-y", `${(y + 0.5) * 100}%`);
     },
     [maxTilt, scale]
   );
