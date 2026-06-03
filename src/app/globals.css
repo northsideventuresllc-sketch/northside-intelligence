@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ni-bg: #07080c;
+  --ni-cyan: #00d4ff;
+  --ni-navy: #0a1628;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ni-bg);
+  color: #e8eaef;
+}
+
+@layer utilities {
+  .text-gradient-cyan {
+    @apply bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent;
+  }
+}
