@@ -17,6 +17,11 @@ body {
   color: #e8eaef;
 }
 
+.scene-root {
+  perspective: 1400px;
+  transform-style: preserve-3d;
+}
+
 @layer utilities {
   .text-gradient-cyan {
     @apply bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent;

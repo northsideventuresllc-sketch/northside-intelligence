@@ -5,6 +5,8 @@ export const BRAND = {
   motto: "We don't sell out. We are the empire.",
   company: "Northside Intelligence",
   footer: "© 2026 Northside Intelligence",
+  mission:
+    "Building intelligence that works to advance livelihood by finding gaps, initializing creativity and innovation, and producing high-level improvements. In charge of building marketplaces, technology, artificial intelligence, systems, business tools, personal tools, and more.",
 } as const;
 
 export const REVENUE_GOAL_EOY_2026 = 500_000;
