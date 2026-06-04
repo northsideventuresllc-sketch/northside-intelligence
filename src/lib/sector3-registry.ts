@@ -26,7 +26,7 @@ export const SECTOR3_REGISTRY: Sector3RegistryEntry[] = [
     subdomain: "replyflow.northsideintelligence.com",
     description: "AI-powered customer service reply automation",
     status: "LIVE",
-    appUrl: "https://replyflow.northsideintelligence.com",
+    appUrl: "https://replyflow-murex.vercel.app",
     github: `https://github.com/${GITHUB_ORG}/replyflow`,
     supabaseTable: "replyflow_profiles",
     arm3Status: "scale",

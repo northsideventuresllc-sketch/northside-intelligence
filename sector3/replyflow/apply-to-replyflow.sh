@@ -8,7 +8,8 @@ if [[ ! -d "$SRC/src" ]]; then
   echo "Usage: $0 /path/to/northside-intelligence" >&2
   exit 1
 fi
-cp "$SRC/vercel.json" .
+# Use canonical vercel.json from docs (not legacy alias-only config)
+cp "$NI_ROOT/docs/ecosystem/replyflow/vercel.json" ./vercel.json
 cp "$SRC/TEMPLATE.md" "$SRC/.cursorrules" .
 cp -r "$SRC/prompts" .
 mkdir -p src/lib src/app/api/webhooks/stripe src/app/api/generate src/app/dashboard
