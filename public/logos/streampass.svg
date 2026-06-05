@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="20" fill="#0A1628"/>
+  <circle cx="60" cy="54" r="28" stroke="#00D4FF" stroke-width="1.5" stroke-opacity="0.4"/>
+  <path d="M44 54 L56 54 L60 42 L64 54 L76 54 L66 62 L70 74 L60 66 L50 74 L54 62 Z" fill="#00D4FF" fill-opacity="0.85"/>
+  <text x="60" y="96" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8" fill="#8B95A8" letter-spacing="0.12em">SECTOR 1B</text>
+</svg>

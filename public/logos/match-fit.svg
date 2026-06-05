@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="20" fill="#0A1628"/>
+  <defs>
+    <radialGradient id="mfGlow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="8" y="8" width="104" height="104" rx="16" fill="url(#mfGlow)"/>
+  <text x="60" y="52" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#00D4FF" letter-spacing="0.06em">MATCH</text>
+  <text x="60" y="72" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="700" fill="#E8EAEF" letter-spacing="0.06em">FIT</text>
+  <text x="60" y="92" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8" fill="#8B95A8" letter-spacing="0.12em">SECTOR 1A</text>
+</svg>

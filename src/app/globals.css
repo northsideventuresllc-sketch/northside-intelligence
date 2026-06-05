@@ -27,6 +27,16 @@ body {
     @apply bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent;
   }
 
+  .hero-title-gradient {
+    background: linear-gradient(to bottom, #ffffff 0%, #a5f3fc 55%, rgba(103, 232, 249, 0.85) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 24px rgba(0, 212, 255, 0.3));
+    padding-bottom: 0.15em;
+    line-height: 1.15;
+  }
+
   .glass-panel {
     @apply rounded-2xl border border-cyan-500/15 bg-ni-navy/40 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(0,212,255,0.12)] backdrop-blur-md;
   }
