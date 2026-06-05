@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+  <defs>
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#00D4FF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Outer hex ring -->
+  <polygon
+    points="60,14 96,34 96,74 60,94 24,74 24,34"
+    stroke="#00D4FF"
+    stroke-width="1.2"
+    stroke-opacity="0.55"
+    fill="none"
+    filter="url(#glow)"
+  />
+  <!-- Hex vertices -->
+  <circle cx="60" cy="14" r="2.2" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="96" cy="34" r="2.2" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="96" cy="74" r="2.2" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="60" cy="94" r="2.2" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="24" cy="74" r="2.2" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="24" cy="34" r="2.2" fill="#00D4FF" filter="url(#glow)"/>
+  <!-- Inner star / purple convergence -->
+  <g stroke="#9B7FD4" stroke-width="0.8" stroke-opacity="0.7">
+    <line x1="60" y1="28" x2="60" y2="80"/>
+    <line x1="36" y1="40" x2="84" y2="68"/>
+    <line x1="84" y1="40" x2="36" y2="68"/>
+    <line x1="42" y1="54" x2="78" y2="54"/>
+  </g>
+  <!-- Crosshair -->
+  <g stroke="#00D4FF" stroke-width="0.6" stroke-opacity="0.35">
+    <line x1="60" y1="22" x2="60" y2="86"/>
+    <line x1="22" y1="54" x2="98" y2="54"/>
+  </g>
+  <!-- Core -->
+  <circle cx="60" cy="54" r="10" fill="url(#coreGlow)" filter="url(#glow)"/>
+  <circle cx="60" cy="54" r="3.5" fill="#00D4FF"/>
+  <!-- HUD label -->
+  <text x="60" y="8" text-anchor="middle" font-family="ui-monospace, monospace" font-size="4.5" fill="#00D4FF" fill-opacity="0.55" letter-spacing="0.08em">NI-01 / v.SYN</text>
+</svg>

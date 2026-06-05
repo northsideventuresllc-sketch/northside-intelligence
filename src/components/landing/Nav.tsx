@@ -8,7 +8,7 @@ export function Nav() {
         <Link href="/" className="group flex items-center gap-3 transition">
           <div className="rounded-xl border border-cyan-500/20 bg-ni-navy/50 p-1 shadow-[0_0_20px_rgba(0,212,255,0.1)] transition group-hover:border-cyan-400/40 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)]">
             <Image
-              src="/logo.png"
+              src="/ni-emblem.svg"
               alt="Northside Intelligence"
               width={48}
               height={48}
