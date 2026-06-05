@@ -1,15 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  SECTOR_3_TOOLS,
+  INTELLIGENCE_TOOLS,
   TOOL_CATEGORIES,
-  type Sector3Tool,
+  type IntelligenceTool,
   type ToolCategory,
 } from "@/lib/constants";
 import { ToolCard } from "./ToolCard";
 
-function matchesQuery(tool: Sector3Tool, query: string, category: ToolCategory | "All") {
+function matchesQuery(tool: IntelligenceTool, query: string, category: ToolCategory | "All") {
   const q = query.trim().toLowerCase();
   if (category !== "All" && tool.category !== category) return false;
   if (!q) return true;
@@ -25,28 +25,45 @@ function matchesQuery(tool: Sector3Tool, query: string, category: ToolCategory |
   return haystack.includes(q);
 }
 
+function wrapIndex(i: number, len: number): number {
+  return ((i % len) + len) % len;
+}
+
 export function ToolsCarousel() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ToolCategory | "All">("All");
   const [index, setIndex] = useState(0);
 
   const filtered = useMemo(
-    () => SECTOR_3_TOOLS.filter((t) => matchesQuery(t, query, category)),
+    () => INTELLIGENCE_TOOLS.filter((t) => matchesQuery(t, query, category)),
     [query, category]
   );
 
-  const safeIndex = filtered.length ? Math.min(index, filtered.length - 1) : 0;
+  const safeIndex = filtered.length ? wrapIndex(index, filtered.length) : 0;
+  const prevIndex = filtered.length ? wrapIndex(safeIndex - 1, filtered.length) : 0;
+  const nextIndex = filtered.length ? wrapIndex(safeIndex + 1, filtered.length) : 0;
+
   const current = filtered[safeIndex];
+  const prev = filtered[prevIndex];
+  const next = filtered[nextIndex];
 
   function go(delta: number) {
     if (!filtered.length) return;
-    setIndex((i) => (i + delta + filtered.length) % filtered.length);
+    setIndex((i) => wrapIndex(i + delta, filtered.length));
   }
+
+  useEffect(() => {
+    if (filtered.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setIndex((i) => wrapIndex(i + 1, filtered.length));
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [filtered.length]);
 
   return (
     <section id="tools" className="relative border-t border-white/5 px-6 py-20">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/[0.04] via-transparent to-transparent" />
-      <div className="relative mx-auto max-w-4xl">
+      <div className="relative mx-auto max-w-5xl">
         <div className="mb-10 text-center">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
             Platform
@@ -58,8 +75,7 @@ export function ToolsCarousel() {
           </h2>
         </div>
 
-        {/* Search & filter */}
-        <div className="mb-8 space-y-4">
+        <div className="mb-10 space-y-4">
           <label className="sr-only" htmlFor="tool-search">
             Search intelligence tools
           </label>
@@ -74,7 +90,7 @@ export function ToolsCarousel() {
             placeholder="Search by tool, category, or keyword…"
             className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition placeholder:text-ni-muted/60 focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/25"
           />
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             {(["All", ...TOOL_CATEGORIES] as const).map((cat) => (
               <button
                 key={cat}
@@ -95,47 +111,64 @@ export function ToolsCarousel() {
           </div>
         </div>
 
-        {/* Carousel */}
         {filtered.length === 0 ? (
           <p className="rounded-2xl border border-white/10 bg-white/5 py-16 text-center text-ni-muted">
             No tools match your search.
           </p>
         ) : (
-          <div className="relative" style={{ perspective: "1200px" }}>
-            <div className="relative min-h-[320px] overflow-hidden rounded-2xl">
-              {filtered.map((tool, i) => {
-                const offset = i - safeIndex;
-                const isActive = offset === 0;
-                const abs = Math.abs(offset);
-                if (abs > 1) return null;
-
-                return (
+          <>
+            <div
+              className="relative mx-auto flex min-h-[340px] max-w-4xl items-center justify-center px-2 sm:gap-6 sm:px-0"
+              style={{ perspective: "1400px" }}
+            >
+              {filtered.length > 1 && prev && (
+                <button
+                  type="button"
+                  onClick={() => go(-1)}
+                  className="group absolute left-0 z-10 w-[26%] max-w-[160px] sm:max-w-[200px]"
+                  aria-label={`Previous: ${prev.name}`}
+                >
                   <div
-                    key={tool.name}
-                    className="absolute inset-0 transition-all duration-500 ease-out"
-                    style={{
-                      transform: `translateX(${offset * 72}%) scale(${isActive ? 1 : 0.88}) rotateY(${offset * -12}deg)`,
-                      opacity: isActive ? 1 : 0.35,
-                      zIndex: isActive ? 10 : 5 - abs,
-                      pointerEvents: isActive ? "auto" : "none",
-                      transformStyle: "preserve-3d",
-                    }}
-                    aria-hidden={!isActive}
+                    className="pointer-events-none scale-[0.82] blur-[4px] transition-all duration-500 sm:scale-90 sm:blur-[3px] group-hover:blur-[2px]"
+                    style={{ transform: "rotateY(18deg) translateZ(-40px)" }}
                   >
-                    <ToolCard tool={tool} />
+                    <ToolCard tool={prev} variant="side" />
                   </div>
-                );
-              })}
+                </button>
+              )}
+
+              <div
+                className="relative z-20 w-full max-w-[280px] flex-shrink-0 transition-transform duration-500"
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                {current && <ToolCard tool={current} variant="center" />}
+              </div>
+
+              {filtered.length > 1 && next && (
+                <button
+                  type="button"
+                  onClick={() => go(1)}
+                  className="group absolute right-0 z-10 w-[26%] max-w-[160px] sm:max-w-[200px]"
+                  aria-label={`Next: ${next.name}`}
+                >
+                  <div
+                    className="pointer-events-none scale-[0.82] blur-[4px] transition-all duration-500 sm:scale-90 sm:blur-[3px] group-hover:blur-[2px]"
+                    style={{ transform: "rotateY(-18deg) translateZ(-40px)" }}
+                  >
+                    <ToolCard tool={next} variant="side" />
+                  </div>
+                </button>
+              )}
             </div>
 
-            <div className="mt-6 flex items-center justify-between gap-4">
+            <div className="mt-8 flex items-center justify-center gap-4">
               <button
                 type="button"
                 onClick={() => go(-1)}
                 className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
                 aria-label="Previous tool"
               >
-                ← Prev
+                ←
               </button>
               <div className="flex flex-col items-center gap-1">
                 <span className="text-sm font-medium text-white">{current?.name}</span>
@@ -164,10 +197,10 @@ export function ToolsCarousel() {
                 className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
                 aria-label="Next tool"
               >
-                Next →
+                →
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
     </section>

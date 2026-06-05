@@ -97,7 +97,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       ? `Enter the 6-digit code sent to ${email}`
       : mode === "signup"
         ? "One account for every Northside Intelligence tool"
-        : "Sign in to access all Sector 3 tools";
+        : "Sign in to access all intelligence tools";
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24">

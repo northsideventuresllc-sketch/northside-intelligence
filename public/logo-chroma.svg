@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" fill="none" aria-hidden="true">
+  <defs>
+    <radialGradient id="coreGlow" cx="50%" cy="42%" r="45%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="1"/>
+      <stop offset="45%" stop-color="#00D4FF" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="textGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- HUD metadata -->
+  <text x="200" y="28" text-anchor="middle" font-family="ui-monospace, monospace" font-size="11" fill="#00D4FF" fill-opacity="0.55" letter-spacing="0.14em" filter="url(#textGlow)">NI-01 / v.SYN</text>
+
+  <!-- Concentric rings -->
+  <circle cx="200" cy="175" r="95" stroke="#00D4FF" stroke-width="0.6" stroke-opacity="0.18"/>
+  <circle cx="200" cy="175" r="72" stroke="#00D4FF" stroke-width="0.6" stroke-opacity="0.22"/>
+  <circle cx="200" cy="175" r="48" stroke="#00D4FF" stroke-width="0.6" stroke-opacity="0.28"/>
+
+  <!-- Crosshair -->
+  <g stroke="#00D4FF" stroke-width="0.5" stroke-opacity="0.25">
+    <line x1="200" y1="95" x2="200" y2="255"/>
+    <line x1="120" y1="175" x2="280" y2="175"/>
+  </g>
+
+  <!-- Outer hex -->
+  <polygon points="200,95 276,139 276,211 200,255 124,211 124,139" stroke="#00D4FF" stroke-width="1.4" stroke-opacity="0.7" fill="none" filter="url(#glow)"/>
+
+  <!-- Hex vertices -->
+  <circle cx="200" cy="95" r="3.5" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="276" cy="139" r="3.5" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="276" cy="211" r="3.5" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="200" cy="255" r="3.5" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="124" cy="211" r="3.5" fill="#00D4FF" filter="url(#glow)"/>
+  <circle cx="124" cy="139" r="3.5" fill="#00D4FF" filter="url(#glow)"/>
+
+  <!-- Purple inner web -->
+  <g stroke="#9B7FD4" stroke-width="0.9" stroke-opacity="0.75">
+    <line x1="200" y1="118" x2="200" y2="232"/>
+    <line x1="142" y1="148" x2="258" y2="202"/>
+    <line x1="258" y1="148" x2="142" y2="202"/>
+    <line x1="162" y1="175" x2="238" y2="175"/>
+    <line x1="200" y1="118" x2="258" y2="148"/>
+    <line x1="258" y1="148" x2="258" y2="202"/>
+    <line x1="258" y1="202" x2="200" y2="232"/>
+    <line x1="200" y1="232" x2="142" y2="202"/>
+    <line x1="142" y1="202" x2="142" y2="148"/>
+    <line x1="142" y1="148" x2="200" y2="118"/>
+  </g>
+
+  <!-- Core light field -->
+  <circle cx="200" cy="175" r="22" fill="url(#coreGlow)" filter="url(#glow)"/>
+  <circle cx="200" cy="175" r="7" fill="#00D4FF" filter="url(#glow)"/>
+
+  <!-- Wordmark -->
+  <text x="200" y="340" text-anchor="middle" font-family="system-ui, sans-serif" font-size="42" font-weight="700" fill="#00D4FF" letter-spacing="0.08em" filter="url(#textGlow)">NORTHSIDE</text>
+  <line x1="92" y1="362" x2="308" y2="362" stroke="#00D4FF" stroke-width="0.8" stroke-opacity="0.5"/>
+  <polygon points="200,354 206,362 194,362" fill="#00D4FF" fill-opacity="0.8"/>
+  <text x="200" y="395" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#00D4FF" fill-opacity="0.85" letter-spacing="0.35em" filter="url(#textGlow)">INTELLIGENCE</text>
+</svg>

@@ -33,6 +33,12 @@ export function Nav() {
           >
             Mission
           </a>
+          <a
+            href="/#ecosystem"
+            className="text-sm text-ni-muted transition hover:text-cyan-300"
+          >
+            Ecosystem
+          </a>
           <Link
             href="/auth/signin"
             className="text-sm text-ni-muted transition hover:text-cyan-300"

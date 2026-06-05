@@ -1,20 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function HeroLogo3D() {
   const sceneRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
   const pointerRef = useRef({ x: 0, y: 0, active: false });
-  const rotationRef = useRef({ x: -6, y: 12, z: 0 });
+  const rotationRef = useRef({ x: -8, y: 14, z: 0 });
+  const [loaded, setLoaded] = useState(false);
 
   const applyTransform = useCallback(() => {
     const logo = logoRef.current;
     if (!logo) return;
     const { x, y, z } = rotationRef.current;
     logo.style.transform = `rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setLoaded(true), 80);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -38,11 +44,11 @@ export function HeroLogo3D() {
 
     const tick = () => {
       const { x, y, active } = pointerRef.current;
-      const targetX = active ? -y * 22 - 4 : -6;
-      const targetY = active ? x * 28 + 12 : 12;
+      const targetX = active ? -y * 24 - 6 : -8;
+      const targetY = active ? x * 32 + 14 : 14;
       rotationRef.current.x += (targetX - rotationRef.current.x) * 0.08;
       rotationRef.current.y += (targetY - rotationRef.current.y) * 0.08;
-      if (!active) rotationRef.current.y += 0.08;
+      if (!active) rotationRef.current.y += 0.06;
       applyTransform();
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -65,95 +71,92 @@ export function HeroLogo3D() {
   return (
     <div
       ref={sceneRef}
-      className="relative mx-auto h-[340px] w-full max-w-md sm:h-[400px] sm:max-w-lg"
-      style={{ perspective: "1400px", transformStyle: "preserve-3d" }}
+      className="relative mx-auto h-[360px] w-full max-w-md sm:h-[420px] sm:max-w-lg"
+      style={{ perspective: "1600px", transformStyle: "preserve-3d" }}
       aria-label="Interactive Northside Intelligence logo"
     >
-      {/* Orbital hex rings */}
+      {/* Orbital rings */}
       <div
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        className={`pointer-events-none absolute inset-0 flex items-center justify-center transition-all duration-[1400ms] ease-out ${
+          loaded ? "scale-100 opacity-100" : "scale-75 opacity-0"
+        }`}
         style={{ transformStyle: "preserve-3d" }}
         aria-hidden
       >
         <div
           className="absolute h-72 w-72 animate-orbit rounded-full border border-cyan-400/15 sm:h-80 sm:w-80"
-          style={{ transform: "translateZ(-80px) rotateX(70deg)" }}
+          style={{ transform: "translateZ(-90px) rotateX(72deg)" }}
         />
         <div
           className="absolute h-56 w-56 animate-orbit-reverse rounded-full border border-purple-400/15"
-          style={{ transform: "translateZ(-40px) rotateX(55deg) rotateY(20deg)" }}
+          style={{ transform: "translateZ(-50px) rotateX(58deg) rotateY(18deg)" }}
         />
       </div>
 
       <div
         ref={logoRef}
-        className="absolute inset-0 flex items-center justify-center transition-transform duration-100 will-change-transform"
-        style={{ transformStyle: "preserve-3d" }}
+        className={`absolute inset-0 flex items-center justify-center will-change-transform transition-all duration-[1200ms] ease-out ${
+          loaded ? "scale-100 opacity-100" : "scale-[0.55] opacity-0"
+        }`}
+        style={{
+          transformStyle: "preserve-3d",
+          transitionDelay: loaded ? "0ms" : "0ms",
+        }}
       >
-        {/* Back plate depth */}
+        {/* Depth layers — light field only, no solid card */}
         <div
-          className="absolute h-64 w-48 rounded-3xl border border-cyan-500/10 bg-ni-navy/40 sm:h-72 sm:w-56"
+          className="pointer-events-none absolute h-64 w-52 sm:h-72 sm:w-60"
           style={{
-            transform: "translateZ(-60px) scale(0.92)",
-            boxShadow: "0 0 80px rgba(0,212,255,0.12)",
+            transform: "translateZ(-70px) scale(0.88)",
+            background:
+              "radial-gradient(ellipse at center, rgba(0,212,255,0.12) 0%, transparent 70%)",
+            filter: "blur(8px)",
           }}
           aria-hidden
         />
         <div
-          className="absolute h-64 w-48 rounded-3xl border border-cyan-500/15 bg-ni-navy/30 sm:h-72 sm:w-56"
-          style={{ transform: "translateZ(-30px) scale(0.96)" }}
+          className="pointer-events-none absolute h-64 w-52 sm:h-72 sm:w-60"
+          style={{
+            transform: "translateZ(-35px) scale(0.94)",
+            background:
+              "radial-gradient(ellipse at center, rgba(155,127,212,0.08) 0%, transparent 65%)",
+            filter: "blur(4px)",
+          }}
           aria-hidden
         />
 
-        {/* Main logo face */}
+        {/* Chroma-keyed logo — transparent background, light field + text only */}
         <div
-          className="relative rounded-3xl border border-cyan-500/30 bg-gradient-to-b from-ni-navy/70 to-ni-bg/90 p-4 shadow-[0_30px_80px_rgba(0,212,255,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md sm:p-5"
+          className={`relative ${loaded ? "animate-logo-reveal" : ""}`}
           style={{
-            transform: "translateZ(40px)",
+            transform: "translateZ(50px)",
             transformStyle: "preserve-3d",
           }}
         >
           <Image
-            src="/logo-full.png"
+            src="/logo-chroma.svg"
             alt="Northside Intelligence"
             width={320}
             height={420}
-            className="h-auto w-44 object-contain drop-shadow-[0_0_40px_rgba(0,212,255,0.45)] sm:w-52 md:w-60"
+            className="h-auto w-48 object-contain drop-shadow-[0_0_50px_rgba(0,212,255,0.5)] sm:w-56 md:w-64"
             priority
+            onLoad={() => setLoaded(true)}
           />
-          {/* Edge highlights for 3D depth */}
+          {/* Specular edge highlights */}
           <div
-            className="pointer-events-none absolute inset-y-4 -right-2 w-3 rounded-r-xl bg-gradient-to-r from-cyan-400/20 to-transparent"
-            style={{ transform: "translateZ(8px)" }}
+            className="pointer-events-none absolute inset-y-8 -right-1 w-2 rounded-r-full bg-gradient-to-r from-cyan-400/25 to-transparent"
+            style={{ transform: "translateZ(12px)" }}
             aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute inset-y-4 -left-2 w-3 rounded-l-xl bg-gradient-to-l from-cyan-400/10 to-transparent"
-            style={{ transform: "translateZ(-8px)" }}
-            aria-hidden
-          />
-        </div>
-
-        {/* Floating emblem accent */}
-        <div
-          className="absolute -top-2 right-4 sm:right-8"
-          style={{ transform: "translateZ(80px)" }}
-          aria-hidden
-        >
-          <Image
-            src="/ni-emblem.svg"
-            alt=""
-            width={48}
-            height={48}
-            className="h-10 w-10 opacity-80 drop-shadow-[0_0_16px_rgba(0,212,255,0.6)] sm:h-12 sm:w-12"
           />
         </div>
       </div>
 
-      {/* Ground reflection */}
+      {/* Ground glow */}
       <div
-        className="pointer-events-none absolute bottom-4 left-1/2 h-10 w-3/4 -translate-x-1/2 rounded-[100%] bg-cyan-500/15 blur-2xl"
-        style={{ transform: "translateZ(-100px) rotateX(80deg)" }}
+        className={`pointer-events-none absolute bottom-6 left-1/2 h-12 w-3/4 -translate-x-1/2 rounded-[100%] bg-cyan-500/20 blur-2xl transition-opacity duration-[1400ms] ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        style={{ transform: "translateZ(-110px) rotateX(80deg)" }}
         aria-hidden
       />
     </div>
