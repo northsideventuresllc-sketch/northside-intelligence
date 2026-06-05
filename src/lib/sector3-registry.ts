@@ -4,6 +4,8 @@ export const NI_BRAIN_SUPABASE_URL =
   `https://${NI_BRAIN_PROJECT_ID}.supabase.co` as const;
 export const GITHUB_ORG = "northsideventuresllc-sketch" as const;
 export const PORTAL_URL = "https://northsideintelligence.com" as const;
+export const PORTAL_SIGNUP_URL = `${PORTAL_URL}/auth/signup` as const;
+export const PORTAL_SIGNIN_URL = `${PORTAL_URL}/auth/signin` as const;
 
 export type Sector3ToolSlug = "replyflow" | "grantbot";
 

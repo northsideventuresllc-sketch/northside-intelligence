@@ -3,6 +3,7 @@
 import type { Sector3Tool } from "@/lib/constants";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTilt } from "@/hooks/useTilt";
+import { buildPortalAuthUrl } from "@/lib/ni-auth";
 
 interface ToolCardProps {
   tool: Sector3Tool;
@@ -49,14 +50,22 @@ export function ToolCard({ tool }: ToolCardProps) {
         </p>
         <div className="mt-auto shrink-0 pt-4">
           {tool.url ? (
-            <a
-              href={tool.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-cyan-500/50 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-300 shadow-[0_4px_16px_rgba(0,212,255,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] transition hover:border-cyan-400/70 hover:bg-cyan-500/20 hover:shadow-[0_8px_24px_rgba(0,212,255,0.25)]"
-            >
-              Open Tool →
-            </a>
+            <div className="flex flex-col gap-2">
+              <a
+                href={tool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-cyan-500/50 bg-cyan-500/10 px-4 py-2.5 text-sm font-medium text-cyan-300 shadow-[0_4px_16px_rgba(0,212,255,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] transition hover:border-cyan-400/70 hover:bg-cyan-500/20 hover:shadow-[0_8px_24px_rgba(0,212,255,0.25)]"
+              >
+                Open Tool →
+              </a>
+              <a
+                href={buildPortalAuthUrl("signup", `${tool.url}/dashboard`)}
+                className="text-center text-xs text-ni-muted transition hover:text-cyan-400"
+              >
+                Sign up with NI account
+              </a>
+            </div>
           ) : (
             <span className="inline-flex w-full items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-ni-muted">
               Coming Soon

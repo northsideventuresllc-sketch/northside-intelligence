@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decryptPayload } from "@/lib/auth/crypto";
 import { verifyOtp } from "@/lib/auth/otp";
+import { resolvePostAuthRedirect } from "@/lib/ni-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -11,12 +12,14 @@ interface PendingSignup {
   email: string;
   password: string;
   fullName: string | null;
+  returnTo?: string | null;
 }
 
 interface PendingSignin {
   flow: "signin";
   email: string;
   password: string;
+  returnTo?: string | null;
 }
 
 type PendingPayload = PendingSignup | PendingSignin;
@@ -55,7 +58,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid or expired verification code" }, { status: 401 });
   }
 
-  const response = NextResponse.json({ success: true });
+  const redirectTo = resolvePostAuthRedirect(pending.returnTo);
+  const response = NextResponse.json({ success: true, returnTo: redirectTo });
 
   if (pending.flow === "signup") {
     const admin = createServiceClient();
@@ -86,6 +90,20 @@ export async function POST(request: NextRequest) {
       full_name: pending.fullName,
       updated_at: new Date().toISOString(),
     });
+
+    const now = new Date().toISOString();
+    await admin.from("replyflow_profiles").upsert(
+      {
+        id: created.user.id,
+        email: pending.email,
+        plan: "free",
+        replies_used_this_month: 0,
+        replies_reset_at: now,
+        created_at: now,
+        updated_at: now,
+      },
+      { onConflict: "id", ignoreDuplicates: true }
+    );
   }
 
   const supabase = await createServerAuthClient();

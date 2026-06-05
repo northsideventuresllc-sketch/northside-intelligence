@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { portalSignInUrl } from '@/lib/ni-auth'
 import { createClient } from '@/lib/supabase/server'
 import { PLAN_LIMITS, PLAN_LABELS } from '@/lib/stripe'
 import { normalizeUserPlan } from '@/lib/tier'
@@ -7,7 +8,7 @@ import DashboardClient from './DashboardClient'
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect(portalSignInUrl())
   const { data: profile } = await supabase.from('replyflow_profiles').select('plan, replies_used_this_month').eq('id', user.id).single()
   const plan = normalizeUserPlan(profile?.plan)
   const used = profile?.replies_used_this_month || 0

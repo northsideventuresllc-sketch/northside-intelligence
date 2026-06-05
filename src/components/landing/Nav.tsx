@@ -1,21 +1,12 @@
-import Image from "next/image";
 import Link from "next/link";
+import { Logo3D } from "./Logo3D";
 
 export function Nav() {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-cyan-500/10 bg-ni-bg/70 shadow-[0_4px_30px_rgba(0,0,0,0.3),inset_0_-1px_0_rgba(0,212,255,0.1)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link href="/" className="group flex items-center gap-3 transition">
-          <div className="rounded-xl border border-cyan-500/20 bg-ni-navy/50 p-1 shadow-[0_0_20px_rgba(0,212,255,0.1)] transition group-hover:border-cyan-400/40 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)]">
-            <Image
-              src="/logo.png"
-              alt="Northside Intelligence"
-              width={48}
-              height={48}
-              className="h-8 w-8 object-contain drop-shadow-[0_0_12px_rgba(0,212,255,0.35)]"
-              priority
-            />
-          </div>
+          <Logo3D variant="emblem" className="!h-10 !w-10 sm:!h-11 sm:!w-11" />
           <span className="hidden text-sm font-medium text-white/90 sm:inline">
             Northside Intelligence
           </span>
