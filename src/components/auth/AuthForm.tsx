@@ -73,6 +73,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ code }),
       });
 

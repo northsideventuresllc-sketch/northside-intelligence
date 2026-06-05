@@ -4,6 +4,7 @@ import { supabaseCookieOptions } from "@/lib/supabase/cookie-domain";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+  const host = request.headers.get("host");
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,7 +22,7 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, supabaseCookieOptions(options))
+          supabaseResponse.cookies.set(name, value, supabaseCookieOptions(options, host))
         );
       },
     },

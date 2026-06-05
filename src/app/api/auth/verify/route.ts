@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyViaEdge } from "@/lib/auth/portal-auth-edge";
 import { resolvePostAuthRedirect } from "@/lib/ni-auth";
-import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { createRouteHandlerAuthClient } from "@/lib/supabase/route-handler-auth";
 
 const PENDING_COOKIE = "ni_auth_pending";
 
@@ -41,10 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to sign in after verification" }, { status: 500 });
   }
 
-  const redirectTo = resolvePostAuthRedirect(returnTo);
-  const response = NextResponse.json({ success: true, returnTo: redirectTo });
-
-  const supabase = await createServerAuthClient();
+  const { supabase, applyAuthCookiesTo } = createRouteHandlerAuthClient(request);
   const { error: sessionError } = await supabase.auth.setSession({
     access_token: accessToken,
     refresh_token: refreshToken,
@@ -54,6 +51,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to sign in after verification" }, { status: 500 });
   }
 
+  const redirectTo = resolvePostAuthRedirect(returnTo);
+  const response = NextResponse.json({ success: true, returnTo: redirectTo });
+  applyAuthCookiesTo(response);
   response.cookies.set(PENDING_COOKIE, "", { path: "/", maxAge: 0 });
   return response;
 }
