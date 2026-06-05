@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
 import { portalSignInUrl } from "@/lib/replyflow/auth";
-import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/replyflow/stripe";
-import { normalizeUserPlan } from "@/lib/replyflow/tier";
+import {
+  getDeploymentTier,
+  getPlanLimits,
+  normalizeUserPlan,
+  PLAN_LABELS,
+} from "@/lib/replyflow/tier";
+
+const PLAN_LIMITS = getPlanLimits(getDeploymentTier());
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import DashboardClient from "./DashboardClient";
 
