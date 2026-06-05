@@ -150,7 +150,7 @@ export const ECOSYSTEM_LABS_LIVE: EcosystemProject[] = [
     name: "Match Fit",
     tagline: "Athletic matching & fit intelligence",
     url: "https://match-fit.net",
-    logo: "/logos/match-fit.svg",
+    logo: "/logos/match-fit.png",
     status: "LIVE",
     keywords: ["fitness", "matching", "athletes", "beta"],
   },
