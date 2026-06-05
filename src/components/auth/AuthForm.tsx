@@ -1,9 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { FormEvent, useMemo, useState } from "react";
 import { AnimatedBackground } from "@/components/landing/AnimatedBackground";
+import { Logo3D } from "@/components/landing/Logo3D";
+import { buildPortalAuthUrl, resolvePostAuthRedirect } from "@/lib/ni-auth";
 
 type AuthMode = "signin" | "signup";
 type Step = "credentials" | "verify";
@@ -13,6 +15,8 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const [step, setStep] = useState<Step>("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +24,11 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const alternateHref = useMemo(() => {
+    const other: AuthMode = mode === "signup" ? "signin" : "signup";
+    return buildPortalAuthUrl(other, returnTo);
+  }, [mode, returnTo]);
 
   async function handleCredentialsSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,7 +38,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     try {
       const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
       const body =
-        mode === "signup" ? { email, password, fullName: fullName || undefined } : { email, password };
+        mode === "signup"
+          ? { email, password, fullName: fullName || undefined, returnTo }
+          : { email, password, returnTo };
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -65,14 +76,14 @@ export function AuthForm({ mode }: AuthFormProps) {
         body: JSON.stringify({ code }),
       });
 
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string; returnTo?: string };
 
       if (!res.ok) {
         setError(data.error ?? "Invalid verification code");
         return;
       }
 
-      window.location.href = "/account";
+      window.location.href = resolvePostAuthRedirect(data.returnTo ?? returnTo);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -80,13 +91,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
-  const title = mode === "signup" ? "Create your account" : "Welcome back";
+  const title = mode === "signup" ? "Create your NI account" : "Welcome back";
   const subtitle =
     step === "verify"
       ? `Enter the 6-digit code sent to ${email}`
       : mode === "signup"
-        ? "Join the Northside Intelligence platform"
-        : "Sign in with email and password";
+        ? "One account for every Northside Intelligence tool"
+        : "Sign in to access all Sector 3 tools";
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24">
@@ -96,21 +107,16 @@ export function AuthForm({ mode }: AuthFormProps) {
         style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
       >
         <div className="mb-8 flex flex-col items-center text-center">
-          <div
-            className="mb-6 animate-float"
-            style={{ transform: "translateZ(40px)" }}
-          >
-            <Image
-              src="/logo-full.png"
-              alt="Northside Intelligence"
-              width={220}
-              height={280}
-              className="h-auto w-44 object-contain drop-shadow-[0_0_40px_rgba(0,212,255,0.35)] sm:w-52"
-              priority
-            />
+          <div className="mb-6" style={{ transform: "translateZ(40px)" }}>
+            <Logo3D variant="full" />
           </div>
           <h1 className="text-2xl font-semibold text-white">{title}</h1>
           <p className="mt-2 text-sm text-ni-muted">{subtitle}</p>
+          {returnTo && step === "credentials" && (
+            <p className="mt-2 text-xs text-cyan-400/80">
+              After verification you&apos;ll return to your tool.
+            </p>
+          )}
         </div>
 
         <div
@@ -232,14 +238,14 @@ export function AuthForm({ mode }: AuthFormProps) {
             {mode === "signup" ? (
               <>
                 Already have an account?{" "}
-                <Link href="/auth/signin" className="text-cyan-400 hover:text-cyan-300">
+                <Link href={alternateHref} className="text-cyan-400 hover:text-cyan-300">
                   Sign in
                 </Link>
               </>
             ) : (
               <>
                 New here?{" "}
-                <Link href="/auth/signup" className="text-cyan-400 hover:text-cyan-300">
+                <Link href={alternateHref} className="text-cyan-400 hover:text-cyan-300">
                   Create an account
                 </Link>
               </>

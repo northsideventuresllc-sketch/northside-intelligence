@@ -4,6 +4,8 @@ export const NI_BRAIN_SUPABASE_URL =
   `https://${NI_BRAIN_PROJECT_ID}.supabase.co` as const;
 export const GITHUB_ORG = "northsideventuresllc-sketch" as const;
 export const PORTAL_URL = "https://northsideintelligence.com" as const;
+export const PORTAL_SIGNUP_URL = `${PORTAL_URL}/auth/signup` as const;
+export const PORTAL_SIGNIN_URL = `${PORTAL_URL}/auth/signin` as const;
 
 export type Sector3ToolSlug = "replyflow" | "grantbot";
 
@@ -26,7 +28,7 @@ export const SECTOR3_REGISTRY: Sector3RegistryEntry[] = [
     subdomain: "replyflow.northsideintelligence.com",
     description: "AI-powered customer service reply automation",
     status: "LIVE",
-    appUrl: "https://replyflow.northsideintelligence.com",
+    appUrl: "https://northsideintelligence.com/replyflow",
     github: `https://github.com/${GITHUB_ORG}/replyflow`,
     supabaseTable: "replyflow_profiles",
     arm3Status: "scale",
