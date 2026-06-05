@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-rf-bg text-white antialiased;
+  }
+}
+
+@layer utilities {
+  .rf-gradient-text {
+    @apply bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet bg-clip-text text-transparent;
+  }
+  .rf-glass {
+    @apply border border-white/10 bg-rf-card/80 backdrop-blur-xl;
+  }
+  .rf-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(251, 113, 133, 0.15), transparent);
+    background-size: 200% 100%;
+  }
+}

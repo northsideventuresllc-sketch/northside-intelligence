@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { BRAND } from "@/lib/constants";
 import { AnimatedBackground } from "./AnimatedBackground";
@@ -11,7 +10,7 @@ export function Hero() {
       <AnimatedBackground />
       <Scene3D className="relative z-10 flex flex-col items-center text-center">
         <div className="mb-10 animate-float-slow">
-          <Logo3D variant="full" priority />
+          <Logo3D variant="full" />
         </div>
         <h1 className="mb-4 text-4xl font-semibold tracking-tight text-white sm:text-5xl md:text-6xl">
           <span

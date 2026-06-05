@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { encryptPayload } from "@/lib/auth/crypto";
 import { issueOtp } from "@/lib/auth/otp";
+import { sanitizeReturnTo } from "@/lib/ni-auth";
 
 const PENDING_COOKIE = "ni_auth_pending";
 const PENDING_MAX_AGE = 60 * 10;
@@ -9,6 +10,7 @@ interface SignupBody {
   email?: string;
   password?: string;
   fullName?: string;
+  returnTo?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -41,14 +43,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
+  const returnTo = sanitizeReturnTo(body.returnTo);
+
   const response = NextResponse.json({ step: "verify", email });
-  response.cookies.set(PENDING_COOKIE, encryptPayload({ email, password, fullName, flow: "signup" }), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: PENDING_MAX_AGE,
-  });
+  response.cookies.set(
+    PENDING_COOKIE,
+    encryptPayload({ email, password, fullName, flow: "signup", returnTo }),
+    {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: PENDING_MAX_AGE,
+    }
+  );
 
   return response;
 }
