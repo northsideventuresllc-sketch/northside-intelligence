@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { encryptPayload } from "@/lib/auth/crypto";
-import { issueOtp } from "@/lib/auth/otp";
+import {
+  createPendingViaEdge,
+  issueOtpViaEdge,
+} from "@/lib/auth/portal-auth-edge";
 import { sanitizeReturnTo } from "@/lib/ni-auth";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -37,27 +39,34 @@ export async function POST(request: NextRequest) {
 
   await supabase.auth.signOut();
 
-  try {
-    await issueOtp({ email, purpose: "signin", metadata: { userId: data.user.id } });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to send verification email";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-
   const returnTo = sanitizeReturnTo(body.returnTo);
 
-  const response = NextResponse.json({ step: "verify", email });
-  response.cookies.set(
-    PENDING_COOKIE,
-    encryptPayload({ email, password, flow: "signin", returnTo }),
-    {
+  try {
+    await issueOtpViaEdge({
+      email,
+      purpose: "signin",
+      metadata: { userId: data.user.id },
+    });
+    const { pendingId } = await createPendingViaEdge({
+      email,
+      password,
+      flow: "signin",
+      returnTo,
+      metadata: { userId: data.user.id },
+    });
+
+    const response = NextResponse.json({ step: "verify", email });
+    response.cookies.set(PENDING_COOKIE, pendingId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: PENDING_MAX_AGE,
-    }
-  );
+    });
 
-  return response;
+    return response;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to send verification email";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

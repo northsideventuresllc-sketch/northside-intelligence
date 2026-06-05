@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { encryptPayload } from "@/lib/auth/crypto";
-import { issueOtp } from "@/lib/auth/otp";
+import {
+  createPendingViaEdge,
+  issueOtpViaEdge,
+} from "@/lib/auth/portal-auth-edge";
 import { sanitizeReturnTo } from "@/lib/ni-auth";
 
 const PENDING_COOKIE = "ni_auth_pending";
@@ -36,27 +38,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    await issueOtp({ email, purpose: "signup" });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to send verification email";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-
   const returnTo = sanitizeReturnTo(body.returnTo);
 
-  const response = NextResponse.json({ step: "verify", email });
-  response.cookies.set(
-    PENDING_COOKIE,
-    encryptPayload({ email, password, fullName, flow: "signup", returnTo }),
-    {
+  try {
+    await issueOtpViaEdge({ email, purpose: "signup" });
+    const { pendingId } = await createPendingViaEdge({
+      email,
+      password,
+      flow: "signup",
+      fullName,
+      returnTo,
+    });
+
+    const response = NextResponse.json({ step: "verify", email });
+    response.cookies.set(PENDING_COOKIE, pendingId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: PENDING_MAX_AGE,
-    }
-  );
+    });
 
-  return response;
+    return response;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to send verification email";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

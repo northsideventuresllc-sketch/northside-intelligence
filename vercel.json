@@ -2,5 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://kxijunwgbrlfzvgkhklo.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aWp1bndnYnJsZnp2Z2toa2xvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzk1NDksImV4cCI6MjA5NDk1NTU0OX0.ickPdoGDAkhEw03Zg-HVYi8bcbG9_WsnrUNGHbkAQvE",
+    "NEXT_PUBLIC_APP_URL": "https://northsideintelligence.com",
+    "NEXT_PUBLIC_REPLYFLOW_URL": "https://northsideintelligence.com/replyflow",
+    "NEXT_PUBLIC_AUTH_COOKIE_DOMAIN": ".northsideintelligence.com",
+    "NI_AUTH_GATEWAY_SECRET": "5d5661891e77f9e5b1e9f4c7d1b864e63bca8c91"
+  }
 }
