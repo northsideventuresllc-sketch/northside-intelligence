@@ -1,8 +1,24 @@
 import Stripe from "stripe";
 import { getDeploymentTier, getPlanLimits, type UserPlan } from "@/lib/replyflow/tier";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+let stripeClient: Stripe | null = null;
+
+export function getStripe(): Stripe {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+  if (!stripeClient) {
+    stripeClient = new Stripe(key, { apiVersion: "2023-10-16" });
+  }
+  return stripeClient;
+}
+
+/** @deprecated Use getStripe() — kept for webhook/checkout routes */
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop) {
+    return Reflect.get(getStripe(), prop);
+  },
 });
 
 export const PLAN_LIMITS = getPlanLimits(getDeploymentTier());

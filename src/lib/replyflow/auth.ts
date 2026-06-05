@@ -1,4 +1,5 @@
 import { buildPortalAuthUrl } from "@/lib/ni-auth";
+import { PORTAL_URL } from "@/lib/sector3-registry";
 
 export const REPLYFLOW_BASE_PATH = "/replyflow";
 
@@ -6,11 +7,11 @@ export function replyflowAppUrl(): string {
   if (process.env.NEXT_PUBLIC_REPLYFLOW_URL) {
     return process.env.NEXT_PUBLIC_REPLYFLOW_URL.replace(/\/$/, "");
   }
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    ""
-  );
-  return `${appUrl}${REPLYFLOW_BASE_PATH}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (appUrl && !appUrl.includes("localhost")) {
+    return `${appUrl}${REPLYFLOW_BASE_PATH}`;
+  }
+  return `${PORTAL_URL}${REPLYFLOW_BASE_PATH}`;
 }
 
 export function replyflowPath(path = "/"): string {
