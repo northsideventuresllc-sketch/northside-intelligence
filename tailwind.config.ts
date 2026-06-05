@@ -16,12 +16,25 @@ const config: Config = {
           "cyan-dim": "#00A8CC",
           muted: "#8B95A8",
         },
+        rf: {
+          bg: "#0c0814",
+          surface: "#16101f",
+          card: "#1f1630",
+          rose: "#fb7185",
+          coral: "#f97316",
+          violet: "#a78bfa",
+          mint: "#5eead4",
+          muted: "#9d8bb8",
+        },
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "Inter", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "monospace"],
       },
       animation: {
+        "float-bubble": "floatBubble 6s ease-in-out infinite",
+        "pulse-glow": "pulseGlow 2.5s ease-in-out infinite",
+        wave: "wave 1.2s ease-in-out infinite",
         "grid-pulse": "grid-pulse 8s ease-in-out infinite",
         float: "float 6s ease-in-out infinite",
         "float-slow": "float-slow 8s ease-in-out infinite",
@@ -32,6 +45,18 @@ const config: Config = {
         "orbit-slow": "orbit-slow 40s linear infinite",
       },
       keyframes: {
+        floatBubble: {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "50%": { transform: "translateY(-12px) rotate(2deg)" },
+        },
+        pulseGlow: {
+          "0%, 100%": { opacity: "0.5", transform: "scale(1)" },
+          "50%": { opacity: "1", transform: "scale(1.05)" },
+        },
+        wave: {
+          "0%, 100%": { transform: "scaleY(0.4)" },
+          "50%": { transform: "scaleY(1)" },
+        },
         "grid-pulse": {
           "0%, 100%": { opacity: "0.15" },
           "50%": { opacity: "0.35" },
@@ -69,6 +94,8 @@ const config: Config = {
         },
       },
       boxShadow: {
+        "rf-glow": "0 0 40px rgba(251, 113, 133, 0.25)",
+        "rf-violet": "0 0 50px rgba(167, 139, 250, 0.2)",
         glow: "0 0 40px rgba(0, 212, 255, 0.15)",
         "glow-sm": "0 0 20px rgba(0, 212, 255, 0.2)",
         "glow-lg": "0 0 80px rgba(0, 212, 255, 0.25)",
