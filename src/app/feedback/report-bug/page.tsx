@@ -4,9 +4,14 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Nav } from "@/components/landing/Nav";
 import { Footer } from "@/components/landing/Footer";
+import { REPORT_BUG_TOOLS } from "@/lib/constants";
 
 export default function ReportBugPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [product, setProduct] = useState(REPORT_BUG_TOOLS[0]?.value ?? "");
+  const [otherProduct, setOtherProduct] = useState("");
+
+  const showOther = product === "other";
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,7 +27,8 @@ export default function ReportBugPage() {
         </Link>
         <h1 className="mb-2 text-3xl font-semibold text-white">Report a Bug</h1>
         <p className="mb-8 text-ni-muted">
-          Found something broken? Tell us what happened and we&apos;ll investigate.
+          Found something broken in one of our intelligence tools? Tell us what happened and
+          we&apos;ll investigate.
         </p>
         {submitted ? (
           <div className="glass-panel p-8 text-center">
@@ -50,17 +56,41 @@ export default function ReportBugPage() {
             </div>
             <div>
               <label htmlFor="product" className="mb-1 block text-sm text-ni-muted">
-                Product / page
+                Product
               </label>
-              <input
+              <select
                 id="product"
                 name="product"
-                type="text"
                 required
-                placeholder="e.g. ReplyFlow, signup, match-fit.net"
+                value={product}
+                onChange={(e) => setProduct(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none focus:border-cyan-500/40"
-              />
+              >
+                {REPORT_BUG_TOOLS.map((tool) => (
+                  <option key={tool.value} value={tool.value}>
+                    {tool.label}
+                  </option>
+                ))}
+                <option value="other">Other</option>
+              </select>
             </div>
+            {showOther && (
+              <div>
+                <label htmlFor="other-product" className="mb-1 block text-sm text-ni-muted">
+                  Please specify
+                </label>
+                <input
+                  id="other-product"
+                  name="otherProduct"
+                  type="text"
+                  required
+                  value={otherProduct}
+                  onChange={(e) => setOtherProduct(e.target.value)}
+                  placeholder="Which product or page?"
+                  className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none focus:border-cyan-500/40"
+                />
+              </div>
+            )}
             <div>
               <label htmlFor="details" className="mb-1 block text-sm text-ni-muted">
                 What went wrong?

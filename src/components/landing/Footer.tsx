@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BRAND } from "@/lib/constants";
+import { BRAND, getCopyrightYear } from "@/lib/constants";
 
 const LEGAL_LINKS = [
   { href: "/legal/terms", label: "Terms of Service" },
@@ -9,6 +9,8 @@ const LEGAL_LINKS = [
 ] as const;
 
 export function Footer() {
+  const year = getCopyrightYear();
+
   return (
     <footer className="relative border-t border-cyan-500/10 px-6 py-12">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
@@ -27,7 +29,10 @@ export function Footer() {
             </Link>
           ))}
         </nav>
-        <p className="text-center text-sm text-ni-muted">{BRAND.footer}</p>
+        <div className="space-y-1 text-center text-sm text-ni-muted">
+          <p>© {year} {BRAND.company}</p>
+          <p>© {year} {BRAND.venturesGroup}</p>
+        </div>
       </div>
     </footer>
   );
