@@ -1,50 +1,52 @@
 # northside-intelligence
 
-Placeholder repository (initial commit). No application source, dependency manifests, or service definitions yet.
+Next.js 14 portal for Northside Intelligence — public landing, auth, ReplyFlow, and internal ops.
 
 ## Cursor Cloud specific instructions
 
 ### Repository state
 
-- **Tracked files:** `README.md` only (as of initial commit).
-- **No** `package.json`, `docker-compose`, Makefile, CI workflows, or language-specific project files.
-- **No services** to start for local development until application code is added.
+- **Stack:** Next.js 14 App Router, TypeScript, Tailwind, Supabase (NI-Brain), Vercel
+- **Production:** https://www.northsideintelligence.com
+- **Vercel project:** `northside-intelligence` (`prj_knNPxlOdg3gen5fasNHWfYB6Aa40`)
 
-### VM update script behavior
+### VM update script
 
-The startup update script is intentionally a no-op (`true`) because there are no dependencies to refresh. When you add manifests (for example `package.json`, `requirements.txt`, `go.mod`), update the VM update script in Cursor environment settings to match (e.g. `npm ci`, `pnpm install`, `uv sync`).
+```bash
+cd /workspace && npm ci
+```
 
 ### Lint / test / build / dev
 
-| Operation | Status |
-|-----------|--------|
-| Lint | Not configured |
-| Test | Not configured |
-| Build | Not configured |
-| Dev server | Not configured |
+| Operation | Command |
+|-----------|---------|
+| Install | `npm ci` |
+| Lint | `npm run lint` |
+| Build | `npm run build` |
+| Dev server | `npm run dev` (port 3000) |
 
-### Toolchain on Cloud Agent VMs (for future scaffolding)
+### Deploy workflow (standing user approval)
 
-These runtimes are typically available without extra VM setup:
+**The user has given standing approval to merge PRs and deploy without asking each time.**
 
-- **Node.js** v22 + **npm** / **pnpm**
-- **Python** 3.12
-- **Go** 1.22
+After any code change:
 
-Docker is not preinstalled on the default Cloud Agent image. If the project later needs Docker, install it during setup or document host-specific requirements.
+1. Work on branch `cursor/<descriptive-name>-6a22`
+2. Run `npm run build` before merge
+3. Commit, push, open PR to `main`
+4. **Merge the PR to `main` immediately** (no need to wait for user deploy confirmation)
+5. Vercel Git integration **auto-deploys production** on every push/merge to `main`
+6. Verify deployment reached `READY` and matches latest `main` commit SHA
 
-### When adding the first application
+Do not use manual `vercel deploy` unless Git integration fails. Production aliases: `northsideintelligence.com`, `www.northsideintelligence.com`.
 
-1. Add dependency manifests and document commands in `README.md` (or per-package READMEs).
-2. Extend the VM **update script** to install dependencies idempotently.
-3. Update this section with: required vs optional services, ports, env vars, and exact lint/test/dev commands.
-4. Prefer non-interactive install flags (e.g. `pnpm install --frozen-lockfile` when a lockfile exists).
-
-### Sanity check (current repo)
+### Sanity check
 
 ```bash
 cd /workspace
-test -f README.md && git status && git log -1 --oneline
+git checkout main && git pull origin main
+npm run build
+git log -1 --oneline
 ```
 
-Expected: clean working tree on `main`, latest commit is the initial commit.
+Expected: clean working tree on `main`, build passes.
