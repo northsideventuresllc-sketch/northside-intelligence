@@ -6,6 +6,8 @@ export const ALLOWED_RETURN_ORIGINS = [
   "https://www.northsideintelligence.com",
   "https://replyflow.northsideintelligence.com",
   "https://replyflow-murex.vercel.app",
+  "https://northsideintelligence.com/replyflow",
+  "https://www.northsideintelligence.com/replyflow",
   "https://grantbot.northsideintelligence.com",
   "http://localhost:3000",
   "http://localhost:3001",
