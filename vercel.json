@@ -9,6 +9,12 @@
     "NEXT_PUBLIC_APP_URL": "https://northsideintelligence.com",
     "NEXT_PUBLIC_REPLYFLOW_URL": "https://northsideintelligence.com/replyflow",
     "NEXT_PUBLIC_AUTH_COOKIE_DOMAIN": ".northsideintelligence.com",
-    "NI_AUTH_GATEWAY_SECRET": "5d5661891e77f9e5b1e9f4c7d1b864e63bca8c91"
+    "NI_AUTH_GATEWAY_SECRET": "5d5661891e77f9e5b1e9f4c7d1b864e63bca8c91",
+    "NI_REPLYFLOW_GATEWAY_SECRET": "5d5661891e77f9e5b1e9f4c7d1b864e63bca8c91",
+    "NI_ADMIN_SECRET": "5d5661891e77f9e5b1e9f4c7d1b864e63bca8c91",
+    "STRIPE_SOLO_PRICE_ID": "price_1Te0s8QXb5thRQWgqVQdW8Rl",
+    "STRIPE_TEAM_PRICE_ID": "price_1Te0sBQXb5thRQWgYzuWMxTd",
+    "STRIPE_AGENCY_PRICE_ID": "price_1Te0sEQXb5thRQWgCiAzrClk",
+    "TIER": "pro"
   }
 }
