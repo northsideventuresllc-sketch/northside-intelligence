@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
-import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { createRouteHandlerAuthClient } from "@/lib/supabase/route-handler-auth";
 
-export async function POST() {
-  const supabase = await createServerAuthClient();
+export async function POST(request: NextRequest) {
+  const { supabase, applyAuthCookiesTo } = createRouteHandlerAuthClient(request);
   await supabase.auth.signOut();
-  return NextResponse.json({ success: true });
+  const response = NextResponse.json({ success: true });
+  return applyAuthCookiesTo(response);
 }

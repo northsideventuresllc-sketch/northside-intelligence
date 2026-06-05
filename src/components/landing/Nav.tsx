@@ -1,7 +1,39 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface AuthUser {
+  id: string;
+  email: string | null;
+  fullName: string | null;
+}
 
 export function Nav() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data: { user: AuthUser | null }) => {
+        if (!cancelled) setUser(data.user);
+      })
+      .catch(() => {
+        if (!cancelled) setUser(null);
+      })
+      .finally(() => {
+        if (!cancelled) setAuthChecked(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <header className="fixed top-0 z-50 w-full border-b border-cyan-500/10 bg-ni-bg/70 shadow-[0_4px_30px_rgba(0,0,0,0.3),inset_0_-1px_0_rgba(0,212,255,0.1)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -39,18 +71,31 @@ export function Nav() {
           >
             Ecosystem
           </a>
-          <Link
-            href="/auth/signin"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/auth/signup"
-            className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
-          >
-            Sign up
-          </Link>
+          {authChecked && user ? (
+            <Link
+              href="/account"
+              className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
+            >
+              Account
+            </Link>
+          ) : authChecked ? (
+            <>
+              <Link
+                href="/auth/signin"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
+              >
+                Sign up
+              </Link>
+            </>
+          ) : (
+            <span className="h-8 w-24" aria-hidden="true" />
+          )}
         </nav>
       </div>
     </header>

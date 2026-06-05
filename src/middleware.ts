@@ -37,6 +37,7 @@ async function guardReplyFlowDashboard(request: NextRequest): Promise<NextRespon
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return null;
 
+  const host = request.headers.get("host");
   let response = NextResponse.next({ request });
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -47,7 +48,7 @@ async function guardReplyFlowDashboard(request: NextRequest): Promise<NextRespon
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, supabaseCookieOptions(options))
+          response.cookies.set(name, value, supabaseCookieOptions(options, host))
         );
       },
     },
@@ -95,6 +96,7 @@ export async function middleware(request: NextRequest) {
 
   const host = request.headers.get("host") ?? "";
   const needsSessionRefresh =
+    pathname === "/" ||
     pathname.startsWith("/account") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
