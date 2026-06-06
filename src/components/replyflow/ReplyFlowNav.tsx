@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { portalSignInUrl, portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
+
+type PortalUser = {
+  id: string;
+  email: string;
+  fullName: string | null;
+};
 
 interface Props {
   email?: string;
@@ -9,7 +17,32 @@ interface Props {
   onSignOut?: () => void;
 }
 
-export function ReplyFlowNav({ email, planLabel, onSignOut }: Props) {
+export function ReplyFlowNav({ email: emailProp, planLabel, onSignOut }: Props) {
+  const [email, setEmail] = useState<string | undefined>(emailProp);
+  const [loaded, setLoaded] = useState(Boolean(emailProp));
+
+  const loadUser = useCallback(async () => {
+    if (emailProp) {
+      setEmail(emailProp);
+      setLoaded(true);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const data = (await res.json()) as { user: PortalUser | null };
+      setEmail(data.user?.email ?? undefined);
+    } catch {
+      setEmail(undefined);
+    } finally {
+      setLoaded(true);
+    }
+  }, [emailProp]);
+
+  useEffect(() => {
+    void loadUser();
+  }, [loadUser]);
+
   return (
     <header className="relative z-20 border-b border-white/10 bg-rf-bg/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
@@ -21,7 +54,9 @@ export function ReplyFlowNav({ email, planLabel, onSignOut }: Props) {
         </Link>
 
         <div className="flex items-center gap-3">
-          {email ? (
+          {!loaded ? (
+            <span className="h-4 w-16 animate-pulse rounded bg-white/10" aria-hidden />
+          ) : email ? (
             <>
               <span className="hidden text-sm text-rf-muted sm:block">{email}</span>
               {planLabel && (
@@ -35,13 +70,15 @@ export function ReplyFlowNav({ email, planLabel, onSignOut }: Props) {
               >
                 NI Account
               </a>
-              {onSignOut && (
+              {onSignOut ? (
                 <button
                   onClick={onSignOut}
                   className="text-sm text-rf-muted transition hover:text-white"
                 >
                   Sign out
                 </button>
+              ) : (
+                <SignOutButton variant="replyflow" onSignedOut={() => setEmail(undefined)} />
               )}
             </>
           ) : (

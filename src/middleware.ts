@@ -93,18 +93,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const host = request.headers.get("host") ?? "";
-  const needsSessionRefresh =
-    pathname.startsWith("/account") ||
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/replyflow") ||
-    isReplyFlowHost(host);
-
-  if (!needsSessionRefresh) {
-    return NextResponse.next();
-  }
-
   return updateSession(request);
 }
 
