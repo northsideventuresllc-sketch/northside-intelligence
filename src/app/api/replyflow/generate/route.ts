@@ -1,28 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { generateReply } from "@/lib/replyflow/ai";
 import { PLAN_LIMITS } from "@/lib/replyflow/stripe";
 import { normalizeUserPlan } from "@/lib/replyflow/tier";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { createServiceClient } from "@/lib/supabase/server";
-
-async function callClaude(systemPrompt: string, userMessage: string): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    }),
-  });
-  if (!res.ok) throw new Error(`Anthropic API error: ${res.status}`);
-  const data = await res.json();
-  return data.content.find((c: { type: string; text?: string }) => c.type === "text")?.text ?? "";
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = `You are a customer service expert. Write a ${tone} customer service reply for a ${scenario} scenario. Be concise, empathetic, and professional. Return only the reply text.`;
-    const reply = await callClaude(systemPrompt, message);
+    const reply = await generateReply(systemPrompt, message);
 
     const svc2 = createServiceClient();
     await svc2

@@ -18,7 +18,9 @@ Fork this repo to launch a new Sector 3 tool. Keep the same stack: **Next.js App
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL (NI Brain) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (client + SSR) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Service role for webhooks and server-side writes |
-| `ANTHROPIC_API_KEY` | Yes | Claude API for generation routes |
+| Vercel AI Gateway | Yes (prod) | OIDC on Vercel; enable in project settings |
+| `AI_GATEWAY_API_KEY` | Optional | Local dev / CI fallback for AI Gateway |
+| `ANTHROPIC_API_KEY` | Optional | Legacy direct Anthropic fallback |
 | `STRIPE_SECRET_KEY` | Yes | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | Yes | Signing secret for `/api/webhooks/stripe` |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Yes | Stripe.js publishable key |
