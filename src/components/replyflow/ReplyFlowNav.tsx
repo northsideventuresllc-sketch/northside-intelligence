@@ -40,7 +40,7 @@ export function ReplyFlowNav({ email, planLabel, onSignOut }: Props) {
                   onClick={onSignOut}
                   className="text-sm text-rf-muted transition hover:text-white"
                 >
-                  Sign out
+                  Sign Out
                 </button>
               )}
             </>
@@ -50,13 +50,13 @@ export function ReplyFlowNav({ email, planLabel, onSignOut }: Props) {
                 href={portalSignInUrl()}
                 className="text-sm text-rf-muted transition hover:text-rf-rose"
               >
-                Sign in
+                Sign In
               </a>
               <a
                 href={portalSignUpUrl()}
                 className="rounded-xl bg-gradient-to-r from-rf-rose to-rf-coral px-4 py-2 text-sm font-semibold text-white shadow-rf-glow transition hover:opacity-90"
               >
-                Get started
+                Get Started
               </a>
             </>
           )}

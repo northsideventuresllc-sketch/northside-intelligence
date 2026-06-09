@@ -3,13 +3,16 @@ import {
   createPendingViaEdge,
   issueOtpViaEdge,
 } from "@/lib/auth/portal-auth-edge";
+import { resolveIdentifierToEmail } from "@/lib/auth/resolve-identifier";
 import { sanitizeReturnTo } from "@/lib/ni-auth";
+import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 const PENDING_COOKIE = "ni_auth_pending";
 const PENDING_MAX_AGE = 60 * 10;
 
 interface SigninBody {
+  identifier?: string;
   email?: string;
   password?: string;
   returnTo?: string;
@@ -23,23 +26,48 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const email = body.email?.trim().toLowerCase();
+  const rawIdentifier = body.identifier?.trim() || body.email?.trim();
   const password = body.password;
 
-  if (!email || !password) {
-    return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+  if (!rawIdentifier || !password) {
+    return NextResponse.json(
+      { error: "Email or username and password are required" },
+      { status: 400 }
+    );
+  }
+
+  const email = await resolveIdentifierToEmail(rawIdentifier);
+  if (!email) {
+    return NextResponse.json({ error: "Invalid email, username, or password" }, { status: 401 });
   }
 
   const supabase = await createServerAuthClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (error || !data.user) {
-    return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+  if (error || !data.user || !data.session) {
+    return NextResponse.json({ error: "Invalid email, username, or password" }, { status: 401 });
+  }
+
+  const returnTo = sanitizeReturnTo(body.returnTo);
+  const admin = createServiceClient();
+  const { data: profile } = await admin
+    .from("ni_portal_profiles")
+    .select("two_factor_enabled")
+    .eq("id", data.user.id)
+    .maybeSingle();
+
+  const twoFactorEnabled = profile?.two_factor_enabled ?? true;
+
+  if (!twoFactorEnabled) {
+    const response = NextResponse.json({
+      success: true,
+      direct: true,
+      returnTo: returnTo ?? "/",
+    });
+    return response;
   }
 
   await supabase.auth.signOut();
-
-  const returnTo = sanitizeReturnTo(body.returnTo);
 
   try {
     await issueOtpViaEdge({

@@ -25,7 +25,7 @@ export function SignOutButton() {
       disabled={loading}
       className="w-full rounded-xl border border-white/10 px-6 py-3 text-sm text-ni-muted transition hover:border-white/20 hover:text-white disabled:opacity-50 sm:w-auto"
     >
-      {loading ? "Signing out…" : "Sign out"}
+      {loading ? "Signing Out…" : "Sign Out"}
     </button>
   );
 }

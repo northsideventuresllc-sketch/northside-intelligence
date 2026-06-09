@@ -46,5 +46,5 @@ export function buildPortalAuthUrl(mode: NiAuthMode, returnTo?: string | null): 
 
 export function resolvePostAuthRedirect(returnTo: string | null | undefined): string {
   const safe = sanitizeReturnTo(returnTo);
-  return safe ?? "/account";
+  return safe ?? "/";
 }

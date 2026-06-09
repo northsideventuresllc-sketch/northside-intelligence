@@ -18,9 +18,12 @@ export function AuthForm({ mode }: AuthFormProps) {
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
   const [step, setStep] = useState<Step>("credentials");
+  const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,8 +42,15 @@ export function AuthForm({ mode }: AuthFormProps) {
       const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/signin";
       const body =
         mode === "signup"
-          ? { email, password, fullName: fullName || undefined, returnTo }
-          : { email, password, returnTo };
+          ? {
+              email: identifier,
+              password,
+              fullName: fullName || undefined,
+              username: username || undefined,
+              twoFactorEnabled,
+              returnTo,
+            }
+          : { identifier, password, returnTo };
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -48,10 +58,22 @@ export function AuthForm({ mode }: AuthFormProps) {
         body: JSON.stringify(body),
       });
 
-      const data = (await res.json()) as { error?: string; step?: string; email?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        step?: string;
+        email?: string;
+        success?: boolean;
+        direct?: boolean;
+        returnTo?: string;
+      };
 
       if (!res.ok) {
         setError(data.error ?? "Something went wrong");
+        return;
+      }
+
+      if (data.direct && data.success) {
+        window.location.href = resolvePostAuthRedirect(data.returnTo ?? returnTo);
         return;
       }
 
@@ -91,13 +113,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
-  const title = mode === "signup" ? "Create your NI account" : "Welcome back";
+  const title = mode === "signup" ? "Create Your NI Account" : "Welcome Back";
   const subtitle =
     step === "verify"
       ? `Enter the 6-digit code sent to ${email}`
       : mode === "signup"
         ? "One account for every Northside Intelligence tool"
-        : "Sign in to access all intelligence tools";
+        : "Sign in with your email or username";
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24">
@@ -131,7 +153,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               {mode === "signup" && (
                 <div>
                   <label htmlFor="fullName" className="mb-1 block text-sm text-ni-muted">
-                    Full name
+                    Full Name
                   </label>
                   <input
                     id="fullName"
@@ -145,20 +167,36 @@ export function AuthForm({ mode }: AuthFormProps) {
                 </div>
               )}
               <div>
-                <label htmlFor="email" className="mb-1 block text-sm text-ni-muted">
-                  Email
+                <label htmlFor="identifier" className="mb-1 block text-sm text-ni-muted">
+                  {mode === "signup" ? "Email" : "Email or Username"}
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="identifier"
+                  type={mode === "signup" ? "email" : "text"}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
-                  autoComplete="email"
+                  autoComplete={mode === "signup" ? "email" : "username"}
                   className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                  placeholder="you@example.com"
+                  placeholder={mode === "signup" ? "you@example.com" : "you@example.com or username"}
                 />
               </div>
+              {mode === "signup" && (
+                <div>
+                  <label htmlFor="username" className="mb-1 block text-sm text-ni-muted">
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                    placeholder="Optional — letters, numbers, underscores"
+                  />
+                </div>
+              )}
               <div>
                 <label htmlFor="password" className="mb-1 block text-sm text-ni-muted">
                   Password
@@ -175,6 +213,19 @@ export function AuthForm({ mode }: AuthFormProps) {
                   placeholder="At least 8 characters"
                 />
               </div>
+              {mode === "signup" && (
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={twoFactorEnabled}
+                    onChange={(e) => setTwoFactorEnabled(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-ni-bg text-cyan-500 focus:ring-cyan-500/30"
+                  />
+                  <span className="text-left text-sm text-ni-muted">
+                    Enable two-factor authentication via email for future sign-ins
+                  </span>
+                </label>
+              )}
               {error && (
                 <p className="text-sm text-red-400" role="alert">
                   {error}
@@ -185,14 +236,14 @@ export function AuthForm({ mode }: AuthFormProps) {
                 disabled={loading}
                 className="w-full rounded-xl border border-cyan-500/50 bg-cyan-500/15 py-3 font-medium text-cyan-300 shadow-[0_8px_32px_rgba(0,212,255,0.15)] transition hover:border-cyan-400/70 hover:bg-cyan-500/25 disabled:opacity-50"
               >
-                {loading ? "Sending code…" : mode === "signup" ? "Create account" : "Continue"}
+                {loading ? "Sending Code…" : mode === "signup" ? "Create Account" : "Continue"}
               </button>
             </form>
           ) : (
             <form onSubmit={handleVerifySubmit} className="space-y-4">
               <div>
                 <label htmlFor="code" className="mb-1 block text-sm text-ni-muted">
-                  Verification code
+                  Verification Code
                 </label>
                 <input
                   id="code"
@@ -218,7 +269,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 disabled={loading || code.length !== 6}
                 className="w-full rounded-xl border border-cyan-500/50 bg-cyan-500/15 py-3 font-medium text-cyan-300 shadow-[0_8px_32px_rgba(0,212,255,0.15)] transition hover:border-cyan-400/70 hover:bg-cyan-500/25 disabled:opacity-50"
               >
-                {loading ? "Verifying…" : "Verify & continue"}
+                {loading ? "Verifying…" : "Verify & Continue"}
               </button>
               <button
                 type="button"
@@ -239,14 +290,14 @@ export function AuthForm({ mode }: AuthFormProps) {
               <>
                 Already have an account?{" "}
                 <Link href={alternateHref} className="text-cyan-400 hover:text-cyan-300">
-                  Sign in
+                  Sign In
                 </Link>
               </>
             ) : (
               <>
                 New here?{" "}
                 <Link href={alternateHref} className="text-cyan-400 hover:text-cyan-300">
-                  Create an account
+                  Create an Account
                 </Link>
               </>
             )}

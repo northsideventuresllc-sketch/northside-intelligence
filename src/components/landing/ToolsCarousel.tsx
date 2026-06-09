@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   INTELLIGENCE_TOOLS,
   TOOL_CATEGORIES,
   type IntelligenceTool,
   type ToolCategory,
 } from "@/lib/constants";
+import { useCarousel } from "@/hooks/useCarousel";
 import { ToolCard } from "./ToolCard";
 
 function matchesQuery(tool: IntelligenceTool, query: string, category: ToolCategory | "All") {
@@ -32,33 +33,20 @@ function wrapIndex(i: number, len: number): number {
 export function ToolsCarousel() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ToolCategory | "All">("All");
-  const [index, setIndex] = useState(0);
 
   const filtered = useMemo(
     () => INTELLIGENCE_TOOLS.filter((t) => matchesQuery(t, query, category)),
     [query, category]
   );
 
-  const safeIndex = filtered.length ? wrapIndex(index, filtered.length) : 0;
+  const { safeIndex, fade, go, goTo, setIndex } = useCarousel(filtered.length);
+
   const prevIndex = filtered.length ? wrapIndex(safeIndex - 1, filtered.length) : 0;
   const nextIndex = filtered.length ? wrapIndex(safeIndex + 1, filtered.length) : 0;
 
   const current = filtered[safeIndex];
   const prev = filtered[prevIndex];
   const next = filtered[nextIndex];
-
-  function go(delta: number) {
-    if (!filtered.length) return;
-    setIndex((i) => wrapIndex(i + delta, filtered.length));
-  }
-
-  useEffect(() => {
-    if (filtered.length <= 1) return;
-    const timer = window.setInterval(() => {
-      setIndex((i) => wrapIndex(i + 1, filtered.length));
-    }, 6000);
-    return () => window.clearInterval(timer);
-  }, [filtered.length]);
 
   return (
     <section id="tools" className="relative border-t border-white/5 px-6 py-20">
@@ -118,7 +106,7 @@ export function ToolsCarousel() {
         ) : (
           <>
             <div
-              className="relative mx-auto flex min-h-[340px] max-w-4xl items-center justify-center px-2 sm:gap-6 sm:px-0"
+              className="relative mx-auto flex min-h-[360px] max-w-4xl items-center justify-center px-2 sm:gap-6 sm:px-0"
               style={{ perspective: "1400px" }}
             >
               {filtered.length > 1 && prev && (
@@ -138,7 +126,9 @@ export function ToolsCarousel() {
               )}
 
               <div
-                className="relative z-20 w-full max-w-[280px] flex-shrink-0 transition-transform duration-500"
+                className={`relative z-20 w-full max-w-[300px] flex-shrink-0 transition-all duration-300 ease-in-out ${
+                  fade === "in" ? "opacity-100 scale-100" : "opacity-0 scale-[0.97]"
+                }`}
                 style={{ transformStyle: "preserve-3d" }}
               >
                 {current && <ToolCard tool={current} variant="center" />}
@@ -180,7 +170,7 @@ export function ToolsCarousel() {
                     <button
                       key={t.name}
                       type="button"
-                      onClick={() => setIndex(i)}
+                      onClick={() => goTo(i)}
                       aria-label={`Go to ${t.name}`}
                       className={`h-1.5 rounded-full transition-all ${
                         i === safeIndex

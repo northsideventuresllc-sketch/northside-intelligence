@@ -212,7 +212,7 @@ export default function DashboardClient({
                       style={{ animationDelay: `${i * 0.1}s` }}
                     />
                   ))}
-                  Crafting reply…
+                  Crafting Reply…
                 </>
               ) : (
                 "Generate Reply"
