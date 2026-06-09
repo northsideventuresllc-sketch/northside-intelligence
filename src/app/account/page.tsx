@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Image from "next/image";
+import { getUserBillingState } from "@/lib/billing/entitlements";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { Nav } from "@/components/landing/Nav";
 import { Footer } from "@/components/landing/Footer";
@@ -27,11 +28,7 @@ export default async function AccountPage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  const { data: replyflowProfile } = await supabase
-    .from("replyflow_profiles")
-    .select("plan, stripe_customer_id")
-    .eq("id", user.id)
-    .maybeSingle();
+  const billingState = await getUserBillingState(user.id);
 
   const displayName =
     profile?.full_name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Member";
@@ -62,17 +59,19 @@ export default async function AccountPage() {
               twoFactorEnabled: profile?.two_factor_enabled ?? true,
             }}
             billing={{
-              replyflowPlan: replyflowProfile?.plan ?? "free",
-              hasStripeCustomer: !!replyflowProfile?.stripe_customer_id,
+              niTier: billingState.niTier,
+              billingInterval: billingState.billingInterval,
+              hasStripeCustomer: !!billingState.stripeCustomerId,
+              toolkitCount: billingState.toolkit.length,
             }}
           />
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a
-              href="/#tools"
+              href="/toolkit"
               className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
             >
-              Explore Tools
+              Open Toolkit
             </a>
             <SignOutButton />
           </div>

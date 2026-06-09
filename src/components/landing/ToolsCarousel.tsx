@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   INTELLIGENCE_TOOLS,
   TOOL_CATEGORIES,
@@ -33,6 +33,22 @@ function wrapIndex(i: number, len: number): number {
 export function ToolsCarousel() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ToolCategory | "All">("All");
+  const [ownedToolSlugs, setOwnedToolSlugs] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/billing/entitlements")
+      .then((res) => res.json())
+      .then((data: { ownedToolSlugs?: string[] }) => {
+        if (!cancelled) setOwnedToolSlugs(data.ownedToolSlugs ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setOwnedToolSlugs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = useMemo(
     () => INTELLIGENCE_TOOLS.filter((t) => matchesQuery(t, query, category)),
@@ -120,7 +136,11 @@ export function ToolsCarousel() {
                     className="pointer-events-none scale-[0.82] blur-[4px] transition-all duration-500 sm:scale-90 sm:blur-[3px] group-hover:blur-[2px]"
                     style={{ transform: "rotateY(18deg) translateZ(-40px)" }}
                   >
-                    <ToolCard tool={prev} variant="side" />
+                    <ToolCard
+                      tool={prev}
+                      variant="side"
+                      purchased={ownedToolSlugs.includes(prev.slug)}
+                    />
                   </div>
                 </button>
               )}
@@ -131,7 +151,13 @@ export function ToolsCarousel() {
                 }`}
                 style={{ transformStyle: "preserve-3d" }}
               >
-                {current && <ToolCard tool={current} variant="center" />}
+                {current && (
+                  <ToolCard
+                    tool={current}
+                    variant="center"
+                    purchased={ownedToolSlugs.includes(current.slug)}
+                  />
+                )}
               </div>
 
               {filtered.length > 1 && next && (
@@ -145,7 +171,11 @@ export function ToolsCarousel() {
                     className="pointer-events-none scale-[0.82] blur-[4px] transition-all duration-500 sm:scale-90 sm:blur-[3px] group-hover:blur-[2px]"
                     style={{ transform: "rotateY(-18deg) translateZ(-40px)" }}
                   >
-                    <ToolCard tool={next} variant="side" />
+                    <ToolCard
+                      tool={next}
+                      variant="side"
+                      purchased={ownedToolSlugs.includes(next.slug)}
+                    />
                   </div>
                 </button>
               )}

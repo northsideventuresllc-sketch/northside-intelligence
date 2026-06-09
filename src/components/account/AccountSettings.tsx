@@ -10,8 +10,10 @@ interface AccountSettingsProps {
     twoFactorEnabled: boolean;
   };
   billing: {
-    replyflowPlan: string;
+    niTier: string;
+    billingInterval: string | null;
     hasStripeCustomer: boolean;
+    toolkitCount: number;
   };
 }
 
@@ -243,14 +245,26 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
 
       <section className="glass-panel p-6">
         <h2 className="mb-4 text-lg font-semibold text-white">Billing</h2>
-        <p className="mb-1 text-sm text-ni-muted">Current ReplyFlow plan</p>
-        <p className="mb-4 text-xl font-semibold capitalize text-white">{billing.replyflowPlan}</p>
+        <p className="mb-1 text-sm text-ni-muted">Current NI plan</p>
+        <p className="mb-1 text-xl font-semibold capitalize text-white">{billing.niTier}</p>
+        {billing.billingInterval && (
+          <p className="mb-2 text-sm capitalize text-ni-muted">{billing.billingInterval} billing</p>
+        )}
+        <p className="mb-4 text-sm text-ni-muted">
+          {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Toolkit
+        </p>
         <div className="flex flex-wrap gap-3">
           <a
-            href="/replyflow#pricing"
+            href="/#pricing"
             className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
           >
-            View Plans
+            View NI Plans
+          </a>
+          <a
+            href="/toolkit"
+            className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10"
+          >
+            Open Toolkit
           </a>
           {billing.hasStripeCustomer && (
             <button
