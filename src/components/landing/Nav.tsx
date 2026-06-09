@@ -66,12 +66,20 @@ export function Nav() {
             Pricing
           </a>
           {isLoggedIn ? (
-            <Link
-              href="/account"
-              className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
-            >
-              Account
-            </Link>
+            <>
+              <Link
+                href="/toolkit"
+                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+              >
+                Toolkit
+              </Link>
+              <Link
+                href="/account"
+                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
+              >
+                Account
+              </Link>
+            </>
           ) : (
             <>
               <Link

@@ -324,6 +324,11 @@ Deno.serve(async (req) => {
         },
         { onConflict: "id", ignoreDuplicates: true }
       );
+
+      await admin.from("ni_subscriptions").upsert(
+        { id: created.user.id, tier: "free", updated_at: now },
+        { onConflict: "id", ignoreDuplicates: true }
+      );
     }
 
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");

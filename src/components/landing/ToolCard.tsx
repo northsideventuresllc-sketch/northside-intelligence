@@ -7,6 +7,7 @@ import { ToolLogo3D } from "./ToolLogo3D";
 interface ToolCardProps {
   tool: IntelligenceTool;
   variant?: "center" | "side";
+  purchased?: boolean;
 }
 
 function CardShell({
@@ -38,18 +39,25 @@ function CardShell({
   );
 }
 
-export function ToolCard({ tool, variant = "center" }: ToolCardProps) {
+export function ToolCard({ tool, variant = "center", purchased = false }: ToolCardProps) {
   const isCenter = variant === "center";
 
   const inner = (
     <>
       <div className="mb-3 flex w-full shrink-0 flex-col items-center gap-2">
-        <ToolLogo3D
-          logo={tool.logo}
-          name={tool.name}
-          brandColor={tool.brandColor}
-          size={isCenter ? "lg" : "md"}
-        />
+        <div className="relative">
+          <ToolLogo3D
+            logo={tool.logo}
+            name={tool.name}
+            brandColor={tool.brandColor}
+            size={isCenter ? "lg" : "md"}
+          />
+          {purchased && (
+            <span className="absolute -right-1 -top-1 rounded-md border border-emerald-400/50 bg-emerald-500/25 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-emerald-200 shadow-[0_0_12px_rgba(52,211,153,0.35)]">
+              PURCHASED
+            </span>
+          )}
+        </div>
         <h3
           className={`font-semibold leading-tight text-white ${isCenter ? "text-lg sm:text-xl" : "text-base"}`}
           style={{ textShadow: isCenter ? `0 0 20px ${tool.brandColor}66` : undefined }}
@@ -67,12 +75,13 @@ export function ToolCard({ tool, variant = "center" }: ToolCardProps) {
     </>
   );
 
-  if (isCenter && tool.url) {
+  if (isCenter) {
+    const href = tool.url ?? `/tools/${tool.slug}`;
+    const external = !!tool.url;
     return (
       <a
-        href={tool.url}
-        target="_blank"
-        rel="noopener noreferrer"
+        href={href}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
         className="block h-full transition hover:-translate-y-1"
         aria-label={`Open ${tool.name}`}
       >

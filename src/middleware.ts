@@ -96,8 +96,11 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
   const needsSessionRefresh =
     pathname.startsWith("/account") ||
+    pathname.startsWith("/toolkit") ||
+    pathname.startsWith("/tools") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/billing") ||
     pathname.startsWith("/replyflow") ||
     isReplyFlowHost(host);
 
@@ -112,6 +115,9 @@ export const config = {
   matcher: [
     "/ops/:path*",
     "/account/:path*",
+    "/toolkit/:path*",
+    "/tools/:path*",
+    "/api/billing/:path*",
     "/auth/:path*",
     "/api/auth/:path*",
     "/replyflow/dashboard/:path*",
