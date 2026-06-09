@@ -13,7 +13,7 @@ export async function GET() {
 
   const { data: profile } = await supabase
     .from("ni_portal_profiles")
-    .select("full_name, email")
+    .select("full_name, email, username, two_factor_enabled")
     .eq("id", user.id)
     .maybeSingle();
 
