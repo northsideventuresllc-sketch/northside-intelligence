@@ -1,20 +1,20 @@
 "use client";
 
-import type { IntelligenceTool } from "@/lib/constants";
+import Image from "next/image";
+import type { EcosystemProject } from "@/lib/constants";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { ToolLogo3D } from "./ToolLogo3D";
 
-interface ToolCardProps {
-  tool: IntelligenceTool;
+interface EcosystemCardProps {
+  project: EcosystemProject;
   variant?: "center" | "side";
 }
 
 function CardShell({
-  tool,
+  project,
   isCenter,
   children,
 }: {
-  tool: IntelligenceTool;
+  project: EcosystemProject;
   isCenter: boolean;
   children: React.ReactNode;
 }) {
@@ -22,15 +22,14 @@ function CardShell({
     <article
       className={`relative flex h-full min-h-[300px] w-full max-w-[300px] flex-col items-center overflow-hidden rounded-2xl border p-5 text-center backdrop-blur-md transition-all duration-500 sm:min-h-[320px] sm:p-6 ${
         isCenter
-          ? "border-opacity-50 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)]"
+          ? "border-cyan-500/30 shadow-[0_24px_70px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.12)]"
           : "border-white/10 bg-ni-navy/30 opacity-60"
       }`}
       style={{
-        borderColor: isCenter ? `${tool.brandColor}66` : undefined,
         background: isCenter
-          ? `linear-gradient(145deg, ${tool.brandColor}14 0%, rgba(10,22,40,0.85) 45%, rgba(7,8,12,0.95) 100%)`
+          ? "linear-gradient(145deg, rgba(0,212,255,0.08) 0%, rgba(10,22,40,0.85) 45%, rgba(7,8,12,0.95) 100%)"
           : undefined,
-        boxShadow: isCenter ? `0 0 60px ${tool.brandColor}22` : undefined,
+        boxShadow: isCenter ? "0 0 60px rgba(0,212,255,0.12)" : undefined,
       }}
     >
       {children}
@@ -38,45 +37,47 @@ function CardShell({
   );
 }
 
-export function ToolCard({ tool, variant = "center" }: ToolCardProps) {
+export function EcosystemCard({ project, variant = "center" }: EcosystemCardProps) {
   const isCenter = variant === "center";
 
   const inner = (
     <>
       <div className="mb-3 flex w-full shrink-0 flex-col items-center gap-2">
-        <ToolLogo3D
-          logo={tool.logo}
-          name={tool.name}
-          brandColor={tool.brandColor}
-          size={isCenter ? "lg" : "md"}
+        <Image
+          src={project.logo}
+          alt={`${project.name} logo`}
+          width={isCenter ? 80 : 64}
+          height={isCenter ? 80 : 64}
+          className={`object-contain drop-shadow-[0_0_20px_rgba(0,212,255,0.3)] ${
+            isCenter ? "h-20 w-20" : "h-16 w-16"
+          }`}
         />
         <h3
           className={`font-semibold leading-tight text-white ${isCenter ? "text-lg sm:text-xl" : "text-base"}`}
-          style={{ textShadow: isCenter ? `0 0 20px ${tool.brandColor}66` : undefined }}
         >
-          {tool.name}
+          {project.name}
         </h3>
-        {isCenter && <StatusBadge status={tool.status} />}
+        {isCenter && <StatusBadge status={project.status} />}
       </div>
 
       {isCenter && (
         <p className="line-clamp-4 flex-1 px-1 text-sm leading-relaxed text-ni-muted">
-          {tool.description}
+          {project.tagline}
         </p>
       )}
     </>
   );
 
-  if (isCenter && tool.url) {
+  if (isCenter && project.url) {
     return (
       <a
-        href={tool.url}
+        href={project.url}
         target="_blank"
         rel="noopener noreferrer"
         className="block h-full transition hover:-translate-y-1"
-        aria-label={`Open ${tool.name}`}
+        aria-label={`Visit ${project.name}`}
       >
-        <CardShell tool={tool} isCenter={isCenter}>
+        <CardShell project={project} isCenter={isCenter}>
           {inner}
         </CardShell>
       </a>
@@ -84,7 +85,7 @@ export function ToolCard({ tool, variant = "center" }: ToolCardProps) {
   }
 
   return (
-    <CardShell tool={tool} isCenter={isCenter}>
+    <CardShell project={project} isCenter={isCenter}>
       {inner}
     </CardShell>
   );

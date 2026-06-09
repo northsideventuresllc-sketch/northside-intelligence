@@ -22,6 +22,8 @@ export async function GET() {
       id: user.id,
       email: user.email,
       fullName: profile?.full_name ?? user.user_metadata?.full_name ?? null,
+      username: profile?.username ?? null,
+      twoFactorEnabled: profile?.two_factor_enabled ?? true,
     },
   });
 }

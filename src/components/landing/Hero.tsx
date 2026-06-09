@@ -4,7 +4,11 @@ import { AnimatedBackground } from "./AnimatedBackground";
 import { HeroLogo3D } from "./HeroLogo3D";
 import { Scene3D } from "./Scene3D";
 
-export function Hero() {
+interface HeroProps {
+  isLoggedIn?: boolean;
+}
+
+export function Hero({ isLoggedIn = false }: HeroProps) {
   return (
     <section className="scene-root relative flex min-h-[92vh] flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-12">
       <AnimatedBackground />
@@ -33,12 +37,14 @@ export function Hero() {
           >
             Explore Tools
           </a>
-          <Link
-            href="/auth/signup"
-            className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition hover:border-cyan-400/30 hover:bg-white/10 hover:-translate-y-0.5"
-          >
-            Create Account
-          </Link>
+          {!isLoggedIn && (
+            <Link
+              href="/auth/signup"
+              className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition hover:border-cyan-400/30 hover:bg-white/10 hover:-translate-y-0.5"
+            >
+              Create Account
+            </Link>
+          )}
         </div>
       </Scene3D>
 

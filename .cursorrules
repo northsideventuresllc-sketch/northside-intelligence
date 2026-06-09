@@ -1,0 +1,17 @@
+# Northside Intelligence — Cursor Rules
+
+## UI capitalization
+
+Apply Title Case to all button labels, CTAs, nav actions, and short UI chrome (badges, tabs, pill filters) unless the control is intentionally compact (then ALL CAPS is acceptable).
+
+Examples:
+- Get Started
+- Sign In / Sign Up / Sign Out
+- Create Account
+- Open Tool
+- Explore Tools
+- Verify & Continue
+
+Use normal sentence capitalization only for paragraph-style body copy, descriptions, and long-form content — not for buttons, headings, or bold title text unless explicitly requested otherwise.
+
+Do not use arrow suffixes on button text (e.g. prefer "Open Dashboard" over "Open dashboard →").

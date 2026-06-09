@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
 
     const { data: pending, error: pendingError } = await admin
       .from("ni_auth_pending")
-      .select("id, email, password, flow, full_name, return_to, expires_at")
+      .select("id, email, password, flow, full_name, return_to, metadata, expires_at")
       .eq("id", pendingId)
       .maybeSingle();
 
@@ -298,10 +298,17 @@ Deno.serve(async (req) => {
       }
 
       const now = new Date().toISOString();
+      const signupMeta = (pending.metadata as Record<string, unknown>) ?? {};
+      const username =
+        typeof signupMeta.username === "string" ? signupMeta.username : null;
+      const twoFactorEnabled = signupMeta.twoFactorEnabled !== false;
+
       await admin.from("ni_portal_profiles").upsert({
         id: created.user.id,
         email: pending.email,
         full_name: pending.full_name,
+        username,
+        two_factor_enabled: twoFactorEnabled,
         updated_at: now,
       });
 

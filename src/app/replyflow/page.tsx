@@ -55,13 +55,13 @@ export default function ReplyFlowHome() {
               href={signupUrl}
               className="rounded-2xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet px-8 py-3.5 text-lg font-semibold text-white shadow-rf-glow transition hover:scale-[1.02] hover:opacity-95"
             >
-              Start free — 10 replies/mo
+              Start Free — 10 Replies/Mo
             </a>
             <Link
               href={replyflowPath("/dashboard")}
               className="rounded-2xl border border-white/15 bg-white/5 px-8 py-3.5 text-lg font-semibold text-white/90 transition hover:border-rf-rose/40 hover:bg-white/10"
             >
-              Open dashboard →
+              Open Dashboard
             </Link>
           </div>
 
@@ -122,7 +122,7 @@ export default function ReplyFlowHome() {
                     href={signupUrl}
                     className="mt-6 block rounded-xl border border-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/10"
                   >
-                    Get started
+                    Get Started
                   </a>
                 </div>
               ))}

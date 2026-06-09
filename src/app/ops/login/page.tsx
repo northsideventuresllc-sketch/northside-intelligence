@@ -66,7 +66,7 @@ function LoginForm() {
         disabled={loading}
         className="w-full rounded-lg bg-cyan-500/20 py-3 font-medium text-cyan-300 ring-1 ring-cyan-500/40 transition hover:bg-cyan-500/30 disabled:opacity-50"
       >
-        {loading ? "Signing in…" : "Sign in"}
+        {loading ? "Signing In…" : "Sign In"}
       </button>
     </form>
   );
