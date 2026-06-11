@@ -9,6 +9,7 @@ import type { NiTier } from "@/lib/billing/ni-tiers";
 import {
   billingStripe,
   getNiTierFromPriceId,
+  mapNiPlanPricing,
   resolveToolCheckoutFromPriceId,
 } from "@/lib/billing/stripe";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
@@ -18,6 +19,12 @@ async function loadAllToolPricing() {
   const supabase = createServiceClient();
   const { data } = await supabase.from("ni_tool_pricing").select("*");
   return (data ?? []).map(mapDbPricing);
+}
+
+async function loadNiPlanPricing() {
+  const supabase = createServiceClient();
+  const { data } = await supabase.from("ni_plan_pricing").select("*");
+  return (data ?? []).map(mapNiPlanPricing);
 }
 
 function periodEndIso(sub: Stripe.Subscription): string {
@@ -42,6 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   const allPricing = await loadAllToolPricing();
+  const niPlanPricing = await loadNiPlanPricing();
 
   try {
     switch (event.type) {
@@ -64,7 +72,7 @@ export async function POST(req: NextRequest) {
         if (checkoutType === "ni_subscription" && session.subscription) {
           const sub = await billingStripe.subscriptions.retrieve(session.subscription as string);
           const priceId = sub.items.data[0]?.price.id;
-          const mapped = getNiTierFromPriceId(priceId);
+          const mapped = getNiTierFromPriceId(priceId, niPlanPricing);
           if (mapped) {
             await setNiSubscription({
               userId,
@@ -95,7 +103,7 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const userId = sub.metadata?.userId;
         const priceId = sub.items.data[0]?.price.id;
-        const niMapped = getNiTierFromPriceId(priceId);
+        const niMapped = getNiTierFromPriceId(priceId, niPlanPricing);
         const toolMapped = resolveToolCheckoutFromPriceId(priceId, allPricing);
 
         if (sub.status === "active") {
@@ -137,7 +145,7 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const userId = sub.metadata?.userId;
         const priceId = sub.items.data[0]?.price.id;
-        const niMapped = getNiTierFromPriceId(priceId);
+        const niMapped = getNiTierFromPriceId(priceId, niPlanPricing);
         const toolMapped = resolveToolCheckoutFromPriceId(priceId, allPricing);
 
         if (niMapped && userId) {
