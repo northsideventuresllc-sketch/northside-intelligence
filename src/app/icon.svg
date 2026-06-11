@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <rect width="32" height="32" fill="#07080c"/>
+  <defs>
+    <radialGradient id="faviconCoreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00D4FF" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#00D4FF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00D4FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="faviconGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="0.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g transform="translate(16 15.5)">
+    <circle cx="0" cy="0" r="13.5" stroke="#00D4FF" stroke-width="0.35" stroke-opacity="0.22"/>
+    <circle cx="0" cy="0" r="10.5" stroke="#00D4FF" stroke-width="0.35" stroke-opacity="0.28"/>
+    <polygon
+      points="0,-11.5 9.96,-5.75 9.96,5.75 0,11.5 -9.96,5.75 -9.96,-5.75"
+      stroke="#00D4FF"
+      stroke-width="0.65"
+      stroke-opacity="0.75"
+      fill="none"
+      filter="url(#faviconGlow)"
+    />
+    <circle cx="0" cy="-11.5" r="1.1" fill="#00D4FF" filter="url(#faviconGlow)"/>
+    <circle cx="9.96" cy="-5.75" r="1.1" fill="#00D4FF" filter="url(#faviconGlow)"/>
+    <circle cx="9.96" cy="5.75" r="1.1" fill="#00D4FF" filter="url(#faviconGlow)"/>
+    <circle cx="0" cy="11.5" r="1.1" fill="#00D4FF" filter="url(#faviconGlow)"/>
+    <circle cx="-9.96" cy="5.75" r="1.1" fill="#00D4FF" filter="url(#faviconGlow)"/>
+    <circle cx="-9.96" cy="-5.75" r="1.1" fill="#00D4FF" filter="url(#faviconGlow)"/>
+    <g stroke="#9B7FD4" stroke-width="0.45" stroke-opacity="0.8">
+      <line x1="0" y1="-7.5" x2="0" y2="7.5"/>
+      <line x1="-6.5" y1="-3.75" x2="6.5" y2="3.75"/>
+      <line x1="6.5" y1="-3.75" x2="-6.5" y2="3.75"/>
+      <line x1="-4.5" y1="0" x2="4.5" y2="0"/>
+    </g>
+    <circle cx="0" cy="0" r="4.2" fill="url(#faviconCoreGlow)" filter="url(#faviconGlow)"/>
+    <circle cx="0" cy="0" r="1.5" fill="#00D4FF"/>
+  </g>
+</svg>
