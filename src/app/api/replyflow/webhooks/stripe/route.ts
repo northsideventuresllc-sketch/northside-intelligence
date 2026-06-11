@@ -5,7 +5,7 @@ import type { UserPlan } from "@/lib/replyflow/tier";
 import { createServiceClient } from "@/lib/supabase/server";
 
 function webhookSecret(): string | undefined {
-  return process.env.STRIPE_WEBHOOK_SECRET;
+  return process.env.STRIPE_REPLYFLOW_WEBHOOK_SECRET ?? process.env.STRIPE_WEBHOOK_SECRET;
 }
 
 async function setProfilePlan(

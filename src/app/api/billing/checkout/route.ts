@@ -10,6 +10,7 @@ import {
   billingStripe,
   getNiSubscriptionPriceId,
   getToolPriceIdFromDb,
+  mapNiPlanPricing,
   type CheckoutKind,
 } from "@/lib/billing/stripe";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
@@ -57,6 +58,9 @@ export async function POST(req: NextRequest) {
 
   const base = appUrl();
   const state = await getUserBillingState(user.id);
+  const service = createServiceClient();
+  const { data: niPlanRows } = await service.from("ni_plan_pricing").select("*");
+  const niPlanPricing = (niPlanRows ?? []).map(mapNiPlanPricing);
 
   let priceId: string | null = null;
   let mode: "subscription" | "payment" = "subscription";
@@ -65,13 +69,12 @@ export async function POST(req: NextRequest) {
   const metadata: Record<string, string> = { userId: user.id, checkoutType: checkout.type };
 
   if (checkout.type === "ni_subscription") {
-    priceId = getNiSubscriptionPriceId(checkout.tier, checkout.interval);
+    priceId = getNiSubscriptionPriceId(checkout.tier, checkout.interval, niPlanPricing);
     metadata.niTier = checkout.tier;
     metadata.billingInterval = checkout.interval;
     successUrl = `${base}/toolkit?upgraded=${checkout.tier}`;
     cancelUrl = `${base}/#pricing`;
   } else {
-    const service = createServiceClient();
     const { data: row } = await service
       .from("ni_tool_pricing")
       .select("*")

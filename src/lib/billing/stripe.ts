@@ -46,21 +46,63 @@ const NI_SUBSCRIPTION_PRICE_ENV: Record<
   },
 };
 
-export function getNiSubscriptionPriceId(tier: NiTier, interval: BillingInterval): string | null {
+export interface NiPlanPricing {
+  tier: NiTier;
+  stripeMonthlyPriceId: string | null;
+  stripeAnnualPriceId: string | null;
+}
+
+export function mapNiPlanPricing(row: Record<string, unknown>): NiPlanPricing {
+  return {
+    tier: row.tier as NiTier,
+    stripeMonthlyPriceId: (row.stripe_monthly_price_id as string) ?? null,
+    stripeAnnualPriceId: (row.stripe_annual_price_id as string) ?? null,
+  };
+}
+
+function niPriceFromEnv(tier: NiTier, interval: BillingInterval): string | null {
   const keys = NI_SUBSCRIPTION_PRICE_ENV[tier];
   if (!keys) return null;
   return envPrice(interval === "monthly" ? keys.monthly : keys.annual) ?? null;
 }
 
-export function getNiTierFromPriceId(priceId: string | undefined): {
+export function getNiSubscriptionPriceId(
+  tier: NiTier,
+  interval: BillingInterval,
+  planPricing?: NiPlanPricing[]
+): string | null {
+  const fromDb = planPricing?.find((p) => p.tier === tier);
+  if (fromDb) {
+    const priceId =
+      interval === "monthly" ? fromDb.stripeMonthlyPriceId : fromDb.stripeAnnualPriceId;
+    if (priceId) return priceId;
+  }
+  return niPriceFromEnv(tier, interval);
+}
+
+export function getNiTierFromPriceId(
+  priceId: string | undefined,
+  planPricing?: NiPlanPricing[]
+): {
   tier: NiTier;
   interval: BillingInterval;
 } | null {
   if (!priceId) return null;
+
+  if (planPricing) {
+    for (const plan of planPricing) {
+      if (priceId === plan.stripeMonthlyPriceId) {
+        return { tier: plan.tier, interval: "monthly" };
+      }
+      if (priceId === plan.stripeAnnualPriceId) {
+        return { tier: plan.tier, interval: "annual" };
+      }
+    }
+  }
+
   for (const tier of ["standard", "premium", "ultimate"] as NiTier[]) {
-    const keys = NI_SUBSCRIPTION_PRICE_ENV[tier];
-    const monthly = envPrice(keys.monthly);
-    const annual = envPrice(keys.annual);
+    const monthly = niPriceFromEnv(tier, "monthly");
+    const annual = niPriceFromEnv(tier, "annual");
     if (priceId === monthly) return { tier, interval: "monthly" };
     if (priceId === annual) return { tier, interval: "annual" };
   }
