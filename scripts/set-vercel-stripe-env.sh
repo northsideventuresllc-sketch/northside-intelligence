@@ -38,7 +38,7 @@ if [[ -n "${STRIPE_REPLYFLOW_WEBHOOK_SECRET:-}" ]]; then
   upsert_env STRIPE_REPLYFLOW_WEBHOOK_SECRET "$STRIPE_REPLYFLOW_WEBHOOK_SECRET"
 fi
 
-for tier in STANDARD PREMIUM ULTIMATE; do
+for tier in CORE PRO POWER; do
   for interval in MONTHLY ANNUAL; do
     var="STRIPE_NI_${tier}_${interval}_PRICE_ID"
     val="${!var:-}"

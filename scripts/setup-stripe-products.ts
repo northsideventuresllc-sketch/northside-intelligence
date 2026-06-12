@@ -11,17 +11,17 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
 const TOOLS = [
-  { slug: "replyflow", name: "ReplyFlow", monthly: 19, annual: 190, lifetime: 399 },
-  { slug: "grantbot", name: "GrantBot", monthly: 39, annual: 390, lifetime: 799 },
-  { slug: "signaldesk", name: "SignalDesk", monthly: 24, annual: 240, lifetime: 499 },
-  { slug: "gapscan", name: "GapScan", monthly: 18, annual: 180, lifetime: 379 },
-  { slug: "bridgeai", name: "BridgeAI", monthly: 29, annual: 290, lifetime: 599 },
+  { slug: "replyflow", name: "ReplyFlow", monthly: 21.85, annual: 218.5, lifetime: 458.85 },
+  { slug: "grantbot", name: "GrantBot", monthly: 39, annual: 390, lifetime: 819 },
+  { slug: "signaldesk", name: "SignalDesk", monthly: 24, annual: 240, lifetime: 504 },
+  { slug: "gapscan", name: "GapScan", monthly: 18, annual: 180, lifetime: 378 },
+  { slug: "bridgeai", name: "BridgeAI", monthly: 33.35, annual: 333.5, lifetime: 700.35 },
 ] as const;
 
 const NI_PLANS = [
-  { tier: "standard", name: "NI Standard", monthly: 1200, annual: 12000 },
-  { tier: "premium", name: "NI Premium", monthly: 2900, annual: 26400 },
-  { tier: "ultimate", name: "NI Ultimate", monthly: 5900, annual: 54000 },
+  { tier: "core", name: "NI Core", monthly: 1999, annual: 15900 },
+  { tier: "pro", name: "NI Pro", monthly: 3900, annual: 32400 },
+  { tier: "power", name: "NI Power", monthly: 5900, annual: 55900 },
 ] as const;
 
 async function main() {
@@ -113,6 +113,31 @@ async function main() {
 
     if (error) console.warn(`Supabase update failed for ${tool.slug}:`, error.message);
     else console.log(`${tool.name}: synced price IDs to ni_tool_pricing`);
+  }
+
+  console.log("\n=== Sync NI plan pricing to Supabase ===\n");
+
+  for (const line of envLines) {
+    const monthly = line.match(/STRIPE_NI_(\w+)_MONTHLY_PRICE_ID=(.+)/);
+    if (monthly) {
+      const tier = monthly[1].toLowerCase();
+      const monthlyId = monthly[2];
+      const annualLine = envLines.find((l) => l.includes(`STRIPE_NI_${monthly[1]}_ANNUAL`));
+      const annualId = annualLine?.split("=")[1] ?? "";
+      const { error } = await supabase
+        .from("ni_plan_pricing")
+        .upsert(
+          {
+            tier,
+            stripe_monthly_price_id: monthlyId,
+            stripe_annual_price_id: annualId,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "tier" }
+        );
+      if (error) console.warn(`ni_plan_pricing upsert failed for ${tier}:`, error.message);
+      else console.log(`ni_plan_pricing: synced ${tier}`);
+    }
   }
 
   console.log("\n=== Add to Vercel / .env.local ===\n");
