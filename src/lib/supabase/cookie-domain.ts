@@ -9,3 +9,17 @@ export function supabaseCookieOptions(
   if (!domain) return options ?? {};
   return { ...options, domain };
 }
+
+/** OTP pending session cookie — same domain as Supabase auth cookies in production. */
+export function pendingAuthCookieOptions(
+  overrides?: Record<string, unknown>
+): Record<string, unknown> {
+  return supabaseCookieOptions({
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 10,
+    ...overrides,
+  });
+}

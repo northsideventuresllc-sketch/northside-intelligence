@@ -300,7 +300,9 @@ Deno.serve(async (req) => {
       const now = new Date().toISOString();
       const signupMeta = (pending.metadata as Record<string, unknown>) ?? {};
       const username =
-        typeof signupMeta.username === "string" ? signupMeta.username : null;
+        typeof signupMeta.username === "string"
+          ? signupMeta.username.trim().toLowerCase()
+          : null;
       const twoFactorEnabled = signupMeta.twoFactorEnabled !== false;
 
       await admin.from("ni_portal_profiles").upsert({

@@ -3,12 +3,13 @@ import {
   createPendingViaEdge,
   issueOtpViaEdge,
 } from "@/lib/auth/portal-auth-edge";
+import { ensurePortalProfile } from "@/lib/auth/ensure-portal-profile";
 import { isValidUsername, normalizeUsername } from "@/lib/auth/username";
 import { sanitizeReturnTo } from "@/lib/ni-auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import { pendingAuthCookieOptions } from "@/lib/supabase/cookie-domain";
 
 const PENDING_COOKIE = "ni_auth_pending";
-const PENDING_MAX_AGE = 60 * 10;
 
 interface SignupBody {
   email?: string;
@@ -56,12 +57,27 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await admin
       .from("ni_portal_profiles")
       .select("id")
-      .eq("username", username)
+      .ilike("username", username)
       .maybeSingle();
 
     if (existing) {
       return NextResponse.json({ error: "Username is already taken" }, { status: 409 });
     }
+  }
+
+  const admin = createServiceClient();
+  const { data: emailExists, error: emailCheckError } = await admin.rpc(
+    "ni_auth_email_exists",
+    { check_email: email }
+  );
+
+  if (emailCheckError) {
+    console.error("Email existence check failed:", emailCheckError.message);
+  } else if (emailExists) {
+    return NextResponse.json(
+      { error: "An account with this email already exists. Sign in instead." },
+      { status: 409 }
+    );
   }
 
   const returnTo = sanitizeReturnTo(body.returnTo);
@@ -77,14 +93,8 @@ export async function POST(request: NextRequest) {
       metadata: { username, twoFactorEnabled },
     });
 
-    const response = NextResponse.json({ step: "verify", email });
-    response.cookies.set(PENDING_COOKIE, pendingId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: PENDING_MAX_AGE,
-    });
+    const response = NextResponse.json({ step: "verify", email, pendingId });
+    response.cookies.set(PENDING_COOKIE, pendingId, pendingAuthCookieOptions());
 
     return response;
   } catch (err) {

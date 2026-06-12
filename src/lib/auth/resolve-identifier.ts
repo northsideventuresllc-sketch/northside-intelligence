@@ -1,4 +1,4 @@
-import { isValidUsername } from "@/lib/auth/username";
+import { isValidUsername, normalizeUsername } from "@/lib/auth/username";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export function isEmail(value: string): boolean {
@@ -20,8 +20,30 @@ export async function resolveIdentifierToEmail(identifier: string): Promise<stri
   const { data } = await admin
     .from("ni_portal_profiles")
     .select("email")
-    .eq("username", username)
+    .ilike("username", username)
     .maybeSingle();
 
-  return data?.email?.toLowerCase() ?? null;
+  if (data?.email) {
+    return data.email.toLowerCase();
+  }
+
+  // Legacy accounts may only have username stored in auth.users metadata.
+  const { data: authUsers, error } = await admin.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+
+  if (error || !authUsers?.users?.length) {
+    return null;
+  }
+
+  const match = authUsers.users.find((user) => {
+    const metaUsername = user.user_metadata?.username;
+    return (
+      typeof metaUsername === "string" &&
+      normalizeUsername(metaUsername) === username
+    );
+  });
+
+  return match?.email?.toLowerCase() ?? null;
 }
