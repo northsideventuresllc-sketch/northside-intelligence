@@ -34,11 +34,11 @@ export function computeToolPricingFromProfile(
   if (!profile) return null;
 
   const demandMultiplier = DEMAND_FACTORS[profile.demandSignal] ?? 1.0;
-  const monthlyPriceUsd = Math.round(profile.baseMonthlyUsd * demandMultiplier * 100) / 100;
-  const annualPriceUsd =
-    Math.round(monthlyPriceUsd * profile.annualMonthsFactor * 100) / 100;
-  const lifetimePriceUsd =
-    Math.round(monthlyPriceUsd * profile.lifetimeMonthsFactor * demandMultiplier * 100) / 100;
+  const monthlyPriceUsd = Math.round(profile.baseMonthlyUsd * demandMultiplier);
+  const annualPriceUsd = Math.round(monthlyPriceUsd * profile.annualMonthsFactor);
+  const lifetimePriceUsd = Math.round(
+    monthlyPriceUsd * profile.lifetimeMonthsFactor * demandMultiplier
+  );
 
   return {
     baseMonthlyUsd: profile.baseMonthlyUsd,
@@ -73,9 +73,9 @@ export function computeToolPricing(
 
   const signal = (demandSignal ?? "medium").toLowerCase();
   const demandMultiplier = DEMAND_FACTORS[signal] ?? 1.0;
-  const monthlyPriceUsd = Math.round(baseMonthlyUsd * demandMultiplier * 100) / 100;
-  const annualPriceUsd = Math.round(monthlyPriceUsd * 10 * 100) / 100;
-  const lifetimePriceUsd = Math.round(monthlyPriceUsd * 21 * demandMultiplier * 100) / 100;
+  const monthlyPriceUsd = Math.round(baseMonthlyUsd * demandMultiplier);
+  const annualPriceUsd = Math.round(monthlyPriceUsd * 10);
+  const lifetimePriceUsd = Math.round(monthlyPriceUsd * 21 * demandMultiplier);
 
   return {
     baseMonthlyUsd,

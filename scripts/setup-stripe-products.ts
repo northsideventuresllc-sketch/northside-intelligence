@@ -11,15 +11,15 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
 const TOOLS = [
-  { slug: "replyflow", name: "ReplyFlow", monthly: 21.85, annual: 218.5, lifetime: 458.85 },
+  { slug: "replyflow", name: "ReplyFlow", monthly: 22, annual: 220, lifetime: 531 },
   { slug: "grantbot", name: "GrantBot", monthly: 39, annual: 390, lifetime: 819 },
   { slug: "signaldesk", name: "SignalDesk", monthly: 24, annual: 240, lifetime: 504 },
   { slug: "gapscan", name: "GapScan", monthly: 18, annual: 180, lifetime: 378 },
-  { slug: "bridgeai", name: "BridgeAI", monthly: 33.35, annual: 333.5, lifetime: 700.35 },
+  { slug: "bridgeai", name: "BridgeAI", monthly: 33, annual: 330, lifetime: 797 },
 ] as const;
 
 const NI_PLANS = [
-  { tier: "core", name: "NI Core", monthly: 1999, annual: 15900 },
+  { tier: "core", name: "NI Core", monthly: 2000, annual: 15900 },
   { tier: "pro", name: "NI Pro", monthly: 3900, annual: 32400 },
   { tier: "power", name: "NI Power", monthly: 5900, annual: 55900 },
 ] as const;
