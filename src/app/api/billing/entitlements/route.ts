@@ -18,10 +18,14 @@ export async function GET() {
     niTier: state.niTier,
     billingInterval: state.billingInterval,
     currentPeriodEnd: state.currentPeriodEnd,
+    isMasterAccount: state.isMasterAccount,
     toolkit: state.toolkit,
     toolSlotsUsed: state.toolSlotsUsed,
     toolSlotLimit: state.toolSlotLimit,
     hasNiPaidPlan: state.hasNiPaidPlan,
-    canAddNiPlanTool: state.niTier !== "free" && (state.toolSlotLimit === null || state.toolSlotsUsed < state.toolSlotLimit),
+    canAddNiPlanTool:
+      !state.isMasterAccount &&
+      state.niTier !== "free" &&
+      (state.toolSlotLimit === null || state.toolSlotsUsed < state.toolSlotLimit),
   });
 }

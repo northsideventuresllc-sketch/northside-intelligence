@@ -1,6 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import {
+  MASTER_ACCOUNT_DESCRIPTION,
+  MASTER_ACCOUNT_LABEL,
+} from "@/lib/billing/master-account";
 
 interface AccountSettingsProps {
   initialProfile: {
@@ -14,6 +18,7 @@ interface AccountSettingsProps {
     billingInterval: string | null;
     hasStripeCustomer: boolean;
     toolkitCount: number;
+    isMasterAccount: boolean;
   };
 }
 
@@ -125,6 +130,15 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
 
   return (
     <div className="space-y-8">
+      {billing.isMasterAccount && (
+        <section className="rounded-2xl border border-amber-400/35 bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-amber-300/90">
+            {MASTER_ACCOUNT_LABEL}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-amber-100/90">{MASTER_ACCOUNT_DESCRIPTION}</p>
+        </section>
+      )}
+
       {message && (
         <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
           {message}
@@ -245,21 +259,35 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
 
       <section className="glass-panel p-6">
         <h2 className="mb-4 text-lg font-semibold text-white">Billing</h2>
-        <p className="mb-1 text-sm text-ni-muted">Current NI plan</p>
-        <p className="mb-1 text-xl font-semibold capitalize text-white">{billing.niTier}</p>
-        {billing.billingInterval && (
-          <p className="mb-2 text-sm capitalize text-ni-muted">{billing.billingInterval} billing</p>
+        {billing.isMasterAccount ? (
+          <>
+            <p className="mb-1 text-sm text-ni-muted">Current NI plan</p>
+            <p className="mb-1 text-xl font-semibold text-white">Master Account</p>
+            <p className="mb-4 text-sm text-ni-muted">
+              {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Toolkit
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mb-1 text-sm text-ni-muted">Current NI plan</p>
+            <p className="mb-1 text-xl font-semibold capitalize text-white">{billing.niTier}</p>
+            {billing.billingInterval && (
+              <p className="mb-2 text-sm capitalize text-ni-muted">{billing.billingInterval} billing</p>
+            )}
+            <p className="mb-4 text-sm text-ni-muted">
+              {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Toolkit
+            </p>
+          </>
         )}
-        <p className="mb-4 text-sm text-ni-muted">
-          {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Toolkit
-        </p>
         <div className="flex flex-wrap gap-3">
-          <a
-            href="/#pricing"
-            className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-          >
-            View NI Plans
-          </a>
+          {!billing.isMasterAccount && (
+            <a
+              href="/#pricing"
+              className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+            >
+              View NI Plans
+            </a>
+          )}
           <a
             href="/toolkit"
             className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10"
