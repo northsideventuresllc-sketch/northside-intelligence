@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import type { BillingInterval, NiTier } from "@/lib/billing/ni-tiers";
+import { normalizeNiTier } from "@/lib/billing/ni-tiers";
 
 let stripeClient: Stripe | null = null;
 
@@ -32,6 +33,19 @@ const NI_SUBSCRIPTION_PRICE_ENV: Record<
   string,
   { monthly: string; annual: string }
 > = {
+  core: {
+    monthly: "STRIPE_NI_CORE_MONTHLY_PRICE_ID",
+    annual: "STRIPE_NI_CORE_ANNUAL_PRICE_ID",
+  },
+  pro: {
+    monthly: "STRIPE_NI_PRO_MONTHLY_PRICE_ID",
+    annual: "STRIPE_NI_PRO_ANNUAL_PRICE_ID",
+  },
+  power: {
+    monthly: "STRIPE_NI_POWER_MONTHLY_PRICE_ID",
+    annual: "STRIPE_NI_POWER_ANNUAL_PRICE_ID",
+  },
+  // Legacy env keys (pre Core/Pro/Power rename)
   standard: {
     monthly: "STRIPE_NI_STANDARD_MONTHLY_PRICE_ID",
     annual: "STRIPE_NI_STANDARD_ANNUAL_PRICE_ID",
@@ -54,13 +68,13 @@ export interface NiPlanPricing {
 
 export function mapNiPlanPricing(row: Record<string, unknown>): NiPlanPricing {
   return {
-    tier: row.tier as NiTier,
+    tier: normalizeNiTier(String(row.tier)),
     stripeMonthlyPriceId: (row.stripe_monthly_price_id as string) ?? null,
     stripeAnnualPriceId: (row.stripe_annual_price_id as string) ?? null,
   };
 }
 
-function niPriceFromEnv(tier: NiTier, interval: BillingInterval): string | null {
+function niPriceFromEnv(tier: string, interval: BillingInterval): string | null {
   const keys = NI_SUBSCRIPTION_PRICE_ENV[tier];
   if (!keys) return null;
   return envPrice(interval === "monthly" ? keys.monthly : keys.annual) ?? null;
@@ -100,11 +114,12 @@ export function getNiTierFromPriceId(
     }
   }
 
-  for (const tier of ["standard", "premium", "ultimate"] as NiTier[]) {
+  for (const tier of ["core", "pro", "power", "standard", "premium", "ultimate"] as const) {
     const monthly = niPriceFromEnv(tier, "monthly");
     const annual = niPriceFromEnv(tier, "annual");
-    if (priceId === monthly) return { tier, interval: "monthly" };
-    if (priceId === annual) return { tier, interval: "annual" };
+    const normalized = normalizeNiTier(tier);
+    if (priceId === monthly) return { tier: normalized, interval: "monthly" };
+    if (priceId === annual) return { tier: normalized, interval: "annual" };
   }
   return null;
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
-import { NI_TIERS, PAID_NI_TIERS, type NiTier } from "@/lib/billing/ni-tiers";
+import { NI_TIERS, PAID_NI_TIERS, formatNiPrice, type NiTier } from "@/lib/billing/ni-tiers";
 import { buildPortalAuthUrl } from "@/lib/ni-auth";
 
 export function PricingSection() {
@@ -80,14 +80,14 @@ export function PricingSection() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {tiers.map((tier) => {
             const plan = NI_TIERS[tier];
-            const isPopular = tier === "standard";
+            const isPopular = tier === "core";
             const isCurrent = niTier === tier;
             const displayPrice =
               tier === "free"
                 ? "$0"
                 : annual
-                  ? `$${plan.annualMonthlyUsd}`
-                  : `$${plan.monthlyPriceUsd}`;
+                  ? `$${formatNiPrice(plan.annualMonthlyUsd)}`
+                  : `$${formatNiPrice(plan.monthlyPriceUsd)}`;
             const priceSuffix =
               tier === "free" ? "/mo" : annual ? "/mo billed annually" : "/mo";
 

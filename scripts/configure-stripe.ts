@@ -13,17 +13,17 @@
 import Stripe from "stripe";
 
 const TOOLS = [
-  { slug: "replyflow", name: "ReplyFlow", monthly: 19, annual: 190, lifetime: 399 },
-  { slug: "grantbot", name: "GrantBot", monthly: 39, annual: 390, lifetime: 799 },
-  { slug: "signaldesk", name: "SignalDesk", monthly: 24, annual: 240, lifetime: 499 },
-  { slug: "gapscan", name: "GapScan", monthly: 18, annual: 180, lifetime: 379 },
-  { slug: "bridgeai", name: "BridgeAI", monthly: 29, annual: 290, lifetime: 599 },
+  { slug: "replyflow", name: "ReplyFlow", monthly: 21.85, annual: 218.5, lifetime: 458.85 },
+  { slug: "grantbot", name: "GrantBot", monthly: 39, annual: 390, lifetime: 819 },
+  { slug: "signaldesk", name: "SignalDesk", monthly: 24, annual: 240, lifetime: 504 },
+  { slug: "gapscan", name: "GapScan", monthly: 18, annual: 180, lifetime: 378 },
+  { slug: "bridgeai", name: "BridgeAI", monthly: 33.35, annual: 333.5, lifetime: 700.35 },
 ] as const;
 
 const NI_PLANS = [
-  { tier: "standard", name: "NI Standard", monthly: 1200, annual: 12000 },
-  { tier: "premium", name: "NI Premium", monthly: 2900, annual: 26400 },
-  { tier: "ultimate", name: "NI Ultimate", monthly: 5900, annual: 54000 },
+  { tier: "core", name: "NI Core", monthly: 1999, annual: 15900 },
+  { tier: "pro", name: "NI Pro", monthly: 3900, annual: 32400 },
+  { tier: "power", name: "NI Power", monthly: 5900, annual: 55900 },
 ] as const;
 
 const BILLING_WEBHOOK_URL =
@@ -76,10 +76,17 @@ async function findToolProduct(
 async function findPrice(
   stripe: Stripe,
   productId: string,
-  interval: "monthly" | "annual" | "lifetime"
+  interval: "monthly" | "annual" | "lifetime",
+  expectedUnitAmount?: number
 ): Promise<Stripe.Price | null> {
   const prices = await stripe.prices.list({ product: productId, limit: 20, active: true });
-  return prices.data.find((p) => p.metadata.interval === interval) ?? null;
+  return (
+    prices.data.find(
+      (p) =>
+        p.metadata.interval === interval &&
+        (expectedUnitAmount === undefined || p.unit_amount === expectedUnitAmount)
+    ) ?? null
+  );
 }
 
 async function ensureNiPlans(stripe: Stripe): Promise<string[]> {
@@ -98,7 +105,7 @@ async function ensureNiPlans(stripe: Stripe): Promise<string[]> {
       console.log(`Found NI product: ${plan.name}`);
     }
 
-    let monthly = await findPrice(stripe, product.id, "monthly");
+    let monthly = await findPrice(stripe, product.id, "monthly", plan.monthly);
     if (!monthly) {
       monthly = await stripe.prices.create({
         product: product.id,
@@ -109,7 +116,7 @@ async function ensureNiPlans(stripe: Stripe): Promise<string[]> {
       });
     }
 
-    let annual = await findPrice(stripe, product.id, "annual");
+    let annual = await findPrice(stripe, product.id, "annual", plan.annual);
     if (!annual) {
       annual = await stripe.prices.create({
         product: product.id,
@@ -145,33 +152,37 @@ async function ensureToolPlans(stripe: Stripe): Promise<ToolPriceIds[]> {
       console.log(`Found tool product: ${tool.name}`);
     }
 
-    let monthly = await findPrice(stripe, product.id, "monthly");
+    const monthlyCents = Math.round(tool.monthly * 100);
+    const annualCents = Math.round(tool.annual * 100);
+    const lifetimeCents = Math.round(tool.lifetime * 100);
+
+    let monthly = await findPrice(stripe, product.id, "monthly", monthlyCents);
     if (!monthly) {
       monthly = await stripe.prices.create({
         product: product.id,
-        unit_amount: Math.round(tool.monthly * 100),
+        unit_amount: monthlyCents,
         currency: "usd",
         recurring: { interval: "month" },
         metadata: { tool_slug: tool.slug, interval: "monthly" },
       });
     }
 
-    let annual = await findPrice(stripe, product.id, "annual");
+    let annual = await findPrice(stripe, product.id, "annual", annualCents);
     if (!annual) {
       annual = await stripe.prices.create({
         product: product.id,
-        unit_amount: Math.round(tool.annual * 100),
+        unit_amount: annualCents,
         currency: "usd",
         recurring: { interval: "year" },
         metadata: { tool_slug: tool.slug, interval: "annual" },
       });
     }
 
-    let lifetime = await findPrice(stripe, product.id, "lifetime");
+    let lifetime = await findPrice(stripe, product.id, "lifetime", lifetimeCents);
     if (!lifetime) {
       lifetime = await stripe.prices.create({
         product: product.id,
-        unit_amount: Math.round(tool.lifetime * 100),
+        unit_amount: lifetimeCents,
         currency: "usd",
         metadata: { tool_slug: tool.slug, interval: "lifetime" },
       });

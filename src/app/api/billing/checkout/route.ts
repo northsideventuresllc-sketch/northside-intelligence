@@ -6,6 +6,7 @@ import {
   getUserBillingState,
   userOwnsTool,
 } from "@/lib/billing/entitlements";
+import { getLifetimeLaunchStatus } from "@/lib/billing/lifetime-launch";
 import {
   billingStripe,
   getNiSubscriptionPriceId,
@@ -89,6 +90,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (checkout.type === "tool_lifetime") {
+      const lifetimeStatus = await getLifetimeLaunchStatus();
+      if (!lifetimeStatus.active) {
+        return NextResponse.json({ error: lifetimeStatus.reason }, { status: 403 });
+      }
+
       priceId = getToolPriceIdFromDb(pricing, "lifetime");
       mode = "payment";
       metadata.toolSlug = checkout.toolSlug;

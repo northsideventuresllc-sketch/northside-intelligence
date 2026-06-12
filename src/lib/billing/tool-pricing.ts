@@ -1,4 +1,8 @@
 import { INTELLIGENCE_TOOLS } from "@/lib/constants";
+import {
+  getAllSector3ToolProfiles,
+  getSector3ToolProfile,
+} from "@/lib/billing/sector3-tool-pricing";
 
 export interface ToolPricing {
   toolSlug: string;
@@ -7,6 +11,8 @@ export interface ToolPricing {
   annualPriceUsd: number;
   lifetimePriceUsd: number;
   demandMultiplier: number;
+  targetAudience: string;
+  marketTier: string;
   stripeMonthlyPriceId: string | null;
   stripeAnnualPriceId: string | null;
   stripeLifetimePriceId: string | null;
@@ -18,20 +24,53 @@ const DEMAND_FACTORS: Record<string, number> = {
   low: 0.9,
 };
 
-const DEFAULT_BASE_PRICES: Record<string, number> = {
-  replyflow: 19,
-  grantbot: 39,
-  signaldesk: 24,
-  gapscan: 18,
-  bridgeai: 29,
-};
+/** Compute market-adjusted subscription pricing from a Sector 3 catalog profile. */
+export function computeToolPricingFromProfile(
+  profile: ReturnType<typeof getSector3ToolProfile>
+): Omit<
+  ToolPricing,
+  "toolSlug" | "stripeMonthlyPriceId" | "stripeAnnualPriceId" | "stripeLifetimePriceId"
+> | null {
+  if (!profile) return null;
+
+  const demandMultiplier = DEMAND_FACTORS[profile.demandSignal] ?? 1.0;
+  const monthlyPriceUsd = Math.round(profile.baseMonthlyUsd * demandMultiplier * 100) / 100;
+  const annualPriceUsd =
+    Math.round(monthlyPriceUsd * profile.annualMonthsFactor * 100) / 100;
+  const lifetimePriceUsd =
+    Math.round(monthlyPriceUsd * profile.lifetimeMonthsFactor * demandMultiplier * 100) / 100;
+
+  return {
+    baseMonthlyUsd: profile.baseMonthlyUsd,
+    monthlyPriceUsd,
+    annualPriceUsd,
+    lifetimePriceUsd,
+    demandMultiplier,
+    targetAudience: profile.targetAudience,
+    marketTier: profile.marketTier,
+  };
+}
 
 /** Compute market-adjusted pricing from base monthly and demand signal. */
 export function computeToolPricing(
   toolSlug: string,
   baseMonthlyUsd: number,
   demandSignal?: string | null
-): Omit<ToolPricing, "toolSlug" | "stripeMonthlyPriceId" | "stripeAnnualPriceId" | "stripeLifetimePriceId"> {
+): Omit<
+  ToolPricing,
+  | "toolSlug"
+  | "stripeMonthlyPriceId"
+  | "stripeAnnualPriceId"
+  | "stripeLifetimePriceId"
+  | "targetAudience"
+  | "marketTier"
+> {
+  const profile = getSector3ToolProfile(toolSlug);
+  if (profile) {
+    const computed = computeToolPricingFromProfile(profile);
+    if (computed) return computed;
+  }
+
   const signal = (demandSignal ?? "medium").toLowerCase();
   const demandMultiplier = DEMAND_FACTORS[signal] ?? 1.0;
   const monthlyPriceUsd = Math.round(baseMonthlyUsd * demandMultiplier * 100) / 100;
@@ -48,17 +87,22 @@ export function computeToolPricing(
 }
 
 export function getDefaultBasePrice(toolSlug: string): number {
-  return DEFAULT_BASE_PRICES[toolSlug] ?? 19;
+  return getSector3ToolProfile(toolSlug)?.baseMonthlyUsd ?? 19;
 }
 
 export function mapDbPricing(row: Record<string, unknown>): ToolPricing {
+  const toolSlug = String(row.tool_slug);
+  const profile = getSector3ToolProfile(toolSlug);
+
   return {
-    toolSlug: String(row.tool_slug),
+    toolSlug,
     baseMonthlyUsd: Number(row.base_monthly_usd),
     monthlyPriceUsd: Number(row.monthly_price_usd),
     annualPriceUsd: Number(row.annual_price_usd),
     lifetimePriceUsd: Number(row.lifetime_price_usd),
     demandMultiplier: Number(row.demand_multiplier),
+    targetAudience: profile?.targetAudience ?? "Intelligence tool subscribers",
+    marketTier: profile?.marketTier ?? "growth",
     stripeMonthlyPriceId: (row.stripe_monthly_price_id as string) ?? null,
     stripeAnnualPriceId: (row.stripe_annual_price_id as string) ?? null,
     stripeLifetimePriceId: (row.stripe_lifetime_price_id as string) ?? null,
@@ -66,3 +110,24 @@ export function mapDbPricing(row: Record<string, unknown>): ToolPricing {
 }
 
 export const INTELLIGENCE_TOOL_SLUGS = INTELLIGENCE_TOOLS.map((t) => t.slug);
+
+export function getCatalogSeedRows(): Array<{
+  tool_slug: string;
+  base_monthly_usd: number;
+  monthly_price_usd: number;
+  annual_price_usd: number;
+  lifetime_price_usd: number;
+  demand_multiplier: number;
+}> {
+  return getAllSector3ToolProfiles().map((profile) => {
+    const computed = computeToolPricingFromProfile(profile)!;
+    return {
+      tool_slug: profile.toolSlug,
+      base_monthly_usd: computed.baseMonthlyUsd,
+      monthly_price_usd: computed.monthlyPriceUsd,
+      annual_price_usd: computed.annualPriceUsd,
+      lifetime_price_usd: computed.lifetimePriceUsd,
+      demand_multiplier: computed.demandMultiplier,
+    };
+  });
+}

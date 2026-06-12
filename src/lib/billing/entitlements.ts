@@ -1,6 +1,7 @@
 import {
   getNiTierConfig,
   getToolSlotLimit,
+  normalizeNiTier,
   tierHasUnlimitedToolAccess,
   type NiTier,
 } from "@/lib/billing/ni-tiers";
@@ -67,7 +68,7 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
   ]);
 
   const subscription = (sub ?? { tier: "free" }) as SubscriptionRow;
-  const niTier = (subscription.tier ?? "free") as NiTier;
+  const niTier = normalizeNiTier(subscription.tier);
   const tierConfig = getNiTierConfig(niTier);
   const toolkit = ((toolkitRows ?? []) as ToolkitRow[]).map((row) => ({
     id: row.id,
