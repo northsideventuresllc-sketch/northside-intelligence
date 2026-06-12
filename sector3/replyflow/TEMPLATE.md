@@ -10,6 +10,7 @@ Fork this repo to launch a new Sector 3 tool. Keep the same stack: **Next.js App
 4. Register subdomain in `vercel.json` and Vercel project.
 5. Add tool entry to `northside-intelligence` → `src/lib/tools.ts`.
 6. Configure GitHub Actions secrets (see `.github/workflows/deploy.yml`).
+7. Add a **tool-specific favicon** (`src/app/icon.svg`) derived from `public/logos/{tool}.svg` — never reuse the NI portal hex emblem (`/icon.svg` on northsideintelligence.com).
 
 ## Environment variables
 

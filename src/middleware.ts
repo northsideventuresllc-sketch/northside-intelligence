@@ -11,6 +11,18 @@ function isReplyFlowHost(host: string): boolean {
   return host.startsWith("replyflow.") || host.includes("replyflow-");
 }
 
+function rewriteReplyFlowFavicon(request: NextRequest): NextResponse | null {
+  const host = request.headers.get("host") ?? "";
+  if (!isReplyFlowHost(host)) return null;
+
+  const { pathname } = request.nextUrl;
+  if (pathname !== "/favicon.ico" && pathname !== "/icon.svg") return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/replyflow/icon.svg";
+  return NextResponse.rewrite(url);
+}
+
 function rewriteReplyFlowSubdomain(request: NextRequest): NextResponse | null {
   const host = request.headers.get("host") ?? "";
   if (!isReplyFlowHost(host)) return null;
@@ -66,6 +78,9 @@ async function guardReplyFlowDashboard(request: NextRequest): Promise<NextRespon
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const faviconRewrite = rewriteReplyFlowFavicon(request);
+  if (faviconRewrite) return faviconRewrite;
+
   const subdomainRewrite = rewriteReplyFlowSubdomain(request);
   if (subdomainRewrite) return subdomainRewrite;
 
@@ -113,6 +128,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/favicon.ico",
+    "/icon.svg",
     "/ops/:path*",
     "/account/:path*",
     "/toolkit/:path*",
@@ -123,6 +140,6 @@ export const config = {
     "/replyflow/dashboard/:path*",
     "/replyflow/login",
     "/replyflow/signup",
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image).*)",
   ],
 };
