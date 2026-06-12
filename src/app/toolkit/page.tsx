@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { ToolkitGrid } from "@/components/billing/ToolkitGrid";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
-import { getUserBillingState } from "@/lib/billing/entitlements";
+import { canAddNiPlanTool, getUserBillingState } from "@/lib/billing/entitlements";
 import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -47,8 +47,9 @@ export default async function ToolkitPage() {
             niTier={state.niTier}
             toolSlotsUsed={state.toolSlotsUsed}
             toolSlotLimit={state.toolSlotLimit}
-            canAddNiPlanTool={state.niTier !== "free" && (state.toolSlotLimit === null || state.toolSlotsUsed < (state.toolSlotLimit ?? 0))}
+            canAddNiPlanTool={canAddNiPlanTool(state)}
             availableToAdd={availableToAdd}
+            isMasterAccount={state.isMasterAccount}
           />
         </div>
       </section>

@@ -63,6 +63,7 @@ export default async function AccountPage() {
               billingInterval: billingState.billingInterval,
               hasStripeCustomer: !!billingState.stripeCustomerId,
               toolkitCount: billingState.toolkit.length,
+              isMasterAccount: billingState.isMasterAccount,
             }}
           />
 

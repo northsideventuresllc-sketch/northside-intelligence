@@ -1,4 +1,8 @@
 import {
+  masterAccountHasProductAccess,
+  isMasterAccountFlag,
+} from "@/lib/billing/master-account";
+import {
   getNiTierConfig,
   getToolSlotLimit,
   normalizeNiTier,
@@ -22,6 +26,7 @@ export interface UserBillingState {
   billingInterval: "monthly" | "annual" | null;
   currentPeriodEnd: string | null;
   stripeCustomerId: string | null;
+  isMasterAccount: boolean;
   toolkit: ToolkitEntry[];
   ownedToolSlugs: string[];
   toolSlotsUsed: number;
@@ -54,7 +59,7 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
 
   const supabase = createServiceClient();
 
-  const [{ data: sub }, { data: toolkitRows }] = await Promise.all([
+  const [{ data: sub }, { data: toolkitRows }, { data: profile }] = await Promise.all([
     supabase
       .from("ni_subscriptions")
       .select("tier, billing_interval, current_period_end, stripe_customer_id")
@@ -65,7 +70,14 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
       .select("id, tool_slug, access_type, expires_at, purchased_at")
       .eq("user_id", userId)
       .order("purchased_at", { ascending: false }),
+    supabase
+      .from("ni_portal_profiles")
+      .select("is_master_account")
+      .eq("id", userId)
+      .maybeSingle(),
   ]);
+
+  const isMasterAccount = isMasterAccountFlag(profile?.is_master_account);
 
   const subscription = (sub ?? { tier: "free" }) as SubscriptionRow;
   const niTier = normalizeNiTier(subscription.tier);
@@ -86,19 +98,22 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
     billingInterval: subscription.billing_interval ?? null,
     currentPeriodEnd: subscription.current_period_end ?? null,
     stripeCustomerId: subscription.stripe_customer_id ?? null,
+    isMasterAccount,
     toolkit,
     ownedToolSlugs,
     toolSlotsUsed: niPlanSlots,
-    toolSlotLimit: tierConfig.toolSlots,
-    hasNiPaidPlan: niTier !== "free",
+    toolSlotLimit: isMasterAccount ? null : tierConfig.toolSlots,
+    hasNiPaidPlan: isMasterAccount || niTier !== "free",
   };
 }
 
 export function userOwnsTool(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
   return state.ownedToolSlugs.includes(toolSlug);
 }
 
 export function userHasUnlimitedToolAccess(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
   if (tierHasUnlimitedToolAccess(state.niTier)) return true;
   const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
   if (!entry) return false;
@@ -111,6 +126,7 @@ export function userHasUnlimitedToolAccess(state: UserBillingState, toolSlug: st
 }
 
 export function shouldHideToolSubscriptions(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
   if (tierHasUnlimitedToolAccess(state.niTier)) return true;
   const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
   if (!entry) return false;
@@ -118,6 +134,7 @@ export function shouldHideToolSubscriptions(state: UserBillingState, toolSlug: s
 }
 
 export function canAddNiPlanTool(state: UserBillingState): boolean {
+  if (state.isMasterAccount) return false;
   if (state.niTier === "free") return false;
   if (tierHasUnlimitedToolAccess(state.niTier)) return true;
   const limit = getToolSlotLimit(state.niTier);

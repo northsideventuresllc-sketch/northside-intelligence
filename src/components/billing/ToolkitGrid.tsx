@@ -14,9 +14,11 @@ interface ToolkitGridProps {
   toolSlotLimit: number | null;
   canAddNiPlanTool: boolean;
   availableToAdd: string[];
+  isMasterAccount?: boolean;
 }
 
-function accessLabel(type: ToolkitEntry["accessType"]): string {
+function accessLabel(type: ToolkitEntry["accessType"], isMasterAccount?: boolean): string {
+  if (isMasterAccount && type === "lifetime") return "Master Access";
   if (type === "lifetime") return "Lifetime";
   if (type === "ni_plan") return "NI Plan";
   return "Subscription";
@@ -29,6 +31,7 @@ export function ToolkitGrid({
   toolSlotLimit,
   canAddNiPlanTool,
   availableToAdd,
+  isMasterAccount = false,
 }: ToolkitGridProps) {
   const [adding, setAdding] = useState<string | null>(null);
   const [message, setMessage] = useState("");
@@ -65,20 +68,31 @@ export function ToolkitGrid({
     <div className="space-y-8">
       <section className="glass-panel p-6">
         <h2 className="mb-2 text-lg font-semibold text-white">Your NI Plan</h2>
-        <p className="text-2xl font-bold capitalize text-white">{tierConfig.name}</p>
-        <p className="mt-1 text-sm text-ni-muted">{tierConfig.description}</p>
-        {toolSlotLimit !== null && niTier !== "free" && (
-          <p className="mt-3 text-sm text-cyan-300/80">
-            Tool slots: {toolSlotsUsed} / {toolSlotLimit}
-          </p>
-        )}
-        {niTier === "free" && (
-          <Link
-            href="/#pricing"
-            className="mt-4 inline-block rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-          >
-            View NI Plans
-          </Link>
+        {isMasterAccount ? (
+          <>
+            <p className="text-2xl font-bold text-white">Master Account</p>
+            <p className="mt-1 text-sm text-ni-muted">
+              Permanent unlimited access to all Sector 3 tools and future NI products.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-2xl font-bold capitalize text-white">{tierConfig.name}</p>
+            <p className="mt-1 text-sm text-ni-muted">{tierConfig.description}</p>
+            {toolSlotLimit !== null && niTier !== "free" && (
+              <p className="mt-3 text-sm text-cyan-300/80">
+                Tool slots: {toolSlotsUsed} / {toolSlotLimit}
+              </p>
+            )}
+            {niTier === "free" && (
+              <Link
+                href="/#pricing"
+                className="mt-4 inline-block rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+              >
+                View NI Plans
+              </Link>
+            )}
+          </>
         )}
       </section>
 
@@ -136,7 +150,7 @@ export function ToolkitGrid({
                   </div>
                   <h3 className="font-semibold text-white">{tool.name}</h3>
                   <p className="mt-1 text-xs uppercase tracking-wider text-cyan-300/70">
-                    {accessLabel(entry.accessType)}
+                    {accessLabel(entry.accessType, isMasterAccount)}
                   </p>
                   {entry.expiresAt && entry.accessType !== "lifetime" && (
                     <p className="mt-2 text-xs text-ni-muted">
