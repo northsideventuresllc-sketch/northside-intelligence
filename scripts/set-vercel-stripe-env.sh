@@ -34,6 +34,14 @@ upsert_env STRIPE_SECRET_KEY "$STRIPE_SECRET_KEY"
 upsert_env STRIPE_WEBHOOK_SECRET "$STRIPE_WEBHOOK_SECRET"
 upsert_env NEXT_PUBLIC_APP_URL "https://www.northsideintelligence.com"
 
+if [[ -n "${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}" ]]; then
+  upsert_env NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+fi
+
+if [[ -n "${STRIPE_RESTRICTED_KEY:-}" ]]; then
+  upsert_env STRIPE_RESTRICTED_KEY "$STRIPE_RESTRICTED_KEY"
+fi
+
 if [[ -n "${STRIPE_REPLYFLOW_WEBHOOK_SECRET:-}" ]]; then
   upsert_env STRIPE_REPLYFLOW_WEBHOOK_SECRET "$STRIPE_REPLYFLOW_WEBHOOK_SECRET"
 fi
@@ -46,6 +54,21 @@ for tier in CORE PRO POWER; do
       upsert_env "$var" "$val"
     fi
   done
+done
+
+# Fallbacks when only legacy STANDARD/PREMIUM/ULTIMATE env keys are present
+declare -A NI_PRICE_FALLBACKS=(
+  [STRIPE_NI_CORE_MONTHLY_PRICE_ID]="price_1The8IQXb5thRQWgDGJmAL2P"
+  [STRIPE_NI_CORE_ANNUAL_PRICE_ID]="price_1The4FQXb5thRQWgSTitRx6n"
+  [STRIPE_NI_PRO_MONTHLY_PRICE_ID]="price_1The4GQXb5thRQWgsNdGgMbY"
+  [STRIPE_NI_PRO_ANNUAL_PRICE_ID]="price_1The4GQXb5thRQWg1K75hiYL"
+  [STRIPE_NI_POWER_MONTHLY_PRICE_ID]="price_1The4HQXb5thRQWgKNuxytL8"
+  [STRIPE_NI_POWER_ANNUAL_PRICE_ID]="price_1The4HQXb5thRQWgVH6gEDjy"
+)
+for key in "${!NI_PRICE_FALLBACKS[@]}"; do
+  if [[ -z "${!key:-}" ]]; then
+    upsert_env "$key" "${NI_PRICE_FALLBACKS[$key]}"
+  fi
 done
 
 for legacy in SOLO TEAM AGENCY; do
