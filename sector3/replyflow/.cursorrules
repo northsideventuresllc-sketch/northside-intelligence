@@ -23,3 +23,7 @@
 
 ## PRs
 - Wait for JB approval before merging to `main`.
+
+## Branding
+- Favicon must use the tool logo (`src/app/icon.svg`), not the NI portal emblem.
+- When hosted in the NI monorepo, also add `public/{tool}/icon.svg` and register `favicon` in `src/lib/sector3-registry.ts`.

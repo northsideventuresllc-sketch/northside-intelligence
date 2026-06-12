@@ -16,6 +16,8 @@ export interface Sector3RegistryEntry {
   description: string;
   status: "LIVE" | "COMING SOON";
   appUrl?: string;
+  /** Tool favicon path — must differ from NI portal `/icon.svg`. */
+  favicon: string;
   github: string;
   supabaseTable: string;
   arm3Status: string;
@@ -29,6 +31,7 @@ export const SECTOR3_REGISTRY: Sector3RegistryEntry[] = [
     description: "AI-powered customer service reply automation",
     status: "LIVE",
     appUrl: "https://northsideintelligence.com/replyflow",
+    favicon: "/replyflow/icon.svg",
     github: `https://github.com/${GITHUB_ORG}/replyflow`,
     supabaseTable: "replyflow_profiles",
     arm3Status: "scale",
@@ -39,6 +42,7 @@ export const SECTOR3_REGISTRY: Sector3RegistryEntry[] = [
     subdomain: "grantbot.northsideintelligence.com",
     description: "AI grant finder and drafter for nonprofits and creators",
     status: "COMING SOON",
+    favicon: "/logos/grantbot.svg",
     github: `https://github.com/${GITHUB_ORG}/grantbot`,
     supabaseTable: "grantbot_profiles",
     arm3Status: "scale",
