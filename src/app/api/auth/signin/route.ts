@@ -3,13 +3,14 @@ import {
   createPendingViaEdge,
   issueOtpViaEdge,
 } from "@/lib/auth/portal-auth-edge";
+import { ensurePortalProfile } from "@/lib/auth/ensure-portal-profile";
 import { resolveIdentifierToEmail } from "@/lib/auth/resolve-identifier";
 import { sanitizeReturnTo } from "@/lib/ni-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { pendingAuthCookieOptions } from "@/lib/supabase/cookie-domain";
 
 const PENDING_COOKIE = "ni_auth_pending";
-const PENDING_MAX_AGE = 60 * 10;
 
 interface SigninBody {
   identifier?: string;
@@ -50,6 +51,9 @@ export async function POST(request: NextRequest) {
 
   const returnTo = sanitizeReturnTo(body.returnTo);
   const admin = createServiceClient();
+
+  await ensurePortalProfile(admin, data.user);
+
   const { data: profile } = await admin
     .from("ni_portal_profiles")
     .select("two_factor_enabled")
@@ -83,14 +87,8 @@ export async function POST(request: NextRequest) {
       metadata: { userId: data.user.id },
     });
 
-    const response = NextResponse.json({ step: "verify", email });
-    response.cookies.set(PENDING_COOKIE, pendingId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: PENDING_MAX_AGE,
-    });
+    const response = NextResponse.json({ step: "verify", email, pendingId });
+    response.cookies.set(PENDING_COOKIE, pendingId, pendingAuthCookieOptions());
 
     return response;
   } catch (err) {

@@ -2,24 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyViaEdge } from "@/lib/auth/portal-auth-edge";
 import { resolvePostAuthRedirect } from "@/lib/ni-auth";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { pendingAuthCookieOptions } from "@/lib/supabase/cookie-domain";
 
 const PENDING_COOKIE = "ni_auth_pending";
 
 interface VerifyBody {
   code?: string;
+  pendingId?: string;
 }
 
 export async function POST(request: NextRequest) {
-  const pendingId = request.cookies.get(PENDING_COOKIE)?.value;
-  if (!pendingId) {
-    return NextResponse.json({ error: "Session expired. Please start again." }, { status: 400 });
-  }
-
   let body: VerifyBody;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const pendingId =
+    request.cookies.get(PENDING_COOKIE)?.value ?? body.pendingId?.trim();
+  if (!pendingId) {
+    return NextResponse.json({ error: "Session expired. Please start again." }, { status: 400 });
   }
 
   const code = body.code?.trim();
@@ -54,6 +57,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to sign in after verification" }, { status: 500 });
   }
 
-  response.cookies.set(PENDING_COOKIE, "", { path: "/", maxAge: 0 });
+  response.cookies.set(PENDING_COOKIE, "", pendingAuthCookieOptions({ maxAge: 0 }));
   return response;
 }

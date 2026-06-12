@@ -25,6 +25,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [username, setUsername] = useState("");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
   const [code, setCode] = useState("");
+  const [pendingId, setPendingId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -62,6 +63,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         error?: string;
         step?: string;
         email?: string;
+        pendingId?: string;
         success?: boolean;
         direct?: boolean;
         returnTo?: string;
@@ -78,6 +80,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
 
       if (data.email) setEmail(data.email);
+      if (data.pendingId) setPendingId(data.pendingId);
       setStep("verify");
     } catch {
       setError("Network error. Please try again.");
@@ -95,7 +98,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, pendingId: pendingId || undefined }),
       });
 
       const data = (await res.json()) as { error?: string; returnTo?: string };
@@ -276,6 +279,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 onClick={() => {
                   setStep("credentials");
                   setCode("");
+                  setPendingId("");
                   setError("");
                 }}
                 className="w-full text-sm text-ni-muted transition hover:text-cyan-300"
