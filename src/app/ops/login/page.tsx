@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState, Suspense } from "react";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 function LoginForm() {
   const router = useRouter();
@@ -45,14 +46,13 @@ function LoginForm() {
         <label htmlFor="password" className="mb-1 block text-sm text-ni-muted">
           Admin password
         </label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
-          className="w-full rounded-lg border border-white/10 bg-ni-bg px-4 py-3 text-white outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+          inputClassName="w-full rounded-lg border border-white/10 bg-ni-bg px-4 py-3 pr-12 text-white outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
           placeholder="Enter NI admin secret"
         />
       </div>

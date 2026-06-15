@@ -333,17 +333,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-    if (!anonKey) {
-      return jsonResponse({ error: "Server misconfigured" }, 500);
-    }
-
-    const authClient = createClient(supabaseUrl, anonKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
     const { data: sessionData, error: signInError } =
-      await authClient.auth.signInWithPassword({
+      await admin.auth.signInWithPassword({
         email: pending.email,
         password: pending.password,
       });
