@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { AnimatedBackground } from "@/components/landing/AnimatedBackground";
 import { Logo3D } from "@/components/landing/Logo3D";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { buildPortalAuthUrl, resolvePostAuthRedirect } from "@/lib/ni-auth";
 
 type AuthMode = "signin" | "signup";
@@ -204,15 +205,13 @@ export function AuthForm({ mode }: AuthFormProps) {
                 <label htmlFor="password" className="mb-1 block text-sm text-ni-muted">
                   Password
                 </label>
-                <input
+                <PasswordInput
                   id="password"
-                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
                   autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                  className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
                   placeholder="At least 8 characters"
                 />
               </div>

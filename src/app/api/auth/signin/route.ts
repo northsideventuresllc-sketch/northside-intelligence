@@ -5,6 +5,7 @@ import {
 } from "@/lib/auth/portal-auth-edge";
 import { ensurePortalProfile } from "@/lib/auth/ensure-portal-profile";
 import { resolveIdentifierToEmail } from "@/lib/auth/resolve-identifier";
+import { verifyPasswordWithServiceRole } from "@/lib/auth/verify-password";
 import { sanitizeReturnTo } from "@/lib/ni-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
@@ -42,49 +43,55 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid email, username, or password" }, { status: 401 });
   }
 
-  const supabase = await createServerAuthClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  if (error || !data.user || !data.session) {
+  const authResult = await verifyPasswordWithServiceRole(email, password);
+  if (!authResult) {
     return NextResponse.json({ error: "Invalid email, username, or password" }, { status: 401 });
   }
 
+  const { user, session } = authResult;
   const returnTo = sanitizeReturnTo(body.returnTo);
   const admin = createServiceClient();
 
-  await ensurePortalProfile(admin, data.user);
+  await ensurePortalProfile(admin, user);
 
   const { data: profile } = await admin
     .from("ni_portal_profiles")
     .select("two_factor_enabled")
-    .eq("id", data.user.id)
+    .eq("id", user.id)
     .maybeSingle();
 
   const twoFactorEnabled = profile?.two_factor_enabled ?? true;
 
   if (!twoFactorEnabled) {
-    const response = NextResponse.json({
+    const supabase = await createServerAuthClient();
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    });
+
+    if (sessionError) {
+      return NextResponse.json({ error: "Failed to sign in" }, { status: 500 });
+    }
+
+    return NextResponse.json({
       success: true,
       direct: true,
       returnTo: returnTo ?? "/",
     });
-    return response;
   }
-
-  await supabase.auth.signOut();
 
   try {
     await issueOtpViaEdge({
       email,
       purpose: "signin",
-      metadata: { userId: data.user.id },
+      metadata: { userId: user.id },
     });
     const { pendingId } = await createPendingViaEdge({
       email,
       password,
       flow: "signin",
       returnTo,
-      metadata: { userId: data.user.id },
+      metadata: { userId: user.id },
     });
 
     const response = NextResponse.json({ step: "verify", email, pendingId });

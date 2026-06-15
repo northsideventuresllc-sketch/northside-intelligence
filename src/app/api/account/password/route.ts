@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyPasswordWithServiceRole } from "@/lib/auth/verify-password";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 interface PasswordBody {
@@ -40,12 +41,8 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  const { error: verifyError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: currentPassword,
-  });
-
-  if (verifyError) {
+  const verified = await verifyPasswordWithServiceRole(user.email, currentPassword);
+  if (!verified) {
     return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
   }
 

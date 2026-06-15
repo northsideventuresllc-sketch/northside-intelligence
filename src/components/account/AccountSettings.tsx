@@ -5,6 +5,7 @@ import {
   MASTER_ACCOUNT_DESCRIPTION,
   MASTER_ACCOUNT_LABEL,
 } from "@/lib/billing/master-account";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 interface AccountSettingsProps {
   initialProfile: {
@@ -208,27 +209,25 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
             <label htmlFor="currentPassword" className="mb-1 block text-sm text-ni-muted">
               Current Password
             </label>
-            <input
+            <PasswordInput
               id="currentPassword"
-              type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500/50"
+              inputClassName="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 pr-12 text-white outline-none transition focus:border-cyan-500/50"
             />
           </div>
           <div>
             <label htmlFor="newPassword" className="mb-1 block text-sm text-ni-muted">
               New Password
             </label>
-            <input
+            <PasswordInput
               id="newPassword"
-              type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500/50"
+              inputClassName="w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 pr-12 text-white outline-none transition focus:border-cyan-500/50"
             />
           </div>
           <button
