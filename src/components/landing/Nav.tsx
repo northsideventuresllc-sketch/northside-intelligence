@@ -48,10 +48,16 @@ export function Nav() {
             Tools
           </a>
           <a
-            href="/#pricing"
+            href="/store"
             className="text-sm text-ni-muted transition hover:text-cyan-300"
           >
             Store
+          </a>
+          <a
+            href="/#pricing"
+            className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+          >
+            Plans
           </a>
           <a
             href="/#mission"

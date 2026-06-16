@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Push Stripe env vars to Vercel production + preview.
+# Push Stripe + NI Store env vars to Vercel production + preview.
 # Requires: VERCEL_TOKEN (https://vercel.com/account/tokens)
 #
 # Usage:

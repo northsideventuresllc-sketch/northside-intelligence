@@ -11,6 +11,28 @@ function isReplyFlowHost(host: string): boolean {
   return host.startsWith("replyflow.") || host.includes("replyflow-");
 }
 
+function isShopHost(host: string): boolean {
+  return host.startsWith("shop.");
+}
+
+function rewriteShopSubdomain(request: NextRequest): NextResponse | null {
+  const host = request.headers.get("host") ?? "";
+  if (!isShopHost(host)) return null;
+
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/store") || pathname.startsWith("/api/store")) {
+    return null;
+  }
+
+  const url = request.nextUrl.clone();
+  if (pathname.startsWith("/api/")) {
+    url.pathname = `/api/store${pathname.slice(4)}`;
+  } else {
+    url.pathname = pathname === "/" ? "/store" : `/store${pathname}`;
+  }
+  return NextResponse.rewrite(url);
+}
+
 function rewriteReplyFlowFavicon(request: NextRequest): NextResponse | null {
   const host = request.headers.get("host") ?? "";
   if (!isReplyFlowHost(host)) return null;
@@ -81,6 +103,9 @@ export async function middleware(request: NextRequest) {
   const faviconRewrite = rewriteReplyFlowFavicon(request);
   if (faviconRewrite) return faviconRewrite;
 
+  const shopRewrite = rewriteShopSubdomain(request);
+  if (shopRewrite) return shopRewrite;
+
   const subdomainRewrite = rewriteReplyFlowSubdomain(request);
   if (subdomainRewrite) return subdomainRewrite;
 
@@ -112,10 +137,12 @@ export async function middleware(request: NextRequest) {
   const needsSessionRefresh =
     pathname.startsWith("/account") ||
     pathname.startsWith("/toolkit") ||
+    pathname.startsWith("/store") ||
     pathname.startsWith("/tools") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/billing") ||
+    pathname.startsWith("/api/store") ||
     pathname.startsWith("/replyflow") ||
     isReplyFlowHost(host);
 
@@ -133,7 +160,9 @@ export const config = {
     "/ops/:path*",
     "/account/:path*",
     "/toolkit/:path*",
+    "/store/:path*",
     "/tools/:path*",
+    "/api/store/:path*",
     "/api/billing/:path*",
     "/auth/:path*",
     "/api/auth/:path*",
