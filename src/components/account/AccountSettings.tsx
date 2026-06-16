@@ -20,6 +20,9 @@ interface AccountSettingsProps {
     hasStripeCustomer: boolean;
     toolkitCount: number;
     isMasterAccount: boolean;
+    niStripeSubscriptionId: string | null;
+    toolSubscriptions: Array<{ toolSlug: string; stripeSubscriptionId: string }>;
+    currentPeriodEnd: string | null;
   };
 }
 
@@ -33,6 +36,8 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
+  const [subscriptionMessage, setSubscriptionMessage] = useState("");
+  const [subscriptionError, setSubscriptionError] = useState("");
 
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
@@ -112,22 +117,58 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
   }
 
   async function openBillingPortal() {
-    setError("");
+    setSubscriptionError("");
     setLoading("billing");
     try {
       const res = await fetch("/api/account/billing/portal", { method: "POST" });
       const data = (await res.json()) as { error?: string; url?: string };
       if (!res.ok || !data.url) {
-        setError(data.error ?? "Billing portal unavailable");
+        setSubscriptionError(data.error ?? "Billing portal unavailable");
         return;
       }
       window.location.href = data.url;
     } catch {
-      setError("Network error. Please try again.");
+      setSubscriptionError("Network error. Please try again.");
     } finally {
       setLoading(null);
     }
   }
+
+  async function handleSubscriptionAction(
+    action: "pause" | "cancel" | "resume",
+    options?: { context?: "portal" | "tool"; toolSlug?: string; immediate?: boolean }
+  ) {
+    setSubscriptionError("");
+    setSubscriptionMessage("");
+    setLoading(action);
+    try {
+      const endpoint =
+        action === "pause"
+          ? "/api/account/billing/pause"
+          : action === "cancel"
+            ? "/api/account/billing/cancel"
+            : "/api/account/billing/resume";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(options ?? {}),
+      });
+      const data = (await res.json()) as { error?: string; message?: string };
+      if (!res.ok) {
+        setSubscriptionError(data.error ?? `Unable to ${action} subscription`);
+        return;
+      }
+      setSubscriptionMessage(data.message ?? `Subscription ${action}d.`);
+    } catch {
+      setSubscriptionError("Network error. Please try again.");
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  const hasNiSubscription = !!billing.niStripeSubscriptionId;
+  const hasToolSubscriptions = billing.toolSubscriptions.length > 0;
+  const hasAnyPausableSubscription = hasNiSubscription || hasToolSubscriptions;
 
   return (
     <div className="space-y-8">
@@ -304,6 +345,98 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
             </button>
           )}
         </div>
+
+        {!billing.isMasterAccount && hasAnyPausableSubscription && (
+          <div className="mt-6 border-t border-white/10 pt-6">
+            <h3 className="mb-2 text-sm font-semibold text-white">Subscription Management</h3>
+            <p className="mb-4 text-sm text-ni-muted">
+              Pause billing temporarily or cancel your subscription. Pausing stops charges while
+              keeping your account active until you resume.
+            </p>
+            {billing.currentPeriodEnd && (
+              <p className="mb-4 text-xs text-ni-muted">
+                Current period ends{" "}
+                {new Date(billing.currentPeriodEnd).toLocaleDateString(undefined, {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-4">
+              {hasNiSubscription && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleSubscriptionAction("pause", { context: "portal" })}
+                    disabled={loading !== null}
+                    className="text-sm text-cyan-300 underline-offset-2 transition hover:underline disabled:opacity-50"
+                  >
+                    {loading === "pause" ? "Pausing…" : "Pause Subscription"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSubscriptionAction("cancel", { context: "portal" })}
+                    disabled={loading !== null}
+                    className="text-sm text-ni-muted underline-offset-2 transition hover:text-red-300 hover:underline disabled:opacity-50"
+                  >
+                    {loading === "cancel" ? "Canceling…" : "Cancel Subscription"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSubscriptionAction("resume")}
+                    disabled={loading !== null}
+                    className="text-sm text-emerald-300 underline-offset-2 transition hover:underline disabled:opacity-50"
+                  >
+                    {loading === "resume" ? "Resuming…" : "Resume Subscription"}
+                  </button>
+                </>
+              )}
+            </div>
+            {hasToolSubscriptions && (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-ni-muted">
+                  Tool Subscriptions
+                </p>
+                {billing.toolSubscriptions.map((sub) => (
+                  <div key={sub.toolSlug} className="flex flex-wrap items-center gap-4">
+                    <span className="text-sm capitalize text-white">{sub.toolSlug}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleSubscriptionAction("pause", { context: "tool", toolSlug: sub.toolSlug })
+                      }
+                      disabled={loading !== null}
+                      className="text-sm text-cyan-300 underline-offset-2 transition hover:underline disabled:opacity-50"
+                    >
+                      Pause
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleSubscriptionAction("cancel", { context: "tool", toolSlug: sub.toolSlug })
+                      }
+                      disabled={loading !== null}
+                      className="text-sm text-ni-muted underline-offset-2 transition hover:text-red-300 hover:underline disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {subscriptionMessage && (
+              <p className="mt-4 text-sm text-emerald-300" role="status">
+                {subscriptionMessage}
+              </p>
+            )}
+            {subscriptionError && (
+              <p className="mt-4 text-sm text-red-300" role="alert">
+                {subscriptionError}
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );

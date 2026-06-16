@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getReplyFlowAccess } from "@/lib/billing/replyflow-access";
 import { generateReply } from "@/lib/replyflow/ai";
-import { PLAN_LIMITS } from "@/lib/replyflow/stripe";
-import { normalizeUserPlan } from "@/lib/replyflow/tier";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -16,17 +15,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const access = await getReplyFlowAccess(user.id);
+
     const { data: profile, error: profileError } = await supabase
       .from("replyflow_profiles")
-      .select("plan, replies_used_this_month, replies_reset_at")
+      .select("replies_used_this_month, replies_reset_at")
       .eq("id", user.id)
       .single();
     if (profileError || !profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    const plan = normalizeUserPlan(profile.plan);
-    const limit = PLAN_LIMITS[plan] ?? 10;
+    const limit = access.repliesLimit;
     const resetAt = new Date(profile.replies_reset_at);
     const now = new Date();
     const monthsSince =
@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
         .update({ replies_used_this_month: 0, replies_reset_at: now.toISOString() })
         .eq("id", user.id);
     }
-    if (repliesUsed >= limit) {
+    if (!access.hasUnlimitedAccess && repliesUsed >= limit) {
       return NextResponse.json(
-        { error: `Reply limit reached (${limit}/mo on ${plan} plan).` },
+        { error: `Reply limit reached (${limit}/mo on ${access.planLabel} plan).` },
         { status: 429 }
       );
     }
@@ -61,7 +61,15 @@ export async function POST(req: NextRequest) {
       .update({ replies_used_this_month: repliesUsed + 1 })
       .eq("id", user.id);
 
-    return NextResponse.json({ reply, usage: { used: repliesUsed + 1, limit } });
+    return NextResponse.json({
+      reply,
+      usage: {
+        used: repliesUsed + 1,
+        limit: access.hasUnlimitedAccess ? null : limit,
+        planLabel: access.planLabel,
+        hasUnlimitedAccess: access.hasUnlimitedAccess,
+      },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });
