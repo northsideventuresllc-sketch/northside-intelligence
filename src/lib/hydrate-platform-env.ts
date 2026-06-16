@@ -47,6 +47,7 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
     );
     if (webhook) process.env.STRIPE_WEBHOOK_SECRET = webhook;
 
+<<<<<<< HEAD
     const restricted = await resolvePlatformSecret(
       "STRIPE_RESTRICTED_KEY",
       process.env.STRIPE_RESTRICTED_KEY,
@@ -60,6 +61,28 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       isPlaceholderStripeWebhookSecret
     );
     if (replyflowWebhook) process.env.STRIPE_REPLYFLOW_WEBHOOK_SECRET = replyflowWebhook;
+=======
+    const storeWebhook = await resolvePlatformSecret(
+      "STRIPE_WEBHOOK_SECRET_STORE",
+      process.env.STRIPE_WEBHOOK_SECRET_STORE,
+      isPlaceholderStripeWebhookSecret
+    );
+    if (storeWebhook) process.env.STRIPE_WEBHOOK_SECRET_STORE = storeWebhook;
+
+    const makeStoreUrl = await resolvePlatformSecret(
+      "MAKE_STORE_WEBHOOK_URL",
+      process.env.MAKE_STORE_WEBHOOK_URL,
+      (value) => !value?.trim()
+    );
+    if (makeStoreUrl) process.env.MAKE_STORE_WEBHOOK_URL = makeStoreUrl;
+
+    const anthropic = await resolvePlatformSecret(
+      "ANTHROPIC_API_KEY",
+      process.env.ANTHROPIC_API_KEY,
+      (value) => !value?.trim()
+    );
+    if (anthropic) process.env.ANTHROPIC_API_KEY = anthropic;
+>>>>>>> 7d97612 (Add NI Store v1: merch catalog, gated checkout, and CJ/Make wiring)
   })();
 
   return hydratePromise;
