@@ -24,7 +24,7 @@ export async function ensureBillingEnvHydrated(): Promise<void> {
 }
 
 export function getBillingConfigError(): string | null {
-  if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+  if (isPlaceholderStripeSecretKey(process.env.STRIPE_SECRET_KEY)) {
     return "Billing is not configured yet. Please try again shortly.";
   }
   return null;
