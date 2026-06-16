@@ -8,6 +8,7 @@ import {
 import { getLifetimeLaunchStatus } from "@/lib/billing/lifetime-launch";
 import {
   billingStripe,
+  ensureBillingEnvHydrated,
   getBillingConfigError,
   getNiSubscriptionPriceId,
   getToolPriceIdFromDb,
@@ -47,6 +48,7 @@ function parseCheckoutBody(body: Record<string, unknown>): CheckoutKind | null {
 }
 
 export async function POST(req: NextRequest) {
+  await ensureBillingEnvHydrated();
   const billingConfigError = getBillingConfigError();
   if (billingConfigError) {
     return NextResponse.json({ error: billingConfigError }, { status: 503 });

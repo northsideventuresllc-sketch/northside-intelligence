@@ -1,8 +1,27 @@
 import Stripe from "stripe";
 import type { BillingInterval, NiTier } from "@/lib/billing/ni-tiers";
 import { normalizeNiTier } from "@/lib/billing/ni-tiers";
+import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
+import { isPlaceholderStripeSecretKey } from "@/lib/platform-secrets";
 
 let stripeClient: Stripe | null = null;
+let stripeClientKey: string | null = null;
+let hydrateAttempted = false;
+
+export function resetBillingStripeClient(): void {
+  stripeClient = null;
+  stripeClientKey = null;
+}
+
+/** Hydrate Stripe env from `ni_platform_secrets` when Vercel env is missing. */
+export async function ensureBillingEnvHydrated(): Promise<void> {
+  if (hydrateAttempted && !isPlaceholderStripeSecretKey(process.env.STRIPE_SECRET_KEY)) return;
+  hydrateAttempted = true;
+  await hydratePlatformEnvFromDatabase();
+  if (stripeClientKey && stripeClientKey !== process.env.STRIPE_SECRET_KEY?.trim()) {
+    resetBillingStripeClient();
+  }
+}
 
 export function getBillingConfigError(): string | null {
   if (!process.env.STRIPE_SECRET_KEY?.trim()) {
@@ -15,8 +34,9 @@ export function getBillingStripe(): Stripe {
   const configError = getBillingConfigError();
   if (configError) throw new Error("STRIPE_SECRET_KEY is not configured");
   const key = process.env.STRIPE_SECRET_KEY!;
-  if (!stripeClient) {
+  if (!stripeClient || stripeClientKey !== key) {
     stripeClient = new Stripe(key, { apiVersion: "2023-10-16" });
+    stripeClientKey = key;
   }
   return stripeClient;
 }

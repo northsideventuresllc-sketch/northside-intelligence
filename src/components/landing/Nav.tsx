@@ -48,6 +48,12 @@ export function Nav() {
             Tools
           </a>
           <a
+            href="/#pricing"
+            className="text-sm text-ni-muted transition hover:text-cyan-300"
+          >
+            Store
+          </a>
+          <a
             href="/#mission"
             className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
           >
@@ -58,12 +64,6 @@ export function Nav() {
             className="text-sm text-ni-muted transition hover:text-cyan-300"
           >
             Ecosystem
-          </a>
-          <a
-            href="/#pricing"
-            className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
-          >
-            Pricing
           </a>
           {isLoggedIn ? (
             <>

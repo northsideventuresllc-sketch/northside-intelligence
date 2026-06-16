@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { billingStripe, getBillingConfigError } from "@/lib/billing/stripe";
+import { billingStripe, ensureBillingEnvHydrated, getBillingConfigError } from "@/lib/billing/stripe";
 import { getUserBillingState } from "@/lib/billing/entitlements";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -8,6 +8,7 @@ function appUrl(): string {
 }
 
 export async function POST() {
+  await ensureBillingEnvHydrated();
   const billingConfigError = getBillingConfigError();
   if (billingConfigError) {
     return NextResponse.json({ error: billingConfigError }, { status: 503 });

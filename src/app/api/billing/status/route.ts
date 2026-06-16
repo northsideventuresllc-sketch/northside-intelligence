@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { getBillingConfigError } from "@/lib/billing/stripe";
+import { ensureBillingEnvHydrated, getBillingConfigError } from "@/lib/billing/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export async function GET() {
+  await ensureBillingEnvHydrated();
   const stripeError = getBillingConfigError();
   const hasServiceRole = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY

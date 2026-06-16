@@ -1,7 +1,15 @@
 import Stripe from "stripe";
 import { getDeploymentTier, getPlanLimits, type UserPlan } from "@/lib/replyflow/tier";
+import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 
 let stripeClient: Stripe | null = null;
+let hydrateAttempted = false;
+
+export async function ensureReplyflowBillingEnvHydrated(): Promise<void> {
+  if (hydrateAttempted && process.env.STRIPE_SECRET_KEY?.trim()) return;
+  hydrateAttempted = true;
+  await hydratePlatformEnvFromDatabase();
+}
 
 export function getBillingConfigError(): string | null {
   if (!process.env.STRIPE_SECRET_KEY?.trim()) {

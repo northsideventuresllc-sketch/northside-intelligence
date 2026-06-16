@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { replyflowAppUrl } from "@/lib/replyflow/auth";
-import { getBillingConfigError, stripe } from "@/lib/replyflow/stripe";
+import { getBillingConfigError, ensureReplyflowBillingEnvHydrated, stripe } from "@/lib/replyflow/stripe";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 const PRICE_IDS: Record<string, string | undefined> = {
@@ -10,6 +10,7 @@ const PRICE_IDS: Record<string, string | undefined> = {
 };
 
 export async function POST(req: NextRequest) {
+  await ensureReplyflowBillingEnvHydrated();
   const billingConfigError = getBillingConfigError();
   if (billingConfigError) {
     return NextResponse.json({ error: billingConfigError }, { status: 503 });
