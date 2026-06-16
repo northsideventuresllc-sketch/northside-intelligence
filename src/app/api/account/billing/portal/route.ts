@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { billingStripe } from "@/lib/billing/stripe";
+import { billingStripe, getBillingConfigError } from "@/lib/billing/stripe";
 import { getUserBillingState } from "@/lib/billing/entitlements";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -8,6 +8,11 @@ function appUrl(): string {
 }
 
 export async function POST() {
+  const billingConfigError = getBillingConfigError();
+  if (billingConfigError) {
+    return NextResponse.json({ error: billingConfigError }, { status: 503 });
+  }
+
   const supabase = await createServerAuthClient();
   const {
     data: { user },
@@ -19,10 +24,22 @@ export async function POST() {
     return NextResponse.json({ error: "No billing account found" }, { status: 400 });
   }
 
-  const session = await billingStripe.billingPortal.sessions.create({
-    customer: state.stripeCustomerId,
-    return_url: `${appUrl()}/account`,
-  });
+  try {
+    const session = await billingStripe.billingPortal.sessions.create({
+      customer: state.stripeCustomerId,
+      return_url: `${appUrl()}/account`,
+    });
 
-  return NextResponse.json({ url: session.url });
+    if (!session.url) {
+      return NextResponse.json({ error: "Billing portal unavailable" }, { status: 502 });
+    }
+
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    console.error("[billing/portal]", err);
+    return NextResponse.json(
+      { error: "Unable to open billing portal. Please try again." },
+      { status: 500 }
+    );
+  }
 }

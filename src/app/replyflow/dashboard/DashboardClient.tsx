@@ -85,14 +85,35 @@ export default function DashboardClient({
 
   async function handleUpgrade(planName: string) {
     setCheckoutLoading(true);
-    const res = await fetch("/api/replyflow/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: planName }),
-    });
-    const data = await res.json();
-    setCheckoutLoading(false);
-    if (data.url) window.location.href = data.url;
+    setError("");
+    try {
+      const res = await fetch("/api/replyflow/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: planName }),
+      });
+      const raw = await res.text();
+      let data: { error?: string; url?: string } = {};
+      try {
+        data = raw ? (JSON.parse(raw) as { error?: string; url?: string }) : {};
+      } catch {
+        setError(
+          res.ok
+            ? "Checkout unavailable"
+            : "Billing is not configured yet. Please try again shortly."
+        );
+        return;
+      }
+      if (!res.ok || !data.url) {
+        setError(data.error ?? "Checkout unavailable");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setCheckoutLoading(false);
+    }
   }
 
   return (
