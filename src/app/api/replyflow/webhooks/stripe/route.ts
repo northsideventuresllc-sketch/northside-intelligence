@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getPlanFromPriceId, stripe } from "@/lib/replyflow/stripe";
+import { getPlanFromPriceId, ensureReplyflowBillingEnvHydrated, stripe } from "@/lib/replyflow/stripe";
 import type { UserPlan } from "@/lib/replyflow/tier";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -26,6 +26,7 @@ async function setProfilePlan(
 }
 
 export async function POST(req: NextRequest) {
+  await ensureReplyflowBillingEnvHydrated();
   const secret = webhookSecret();
   if (!secret) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });

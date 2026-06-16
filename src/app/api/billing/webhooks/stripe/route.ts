@@ -8,6 +8,7 @@ import {
 import type { NiTier } from "@/lib/billing/ni-tiers";
 import {
   billingStripe,
+  ensureBillingEnvHydrated,
   getNiTierFromPriceId,
   mapNiPlanPricing,
   resolveToolCheckoutFromPriceId,
@@ -32,6 +33,7 @@ function periodEndIso(sub: Stripe.Subscription): string {
 }
 
 export async function POST(req: NextRequest) {
+  await ensureBillingEnvHydrated();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
