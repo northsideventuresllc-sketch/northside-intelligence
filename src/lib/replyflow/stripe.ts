@@ -3,11 +3,17 @@ import { getDeploymentTier, getPlanLimits, type UserPlan } from "@/lib/replyflow
 
 let stripeClient: Stripe | null = null;
 
-export function getStripe(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) {
-    throw new Error("STRIPE_SECRET_KEY is not configured");
+export function getBillingConfigError(): string | null {
+  if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+    return "Billing is not configured yet. Please try again shortly.";
   }
+  return null;
+}
+
+export function getStripe(): Stripe {
+  const configError = getBillingConfigError();
+  if (configError) throw new Error("STRIPE_SECRET_KEY is not configured");
+  const key = process.env.STRIPE_SECRET_KEY!;
   if (!stripeClient) {
     stripeClient = new Stripe(key, { apiVersion: "2023-10-16" });
   }

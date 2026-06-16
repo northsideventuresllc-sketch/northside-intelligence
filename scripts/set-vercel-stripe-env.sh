@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # Push Stripe env vars to Vercel production + preview.
 # Requires: VERCEL_TOKEN (https://vercel.com/account/tokens)
-# Usage: VERCEL_TOKEN=... ./scripts/set-vercel-stripe-env.sh
+#
+# Usage:
+#   VERCEL_TOKEN=... STRIPE_SECRET_KEY=sk_... STRIPE_WEBHOOK_SECRET=whsec_... \
+#     ./scripts/set-vercel-stripe-env.sh
+#
+# Price IDs fall back to values synced in Supabase ni_plan_pricing when env vars are omitted.
 
 set -euo pipefail
 
@@ -34,6 +39,14 @@ upsert_env STRIPE_SECRET_KEY "$STRIPE_SECRET_KEY"
 upsert_env STRIPE_WEBHOOK_SECRET "$STRIPE_WEBHOOK_SECRET"
 upsert_env NEXT_PUBLIC_APP_URL "https://www.northsideintelligence.com"
 
+if [[ -n "${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}" ]]; then
+  upsert_env NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+fi
+
+if [[ -n "${STRIPE_RESTRICTED_KEY:-}" ]]; then
+  upsert_env STRIPE_RESTRICTED_KEY "$STRIPE_RESTRICTED_KEY"
+fi
+
 if [[ -n "${STRIPE_REPLYFLOW_WEBHOOK_SECRET:-}" ]]; then
   upsert_env STRIPE_REPLYFLOW_WEBHOOK_SECRET "$STRIPE_REPLYFLOW_WEBHOOK_SECRET"
 fi
@@ -46,6 +59,31 @@ for tier in CORE PRO POWER; do
       upsert_env "$var" "$val"
     fi
   done
+done
+
+declare -A NI_PRICE_FALLBACKS=(
+  [STRIPE_NI_CORE_MONTHLY_PRICE_ID]="price_1The8IQXb5thRQWgDGJmAL2P"
+  [STRIPE_NI_CORE_ANNUAL_PRICE_ID]="price_1The4FQXb5thRQWgSTitRx6n"
+  [STRIPE_NI_PRO_MONTHLY_PRICE_ID]="price_1The4GQXb5thRQWgsNdGgMbY"
+  [STRIPE_NI_PRO_ANNUAL_PRICE_ID]="price_1The4GQXb5thRQWg1K75hiYL"
+  [STRIPE_NI_POWER_MONTHLY_PRICE_ID]="price_1The4HQXb5thRQWgKNuxytL8"
+  [STRIPE_NI_POWER_ANNUAL_PRICE_ID]="price_1The4HQXb5thRQWgVH6gEDjy"
+)
+for key in "${!NI_PRICE_FALLBACKS[@]}"; do
+  if [[ -z "${!key:-}" ]]; then
+    upsert_env "$key" "${NI_PRICE_FALLBACKS[$key]}"
+  fi
+done
+
+declare -A LEGACY_REPLYFLOW_PRICES=(
+  [STRIPE_SOLO_PRICE_ID]="price_1Te0s8QXb5thRQWgqVQdW8Rl"
+  [STRIPE_TEAM_PRICE_ID]="price_1Te0sBQXb5thRQWgYzuWMxTd"
+  [STRIPE_AGENCY_PRICE_ID]="price_1Te0sEQXb5thRQWgCiAzrClk"
+)
+for key in "${!LEGACY_REPLYFLOW_PRICES[@]}"; do
+  if [[ -z "${!key:-}" ]]; then
+    upsert_env "$key" "${LEGACY_REPLYFLOW_PRICES[$key]}"
+  fi
 done
 
 for legacy in SOLO TEAM AGENCY; do

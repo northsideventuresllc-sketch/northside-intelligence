@@ -22,7 +22,18 @@ export function CheckoutButton({ label, payload, className, disabled }: Checkout
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await res.json()) as { error?: string; url?: string };
+      const raw = await res.text();
+      let data: { error?: string; url?: string } = {};
+      try {
+        data = raw ? (JSON.parse(raw) as { error?: string; url?: string }) : {};
+      } catch {
+        setError(
+          res.ok
+            ? "Checkout unavailable"
+            : "Billing is not configured yet. Please try again shortly."
+        );
+        return;
+      }
       if (!res.ok || !data.url) {
         setError(data.error ?? "Checkout unavailable");
         return;
