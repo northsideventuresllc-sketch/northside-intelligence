@@ -18,6 +18,7 @@ export async function GET() {
     niTier: state.niTier,
     billingInterval: state.billingInterval,
     currentPeriodEnd: state.currentPeriodEnd,
+    niStripeSubscriptionId: state.niStripeSubscriptionId,
     isMasterAccount: state.isMasterAccount,
     toolkit: state.toolkit,
     toolSlotsUsed: state.toolSlotsUsed,

@@ -19,6 +19,7 @@ export interface ToolkitEntry {
   accessType: ToolkitAccessType;
   expiresAt: string | null;
   purchasedAt: string;
+  stripeSubscriptionId: string | null;
 }
 
 export interface UserBillingState {
@@ -26,6 +27,7 @@ export interface UserBillingState {
   billingInterval: "monthly" | "annual" | null;
   currentPeriodEnd: string | null;
   stripeCustomerId: string | null;
+  niStripeSubscriptionId: string | null;
   isMasterAccount: boolean;
   toolkit: ToolkitEntry[];
   ownedToolSlugs: string[];
@@ -40,6 +42,7 @@ interface ToolkitRow {
   access_type: ToolkitAccessType;
   expires_at: string | null;
   purchased_at: string;
+  stripe_subscription_id: string | null;
 }
 
 interface SubscriptionRow {
@@ -47,6 +50,7 @@ interface SubscriptionRow {
   billing_interval: "monthly" | "annual" | null;
   current_period_end: string | null;
   stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
 }
 
 export async function expireStaleEntitlements(): Promise<void> {
@@ -62,12 +66,12 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
   const [{ data: sub }, { data: toolkitRows }, { data: profile }] = await Promise.all([
     supabase
       .from("ni_subscriptions")
-      .select("tier, billing_interval, current_period_end, stripe_customer_id")
+      .select("tier, billing_interval, current_period_end, stripe_customer_id, stripe_subscription_id")
       .eq("id", userId)
       .maybeSingle(),
     supabase
       .from("ni_toolkit")
-      .select("id, tool_slug, access_type, expires_at, purchased_at")
+      .select("id, tool_slug, access_type, expires_at, purchased_at, stripe_subscription_id")
       .eq("user_id", userId)
       .order("purchased_at", { ascending: false }),
     supabase
@@ -88,6 +92,7 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
     accessType: row.access_type,
     expiresAt: row.expires_at,
     purchasedAt: row.purchased_at,
+    stripeSubscriptionId: row.stripe_subscription_id ?? null,
   }));
 
   const ownedToolSlugs = toolkit.map((t) => t.toolSlug);
@@ -98,6 +103,7 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
     billingInterval: subscription.billing_interval ?? null,
     currentPeriodEnd: subscription.current_period_end ?? null,
     stripeCustomerId: subscription.stripe_customer_id ?? null,
+    niStripeSubscriptionId: subscription.stripe_subscription_id ?? null,
     isMasterAccount,
     toolkit,
     ownedToolSlugs,

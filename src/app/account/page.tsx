@@ -64,6 +64,17 @@ export default async function AccountPage() {
               hasStripeCustomer: !!billingState.stripeCustomerId,
               toolkitCount: billingState.toolkit.length,
               isMasterAccount: billingState.isMasterAccount,
+              niStripeSubscriptionId: billingState.niStripeSubscriptionId,
+              toolSubscriptions: billingState.toolkit
+                .filter(
+                  (entry) =>
+                    entry.accessType === "tool_subscription" && entry.stripeSubscriptionId
+                )
+                .map((entry) => ({
+                  toolSlug: entry.toolSlug,
+                  stripeSubscriptionId: entry.stripeSubscriptionId!,
+                })),
+              currentPeriodEnd: billingState.currentPeriodEnd,
             }}
           />
 

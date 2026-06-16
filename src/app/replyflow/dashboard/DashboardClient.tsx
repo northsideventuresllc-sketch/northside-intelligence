@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
+import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { replyflowPath } from "@/lib/replyflow/auth";
+import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
+import type { NiTier } from "@/lib/billing/ni-tiers";
 import { createBrowserClient } from "@supabase/ssr";
 
 const TONES = ["Professional", "Friendly", "Empathetic", "Firm"] as const;
@@ -22,6 +25,8 @@ interface Props {
   planLabel: string;
   repliesUsed: number;
   repliesLimit: number;
+  hasUnlimitedAccess: boolean;
+  niTier: string;
 }
 
 function createClient() {
@@ -37,6 +42,8 @@ export default function DashboardClient({
   planLabel,
   repliesUsed,
   repliesLimit,
+  hasUnlimitedAccess,
+  niTier,
 }: Props) {
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>("Professional");
@@ -46,11 +53,12 @@ export default function DashboardClient({
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [used, setUsed] = useState(repliesUsed);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
-  const atLimit = used >= repliesLimit;
-  const usagePercent = Math.min((used / (repliesLimit === 999999 ? 1 : repliesLimit)) * 100, 100);
+  const effectiveLimit = hasUnlimitedAccess ? 999999 : repliesLimit;
+  const atLimit = !hasUnlimitedAccess && used >= effectiveLimit;
+  const usagePercent = Math.min((used / (effectiveLimit === 999999 ? 1 : effectiveLimit)) * 100, 100);
+  const showUpgrade = atLimit && !isHighestPaidNiTier(niTier as NiTier);
 
   async function handleGenerate() {
     if (!message.trim()) return;
@@ -83,38 +91,14 @@ export default function DashboardClient({
     router.push(replyflowPath("/"));
   }
 
-  async function handleUpgrade(planName: string) {
-    setCheckoutLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/replyflow/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planName }),
-      });
-      const raw = await res.text();
-      let data: { error?: string; url?: string } = {};
-      try {
-        data = raw ? (JSON.parse(raw) as { error?: string; url?: string }) : {};
-      } catch {
-        setError(
-          res.ok
-            ? "Checkout unavailable"
-            : "Billing is not configured yet. Please try again shortly."
-        );
-        return;
-      }
-      if (!res.ok || !data.url) {
-        setError(data.error ?? "Checkout unavailable");
-        return;
-      }
-      window.location.href = data.url;
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setCheckoutLoading(false);
-    }
-  }
+  const upgradePayload =
+    niTier === "free"
+      ? { type: "ni_subscription" as const, tier: "core" as const, interval: "monthly" as const }
+      : niTier === "core"
+        ? { type: "ni_subscription" as const, tier: "pro" as const, interval: "monthly" as const }
+        : niTier === "pro"
+          ? { type: "ni_subscription" as const, tier: "power" as const, interval: "monthly" as const }
+          : null;
 
   return (
     <div className="relative min-h-screen">
@@ -129,7 +113,7 @@ export default function DashboardClient({
               <span className={atLimit ? "font-semibold text-rf-rose" : "font-semibold text-white"}>
                 {used}
               </span>{" "}
-              / {repliesLimit === 999999 ? "∞" : repliesLimit}
+              / {effectiveLimit === 999999 ? "∞" : effectiveLimit}
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -142,18 +126,14 @@ export default function DashboardClient({
               style={{ width: `${usagePercent}%` }}
             />
           </div>
-          {atLimit && plan !== "agency" && (
+          {showUpgrade && upgradePayload && (
             <div className="mt-3 flex items-center justify-between gap-4">
               <p className="text-sm text-rf-rose">Limit reached — upgrade to keep going.</p>
-              <button
-                onClick={() =>
-                  handleUpgrade(plan === "free" ? "solo" : plan === "solo" ? "team" : "agency")
-                }
-                disabled={checkoutLoading}
+              <CheckoutButton
+                label="Upgrade Subscription"
+                payload={upgradePayload}
                 className="rounded-xl bg-gradient-to-r from-rf-rose to-rf-coral px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {checkoutLoading ? "Loading…" : "Upgrade"}
-              </button>
+              />
             </div>
           )}
         </div>
