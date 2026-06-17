@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscriptionActions";
 import { ToolPricingGrid } from "@/components/billing/ToolPricingGrid";
 import { Footer } from "@/components/landing/Footer";
@@ -16,6 +16,7 @@ import { getLifetimeLaunchStatus } from "@/lib/billing/lifetime-launch";
 import { getNiTierConfig } from "@/lib/billing/ni-tiers";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
 import { INTELLIGENCE_TOOLS } from "@/lib/constants";
+import { getSector3DashboardPath } from "@/lib/sector3-routing";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -50,6 +51,11 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
   const pricing = pricingRow ? mapDbPricing(pricingRow) : null;
   const lifetimeLaunch = await getLifetimeLaunchStatus();
+
+  if (user && tool.status === "LIVE") {
+    const dashboardPath = getSector3DashboardPath(tool.slug);
+    if (dashboardPath) redirect(dashboardPath);
+  }
 
   let billingState = null;
   if (user) {

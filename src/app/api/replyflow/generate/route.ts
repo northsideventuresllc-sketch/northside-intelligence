@@ -56,10 +56,24 @@ export async function POST(req: NextRequest) {
     const reply = await generateReply(systemPrompt, message);
 
     const svc2 = createServiceClient();
-    await svc2
-      .from("replyflow_profiles")
-      .update({ replies_used_this_month: repliesUsed + 1 })
-      .eq("id", user.id);
+    await Promise.all([
+      svc2
+        .from("replyflow_profiles")
+        .update({
+          replies_used_this_month: repliesUsed + 1,
+          last_tone: tone,
+          last_scenario: scenario,
+          updated_at: now.toISOString(),
+        })
+        .eq("id", user.id),
+      svc2.from("replyflow_replies").insert({
+        user_id: user.id,
+        customer_message: message,
+        tone,
+        scenario,
+        generated_reply: reply,
+      }),
+    ]);
 
     return NextResponse.json({
       reply,

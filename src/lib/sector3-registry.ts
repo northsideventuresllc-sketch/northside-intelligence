@@ -16,6 +16,8 @@ export interface Sector3RegistryEntry {
   description: string;
   status: "LIVE" | "COMING SOON";
   appUrl?: string;
+  /** Relative dashboard path when hosted in the portal (e.g. `/replyflow/dashboard`). */
+  dashboardPath?: string;
   /** Tool favicon path — must differ from NI portal `/icon.svg`. */
   favicon: string;
   github: string;
@@ -31,6 +33,7 @@ export const SECTOR3_REGISTRY: Sector3RegistryEntry[] = [
     description: "AI-powered customer service reply automation",
     status: "LIVE",
     appUrl: "https://northsideintelligence.com/replyflow",
+    dashboardPath: "/replyflow/dashboard",
     favicon: "/replyflow/icon.svg",
     github: `https://github.com/${GITHUB_ORG}/replyflow`,
     supabaseTable: "replyflow_profiles",
