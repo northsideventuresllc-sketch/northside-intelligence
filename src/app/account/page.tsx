@@ -24,7 +24,7 @@ export default async function AccountPage() {
 
   const { data: profile } = await supabase
     .from("ni_portal_profiles")
-    .select("full_name, email, username, two_factor_enabled")
+    .select("full_name, email, username, two_factor_enabled, account_type, business_name, business_website, business_size")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -57,6 +57,10 @@ export default async function AccountPage() {
               fullName: profile?.full_name ?? null,
               username: profile?.username ?? null,
               twoFactorEnabled: profile?.two_factor_enabled ?? true,
+              accountType: (profile?.account_type ?? "personal") as "personal" | "business",
+              businessName: profile?.business_name ?? null,
+              businessWebsite: profile?.business_website ?? null,
+              businessSize: profile?.business_size ?? null,
             }}
             billing={{
               niTier: billingState.niTier,

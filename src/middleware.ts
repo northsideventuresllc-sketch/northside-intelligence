@@ -138,11 +138,13 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/account") ||
     pathname.startsWith("/toolkit") ||
     pathname.startsWith("/store") ||
+    pathname.startsWith("/services") ||
     pathname.startsWith("/tools") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/billing") ||
     pathname.startsWith("/api/store") ||
+    pathname.startsWith("/api/services") ||
     pathname.startsWith("/replyflow") ||
     isReplyFlowHost(host);
 

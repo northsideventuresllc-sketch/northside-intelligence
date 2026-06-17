@@ -53,6 +53,12 @@ export function Nav() {
           >
             Store
           </a>
+          <Link
+            href="/services"
+            className="text-sm text-ni-muted transition hover:text-cyan-300"
+          >
+            Intelligence Services
+          </Link>
           <a
             href="/#pricing"
             className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
