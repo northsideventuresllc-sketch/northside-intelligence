@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
+import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { formatStorePrice } from "@/lib/store/client";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
@@ -27,7 +27,7 @@ export function ViralProductCard({ product, variant, onSelect }: ViralProductCar
         }`}
       >
         {product.imageUrl ? (
-          <Image
+          <StoreProductImage
             src={product.imageUrl}
             alt={product.name}
             width={isCenter ? 200 : 120}

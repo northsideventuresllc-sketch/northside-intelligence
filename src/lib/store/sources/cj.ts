@@ -1,7 +1,9 @@
 import "server-only";
 
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
+import { enrichCjProductDetail } from "@/lib/store/sources/cj-detail";
 import { getCjAccessToken } from "@/lib/store/sources/cj-auth";
+import { parseCjListingPriceUsd, supplierCostCentsFromUsd } from "@/lib/store/sources/cj-pricing";
 import type { SourceProductDraft } from "@/lib/store/sources/types";
 
 /**
@@ -65,13 +67,26 @@ async function fetchCjListV2(
   return json.data?.list ?? [];
 }
 
-function mapCjProduct(item: CjListV2Product, tags = ["cj", "trending"]): CjProductDraft | null {
+async function mapCjProduct(
+  item: CjListV2Product,
+  tags = ["cj", "trending"]
+): Promise<CjProductDraft | null> {
   const id = item.id ?? item.sku;
   const name = item.nameEn?.trim();
   if (!id || !name) return null;
 
-  const sell = parseFloat(item.sellPrice ?? "0");
-  if (!Number.isFinite(sell) || sell <= 0) return null;
+  const enriched = await enrichCjProductDetail({
+    sourceProductId: id,
+    name,
+    listSellPrice: item.sellPrice,
+    listImageUrl: item.bigImage,
+  });
+
+  const supplierUsd =
+    enriched != null
+      ? enriched.supplierCostCents / 100
+      : parseCjListingPriceUsd(item.sellPrice);
+  if (supplierUsd == null || supplierUsd <= 0) return null;
 
   const category = (item.threeCategoryName ?? "general")
     .toLowerCase()
@@ -80,12 +95,12 @@ function mapCjProduct(item: CjListV2Product, tags = ["cj", "trending"]): CjProdu
 
   return {
     name,
-    description: name,
-    imageUrl: item.bigImage ?? "",
+    description: enriched?.description ?? name,
+    imageUrl: enriched?.imageUrl || item.bigImage || "",
     category: category || "general",
     tags,
     sourceProductId: id,
-    supplierCostCents: Math.round(sell * 100),
+    supplierCostCents: supplierCostCentsFromUsd(supplierUsd),
     estimatedDeliveryDays: 12,
   };
 }
@@ -113,7 +128,7 @@ export async function searchCjProducts(query: string, limit = 20): Promise<Sourc
     const seen = new Set<string>();
     const drafts: SourceProductDraft[] = [];
     for (const item of items) {
-      const draft = mapCjProduct(item, ["cj", "search"]);
+      const draft = await mapCjProduct(item, ["cj", "search"]);
       if (!draft || seen.has(draft.sourceProductId)) continue;
       seen.add(draft.sourceProductId);
       drafts.push(toSourceDraft(draft));
@@ -142,7 +157,7 @@ export async function fetchCjTrendingProducts(limit = 10): Promise<CjProductDraf
     });
 
     for (const item of trending) {
-      const draft = mapCjProduct(item);
+      const draft = await mapCjProduct(item);
       if (!draft || seen.has(draft.sourceProductId)) continue;
       seen.add(draft.sourceProductId);
       drafts.push(draft);
@@ -160,7 +175,7 @@ export async function fetchCjTrendingProducts(limit = 10): Promise<CjProductDraf
         sort: "desc",
       });
       for (const item of batch) {
-        const draft = mapCjProduct(item);
+        const draft = await mapCjProduct(item);
         if (!draft || seen.has(draft.sourceProductId)) continue;
         seen.add(draft.sourceProductId);
         drafts.push(draft);

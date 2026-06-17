@@ -2,15 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CatalogProductView, StoreSearchResponse } from "@/lib/store/catalog/types";
-import { DROPSHIP_SOURCE_PLATFORMS } from "@/lib/store/platform-labels";
+import { STORE_ITEM_CATEGORIES, formatCategoryLabel } from "@/lib/store/categories";
 import { SearchResultCard } from "@/components/store/SearchResultCard";
 import { StoreCartLink } from "@/components/store/StoreCartLink";
 import type { StoreSearchFilters } from "@/components/store/StorePageClient";
-
-const PLATFORM_OPTIONS = [
-  { id: "curated", label: "NI Deals" },
-  ...DROPSHIP_SOURCE_PLATFORMS,
-] as const;
 
 function getSessionId(): string {
   if (typeof window === "undefined") return "";
@@ -58,7 +53,6 @@ export function StoreSearchResults({
   onSearch,
   onBack,
 }: StoreSearchResultsProps) {
-  const [category, setCategory] = useState(filters.category);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<StoreSearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,8 +69,7 @@ export function StoreSearchResults({
     try {
       const params = new URLSearchParams();
       if (query.trim()) params.set("q", query.trim());
-      if (filters.platforms.length) params.set("platforms", filters.platforms.join(","));
-      if (category) params.set("category", category);
+      if (filters.category) params.set("category", filters.category);
       if (filters.minPrice) params.set("minPrice", filters.minPrice);
       if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
       params.set("page", String(page));
@@ -92,7 +85,7 @@ export function StoreSearchResults({
     } finally {
       setLoading(false);
     }
-  }, [query, filters, category, page]);
+  }, [query, filters, page]);
 
   useEffect(() => {
     runSearch();
@@ -107,8 +100,6 @@ export function StoreSearchResults({
     setPage(1);
     onSearch(draftQuery);
   };
-
-  const categories = data?.categories ?? [];
 
   return (
     <section aria-label="Search results">
@@ -128,7 +119,7 @@ export function StoreSearchResults({
           type="search"
           value={draftQuery}
           onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Search trending products…"
+          placeholder="Search products…"
           className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-ni-muted focus:border-cyan-400/50 focus:outline-none"
           aria-label="Search products"
         />
@@ -141,17 +132,28 @@ export function StoreSearchResults({
       </form>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {PLATFORM_OPTIONS.map((option) => {
-          const active = filters.platforms.includes(option.id);
+        <button
+          type="button"
+          onClick={() => {
+            onFiltersChange({ ...filters, category: "" });
+            setPage(1);
+          }}
+          className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+            !filters.category
+              ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-100"
+              : "border-white/10 bg-white/5 text-ni-muted hover:border-white/20"
+          }`}
+        >
+          All Categories
+        </button>
+        {STORE_ITEM_CATEGORIES.map((cat) => {
+          const active = filters.category === cat.id;
           return (
             <button
-              key={option.id}
+              key={cat.id}
               type="button"
               onClick={() => {
-                const platforms = active
-                  ? filters.platforms.filter((p) => p !== option.id)
-                  : [...filters.platforms, option.id];
-                onFiltersChange({ ...filters, platforms });
+                onFiltersChange({ ...filters, category: active ? "" : cat.id });
                 setPage(1);
               }}
               className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
@@ -160,30 +162,13 @@ export function StoreSearchResults({
                   : "border-white/10 bg-white/5 text-ni-muted hover:border-white/20"
               }`}
             >
-              {option.label}
+              {cat.label}
             </button>
           );
         })}
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <select
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value);
-            onFiltersChange({ ...filters, category: e.target.value });
-            setPage(1);
-          }}
-          className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-400/50 focus:outline-none"
-          aria-label="Filter by category"
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat.replace(/-/g, " ")}
-            </option>
-          ))}
-        </select>
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <input
           type="number"
           min="0"
@@ -210,7 +195,7 @@ export function StoreSearchResults({
         />
       </div>
 
-      {loading && <p className="text-center text-sm text-ni-muted">Searching sources…</p>}
+      {loading && <p className="text-center text-sm text-ni-muted">Searching…</p>}
       {error && <p className="text-center text-sm text-red-300">{error}</p>}
 
       {!loading && data && (
@@ -220,7 +205,9 @@ export function StoreSearchResults({
               ? query
                 ? `No results for “${query}”.`
                 : "No products match your filters."
-              : `${data.total} result${data.total === 1 ? "" : "s"}${query ? ` for “${query}”` : ""}`}
+              : `${data.total} result${data.total === 1 ? "" : "s"}${query ? ` for “${query}”` : ""}${
+                  filters.category ? ` in ${formatCategoryLabel(filters.category)}` : ""
+                }`}
           </p>
 
           {data.results.length > 0 && (

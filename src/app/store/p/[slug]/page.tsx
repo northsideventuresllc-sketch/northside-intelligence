@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
 import { ProductPurchasePanel } from "@/components/store/ProductPurchasePanel";
 import { StoreCartProvider } from "@/components/store/StoreCartProvider";
+import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { getCatalogProductBySlug, toCatalogProductView } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
 import { getStoreGateStatus } from "@/lib/store/gate";
@@ -48,7 +48,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
               <div className="flex flex-col lg:flex-row">
                 <div className="flex h-80 items-center justify-center border-b border-white/5 bg-gradient-to-br from-cyan-500/10 to-transparent p-8 lg:h-auto lg:w-2/5 lg:border-b-0 lg:border-r">
                   {product.imageUrl ? (
-                    <Image
+                    <StoreProductImage
                       src={product.imageUrl}
                       alt={product.name}
                       width={320}
@@ -93,7 +93,6 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                     product={product}
                     sourceProductId={row.sourceProductId}
                     checkoutLive={gate.live}
-                    gateMessage={gate.message}
                   />
                 </div>
               </div>

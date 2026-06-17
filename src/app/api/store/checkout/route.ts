@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
   const gate = getStoreGateStatus();
   if (!gate.live) {
-    return NextResponse.json({ error: gate.message }, { status: 403 });
+    return NextResponse.json({ error: "Checkout is not available right now." }, { status: 403 });
   }
 
   let body: { items?: CheckoutItemBody[] };
