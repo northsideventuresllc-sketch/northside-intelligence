@@ -63,6 +63,8 @@ upsert_env NI_STORE_LIVE "${NI_STORE_LIVE:-false}"
 
 if [[ -n "${CJ_DROPSHIPPING_API_KEY:-}" ]]; then
   upsert_env CJ_DROPSHIPPING_API_KEY "$CJ_DROPSHIPPING_API_KEY"
+else
+  echo "SKIP CJ_DROPSHIPPING_API_KEY (not provided)"
 fi
 
 echo "Done. Redeploy production to pick up new env vars."
