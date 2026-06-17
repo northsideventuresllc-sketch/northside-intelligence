@@ -95,6 +95,13 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       (value) => !value?.trim()
     );
     if (cronSecret) process.env.CRON_SECRET = cronSecret;
+
+    const storeLive = await resolvePlatformSecret(
+      "NI_STORE_LIVE",
+      process.env.NI_STORE_LIVE,
+      (value) => !value?.trim()
+    );
+    if (storeLive) process.env.NI_STORE_LIVE = storeLive;
   })();
 
   return hydratePromise;

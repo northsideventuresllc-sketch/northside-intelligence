@@ -12,6 +12,7 @@ export interface CatalogProductRow {
   category: string;
   tags: string[];
   sourcePlatform: string;
+  sourceProductId: string | null;
   supplierCostCents: number;
   retailPriceCents: number;
   currency: string;
@@ -32,6 +33,7 @@ function mapRow(row: Record<string, unknown>): CatalogProductRow {
     category: String(row.category ?? "general"),
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
     sourcePlatform: String(row.source_platform ?? "curated"),
+    sourceProductId: row.source_product_id != null ? String(row.source_product_id) : null,
     supplierCostCents: Number(row.supplier_cost_cents),
     retailPriceCents: Number(row.retail_price_cents),
     currency: String(row.currency ?? "usd"),

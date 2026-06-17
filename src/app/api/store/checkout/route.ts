@@ -1,52 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
-import { canCheckoutProductServer, getStoreGateStatus } from "@/lib/store/gate";
-import { getStoreProductBySlug } from "@/lib/store/products";
+import { calculateCartTotals } from "@/lib/store/cart/pricing";
+import type { CartLineItem, ShippingTier } from "@/lib/store/cart/types";
+import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
+import { ensureStoreEnv } from "@/lib/store/env";
+import { getStoreGateStatus } from "@/lib/store/gate";
 import { ensureStoreStripeEnv, getStoreStripe, storeAppUrl } from "@/lib/store/stripe";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
+interface CheckoutItemBody {
+  slug?: string;
+  quantity?: number;
+  shippingTier?: ShippingTier;
+}
+
 export async function POST(req: NextRequest) {
+  await ensureStoreEnv();
   await ensureStoreStripeEnv();
 
   const gate = getStoreGateStatus();
   if (!gate.live) {
-    return NextResponse.json(
-      { error: "Store checkout is not live yet. CJDropshipping integration pending." },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: gate.message }, { status: 403 });
   }
 
-  let body: { productSlug?: string; quantity?: number };
+  let body: { items?: CheckoutItemBody[] };
   try {
-    body = (await req.json()) as { productSlug?: string; quantity?: number };
+    body = (await req.json()) as { items?: CheckoutItemBody[] };
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const productSlug = body.productSlug?.trim();
-  const quantity = Math.max(1, Math.min(10, Number(body.quantity) || 1));
-  if (!productSlug) {
-    return NextResponse.json({ error: "productSlug is required" }, { status: 400 });
+  const rawItems = body.items ?? [];
+  if (!rawItems.length) {
+    return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
   }
 
-  const product = await getStoreProductBySlug(productSlug);
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  const cartLines: CartLineItem[] = [];
+  for (const raw of rawItems) {
+    const slug = raw.slug?.trim();
+    if (!slug) continue;
+    const catalog = await getCatalogProductBySlug(slug);
+    if (!catalog) {
+      return NextResponse.json({ error: `Product not found: ${slug}` }, { status: 404 });
+    }
+    const quantity = Math.max(1, Math.min(10, Number(raw.quantity) || 1));
+    const shippingTier: ShippingTier =
+      raw.shippingTier === "expedited" ? "expedited" : "standard";
+    cartLines.push({
+      slug: catalog.slug,
+      name: catalog.name,
+      imageUrl: catalog.imageUrl,
+      retailPriceCents: catalog.retailPriceCents,
+      currency: catalog.currency,
+      sourcePlatform: catalog.sourcePlatform,
+      sourceProductId: catalog.sourceProductId,
+      quantity,
+      shippingTier,
+    });
   }
 
-  if (!canCheckoutProductServer({ isMock: product.isMock })) {
-    return NextResponse.json(
-      { error: "This product is not available for checkout yet." },
-      { status: 403 }
-    );
+  if (!cartLines.length) {
+    return NextResponse.json({ error: "No valid cart items" }, { status: 400 });
   }
 
-  if (!product.stripePriceId) {
-    return NextResponse.json(
-      { error: "Stripe price not configured for this product." },
-      { status: 503 }
-    );
-  }
-
+  const totals = calculateCartTotals(cartLines);
   const supabase = await createServerAuthClient();
   const {
     data: { user },
@@ -55,19 +71,59 @@ export async function POST(req: NextRequest) {
   const base = storeAppUrl();
   const stripe = getStoreStripe();
 
+  const lineItems = [
+    ...cartLines.map((item) => ({
+      price_data: {
+        currency: item.currency,
+        unit_amount: item.retailPriceCents,
+        product_data: {
+          name: item.name,
+          images: item.imageUrl ? [item.imageUrl] : undefined,
+          metadata: {
+            catalogSlug: item.slug,
+            sourcePlatform: item.sourcePlatform,
+          },
+        },
+      },
+      quantity: item.quantity,
+    })),
+    {
+      price_data: {
+        currency: cartLines[0]?.currency ?? "usd",
+        unit_amount: totals.shippingCents,
+        product_data: {
+          name: totals.hasExpedited
+            ? "Estimated Shipping & Handling (Expedited)"
+            : "Estimated Shipping & Handling",
+          description:
+            "NI estimates shipping at checkout. Unused shipping is refunded after fulfillment.",
+        },
+      },
+      quantity: 1,
+    },
+  ];
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      line_items: [{ price: product.stripePriceId, quantity }],
-      success_url: `${base}/store?ordered=${product.slug}`,
-      cancel_url: `${base}/store`,
+      line_items: lineItems,
+      success_url: `${base}/store/cart?ordered=1`,
+      cancel_url: `${base}/store/cart`,
       customer_email: user?.email ?? undefined,
       shipping_address_collection: { allowed_countries: ["US"] },
       metadata: {
         storeCheckout: "true",
-        productSlug: product.slug,
+        catalogCheckout: "true",
         userId: user?.id ?? "",
-        quantity: String(quantity),
+        shippingEstimateCents: String(totals.shippingEstimateCents),
+        shippingChargedCents: String(totals.shippingCents),
+        itemsJson: JSON.stringify(
+          cartLines.map((item) => ({
+            slug: item.slug,
+            quantity: item.quantity,
+            shippingTier: item.shippingTier,
+          }))
+        ),
       },
     });
 

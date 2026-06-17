@@ -28,10 +28,21 @@ Dropship storefront for Northside Intelligence (`shop.northsideintelligence.com`
 
 Search returns `CatalogProductView[]` only — supplier costs never exposed. CJ hits are upserted into `ni_store_catalog` for PDP links.
 
-## Phase 3–4 (planned)
+## Phase 3 (shipped): Full product landing pages
 
-- Full product landing pages (reviews, expedited shipping)
-- Cart + checkout with estimated S&H and refund of unused shipping
+| Layer | Path | Purpose |
+|-------|------|---------|
+| PDP | `/store/p/[slug]` | Image, retail price, reviews, source, ETA, expedited shipping |
+| Purchase | `ProductPurchasePanel` | Standard vs expedited shipping, Add to Cart |
+
+## Phase 4 (shipped): Cart + checkout
+
+| Layer | Path | Purpose |
+|-------|------|---------|
+| Cart | `/store/cart` | Line items, shipping tier, estimated S&H |
+| Checkout API | `POST /api/store/checkout` | Stripe Checkout with retail + estimated shipping |
+| Webhook | `/api/store/webhooks/stripe` | Catalog orders + Make fulfillment |
+| Gate API | `GET /api/store/gate` | Checkout live status for UI |
 
 ## Legacy merch tables
 

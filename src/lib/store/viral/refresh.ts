@@ -99,6 +99,7 @@ export async function refreshDailyViralPicks(): Promise<{ pickDate: string; coun
           category: product.category,
           tags: product.tags,
           sourcePlatform: "curated",
+          sourceProductId: null,
           supplierCostCents: 0,
           retailPriceCents: 0,
           currency: "usd",

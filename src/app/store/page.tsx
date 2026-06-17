@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
-import { ViralProductsCarousel } from "@/components/store/ViralProductsCarousel";
-import { StoreSearch } from "@/components/store/StoreSearch";
-import { WebTrackingOptIn } from "@/components/store/WebTrackingOptIn";
+import { StoreCartProvider } from "@/components/store/StoreCartProvider";
+import { StorePageClient } from "@/components/store/StorePageClient";
 
 export const metadata: Metadata = {
   title: "Store | Northside Intelligence",
@@ -17,31 +17,22 @@ export default function StorePage() {
   return (
     <main className="min-h-screen bg-ni-bg">
       <Nav />
-      <section className="relative px-6 pb-20 pt-24">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/[0.04] via-transparent to-transparent" />
-        <div className="relative mx-auto max-w-5xl">
-          <div className="mb-10 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
-              NI Deals
-            </p>
-            <h1 className="text-3xl font-semibold text-white">NI Store</h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-ni-muted">
-              Ten viral products refreshed every 24 hours — scored from what&apos;s trending online
-              and what shoppers love on NI. Search dropship sources below; full checkout ships in a
-              later update.
-            </p>
+      <StoreCartProvider>
+        <section className="relative px-6 pb-20 pt-24">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/[0.04] via-transparent to-transparent" />
+          <div className="relative mx-auto max-w-6xl">
+            <Suspense
+              fallback={
+                <div className="glass-panel animate-pulse p-12 text-center text-ni-muted">
+                  Loading store…
+                </div>
+              }
+            >
+              <StorePageClient />
+            </Suspense>
           </div>
-
-          <StoreSearch />
-          <WebTrackingOptIn />
-          <ViralProductsCarousel />
-
-          <p className="mt-6 text-center text-xs text-ni-muted">
-            Prices include our service fee. Supplier listing costs are never shown — you only see
-            your NI price.
-          </p>
-        </div>
-      </section>
+        </section>
+      </StoreCartProvider>
       <Footer />
     </main>
   );

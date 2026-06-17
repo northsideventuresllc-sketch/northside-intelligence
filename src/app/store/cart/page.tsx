@@ -1,0 +1,194 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Footer } from "@/components/landing/Footer";
+import { Nav } from "@/components/landing/Nav";
+import { StoreCartProvider, useStoreCart } from "@/components/store/StoreCartProvider";
+import { calculateCartTotals } from "@/lib/store/cart/pricing";
+import { formatStorePrice } from "@/lib/store/client";
+import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
+import type { StoreGateStatus } from "@/lib/store/types";
+import type { ShippingTier } from "@/lib/store/cart/types";
+
+function CartContent() {
+  const searchParams = useSearchParams();
+  const ordered = searchParams.get("ordered") === "1";
+  const { items, itemCount, removeItem, updateQuantity, updateShippingTier, clearCart } =
+    useStoreCart();
+  const [gate, setGate] = useState<StoreGateStatus | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/store/gate")
+      .then((r) => r.json())
+      .then((json: StoreGateStatus) => setGate(json))
+      .catch(() => setGate(null));
+  }, []);
+
+  const totals = useMemo(() => calculateCartTotals(items), [items]);
+
+  async function handleCheckout() {
+    if (!items.length) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/store/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((item) => ({
+            slug: item.slug,
+            quantity: item.quantity,
+            shippingTier: item.shippingTier,
+          })),
+        }),
+      });
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Checkout failed");
+      if (!json.url) throw new Error("Checkout URL unavailable");
+      clearCart();
+      window.location.href = json.url;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Checkout failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="relative px-6 pb-20 pt-24">
+      <div className="mx-auto max-w-3xl">
+        <Link href="/store" className="text-sm text-cyan-300 hover:underline">
+          ← Back to Store
+        </Link>
+        <h1 className="mt-4 text-2xl font-semibold text-white">Your Cart</h1>
+
+        {ordered && (
+          <p className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            Order received — fulfillment will begin shortly.
+          </p>
+        )}
+
+        {!items.length && !ordered && (
+          <p className="mt-8 text-sm text-ni-muted">Your cart is empty.</p>
+        )}
+
+        {items.length > 0 && (
+          <div className="mt-8 space-y-4">
+            {items.map((item) => (
+              <article key={item.slug} className="glass-panel flex gap-4 p-4">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-white/5">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.name}
+                      width={72}
+                      height={72}
+                      className="max-h-16 object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-ni-muted">No Image</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/store/p/${item.slug}`} className="font-semibold text-white hover:underline">
+                    {item.name}
+                  </Link>
+                  <p className="mt-1 text-sm text-ni-muted">
+                    {formatStorePrice(item.retailPriceCents, item.currency)} · via{" "}
+                    {STORE_PLATFORM_LABELS[item.sourcePlatform] ?? item.sourcePlatform}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <label className="text-xs text-ni-muted">
+                      Qty
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={item.quantity}
+                        onChange={(e) => updateQuantity(item.slug, Number(e.target.value))}
+                        className="ml-2 w-14 rounded border border-white/10 bg-white/5 px-2 py-1 text-white"
+                      />
+                    </label>
+                    <select
+                      value={item.shippingTier}
+                      onChange={(e) =>
+                        updateShippingTier(item.slug, e.target.value as ShippingTier)
+                      }
+                      className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-white"
+                    >
+                      <option value="standard">Standard</option>
+                      <option value="expedited">Expedited</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.slug)}
+                      className="text-xs font-semibold text-red-300 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+
+            <div className="glass-panel space-y-2 p-4 text-sm">
+              <div className="flex justify-between text-ni-muted">
+                <span>Subtotal ({itemCount} items)</span>
+                <span>{formatStorePrice(totals.subtotalCents)}</span>
+              </div>
+              <div className="flex justify-between text-ni-muted">
+                <span>Est. Shipping & Handling</span>
+                <span>{formatStorePrice(totals.shippingCents)}</span>
+              </div>
+              <div className="flex justify-between border-t border-white/10 pt-2 text-base font-semibold text-white">
+                <span>Total</span>
+                <span>{formatStorePrice(totals.totalCents)}</span>
+              </div>
+              <p className="text-[11px] text-ni-muted">
+                Shipping is estimated at checkout. Any unused amount is refunded after fulfillment.
+              </p>
+            </div>
+
+            {error && <p className="text-sm text-red-300">{error}</p>}
+
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={loading || !gate?.live}
+              className="w-full rounded-xl bg-ni-cyan py-3 text-sm font-semibold text-ni-bg transition hover:bg-cyan-300 disabled:opacity-50"
+            >
+              {loading ? "Redirecting…" : "Checkout"}
+            </button>
+
+            {!gate?.live && gate?.message && (
+              <p className="text-center text-xs text-ni-muted">{gate.message}</p>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export default function StoreCartPage() {
+  return (
+    <main className="min-h-screen bg-ni-bg">
+      <Nav />
+      <StoreCartProvider>
+        <Suspense
+          fallback={
+            <div className="px-6 pt-24 text-center text-ni-muted">Loading cart…</div>
+          }
+        >
+          <CartContent />
+        </Suspense>
+      </StoreCartProvider>
+      <Footer />
+    </main>
+  );
+}

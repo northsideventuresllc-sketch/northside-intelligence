@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CatalogProductView, StoreSearchResponse } from "@/lib/store/catalog/types";
 import { DROPSHIP_SOURCE_PLATFORMS } from "@/lib/store/platform-labels";
 import { SearchResultCard } from "@/components/store/SearchResultCard";
+import { StoreCartLink } from "@/components/store/StoreCartLink";
+import type { StoreSearchFilters } from "@/components/store/StorePageClient";
 
 const PLATFORM_OPTIONS = [
   { id: "curated", label: "NI Deals" },
@@ -37,13 +39,26 @@ async function trackSearch(query: string) {
   }
 }
 
-export function StoreSearch() {
-  const [query, setQuery] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState("");
-  const [platforms, setPlatforms] = useState<string[]>([]);
-  const [category, setCategory] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+interface StoreSearchResultsProps {
+  query: string;
+  draftQuery: string;
+  filters: StoreSearchFilters;
+  onQueryChange: (query: string) => void;
+  onFiltersChange: (filters: StoreSearchFilters) => void;
+  onSearch: (query: string) => void;
+  onBack: () => void;
+}
+
+export function StoreSearchResults({
+  query,
+  draftQuery,
+  filters,
+  onQueryChange,
+  onFiltersChange,
+  onSearch,
+  onBack,
+}: StoreSearchResultsProps) {
+  const [category, setCategory] = useState(filters.category);
   const [page, setPage] = useState(1);
   const [data, setData] = useState<StoreSearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,84 +69,91 @@ export function StoreSearch() {
     return Math.max(1, Math.ceil(data.total / data.limit));
   }, [data]);
 
-  const runSearch = useCallback(
-    async (searchQuery: string, pageNum: number) => {
-      setLoading(true);
-      setError("");
-      try {
-        const params = new URLSearchParams();
-        if (searchQuery.trim()) params.set("q", searchQuery.trim());
-        if (platforms.length) params.set("platforms", platforms.join(","));
-        if (category) params.set("category", category);
-        if (minPrice) params.set("minPrice", minPrice);
-        if (maxPrice) params.set("maxPrice", maxPrice);
-        params.set("page", String(pageNum));
-        params.set("limit", "24");
+  const runSearch = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams();
+      if (query.trim()) params.set("q", query.trim());
+      if (filters.platforms.length) params.set("platforms", filters.platforms.join(","));
+      if (category) params.set("category", category);
+      if (filters.minPrice) params.set("minPrice", filters.minPrice);
+      if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+      params.set("page", String(page));
+      params.set("limit", "24");
 
-        const res = await fetch(`/api/store/search?${params.toString()}`);
-        const json = (await res.json()) as StoreSearchResponse & { error?: string };
-        if (!res.ok) throw new Error(json.error ?? "Search failed");
-        setData(json);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Search failed");
-        setData(null);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [platforms, category, minPrice, maxPrice]
-  );
+      const res = await fetch(`/api/store/search?${params.toString()}`);
+      const json = (await res.json()) as StoreSearchResponse & { error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Search failed");
+      setData(json);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Search failed");
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [query, filters, category, page]);
 
   useEffect(() => {
-    runSearch(submittedQuery, page);
-  }, [submittedQuery, page, runSearch, category, platforms, minPrice, maxPrice]);
+    runSearch();
+  }, [runSearch]);
+
+  useEffect(() => {
+    if (query.trim()) trackSearch(query);
+  }, [query]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = query.trim();
-    setSubmittedQuery(trimmed);
     setPage(1);
-    if (trimmed) trackSearch(trimmed);
-  };
-
-  const togglePlatform = (id: string) => {
-    setPlatforms((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
-    setPage(1);
+    onSearch(draftQuery);
   };
 
   const categories = data?.categories ?? [];
 
   return (
-    <section className="mb-12" aria-label="Product search">
-      <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
-        <div className="flex gap-2">
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search trending products across dropship sources…"
-            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-ni-muted focus:border-cyan-400/50 focus:outline-none"
-            aria-label="Search products"
-          />
-          <button
-            type="submit"
-            className="rounded-xl bg-ni-cyan px-5 py-3 text-sm font-semibold text-ni-bg transition hover:bg-cyan-300"
-          >
-            Search
-          </button>
-        </div>
+    <section aria-label="Search results">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm font-semibold text-cyan-300 hover:underline"
+        >
+          ← Back to Deals
+        </button>
+        <StoreCartLink />
+      </div>
+
+      <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
+        <input
+          type="search"
+          value={draftQuery}
+          onChange={(e) => onQueryChange(e.target.value)}
+          placeholder="Search trending products…"
+          className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-ni-muted focus:border-cyan-400/50 focus:outline-none"
+          aria-label="Search products"
+        />
+        <button
+          type="submit"
+          className="rounded-xl bg-ni-cyan px-5 py-3 text-sm font-semibold text-ni-bg transition hover:bg-cyan-300"
+        >
+          Search
+        </button>
       </form>
 
-      <div className="mx-auto mt-4 flex max-w-3xl flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         {PLATFORM_OPTIONS.map((option) => {
-          const active = platforms.includes(option.id);
+          const active = filters.platforms.includes(option.id);
           return (
             <button
               key={option.id}
               type="button"
-              onClick={() => togglePlatform(option.id)}
+              onClick={() => {
+                const platforms = active
+                  ? filters.platforms.filter((p) => p !== option.id)
+                  : [...filters.platforms, option.id];
+                onFiltersChange({ ...filters, platforms });
+                setPage(1);
+              }}
               className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                 active
                   ? "border-cyan-400/50 bg-cyan-500/20 text-cyan-100"
@@ -144,11 +166,12 @@ export function StoreSearch() {
         })}
       </div>
 
-      <div className="mx-auto mt-4 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <select
           value={category}
           onChange={(e) => {
             setCategory(e.target.value);
+            onFiltersChange({ ...filters, category: e.target.value });
             setPage(1);
           }}
           className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-400/50 focus:outline-none"
@@ -165,50 +188,39 @@ export function StoreSearch() {
           type="number"
           min="0"
           step="0.01"
-          value={minPrice}
+          value={filters.minPrice}
           onChange={(e) => {
-            setMinPrice(e.target.value);
+            onFiltersChange({ ...filters, minPrice: e.target.value });
             setPage(1);
           }}
           placeholder="Min price ($)"
           className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-ni-muted focus:border-cyan-400/50 focus:outline-none"
-          aria-label="Minimum retail price"
         />
         <input
           type="number"
           min="0"
           step="0.01"
-          value={maxPrice}
+          value={filters.maxPrice}
           onChange={(e) => {
-            setMaxPrice(e.target.value);
+            onFiltersChange({ ...filters, maxPrice: e.target.value });
             setPage(1);
           }}
           placeholder="Max price ($)"
           className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-ni-muted focus:border-cyan-400/50 focus:outline-none"
-          aria-label="Maximum retail price"
         />
       </div>
 
-      <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-ni-muted">
-        Retail prices only — supplier costs are never shown. AliExpress and Temu appear when API
-        keys are configured.
-      </p>
-
-      {loading && (
-        <p className="mt-8 text-center text-sm text-ni-muted">Searching sources…</p>
-      )}
-      {error && <p className="mt-8 text-center text-sm text-red-300">{error}</p>}
+      {loading && <p className="text-center text-sm text-ni-muted">Searching sources…</p>}
+      {error && <p className="text-center text-sm text-red-300">{error}</p>}
 
       {!loading && data && (
-        <div className="mt-8">
-          <p className="mb-4 text-center text-sm text-ni-muted">
+        <>
+          <p className="mb-4 text-sm text-ni-muted">
             {data.total === 0
-              ? submittedQuery
-                ? `No results for “${submittedQuery}”.`
+              ? query
+                ? `No results for “${query}”.`
                 : "No products match your filters."
-              : `${data.total} result${data.total === 1 ? "" : "s"}${
-                  submittedQuery ? ` for “${submittedQuery}”` : ""
-                }`}
+              : `${data.total} result${data.total === 1 ? "" : "s"}${query ? ` for “${query}”` : ""}`}
           </p>
 
           {data.results.length > 0 && (
@@ -220,7 +232,7 @@ export function StoreSearch() {
           )}
 
           {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-3">
+            <div className="mt-8 flex items-center justify-center gap-3">
               <button
                 type="button"
                 disabled={page <= 1}
@@ -242,7 +254,7 @@ export function StoreSearch() {
               </button>
             </div>
           )}
-        </div>
+        </>
       )}
     </section>
   );
