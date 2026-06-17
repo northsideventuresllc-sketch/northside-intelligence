@@ -31,6 +31,8 @@ interface Props {
   initialTone?: string;
   initialScenario?: string;
   history: ReplyFlowHistoryEntry[];
+  gated?: boolean;
+  gateContent?: React.ReactNode;
 }
 
 function createClient() {
@@ -55,6 +57,8 @@ export default function DashboardClient({
   initialTone,
   initialScenario,
   history: initialHistory,
+  gated = false,
+  gateContent,
 }: Props) {
   const [message, setMessage] = useState("");
   const [tone, setTone] = useState<(typeof TONES)[number]>(
@@ -139,6 +143,10 @@ export default function DashboardClient({
       <ReplyFlowNav email={email} planLabel={planLabel} onSignOut={handleSignOut} />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
+        {gated && gateContent ? (
+          gateContent
+        ) : (
+          <>
         <div className="rf-glass rounded-2xl p-5">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-white/80">Monthly replies</span>
@@ -297,6 +305,8 @@ export default function DashboardClient({
               ))}
             </ul>
           </div>
+        )}
+          </>
         )}
       </main>
     </div>

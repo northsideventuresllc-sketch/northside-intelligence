@@ -4,12 +4,14 @@ import { ToolkitGrid } from "@/components/billing/ToolkitGrid";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
 import { canAddNiPlanTool, getUserBillingState } from "@/lib/billing/entitlements";
-import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
+import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
+import { INTELLIGENCE_TOOL_SLUGS, mapDbPricing } from "@/lib/billing/tool-pricing";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { createServiceClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Toolkit | Northside Intelligence",
-  description: "Your subscribed Intelligence Tools",
+  title: "Tool Case | Northside Intelligence",
+  description: "Your Intelligence Tools collection",
 };
 
 export default async function ToolkitPage() {
@@ -26,6 +28,12 @@ export default async function ToolkitPage() {
   const owned = new Set(state.ownedToolSlugs);
   const availableToAdd = INTELLIGENCE_TOOL_SLUGS.filter((slug) => !owned.has(slug));
 
+  const service = createServiceClient();
+  const { data: pricingRows } = await service.from("ni_tool_pricing").select("*");
+  const toolPricingBySlug = Object.fromEntries(
+    (pricingRows ?? []).map((row) => [String(row.tool_slug), mapDbPricing(row)])
+  );
+
   return (
     <main className="min-h-screen bg-ni-bg">
       <Nav />
@@ -35,10 +43,10 @@ export default async function ToolkitPage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
               Your Collection
             </p>
-            <h1 className="text-3xl font-semibold text-white">Toolkit</h1>
+            <h1 className="text-3xl font-semibold text-white">Tool Case</h1>
             <p className="mx-auto mt-3 max-w-xl text-sm text-ni-muted">
-              Intelligence Tools you are subscribed to — lifetime purchases, individual plans, and
-              tools included in your NI subscription.
+              Add Intelligence Tools to your Tool Case to use them. Assign unlimited access from
+              your NI plan, or subscribe per tool at any time.
             </p>
           </div>
 
@@ -50,6 +58,10 @@ export default async function ToolkitPage() {
             canAddNiPlanTool={canAddNiPlanTool(state)}
             availableToAdd={availableToAdd}
             isMasterAccount={state.isMasterAccount}
+            canSwapUnlimitedTool={state.canSwapUnlimitedTool}
+            nextUnlimitedSwapAt={state.nextUnlimitedSwapAt}
+            toolPricingBySlug={toolPricingBySlug}
+            showPermanentOfferFor={(slug) => shouldShowPermanentAccessOffer(slug, user.id)}
           />
         </div>
       </section>
