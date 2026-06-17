@@ -14,6 +14,7 @@ export interface MakeStoreOrderPayload {
     cjProductId: string | null;
     quantity: number;
     unitPriceCents: number;
+    shippingTier?: string;
   }>;
 }
 

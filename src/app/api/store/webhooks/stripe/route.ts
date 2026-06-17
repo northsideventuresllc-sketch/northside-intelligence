@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import type { ShippingTier } from "@/lib/store/cart/types";
+import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
+import { createPaidCatalogOrder, type CatalogCheckoutLine } from "@/lib/store/catalog-orders";
 import { sendMakeStoreWebhook } from "@/lib/store/make-webhook";
-import { createPaidStoreOrder, markOrderFulfillmentSent } from "@/lib/store/orders";
-import { getStoreProductBySlug } from "@/lib/store/products";
+import { isStoreCheckoutLive } from "@/lib/store/gate";
+import { ensureStoreEnv } from "@/lib/store/env";
 import {
   ensureStoreStripeEnv,
   getStoreStripe,
   getStoreWebhookSecret,
 } from "@/lib/store/stripe";
-import { isStoreCheckoutLive } from "@/lib/store/gate";
 
 export async function POST(req: NextRequest) {
+  await ensureStoreEnv();
   await ensureStoreStripeEnv();
 
   const secret = getStoreWebhookSecret();
@@ -38,26 +41,51 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true, skipped: "not_store_checkout" });
   }
 
-  const productSlug = session.metadata.productSlug;
-  const quantity = Math.max(1, Number(session.metadata.quantity) || 1);
-  const userId = session.metadata.userId || null;
+  if (session.metadata.catalogCheckout !== "true") {
+    return NextResponse.json({ received: true, skipped: "legacy_checkout_disabled" });
+  }
 
-  if (!productSlug) {
-    return NextResponse.json({ error: "Missing product metadata" }, { status: 400 });
+  const userId = session.metadata.userId || null;
+  const itemsJson = session.metadata.itemsJson;
+
+  if (!itemsJson) {
+    return NextResponse.json({ error: "Missing cart metadata" }, { status: 400 });
+  }
+
+  let parsedItems: Array<{ slug: string; quantity: number; shippingTier: ShippingTier }>;
+  try {
+    parsedItems = JSON.parse(itemsJson) as Array<{
+      slug: string;
+      quantity: number;
+      shippingTier: ShippingTier;
+    }>;
+  } catch {
+    return NextResponse.json({ error: "Invalid cart metadata" }, { status: 400 });
   }
 
   try {
-    const product = await getStoreProductBySlug(productSlug);
-    if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    const lines: CatalogCheckoutLine[] = [];
+    for (const item of parsedItems) {
+      const catalog = await getCatalogProductBySlug(item.slug);
+      if (!catalog) {
+        return NextResponse.json({ error: `Product not found: ${item.slug}` }, { status: 404 });
+      }
+      lines.push({
+        catalog,
+        quantity: Math.max(1, Math.min(10, Number(item.quantity) || 1)),
+        shippingTier: item.shippingTier === "expedited" ? "expedited" : "standard",
+      });
     }
 
-    if (product.isMock) {
-      console.warn("[store/webhook] rejected mock product checkout", productSlug);
-      return NextResponse.json({ error: "Mock products cannot be fulfilled" }, { status: 403 });
-    }
+    const subtotalCents = lines.reduce(
+      (sum, line) => sum + line.catalog.retailPriceCents * line.quantity,
+      0
+    );
+    const shippingChargedCents = Number(session.metadata.shippingChargedCents) || 0;
+    const shippingEstimateCents =
+      Number(session.metadata.shippingEstimateCents) || shippingChargedCents;
 
-    const orderId = await createPaidStoreOrder({
+    const orderId = await createPaidCatalogOrder({
       userId: userId || null,
       stripeCheckoutSessionId: session.id,
       stripePaymentIntentId:
@@ -65,10 +93,12 @@ export async function POST(req: NextRequest) {
       customerEmail: session.customer_details?.email ?? session.customer_email ?? null,
       shipping: (session as Stripe.Checkout.Session & { shipping_details?: unknown })
         .shipping_details as Record<string, unknown> | null,
-      totalCents: session.amount_total ?? product.priceCents * quantity,
-      currency: session.currency ?? product.currency,
-      product,
-      quantity,
+      subtotalCents,
+      shippingCents: shippingChargedCents,
+      shippingEstimateCents,
+      totalCents: session.amount_total ?? subtotalCents + shippingChargedCents,
+      currency: session.currency ?? "usd",
+      lines,
     });
 
     if (isStoreCheckoutLive()) {
@@ -80,19 +110,22 @@ export async function POST(req: NextRequest) {
         customerEmail: session.customer_details?.email ?? session.customer_email ?? null,
         shipping: (session as Stripe.Checkout.Session & { shipping_details?: unknown })
           .shipping_details as Record<string, unknown> | null,
-        totalCents: session.amount_total ?? product.priceCents * quantity,
-        currency: session.currency ?? product.currency,
-        items: [
-          {
-            productSlug: product.slug,
-            productName: product.name,
-            cjProductId: product.cjProductId,
-            quantity,
-            unitPriceCents: product.priceCents,
-          },
-        ],
+        totalCents: session.amount_total ?? subtotalCents + shippingChargedCents,
+        currency: session.currency ?? "usd",
+        items: lines.map((line) => ({
+          productSlug: line.catalog.slug,
+          productName: line.catalog.name,
+          cjProductId:
+            line.catalog.sourcePlatform === "cj" ? line.catalog.sourceProductId : null,
+          quantity: line.quantity,
+          unitPriceCents: line.catalog.retailPriceCents,
+          shippingTier: line.shippingTier,
+        })),
       });
-      if (sent) await markOrderFulfillmentSent(orderId);
+      if (sent) {
+        const { markOrderFulfillmentSent } = await import("@/lib/store/orders");
+        await markOrderFulfillmentSent(orderId);
+      }
     }
 
     return NextResponse.json({ received: true, orderId });

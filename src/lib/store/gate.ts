@@ -7,14 +7,18 @@ export function isCjDropshippingWired(): boolean {
   return Boolean(process.env.CJ_DROPSHIPPING_API_KEY?.trim());
 }
 
-/** True when Make.com store fulfillment webhook is configured. */
+/** True when Make.com store fulfillment webhook is configured (not a placeholder). */
 export function isMakeStoreWebhookConfigured(): boolean {
-  return Boolean(process.env.MAKE_STORE_WEBHOOK_URL?.trim());
+  const url = process.env.MAKE_STORE_WEBHOOK_URL?.trim();
+  if (!url) return false;
+  if (url.includes("placeholder")) return false;
+  return true;
 }
 
 /** Manual launch flag — must be explicitly enabled. */
 export function isStoreLaunchFlagSet(): boolean {
-  return process.env.NI_STORE_LIVE === "true";
+  const flag = process.env.NI_STORE_LIVE?.trim().toLowerCase();
+  return flag === "true" || flag === "1";
 }
 
 /** Store checkout is live only when CJ, Make, and launch flag are all set. */

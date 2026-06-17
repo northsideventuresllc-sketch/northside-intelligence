@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Push CRON_SECRET to Vercel and attach shop.northsideintelligence.com.
+# Push store infra to Vercel: CRON_SECRET, shop domain, MAKE webhook, NI_STORE_LIVE.
 #
 # Usage:
-#   VERCEL_TOKEN=... CRON_SECRET=... ./scripts/set-vercel-infra.sh
-#
-# CRON_SECRET defaults to the value in NI-Brain when omitted (see ni_platform_secrets).
+#   VERCEL_TOKEN=... \
+#   CRON_SECRET=... \
+#   MAKE_STORE_WEBHOOK_URL=https://hook.us1.make.com/... \
+#   NI_STORE_LIVE=true \
+#     ./scripts/set-vercel-infra.sh
 
 set -euo pipefail
 
@@ -44,7 +46,20 @@ add_domain() {
 
 : "${CRON_SECRET:?Set CRON_SECRET (openssl rand -hex 32)}"
 
-echo "=== Vercel infra: CRON_SECRET + shop domain ==="
+echo "=== Vercel store infra ==="
 upsert_env CRON_SECRET "$CRON_SECRET"
 add_domain "$SHOP_DOMAIN"
-echo "Done. Redeploy production to pick up CRON_SECRET."
+
+if [[ -n "${MAKE_STORE_WEBHOOK_URL:-}" ]]; then
+  upsert_env MAKE_STORE_WEBHOOK_URL "$MAKE_STORE_WEBHOOK_URL"
+else
+  echo "SKIP MAKE_STORE_WEBHOOK_URL (set when Make.com CJ scenario is ready)"
+fi
+
+if [[ -n "${NI_STORE_LIVE:-}" ]]; then
+  upsert_env NI_STORE_LIVE "$NI_STORE_LIVE"
+else
+  echo "SKIP NI_STORE_LIVE (set to true when launching checkout)"
+fi
+
+echo "Done. Redeploy production to pick up new env vars."
