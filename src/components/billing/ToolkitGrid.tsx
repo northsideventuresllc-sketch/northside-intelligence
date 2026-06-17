@@ -20,7 +20,7 @@ interface ToolkitGridProps {
   canSwapUnlimitedTool: boolean;
   nextUnlimitedSwapAt: string | null;
   toolPricingBySlug?: Record<string, ToolPricing>;
-  showPermanentOfferFor?: (toolSlug: string) => boolean;
+  permanentOfferBySlug?: Record<string, boolean>;
 }
 
 function accessLabel(type: ToolkitEntry["accessType"], isMasterAccount?: boolean): string {
@@ -42,7 +42,7 @@ export function ToolkitGrid({
   canSwapUnlimitedTool,
   nextUnlimitedSwapAt,
   toolPricingBySlug = {},
-  showPermanentOfferFor,
+  permanentOfferBySlug = {},
 }: ToolkitGridProps) {
   const [adding, setAdding] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<string | null>(null);
@@ -282,7 +282,7 @@ export function ToolkitGrid({
                           canSwapUnlimitedTool,
                           nextUnlimitedSwapAt,
                         }}
-                        showPermanentOffer={showPermanentOfferFor?.(entry.toolSlug) ?? false}
+                        showPermanentOffer={permanentOfferBySlug[entry.toolSlug] ?? false}
                       />
                     </div>
                   )}
