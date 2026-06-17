@@ -25,10 +25,10 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     name: "ReplyFlow",
     targetAudience: "SMBs, creators, and support teams automating customer replies",
     marketTier: "entry",
-    baseMonthlyUsd: 19,
+    baseMonthlyUsd: 15,
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
-    demandSignal: "high",
+    demandSignal: "medium",
   },
   {
     toolSlug: "grantbot",

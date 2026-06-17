@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscriptionActions";
 import { ToolPricingGrid } from "@/components/billing/ToolPricingGrid";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
@@ -11,8 +10,10 @@ import {
   getUserBillingState,
   shouldHideToolSubscriptions,
   userOwnsTool,
+  userHasUnlimitedToolAccess,
 } from "@/lib/billing/entitlements";
-import { getLifetimeLaunchStatus } from "@/lib/billing/lifetime-launch";
+import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
+import { ToolSubscriptionPanel } from "@/components/billing/ToolSubscriptionPanel";
 import { getNiTierConfig } from "@/lib/billing/ni-tiers";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
 import { INTELLIGENCE_TOOLS } from "@/lib/constants";
@@ -50,7 +51,6 @@ export default async function ToolPage({ params }: ToolPageProps) {
     .maybeSingle();
 
   const pricing = pricingRow ? mapDbPricing(pricingRow) : null;
-  const lifetimeLaunch = await getLifetimeLaunchStatus();
 
   if (user && tool.status === "LIVE") {
     const dashboardPath = getSector3DashboardPath(tool.slug);
@@ -63,10 +63,16 @@ export default async function ToolPage({ params }: ToolPageProps) {
   }
 
   const owned = billingState ? userOwnsTool(billingState, tool.slug) : false;
+  const hasUnlimited = billingState ? userHasUnlimitedToolAccess(billingState, tool.slug) : false;
   const hideSubscriptions = billingState
     ? shouldHideToolSubscriptions(billingState, tool.slug)
     : false;
-  const showPricing = !owned && !hideSubscriptions && pricing;
+  const showGuestPricing = !user && pricing;
+  const showLoggedInSubscription =
+    user && billingState && pricing && owned && !hasUnlimited && !hideSubscriptions;
+  const showPermanentOffer = Boolean(
+    user && shouldShowPermanentAccessOffer(tool.slug, user.id)
+  );
 
   return (
     <main className="min-h-screen bg-ni-bg">
@@ -104,7 +110,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
           {owned && (
             <div className="glass-panel mt-8 p-6 text-center">
               <p className="text-sm font-semibold uppercase tracking-wider text-emerald-300">
-                In Your Toolkit
+                In Your Tool Case
               </p>
               <p className="mt-2 text-ni-muted">You have access to {tool.name}.</p>
               <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -120,7 +126,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
                   href="/toolkit"
                   className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10"
                 >
-                  View Toolkit
+                  View Tool Case
                 </Link>
               </div>
             </div>
@@ -129,38 +135,38 @@ export default async function ToolPage({ params }: ToolPageProps) {
           {hideSubscriptions && !owned && billingState?.hasNiPaidPlan && (
             <div className="glass-panel mt-8 p-6 text-center">
               <p className="text-ni-muted">
-                Add {tool.name} from your Toolkit under your NI {getNiTierConfig(billingState.niTier).name} plan.
+                Add {tool.name} to your Tool Case under your NI {getNiTierConfig(billingState.niTier).name} plan.
               </p>
               <Link
                 href="/toolkit"
                 className="mt-4 inline-block rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
               >
-                Open Toolkit
+                Open Tool Case
               </Link>
             </div>
           )}
 
-          {showPricing && pricing && (
+          {showGuestPricing && pricing && (
             <div className="mt-8">
-              {user && billingState ? (
-                <div className="glass-panel p-8">
-                  <LoggedInSubscriptionActions
-                    billingState={billingState}
-                    context="tool"
-                    toolSlug={tool.slug}
-                  />
-                </div>
-              ) : (
-                <ToolPricingGrid
-                  toolSlug={tool.slug}
-                  toolName={tool.name}
-                  pricing={pricing}
-                  lifetimeActive={lifetimeLaunch.active}
-                  lifetimeReason={lifetimeLaunch.reason}
-                  isLoggedIn={false}
-                  returnPath={`/tools/${tool.slug}`}
-                />
-              )}
+              <ToolPricingGrid
+                toolSlug={tool.slug}
+                toolName={tool.name}
+                pricing={pricing}
+                isLoggedIn={false}
+                returnPath={`/tools/${tool.slug}`}
+              />
+            </div>
+          )}
+
+          {showLoggedInSubscription && billingState && pricing && (
+            <div className="mt-8">
+              <ToolSubscriptionPanel
+                toolSlug={tool.slug}
+                toolName={tool.name}
+                pricing={pricing}
+                billingState={billingState}
+                showPermanentOffer={showPermanentOffer}
+              />
             </div>
           )}
 
@@ -169,7 +175,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               <Link href="/auth/signin" className="text-cyan-300 hover:text-cyan-200">
                 Sign In
               </Link>{" "}
-              to see your Toolkit and pricing options.
+              to manage your Tool Case and subscription options.
             </p>
           )}
         </div>

@@ -24,6 +24,9 @@ export async function GET() {
     toolSlotsUsed: state.toolSlotsUsed,
     toolSlotLimit: state.toolSlotLimit,
     hasNiPaidPlan: state.hasNiPaidPlan,
+    canSwapUnlimitedTool: state.canSwapUnlimitedTool,
+    nextUnlimitedSwapAt: state.nextUnlimitedSwapAt,
+    lastUnlimitedSwapAt: state.lastUnlimitedSwapAt,
     canAddNiPlanTool:
       !state.isMasterAccount &&
       state.niTier !== "free" &&

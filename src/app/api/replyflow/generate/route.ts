@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getReplyFlowAccess } from "@/lib/billing/replyflow-access";
+import { getUserBillingState, userCanUseTool } from "@/lib/billing/entitlements";
 import { generateReply } from "@/lib/replyflow/ai";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -13,6 +14,14 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const billingState = await getUserBillingState(user.id);
+    if (!userCanUseTool(billingState, "replyflow")) {
+      return NextResponse.json(
+        { error: "Add ReplyFlow to your Tool Case before using it", code: "TOOL_NOT_IN_CASE" },
+        { status: 403 }
+      );
     }
 
     const access = await getReplyFlowAccess(user.id);

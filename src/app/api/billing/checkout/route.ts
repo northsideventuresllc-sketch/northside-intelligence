@@ -4,8 +4,11 @@ import { PAID_NI_TIERS } from "@/lib/billing/ni-tiers";
 import {
   getUserBillingState,
   userOwnsTool,
+  userHasUnlimitedToolAccess,
+  canAddNiPlanTool,
 } from "@/lib/billing/entitlements";
 import { getLifetimeLaunchStatus } from "@/lib/billing/lifetime-launch";
+import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
 import {
   billingStripe,
   ensureBillingEnvHydrated,
@@ -100,13 +103,22 @@ export async function POST(req: NextRequest) {
       const pricing = mapDbPricing(row);
 
       if (userOwnsTool(state, checkout.toolSlug)) {
-        return NextResponse.json({ error: "You already own this tool" }, { status: 400 });
+        if (userHasUnlimitedToolAccess(state, checkout.toolSlug)) {
+          return NextResponse.json({ error: "You already have unlimited access to this tool" }, { status: 400 });
+        }
+        if (checkout.type !== "tool_subscription") {
+          return NextResponse.json({ error: "You already own this tool" }, { status: 400 });
+        }
       }
 
       if (checkout.type === "tool_lifetime") {
         const lifetimeStatus = await getLifetimeLaunchStatus();
-        if (!lifetimeStatus.active) {
-          return NextResponse.json({ error: lifetimeStatus.reason }, { status: 403 });
+        const randomOffer = shouldShowPermanentAccessOffer(checkout.toolSlug, user.id);
+        if (!lifetimeStatus.active && !randomOffer) {
+          return NextResponse.json(
+            { error: lifetimeStatus.active ? lifetimeStatus.reason : "Permanent access is not available right now" },
+            { status: 403 }
+          );
         }
 
         priceId = getToolPriceIdFromDb(pricing, "lifetime");
@@ -116,9 +128,13 @@ export async function POST(req: NextRequest) {
         successUrl = `${base}/toolkit?purchased=${checkout.toolSlug}`;
         cancelUrl = `${base}/tools/${checkout.toolSlug}`;
       } else {
-        if (state.hasNiPaidPlan) {
+        if (
+          state.hasNiPaidPlan &&
+          canAddNiPlanTool(state) &&
+          !userHasUnlimitedToolAccess(state, checkout.toolSlug)
+        ) {
           return NextResponse.json(
-            { error: "Add this tool from your Toolkit under your NI plan" },
+            { error: "Assign unlimited access from your Tool Case under your NI plan" },
             { status: 400 }
           );
         }

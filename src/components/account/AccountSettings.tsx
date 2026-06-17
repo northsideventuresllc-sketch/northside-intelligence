@@ -304,7 +304,7 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
             <p className="mb-1 text-sm text-ni-muted">Current NI plan</p>
             <p className="mb-1 text-xl font-semibold text-white">Master Account</p>
             <p className="mb-4 text-sm text-ni-muted">
-              {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Toolkit
+              {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Tool Case
             </p>
           </>
         ) : (
@@ -315,7 +315,7 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
               <p className="mb-2 text-sm capitalize text-ni-muted">{billing.billingInterval} billing</p>
             )}
             <p className="mb-4 text-sm text-ni-muted">
-              {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Toolkit
+              {billing.toolkitCount} tool{billing.toolkitCount === 1 ? "" : "s"} in your Tool Case
             </p>
           </>
         )}
@@ -332,7 +332,7 @@ export function AccountSettings({ initialProfile, billing }: AccountSettingsProp
             href="/toolkit"
             className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10"
           >
-            Open Toolkit
+            Open Tool Case
           </a>
           {billing.hasStripeCustomer && (
             <button

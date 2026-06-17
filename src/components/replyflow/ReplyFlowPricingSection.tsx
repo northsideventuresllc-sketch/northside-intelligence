@@ -3,30 +3,38 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscriptionActions";
+import { ToolMonthlyPricingCard } from "@/components/billing/ToolMonthlyPricingCard";
+import { ToolSubscriptionPanel } from "@/components/billing/ToolSubscriptionPanel";
 import type { UserBillingState } from "@/lib/billing/entitlements";
+import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
+import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
+import type { ToolPricing } from "@/lib/billing/tool-pricing";
 import type { NiTier } from "@/lib/billing/ni-tiers";
-import { portalSignUpUrl } from "@/lib/replyflow/auth";
+import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
 
-const plans = [
-  { name: "Solo", price: "$9", desc: "100 replies / month", accent: "from-rf-rose/20 to-rf-coral/10" },
-  {
-    name: "Team",
-    price: "$49",
-    desc: "1,000 replies / month",
-    accent: "from-rf-violet/30 to-rf-rose/10",
-    popular: true,
-  },
-  { name: "Agency", price: "$99", desc: "Unlimited scale", accent: "from-rf-coral/20 to-rf-violet/20" },
-];
+interface ReplyFlowPricingSectionProps {
+  pricing?: ToolPricing | null;
+}
 
-export function ReplyFlowPricingSection() {
+export function ReplyFlowPricingSection({ pricing }: ReplyFlowPricingSectionProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [billingState, setBillingState] = useState<Pick<
-    UserBillingState,
-    "niTier" | "billingInterval" | "isMasterAccount" | "niStripeSubscriptionId" | "toolkit"
-  > | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [billingState, setBillingState] = useState<UserBillingState | null>(null);
   const [loading, setLoading] = useState(true);
-  const signupUrl = portalSignUpUrl();
+
+  const fallbackPricing: ToolPricing = pricing ?? {
+    toolSlug: "replyflow",
+    baseMonthlyUsd: 15,
+    monthlyPriceUsd: 15,
+    annualPriceUsd: 150,
+    lifetimePriceUsd: 315,
+    demandMultiplier: 1,
+    targetAudience: "Customer support teams",
+    marketTier: "entry",
+    stripeMonthlyPriceId: null,
+    stripeAnnualPriceId: null,
+    stripeLifetimePriceId: null,
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -38,13 +46,12 @@ export function ReplyFlowPricingSection() {
       .then(([authData, billingData]) => {
         if (cancelled) return;
         setIsLoggedIn(!!authData.user);
-        setBillingState({
-          niTier: (billingData.niTier as NiTier) ?? "free",
-          billingInterval: billingData.billingInterval ?? null,
-          isMasterAccount: billingData.isMasterAccount ?? false,
-          niStripeSubscriptionId: billingData.niStripeSubscriptionId ?? null,
-          toolkit: billingData.toolkit ?? [],
-        });
+        setUserId(authData.user?.id ?? null);
+        if (authData.user) {
+          setBillingState(billingData as UserBillingState);
+        } else {
+          setBillingState(null);
+        }
       })
       .catch(() => {
         if (!cancelled) {
@@ -61,53 +68,53 @@ export function ReplyFlowPricingSection() {
     };
   }, []);
 
+  const showPermanentOffer =
+    !!userId && shouldShowPermanentAccessOffer("replyflow", userId);
+
   return (
     <section id="pricing" className="border-t border-white/10 px-6 py-20">
       <div className="mx-auto max-w-4xl">
         <h2 className="text-center text-3xl font-bold rf-gradient-text">Simple Pricing</h2>
         <p className="mt-2 text-center text-rf-muted">
-          One Northside Intelligence account. Upgrade when you&apos;re ready.
+          One monthly subscription for unlimited ReplyFlow access.
         </p>
 
         {loading ? (
           <p className="mt-12 text-center text-sm text-rf-muted">Loading pricing…</p>
         ) : isLoggedIn && billingState ? (
-          <div className="rf-glass mx-auto mt-12 max-w-md rounded-2xl p-8">
-            <LoggedInSubscriptionActions
-              billingState={billingState}
-              context="tool"
-              toolSlug="replyflow"
-              variant="replyflow"
-            />
+          <div className="mx-auto mt-12 max-w-md space-y-6">
+            {!billingState.ownedToolSlugs.includes("replyflow") ? (
+              <AddToToolCasePrompt toolSlug="replyflow" toolName="ReplyFlow" variant="replyflow" />
+            ) : userHasUnlimitedToolAccess(billingState, "replyflow") ? (
+              <div className="rf-glass rounded-2xl p-8">
+                <LoggedInSubscriptionActions
+                  billingState={billingState}
+                  context="tool"
+                  toolSlug="replyflow"
+                  variant="replyflow"
+                />
+              </div>
+            ) : (
+              <ToolSubscriptionPanel
+                toolSlug="replyflow"
+                toolName="ReplyFlow"
+                pricing={fallbackPricing}
+                billingState={billingState}
+                showPermanentOffer={showPermanentOffer}
+                variant="replyflow"
+              />
+            )}
           </div>
         ) : (
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {plans.map((p) => (
-              <div
-                key={p.name}
-                className={`rf-glass relative rounded-2xl bg-gradient-to-br ${p.accent} p-6 ${
-                  p.popular ? "ring-2 ring-rf-rose/50 shadow-rf-glow" : ""
-                }`}
-              >
-                {p.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-rf-rose px-3 py-0.5 text-xs font-bold text-white">
-                    Popular
-                  </span>
-                )}
-                <p className="text-3xl font-bold text-white">
-                  {p.price}
-                  <span className="text-sm font-normal text-rf-muted">/mo</span>
-                </p>
-                <p className="mt-1 font-semibold text-white">{p.name}</p>
-                <p className="mt-2 text-sm text-rf-muted">{p.desc}</p>
-                <a
-                  href={signupUrl}
-                  className="mt-6 block rounded-xl border border-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/10"
-                >
-                  Get Started
-                </a>
-              </div>
-            ))}
+          <div className="mt-12">
+            <ToolMonthlyPricingCard
+              toolSlug="replyflow"
+              toolName="ReplyFlow"
+              pricing={fallbackPricing}
+              isLoggedIn={false}
+              returnPath="/replyflow"
+              variant="replyflow"
+            />
           </div>
         )}
 

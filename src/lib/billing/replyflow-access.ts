@@ -1,5 +1,9 @@
 import { getNiTierConfig } from "@/lib/billing/ni-tiers";
-import { getUserBillingState, userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
+import {
+  getUserBillingState,
+  userCanUseTool,
+  userHasUnlimitedToolAccess,
+} from "@/lib/billing/entitlements";
 import { getDeploymentTier, getPlanLimits, normalizeUserPlan, PLAN_LABELS } from "@/lib/replyflow/tier";
 
 const UNLIMITED_REPLIES = 999999;
@@ -11,10 +15,12 @@ export interface ReplyFlowAccess {
   hasUnlimitedAccess: boolean;
   niTier: string;
   ownsTool: boolean;
+  canUseTool: boolean;
 }
 
 export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAccess> {
   const state = await getUserBillingState(userId);
+  const canUseTool = userCanUseTool(state, "replyflow");
   const hasUnlimited = userHasUnlimitedToolAccess(state, "replyflow");
 
   const service = await import("@/lib/supabase/server").then((m) => m.createServiceClient());
@@ -28,6 +34,18 @@ export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAcces
   const deployment = getDeploymentTier();
   const legacyLimits = getPlanLimits(deployment);
 
+  if (!canUseTool) {
+    return {
+      plan: "none",
+      planLabel: "Not in Tool Case",
+      repliesLimit: 0,
+      hasUnlimitedAccess: false,
+      niTier: state.niTier,
+      ownsTool: false,
+      canUseTool: false,
+    };
+  }
+
   if (state.isMasterAccount || hasUnlimited) {
     const tierName = state.isMasterAccount
       ? "Master Account"
@@ -39,6 +57,7 @@ export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAcces
       hasUnlimitedAccess: true,
       niTier: state.niTier,
       ownsTool: true,
+      canUseTool: true,
     };
   }
 
@@ -53,6 +72,7 @@ export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAcces
         hasUnlimitedAccess: true,
         niTier: state.niTier,
         ownsTool: true,
+        canUseTool: true,
       };
     }
   }
@@ -64,6 +84,7 @@ export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAcces
     hasUnlimitedAccess: false,
     niTier: state.niTier,
     ownsTool,
+    canUseTool: true,
   };
 }
 

@@ -9,7 +9,6 @@ import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
 import { tierHasUnlimitedToolAccess } from "@/lib/billing/ni-tiers";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
-/** @deprecated Use /api/billing/toolkit/add-free then /api/billing/toolkit/assign-unlimited */
 export async function POST(req: NextRequest) {
   const supabase = await createServerAuthClient();
   const {
@@ -23,24 +22,15 @@ export async function POST(req: NextRequest) {
   }
 
   const state = await getUserBillingState(user.id);
-  if (state.niTier === "free") {
-    return NextResponse.json({ error: "Upgrade your NI plan to add tools" }, { status: 403 });
-  }
-
   if (userOwnsTool(state, toolSlug)) {
     return NextResponse.json({ error: "Tool already in your Tool Case" }, { status: 400 });
-  }
-
-  if (!canAddNiPlanTool(state) && !tierHasUnlimitedToolAccess(state.niTier)) {
-    return NextResponse.json({ error: "No tool slots remaining on your plan" }, { status: 403 });
   }
 
   await grantToolkitAccess({
     userId: user.id,
     toolSlug,
-    accessType: tierHasUnlimitedToolAccess(state.niTier) ? "ni_plan" : "ni_plan",
-    expiresAt: state.currentPeriodEnd,
+    accessType: "free",
   });
 
-  return NextResponse.json({ ok: true, toolSlug });
+  return NextResponse.json({ ok: true, toolSlug, accessType: "free" });
 }
