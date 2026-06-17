@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
+import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { formatStorePrice } from "@/lib/store/client";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
@@ -20,7 +20,7 @@ export function SearchResultCard({ product, onSelect }: SearchResultCardProps) {
     >
       <div className="relative flex h-40 items-center justify-center border-b border-white/5 bg-gradient-to-br from-cyan-500/10 to-transparent">
         {product.imageUrl ? (
-          <Image
+          <StoreProductImage
             src={product.imageUrl}
             alt={product.name}
             width={160}

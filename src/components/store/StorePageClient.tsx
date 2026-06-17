@@ -9,14 +9,12 @@ import { WebTrackingOptIn } from "@/components/store/WebTrackingOptIn";
 import { StoreCartLink } from "@/components/store/StoreCartLink";
 
 export interface StoreSearchFilters {
-  platforms: string[];
   category: string;
   minPrice: string;
   maxPrice: string;
 }
 
 const DEFAULT_FILTERS: StoreSearchFilters = {
-  platforms: [],
   category: "",
   minPrice: "",
   maxPrice: "",
@@ -99,8 +97,7 @@ export function StorePageClient() {
       </div>
 
       <p className="mt-8 text-center text-xs text-ni-muted lg:text-left">
-        Prices include our service fee. Supplier listing costs are never shown — you only see your NI
-        price.
+        NI price = supplier listing price + 10%. Supplier costs are never shown.
       </p>
     </>
   );

@@ -102,6 +102,27 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       (value) => !value?.trim()
     );
     if (storeLive) process.env.NI_STORE_LIVE = storeLive;
+
+    const serpApi = await resolvePlatformSecret(
+      "SERPAPI_API_KEY",
+      process.env.SERPAPI_API_KEY,
+      (value) => !value?.trim()
+    );
+    if (serpApi) process.env.SERPAPI_API_KEY = serpApi;
+
+    const aliexpressKey = await resolvePlatformSecret(
+      "ALIEXPRESS_API_KEY",
+      process.env.ALIEXPRESS_API_KEY,
+      (value) => !value?.trim()
+    );
+    if (aliexpressKey) process.env.ALIEXPRESS_API_KEY = aliexpressKey;
+
+    const temuKey = await resolvePlatformSecret(
+      "TEMU_API_KEY",
+      process.env.TEMU_API_KEY,
+      (value) => !value?.trim()
+    );
+    if (temuKey) process.env.TEMU_API_KEY = temuKey;
   })();
 
   return hydratePromise;

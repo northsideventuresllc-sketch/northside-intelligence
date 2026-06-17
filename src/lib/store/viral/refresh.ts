@@ -1,5 +1,6 @@
 import "server-only";
 
+import { refreshCjCatalogListings } from "@/lib/store/catalog/refresh-cj";
 import { createServiceClient } from "@/lib/supabase/server";
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
 import { ensureStoreEnv } from "@/lib/store/env";
@@ -67,6 +68,7 @@ async function upsertCjProducts(): Promise<void> {
 /** Refresh global top-10 viral picks for today (24h cycle). */
 export async function refreshDailyViralPicks(): Promise<{ pickDate: string; count: number }> {
   await upsertCjProducts();
+  await refreshCjCatalogListings(40);
 
   const supabase = createServiceClient();
   const pickDate = utcDateString();

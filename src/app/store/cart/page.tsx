@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
 import { StoreCartProvider, useStoreCart } from "@/components/store/StoreCartProvider";
+import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { calculateCartTotals } from "@/lib/store/cart/pricing";
 import { formatStorePrice } from "@/lib/store/client";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
@@ -83,7 +83,7 @@ function CartContent() {
               <article key={item.slug} className="glass-panel flex gap-4 p-4">
                 <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-white/5">
                   {item.imageUrl ? (
-                    <Image
+                    <StoreProductImage
                       src={item.imageUrl}
                       alt={item.name}
                       width={72}
@@ -165,9 +165,6 @@ function CartContent() {
               {loading ? "Redirecting…" : "Checkout"}
             </button>
 
-            {!gate?.live && gate?.message && (
-              <p className="text-center text-xs text-ni-muted">{gate.message}</p>
-            )}
           </div>
         )}
       </div>

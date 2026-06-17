@@ -10,14 +10,12 @@ interface ProductPurchasePanelProps {
   product: CatalogProductView;
   sourceProductId: string | null;
   checkoutLive: boolean;
-  gateMessage: string;
 }
 
 export function ProductPurchasePanel({
   product,
   sourceProductId,
   checkoutLive,
-  gateMessage,
 }: ProductPurchasePanelProps) {
   const { addItem } = useStoreCart();
   const [shippingTier, setShippingTier] = useState<ShippingTier>("standard");
@@ -84,10 +82,6 @@ export function ProductPurchasePanel({
       >
         {added ? "Added to Cart" : "Add to Cart"}
       </button>
-
-      {!checkoutLive && (
-        <p className="text-center text-xs text-ni-muted">{gateMessage}</p>
-      )}
 
       <p className="text-center text-[11px] text-ni-muted">
         Estimated shipping & handling is collected at checkout. Unused shipping is refunded after

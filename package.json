@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup:stripe": "npx tsx scripts/setup-stripe-products.ts"
+    "verify:cj-pricing": "npx tsx scripts/verify-cj-pricing.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
