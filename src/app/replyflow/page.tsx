@@ -1,3 +1,4 @@
+import { redirectLoggedInSector3ToDashboard } from "@/lib/sector3-auth-redirect";
 import Link from "next/link";
 import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
@@ -6,7 +7,9 @@ import { portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
 
 const tones = ["Professional", "Friendly", "Empathetic", "Firm"];
 
-export default function ReplyFlowHome() {
+export default async function ReplyFlowHome() {
+  await redirectLoggedInSector3ToDashboard("/replyflow");
+
   const signupUrl = portalSignUpUrl();
 
   return (

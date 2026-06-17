@@ -8,6 +8,7 @@ import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { replyflowPath } from "@/lib/replyflow/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
+import type { ReplyFlowHistoryEntry } from "@/lib/replyflow/history";
 import { createBrowserClient } from "@supabase/ssr";
 
 const TONES = ["Professional", "Friendly", "Empathetic", "Firm"] as const;
@@ -27,6 +28,9 @@ interface Props {
   repliesLimit: number;
   hasUnlimitedAccess: boolean;
   niTier: string;
+  initialTone?: string;
+  initialScenario?: string;
+  history: ReplyFlowHistoryEntry[];
 }
 
 function createClient() {
@@ -34,6 +38,10 @@ function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+}
+
+function isValidTone(value: string | undefined): value is (typeof TONES)[number] {
+  return !!value && TONES.includes(value as (typeof TONES)[number]);
 }
 
 export default function DashboardClient({
@@ -44,15 +52,21 @@ export default function DashboardClient({
   repliesLimit,
   hasUnlimitedAccess,
   niTier,
+  initialTone,
+  initialScenario,
+  history: initialHistory,
 }: Props) {
   const [message, setMessage] = useState("");
-  const [tone, setTone] = useState<(typeof TONES)[number]>("Professional");
-  const [scenario, setScenario] = useState("General inquiry");
+  const [tone, setTone] = useState<(typeof TONES)[number]>(
+    isValidTone(initialTone) ? initialTone : "Professional"
+  );
+  const [scenario, setScenario] = useState(initialScenario ?? "General inquiry");
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [used, setUsed] = useState(repliesUsed);
+  const [history, setHistory] = useState(initialHistory);
   const router = useRouter();
   const supabase = createClient();
   const effectiveLimit = hasUnlimitedAccess ? 999999 : repliesLimit;
@@ -78,6 +92,25 @@ export default function DashboardClient({
     }
     setReply(data.reply);
     if (data.usage) setUsed(data.usage.used);
+    setHistory((prev) => [
+      {
+        id: crypto.randomUUID(),
+        customerMessage: message,
+        tone,
+        scenario,
+        generatedReply: data.reply,
+        createdAt: new Date().toISOString(),
+      },
+      ...prev,
+    ].slice(0, 50));
+  }
+
+  function loadHistoryEntry(entry: ReplyFlowHistoryEntry) {
+    setMessage(entry.customerMessage);
+    if (isValidTone(entry.tone)) setTone(entry.tone);
+    setScenario(entry.scenario);
+    setReply(entry.generatedReply);
+    setError("");
   }
 
   async function handleCopy() {
@@ -234,6 +267,35 @@ export default function DashboardClient({
               </button>
             </div>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/90">{reply}</p>
+          </div>
+        )}
+
+        {history.length > 0 && (
+          <div className="rf-glass rounded-3xl p-6">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-rf-muted">
+              Recent Replies
+            </h2>
+            <ul className="space-y-3">
+              {history.map((entry) => (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    onClick={() => loadHistoryEntry(entry)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-rf-violet/40 hover:bg-white/10"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="line-clamp-2 text-sm text-white/90">{entry.customerMessage}</p>
+                      <span className="shrink-0 text-xs text-rf-muted">
+                        {new Date(entry.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-rf-muted">
+                      {entry.tone} · {entry.scenario}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </main>
