@@ -19,8 +19,8 @@ const SOURCE_SEARCHERS: Record<
   temu: searchTemuProducts,
 };
 
-function dedupeKey(platform: string, sourceProductId: string): string {
-  return `${platform}:${sourceProductId}`;
+function dedupeKey(slug: string): string {
+  return slug;
 }
 
 function matchesRetailFilters(
@@ -70,7 +70,7 @@ export async function searchStoreProducts(
       const view = draftToCatalogView(draft);
       if (filters.category && view.category !== filters.category) continue;
       if (!matchesRetailFilters(view.retailPriceCents, filters)) continue;
-      const key = dedupeKey(draft.sourcePlatform, draft.sourceProductId);
+      const key = dedupeKey(view.slug);
       if (seen.has(key)) continue;
       seen.add(key);
       merged.push(view);
@@ -86,7 +86,7 @@ export async function searchStoreProducts(
     });
 
     for (const row of curated) {
-      const key = dedupeKey(row.sourcePlatform, row.slug);
+      const key = dedupeKey(row.slug);
       if (seen.has(key)) continue;
       seen.add(key);
       merged.push(toCatalogProductView(row));
