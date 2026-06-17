@@ -37,7 +37,7 @@ export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAcces
   if (!canUseTool) {
     return {
       plan: "none",
-      planLabel: "Not in Tool Case",
+      planLabel: "Not in Toolkit",
       repliesLimit: 0,
       hasUnlimitedAccess: false,
       niTier: state.niTier,

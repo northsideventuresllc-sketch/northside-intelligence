@@ -140,7 +140,7 @@ export function userOwnsTool(state: UserBillingState, toolSlug: string): boolean
   return state.ownedToolSlugs.includes(toolSlug);
 }
 
-/** Tool is in the user's Tool Case (required before using any Sector 3 tool). */
+/** Tool is in the user's Toolkit (required before using any Sector 3 tool). */
 export function userHasToolInCase(state: UserBillingState, toolSlug: string): boolean {
   return userOwnsTool(state, toolSlug);
 }

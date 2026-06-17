@@ -9,7 +9,7 @@ import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
 import { tierHasUnlimitedToolAccess } from "@/lib/billing/ni-tiers";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
-/** Assign an NI plan unlimited slot to a tool already in the Tool Case. */
+/** Assign an NI plan unlimited slot to a tool already in the Toolkit. */
 export async function POST(req: NextRequest) {
   const supabase = await createServerAuthClient();
   const {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   if (!userOwnsTool(state, toolSlug)) {
     return NextResponse.json(
-      { error: "Add this tool to your Tool Case first" },
+      { error: "Add this tool to your Toolkit first" },
       { status: 400 }
     );
   }

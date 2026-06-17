@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
           !userHasUnlimitedToolAccess(state, checkout.toolSlug)
         ) {
           return NextResponse.json(
-            { error: "Assign unlimited access from your Tool Case under your NI plan" },
+            { error: "Assign unlimited access from your Toolkit under your NI plan" },
             { status: 400 }
           );
         }

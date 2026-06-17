@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const state = await getUserBillingState(user.id);
   if (userOwnsTool(state, toolSlug)) {
-    return NextResponse.json({ error: "Tool already in your Tool Case" }, { status: 400 });
+    return NextResponse.json({ error: "Tool already in your Toolkit" }, { status: 400 });
   }
 
   await grantToolkitAccess({

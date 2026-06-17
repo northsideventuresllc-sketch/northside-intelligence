@@ -110,7 +110,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
           {owned && (
             <div className="glass-panel mt-8 p-6 text-center">
               <p className="text-sm font-semibold uppercase tracking-wider text-emerald-300">
-                In Your Tool Case
+                In Your Toolkit
               </p>
               <p className="mt-2 text-ni-muted">You have access to {tool.name}.</p>
               <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -126,7 +126,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
                   href="/toolkit"
                   className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10"
                 >
-                  View Tool Case
+                  View Toolkit
                 </Link>
               </div>
             </div>
@@ -135,13 +135,13 @@ export default async function ToolPage({ params }: ToolPageProps) {
           {hideSubscriptions && !owned && billingState?.hasNiPaidPlan && (
             <div className="glass-panel mt-8 p-6 text-center">
               <p className="text-ni-muted">
-                Add {tool.name} to your Tool Case under your NI {getNiTierConfig(billingState.niTier).name} plan.
+                Add {tool.name} to your Toolkit under your NI {getNiTierConfig(billingState.niTier).name} plan.
               </p>
               <Link
                 href="/toolkit"
                 className="mt-4 inline-block rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-5 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
               >
-                Open Tool Case
+                Open Toolkit
               </Link>
             </div>
           )}
@@ -175,7 +175,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               <Link href="/auth/signin" className="text-cyan-300 hover:text-cyan-200">
                 Sign In
               </Link>{" "}
-              to manage your Tool Case and subscription options.
+              to manage your Toolkit and subscription options.
             </p>
           )}
         </div>

@@ -83,7 +83,7 @@ export function Nav() {
                 href="/toolkit"
                 className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
               >
-                Tool Case
+                Toolkit
               </Link>
               <Link
                 href="/account"
