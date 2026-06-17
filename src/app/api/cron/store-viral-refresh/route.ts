@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ensureStoreEnv } from "@/lib/store/env";
 import { refreshDailyViralPicks } from "@/lib/store/viral/refresh";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    await ensureStoreEnv();
     const result = await refreshDailyViralPicks();
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {

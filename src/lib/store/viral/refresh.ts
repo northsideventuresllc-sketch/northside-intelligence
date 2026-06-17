@@ -2,6 +2,7 @@ import "server-only";
 
 import { createServiceClient } from "@/lib/supabase/server";
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
+import { ensureStoreEnv } from "@/lib/store/env";
 import { fetchCjTrendingProducts } from "@/lib/store/sources/cj";
 import { getTodaysTrendTags } from "@/lib/store/sources/trends";
 import { EVENT_WEIGHTS, scoreCatalogProduct } from "@/lib/store/viral/scoring";
@@ -33,6 +34,7 @@ async function getSiteEventCounts(): Promise<Map<string, number>> {
 }
 
 async function upsertCjProducts(): Promise<void> {
+  await ensureStoreEnv();
   const drafts = await fetchCjTrendingProducts(5);
   if (!drafts.length) return;
 

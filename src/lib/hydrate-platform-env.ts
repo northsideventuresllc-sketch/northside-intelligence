@@ -81,6 +81,13 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       (value) => !value?.trim()
     );
     if (anthropic) process.env.ANTHROPIC_API_KEY = anthropic;
+
+    const cjKey = await resolvePlatformSecret(
+      "CJ_DROPSHIPPING_API_KEY",
+      process.env.CJ_DROPSHIPPING_API_KEY,
+      (value) => !value?.trim()
+    );
+    if (cjKey) process.env.CJ_DROPSHIPPING_API_KEY = cjKey;
   })();
 
   return hydratePromise;
