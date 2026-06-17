@@ -39,6 +39,7 @@ export async function ensurePortalProfile(
       full_name: metaFullName,
       username: metaUsername,
       two_factor_enabled: true,
+      account_type: "personal",
       created_at: now,
       updated_at: now,
     });
