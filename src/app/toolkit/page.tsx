@@ -34,6 +34,13 @@ export default async function ToolkitPage() {
     (pricingRows ?? []).map((row) => [String(row.tool_slug), mapDbPricing(row)])
   );
 
+  const permanentOfferBySlug = Object.fromEntries(
+    INTELLIGENCE_TOOL_SLUGS.map((slug) => [
+      slug,
+      shouldShowPermanentAccessOffer(slug, user.id),
+    ])
+  );
+
   return (
     <main className="min-h-screen bg-ni-bg">
       <Nav />
@@ -61,7 +68,7 @@ export default async function ToolkitPage() {
             canSwapUnlimitedTool={state.canSwapUnlimitedTool}
             nextUnlimitedSwapAt={state.nextUnlimitedSwapAt}
             toolPricingBySlug={toolPricingBySlug}
-            showPermanentOfferFor={(slug) => shouldShowPermanentAccessOffer(slug, user.id)}
+            permanentOfferBySlug={permanentOfferBySlug}
           />
         </div>
       </section>
