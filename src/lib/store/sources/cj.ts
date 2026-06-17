@@ -2,6 +2,7 @@ import "server-only";
 
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
 import { getCjAccessToken } from "@/lib/store/sources/cj-auth";
+import type { SourceProductDraft } from "@/lib/store/sources/types";
 
 /**
  * CJ Dropshipping API integration.
@@ -64,7 +65,7 @@ async function fetchCjListV2(
   return json.data?.list ?? [];
 }
 
-function mapCjProduct(item: CjListV2Product): CjProductDraft | null {
+function mapCjProduct(item: CjListV2Product, tags = ["cj", "trending"]): CjProductDraft | null {
   const id = item.id ?? item.sku;
   const name = item.nameEn?.trim();
   if (!id || !name) return null;
@@ -82,11 +83,47 @@ function mapCjProduct(item: CjListV2Product): CjProductDraft | null {
     description: name,
     imageUrl: item.bigImage ?? "",
     category: category || "general",
-    tags: ["cj", "trending"],
+    tags,
     sourceProductId: id,
     supplierCostCents: Math.round(sell * 100),
     estimatedDeliveryDays: 12,
   };
+}
+
+function toSourceDraft(draft: CjProductDraft): SourceProductDraft {
+  return { ...draft, sourcePlatform: "cj" };
+}
+
+export async function searchCjProducts(query: string, limit = 20): Promise<SourceProductDraft[]> {
+  const token = await getCjAccessToken();
+  if (!token) return [];
+
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  try {
+    const items = await fetchCjListV2(token, {
+      page: "1",
+      size: String(Math.min(limit, 40)),
+      keyWord: trimmed,
+      orderBy: "1",
+      sort: "desc",
+    });
+
+    const seen = new Set<string>();
+    const drafts: SourceProductDraft[] = [];
+    for (const item of items) {
+      const draft = mapCjProduct(item, ["cj", "search"]);
+      if (!draft || seen.has(draft.sourceProductId)) continue;
+      seen.add(draft.sourceProductId);
+      drafts.push(toSourceDraft(draft));
+      if (drafts.length >= limit) break;
+    }
+    return drafts;
+  } catch (err) {
+    console.warn("[store/cj] search error:", err);
+    return [];
+  }
 }
 
 export async function fetchCjTrendingProducts(limit = 10): Promise<CjProductDraft[]> {

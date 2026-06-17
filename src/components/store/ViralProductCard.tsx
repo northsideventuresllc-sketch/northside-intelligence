@@ -4,20 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
 import { formatStorePrice } from "@/lib/store/client";
+import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
 interface ViralProductCardProps {
   product: CatalogProductView;
   variant: "center" | "side";
   onSelect?: () => void;
 }
-
-const PLATFORM_LABELS: Record<string, string> = {
-  cj: "CJ Dropshipping",
-  aliexpress: "AliExpress",
-  temu: "Temu",
-  amazon: "Amazon",
-  curated: "NI Deals",
-};
 
 export function ViralProductCard({ product, variant, onSelect }: ViralProductCardProps) {
   const isCenter = variant === "center";
@@ -75,7 +68,7 @@ export function ViralProductCard({ product, variant, onSelect }: ViralProductCar
         {isCenter && (
           <p className="mt-2 text-[11px] text-ni-muted">
             Ships in ~{product.estimatedDeliveryDays} days · via{" "}
-            {PLATFORM_LABELS[product.sourcePlatform] ?? product.sourcePlatform}
+            {STORE_PLATFORM_LABELS[product.sourcePlatform] ?? product.sourcePlatform}
           </p>
         )}
       </div>

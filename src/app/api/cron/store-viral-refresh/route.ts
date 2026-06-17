@@ -5,6 +5,8 @@ import { refreshDailyViralPicks } from "@/lib/store/viral/refresh";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  await ensureStoreEnv();
+
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET?.trim();
 

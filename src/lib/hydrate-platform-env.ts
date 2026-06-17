@@ -88,6 +88,13 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       (value) => !value?.trim()
     );
     if (cjKey) process.env.CJ_DROPSHIPPING_API_KEY = cjKey;
+
+    const cronSecret = await resolvePlatformSecret(
+      "CRON_SECRET",
+      process.env.CRON_SECRET,
+      (value) => !value?.trim()
+    );
+    if (cronSecret) process.env.CRON_SECRET = cronSecret;
   })();
 
   return hydratePromise;
