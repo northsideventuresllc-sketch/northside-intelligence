@@ -238,7 +238,13 @@ export function AuthForm({ mode }: AuthFormProps) {
                 disabled={loading}
                 className="w-full rounded-xl border border-cyan-500/50 bg-cyan-500/15 py-3 font-medium text-cyan-300 shadow-[0_8px_32px_rgba(0,212,255,0.15)] transition hover:border-cyan-400/70 hover:bg-cyan-500/25 disabled:opacity-50"
               >
-                {loading ? "Sending Code…" : mode === "signup" ? "Create Account" : "Continue"}
+                {loading
+                  ? mode === "signup"
+                    ? "Sending Code…"
+                    : "Logging In…"
+                  : mode === "signup"
+                    ? "Create Account"
+                    : "Continue"}
               </button>
             </form>
           ) : (
