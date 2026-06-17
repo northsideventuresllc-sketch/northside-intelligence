@@ -10,7 +10,7 @@ import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Tool Case | Northside Intelligence",
+  title: "Toolkit | Northside Intelligence",
   description: "Your Intelligence Tools collection",
 };
 
@@ -43,9 +43,9 @@ export default async function ToolkitPage() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
               Your Collection
             </p>
-            <h1 className="text-3xl font-semibold text-white">Tool Case</h1>
+            <h1 className="text-3xl font-semibold text-white">Toolkit</h1>
             <p className="mx-auto mt-3 max-w-xl text-sm text-ni-muted">
-              Add Intelligence Tools to your Tool Case to use them. Assign unlimited access from
+              Add Intelligence Tools to your Toolkit to use them. Assign unlimited access from
               your NI plan, or subscribe per tool at any time.
             </p>
           </div>

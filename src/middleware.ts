@@ -7,6 +7,42 @@ import { supabaseCookieOptions } from "@/lib/supabase/cookie-domain";
 const OPS_COOKIE = "ni_ops_token";
 const PUBLIC_OPS_PATHS = ["/ops/login", "/api/ops/auth"];
 
+/** Portal routes that must not be rewritten on tool subdomains. */
+const PORTAL_PATH_PREFIXES = [
+  "/toolkit",
+  "/account",
+  "/auth",
+  "/tools",
+  "/store",
+  "/legal",
+  "/feedback",
+  "/ops",
+  "/api/billing",
+  "/api/auth",
+  "/api/account",
+  "/api/store",
+] as const;
+
+function isPortalPath(pathname: string): boolean {
+  return PORTAL_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+function portalOrigin(): string {
+  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://www.northsideintelligence.com";
+}
+
+function redirectReplyFlowPortalPath(request: NextRequest): NextResponse | null {
+  const host = request.headers.get("host") ?? "";
+  if (!isReplyFlowHost(host)) return null;
+
+  const { pathname, search } = request.nextUrl;
+  if (!isPortalPath(pathname)) return null;
+
+  return NextResponse.redirect(new URL(`${pathname}${search}`, portalOrigin()));
+}
+
 function isReplyFlowHost(host: string): boolean {
   return host.startsWith("replyflow.") || host.includes("replyflow-");
 }
@@ -105,6 +141,9 @@ export async function middleware(request: NextRequest) {
 
   const shopRewrite = rewriteShopSubdomain(request);
   if (shopRewrite) return shopRewrite;
+
+  const portalRedirect = redirectReplyFlowPortalPath(request);
+  if (portalRedirect) return portalRedirect;
 
   const subdomainRewrite = rewriteReplyFlowSubdomain(request);
   if (subdomainRewrite) return subdomainRewrite;

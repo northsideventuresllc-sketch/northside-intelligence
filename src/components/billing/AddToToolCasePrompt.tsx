@@ -48,9 +48,9 @@ export function AddToToolCasePrompt({
 
   return (
     <div className={cardClass}>
-      <p className={`text-lg font-semibold text-white`}>Add {toolName} to Your Tool Case</p>
+      <p className={`text-lg font-semibold text-white`}>Add {toolName} to Your Toolkit</p>
       <p className={`mt-2 text-sm ${mutedClass}`}>
-        You need to add {toolName} to your Tool Case before you can use it. Free tier usage is
+        You need to add {toolName} to your Toolkit before you can use it. Free tier usage is
         included — upgrade anytime for unlimited access.
       </p>
       <button
@@ -59,7 +59,7 @@ export function AddToToolCasePrompt({
         disabled={loading}
         className={`mt-6 ${buttonClass}`}
       >
-        {loading ? "Adding…" : "Add to Tool Case"}
+        {loading ? "Adding…" : "Add to Toolkit"}
       </button>
       {error && (
         <p className="mt-3 text-sm text-red-300" role="alert">
@@ -69,7 +69,7 @@ export function AddToToolCasePrompt({
       <p className={`mt-4 text-xs ${mutedClass}`}>
         Or manage all tools in your{" "}
         <Link href="/toolkit" className={isReplyflow ? "text-rf-rose hover:underline" : "text-cyan-300 hover:underline"}>
-          Tool Case
+          Toolkit
         </Link>
       </p>
     </div>

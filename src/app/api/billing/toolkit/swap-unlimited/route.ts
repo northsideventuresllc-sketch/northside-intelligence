@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
   if (!userOwnsTool(state, toToolSlug)) {
     return NextResponse.json(
-      { error: "Add the destination tool to your Tool Case first" },
+      { error: "Add the destination tool to your Toolkit first" },
       { status: 400 }
     );
   }

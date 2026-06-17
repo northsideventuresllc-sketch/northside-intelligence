@@ -83,7 +83,7 @@ export default async function AccountPage() {
               href="/toolkit"
               className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
             >
-              Open Tool Case
+              Open Toolkit
             </a>
             <SignOutButton />
           </div>

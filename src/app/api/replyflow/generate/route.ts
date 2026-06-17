@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const billingState = await getUserBillingState(user.id);
     if (!userCanUseTool(billingState, "replyflow")) {
       return NextResponse.json(
-        { error: "Add ReplyFlow to your Tool Case before using it", code: "TOOL_NOT_IN_CASE" },
+        { error: "Add ReplyFlow to your Toolkit before using it", code: "TOOL_NOT_IN_CASE" },
         { status: 403 }
       );
     }

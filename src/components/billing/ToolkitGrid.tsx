@@ -74,7 +74,7 @@ export function ToolkitGrid({
         setError(data.error ?? "Could not add tool");
         return;
       }
-      setMessage("Tool added to your Tool Case. Refreshing…");
+      setMessage("Tool added to your Toolkit. Refreshing…");
       window.location.reload();
     } catch {
       setError("Network error. Please try again.");
@@ -185,7 +185,7 @@ export function ToolkitGrid({
         <h2 className="mb-4 text-lg font-semibold text-white">Your Tools</h2>
         {toolkit.length === 0 ? (
           <div className="glass-panel p-8 text-center">
-            <p className="text-ni-muted">No tools in your Tool Case yet.</p>
+            <p className="text-ni-muted">No tools in your Toolkit yet.</p>
             <Link
               href="/#tools"
               className="mt-4 inline-block text-sm font-medium text-cyan-300 hover:text-cyan-200"
@@ -340,7 +340,7 @@ export function ToolkitGrid({
 
       {availableToAdd.length > 0 && (
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-white">Add Tools to Your Tool Case</h2>
+          <h2 className="mb-4 text-lg font-semibold text-white">Add Tools to Your Toolkit</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {availableToAdd.map((slug) => {
               const tool = INTELLIGENCE_TOOLS.find((t) => t.slug === slug);
@@ -362,7 +362,7 @@ export function ToolkitGrid({
                     disabled={adding === slug}
                     className="mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20 disabled:opacity-50"
                   >
-                    {adding === slug ? "Adding…" : "Add to Tool Case"}
+                    {adding === slug ? "Adding…" : "Add to Toolkit"}
                   </button>
                 </article>
               );
