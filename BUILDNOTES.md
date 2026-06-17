@@ -18,9 +18,18 @@ Dropship storefront for Northside Intelligence (`shop.northsideintelligence.com`
 
 **Viral scoring:** 55% web trend score + 35% on-site events + 10% daily theme boost. Logged-in users with activity get a personalized top 10 blend.
 
-## Phase 2–4 (planned)
+## Phase 2 (shipped): Multi-source search
 
-- Search across dropship sources with filters
+| Layer | Path / service | Purpose |
+|-------|----------------|---------|
+| Search API | `GET /api/store/search` | CJ + curated catalog search with filters |
+| Search UI | `StoreSearch` on `/store` | Query, platform pills, category, retail price range |
+| Sources | `src/lib/store/sources/` | CJ live search; AliExpress/Temu stubs for future keys |
+
+Search returns `CatalogProductView[]` only — supplier costs never exposed. CJ hits are upserted into `ni_store_catalog` for PDP links.
+
+## Phase 3–4 (planned)
+
 - Full product landing pages (reviews, expedited shipping)
 - Cart + checkout with estimated S&H and refund of unused shipping
 
@@ -33,7 +42,7 @@ Dropship storefront for Northside Intelligence (`shop.northsideintelligence.com`
 | Variable | Required | Notes |
 |----------|----------|-------|
 | `CJ_DROPSHIPPING_API_KEY` | Recommended | Pulls live trending SKUs into daily picks |
-| `CRON_SECRET` | Production cron | Bearer token for viral refresh endpoint |
+| `CRON_SECRET` | Production cron | Bearer token for viral refresh (also in `ni_platform_secrets`) |
 | `STRIPE_SECRET_KEY` | Checkout phases | Shared with portal billing |
 | `STRIPE_WEBHOOK_SECRET_STORE` | Checkout phases | Store webhook only |
 | `MAKE_STORE_WEBHOOK_URL` | Fulfillment | Make → CJDropshipping |

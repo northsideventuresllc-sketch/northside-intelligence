@@ -1,5 +1,9 @@
 import "server-only";
 
+import { DROPSHIP_SOURCE_PLATFORMS } from "@/lib/store/platform-labels";
+
+export { DROPSHIP_SOURCE_PLATFORMS };
+
 /** Rotating viral keyword themes — refreshed daily in cron to simulate web trend research. */
 export const DAILY_TREND_THEMES: Record<number, string[]> = {
   0: ["portable", "wireless", "smart-home", "viral", "tiktok"],
@@ -15,9 +19,3 @@ export function getTodaysTrendTags(): string[] {
   const day = new Date().getUTCDay();
   return DAILY_TREND_THEMES[day] ?? DAILY_TREND_THEMES[0];
 }
-
-export const DROPSHIP_SOURCE_PLATFORMS = [
-  { id: "cj", label: "CJ Dropshipping", enabled: true },
-  { id: "aliexpress", label: "AliExpress", enabled: true },
-  { id: "temu", label: "Temu", enabled: true },
-] as const;

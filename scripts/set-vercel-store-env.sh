@@ -67,4 +67,10 @@ else
   echo "SKIP CJ_DROPSHIPPING_API_KEY (not provided)"
 fi
 
+if [[ -n "${CRON_SECRET:-}" ]]; then
+  upsert_env CRON_SECRET "$CRON_SECRET"
+else
+  echo "SKIP CRON_SECRET (not provided — see scripts/set-vercel-infra.sh)"
+fi
+
 echo "Done. Redeploy production to pick up new env vars."

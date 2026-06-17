@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
 import { ViralProductsCarousel } from "@/components/store/ViralProductsCarousel";
+import { StoreSearch } from "@/components/store/StoreSearch";
 import { WebTrackingOptIn } from "@/components/store/WebTrackingOptIn";
 
 export const metadata: Metadata = {
@@ -26,10 +27,12 @@ export default function StorePage() {
             <h1 className="text-3xl font-semibold text-white">NI Store</h1>
             <p className="mx-auto mt-3 max-w-xl text-sm text-ni-muted">
               Ten viral products refreshed every 24 hours — scored from what&apos;s trending online
-              and what shoppers love on NI. Search and full checkout arrive in the next updates.
+              and what shoppers love on NI. Search dropship sources below; full checkout ships in a
+              later update.
             </p>
           </div>
 
+          <StoreSearch />
           <WebTrackingOptIn />
           <ViralProductsCarousel />
 

@@ -25,3 +25,13 @@ export interface ViralPicksResponse {
   resetsAt: string;
   webTrackingEnabled: boolean;
 }
+
+export interface StoreSearchResponse {
+  results: CatalogProductView[];
+  total: number;
+  page: number;
+  limit: number;
+  query: string;
+  platforms: string[];
+  categories: string[];
+}
