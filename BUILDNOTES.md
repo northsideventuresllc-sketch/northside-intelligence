@@ -1,54 +1,44 @@
-# NI Store v1 — Build Notes
+# NI Store — Build Notes
 
-Physical merchandise storefront for Northside Intelligence (`shop.northsideintelligence.com` → `/store`).
+Dropship storefront for Northside Intelligence (`shop.northsideintelligence.com` → `/store`).
 
-## Architecture
+## Phase 1 (shipped): Viral carousel + personalization loop
 
 | Layer | Path / service | Purpose |
 |-------|----------------|---------|
-| Storefront | `/store` | Product catalog (mock seeds until CJ wired) |
-| Checkout API | `/api/store/checkout` | Stripe Checkout (gated) |
-| Stripe webhook | `/api/store/webhooks/stripe` | Order fulfillment trigger |
-| Make.com | `MAKE_STORE_WEBHOOK_URL` | Routes paid orders to CJDropshipping workflow |
-| Database | `ni_store_*` tables (NI-Brain) | Products, orders, line items |
+| Storefront | `/store` | Top 10 viral products carousel (24h reset) |
+| Product preview | `/store/p/[slug]` | Catalog product detail (cart in Phase 4) |
+| Viral API | `GET /api/store/viral` | Global + personalized daily picks |
+| Events API | `POST /api/store/events` | Self-learning: views, clicks, searches |
+| Preferences | `/api/store/preferences` | Web tracking opt-in per user |
+| Cron | `GET /api/cron/store-viral-refresh` | Daily viral re-rank (06:00 UTC) |
+| Database | `ni_store_catalog`, `ni_store_viral_picks`, `ni_store_events`, `ni_store_user_preferences` | Catalog, picks, feedback loop |
 
-## Gating (required before launch)
+**Pricing rule:** UI shows `retail_price_cents` only (= supplier cost + 10%). `supplier_cost_cents` is server-only.
 
-Checkout stays **disabled** until all are true:
+**Viral scoring:** 55% web trend score + 35% on-site events + 10% daily theme boost. Logged-in users with activity get a personalized top 10 blend.
 
-1. `CJ_DROPSHIPPING_API_KEY` is set (CJ API wired)
-2. `MAKE_STORE_WEBHOOK_URL` is set (Make scenario live)
-3. `NI_STORE_LIVE=true` (manual launch flag)
+## Phase 2–4 (planned)
 
-While gated, `/store` shows a **Coming Soon** banner and mock products cannot reach Stripe.
+- Search across dropship sources with filters
+- Full product landing pages (reviews, expedited shipping)
+- Cart + checkout with estimated S&H and refund of unused shipping
+
+## Legacy merch tables
+
+`ni_store_products` / checkout webhook remain for original NI merch mock catalog.
 
 ## Environment variables
 
 | Variable | Required | Notes |
 |----------|----------|-------|
-| `STRIPE_SECRET_KEY` | Yes | Shared with portal billing |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Yes | Client-side Stripe.js (future) |
-| `STRIPE_WEBHOOK_SECRET_STORE` | Yes | Signing secret for `/api/store/webhooks/stripe` only |
-| `MAKE_STORE_WEBHOOK_URL` | Yes (for live) | Make.com custom webhook URL |
-| `CJ_DROPSHIPPING_API_KEY` | Yes (for live) | CJDropshipping API key |
-| `NI_STORE_LIVE` | Launch flag | Default unset/false |
-| `ANTHROPIC_API_KEY` | Optional | Product copy tooling (ReplyFlow) |
-
-Secrets may also live in `ni_platform_secrets` when absent from Vercel.
-
-## Deployment checklist
-
-1. Verify Vercel env: `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-2. Add `STRIPE_WEBHOOK_SECRET_STORE`, `MAKE_STORE_WEBHOOK_URL` to Vercel (or `ni_platform_secrets`)
-3. Run `supabase/migrations/002_ni_store.sql` on NI-Brain (`kxijunwgbrlfzvgkhklo`)
-4. Register Stripe webhook: `https://northsideintelligence.com/api/store/webhooks/stripe`
-5. Add domain `shop.northsideintelligence.com` on Vercel project `northside-intelligence`
-6. `npm run build` → merge `feature/ni-store-v1` → `main`
+| `CJ_DROPSHIPPING_API_KEY` | Recommended | Pulls live trending SKUs into daily picks |
+| `CRON_SECRET` | Production cron | Bearer token for viral refresh endpoint |
+| `STRIPE_SECRET_KEY` | Checkout phases | Shared with portal billing |
+| `STRIPE_WEBHOOK_SECRET_STORE` | Checkout phases | Store webhook only |
+| `MAKE_STORE_WEBHOOK_URL` | Fulfillment | Make → CJDropshipping |
+| `NI_STORE_LIVE` | Launch flag | Enables live checkout when wired |
 
 ## Stripe webhook events
 
 - `checkout.session.completed`
-
-## Mock products
-
-Seeded in migration with `is_mock = true`. Checkout API rejects mock SKUs even if gating were bypassed.

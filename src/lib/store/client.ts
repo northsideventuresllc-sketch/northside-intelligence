@@ -17,3 +17,4 @@ export function formatStorePrice(priceCents: number, currency = "usd"): string {
 }
 
 export type { StoreGateStatus, StoreProductView } from "@/lib/store/types";
+export type { CatalogProductView, ViralPicksResponse } from "@/lib/store/catalog/types";
