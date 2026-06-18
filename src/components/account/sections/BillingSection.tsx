@@ -14,7 +14,6 @@ import {
   getDowngradeCheckoutPayload,
   getNextNiTier,
   getUpgradeCheckoutPayload,
-  hasPausableSubscription,
 } from "@/lib/billing/subscription-actions";
 import { getNiTierConfig, type NiTier } from "@/lib/billing/ni-tiers";
 import type { AccountPageData } from "@/lib/account/get-account-page-data";
@@ -43,7 +42,6 @@ export function BillingSection({ billing }: BillingSectionProps) {
   const hasNiSubscription = !!billing.niStripeSubscriptionId;
   const hasToolSubscriptions = billing.toolSubscriptions.length > 0;
   const hasAnyPausableSubscription = hasNiSubscription || hasToolSubscriptions;
-  const canPause = hasPausableSubscription;
 
   async function openBillingPortal() {
     setSubscriptionError("");
@@ -202,7 +200,7 @@ export function BillingSection({ billing }: BillingSectionProps) {
             </p>
           )}
           <div className="flex flex-wrap items-center gap-4">
-            {hasNiSubscription && canPause && (
+            {hasNiSubscription && (
               <>
                 <button
                   type="button"
