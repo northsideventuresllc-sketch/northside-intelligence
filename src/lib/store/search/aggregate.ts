@@ -2,33 +2,21 @@ import "server-only";
 
 import { toCatalogProductView } from "@/lib/store/catalog/products";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
+import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { draftToCatalogView } from "@/lib/store/search/draft-to-view";
 import { upsertSearchDrafts } from "@/lib/store/search/upsert-catalog";
-import { searchCuratedCatalog } from "@/lib/store/sources/curated-search";
 import { searchCjProducts } from "@/lib/store/sources/cj";
-import { searchSpocketProducts } from "@/lib/store/sources/spocket";
-import { searchZendropProducts } from "@/lib/store/sources/zendrop";
-import type { DropshipPlatform, StoreSearchFilters } from "@/lib/store/sources/types";
-
-const SOURCE_SEARCHERS: Record<
-  Exclude<DropshipPlatform, "curated">,
-  (query: string, limit: number) => Promise<import("@/lib/store/sources/types").SourceProductDraft[]>
-> = {
-  cj: searchCjProducts,
-  spocket: searchSpocketProducts,
-  zendrop: searchZendropProducts,
-};
-
-function dedupeKey(slug: string): string {
-  return slug;
-}
+import type { PriceChangeNotice, StoreSearchFilters } from "@/lib/store/sources/types";
 
 function matchesRetailFilters(
-  retailCents: number,
+  view: CatalogProductView,
   filters: StoreSearchFilters
 ): boolean {
-  if (filters.minRetailCents != null && retailCents < filters.minRetailCents) return false;
-  if (filters.maxRetailCents != null && retailCents > filters.maxRetailCents) return false;
+  const minCheck = view.retailPriceMinCents ?? view.retailPriceCents;
+  const maxCheck = view.retailPriceMaxCents ?? view.retailPriceCents;
+  if (filters.minRetailCents != null && maxCheck < filters.minRetailCents) return false;
+  if (filters.maxRetailCents != null && minCheck > filters.maxRetailCents) return false;
+  if (filters.category && view.category !== filters.category) return false;
   return true;
 }
 
@@ -38,7 +26,8 @@ export interface StoreSearchResult {
   page: number;
   limit: number;
   query: string;
-  platforms: DropshipPlatform[];
+  platforms: ["cj"];
+  priceChangeNotices: PriceChangeNotice[];
 }
 
 export async function searchStoreProducts(
@@ -46,58 +35,45 @@ export async function searchStoreProducts(
 ): Promise<StoreSearchResult> {
   const query = filters.query.trim();
   const perSourceLimit = Math.min(filters.limit * 2, 40);
-  const enabledPlatforms = filters.platforms.length
-    ? filters.platforms
-    : (["cj", "spocket", "zendrop", "curated"] as DropshipPlatform[]);
+  const priceChangeNotices: PriceChangeNotice[] = [];
 
-  const seen = new Set<string>();
+  if (!query) {
+    return {
+      results: [],
+      total: 0,
+      page: filters.page,
+      limit: filters.limit,
+      query,
+      platforms: ["cj"],
+      priceChangeNotices,
+    };
+  }
+
+  const drafts = await searchCjProducts(query, perSourceLimit);
+  await upsertSearchDrafts(drafts);
+
   const merged: CatalogProductView[] = [];
 
-  const remotePlatforms = enabledPlatforms.filter(
-    (p): p is Exclude<DropshipPlatform, "curated"> => p !== "curated"
-  );
+  for (const draft of drafts) {
+    const priorView = draftToCatalogView(draft);
+    const slug = priorView.slug;
 
-  if (query) {
-    const remoteDrafts = (
-      await Promise.all(
-        remotePlatforms.map((platform) => SOURCE_SEARCHERS[platform](query, perSourceLimit))
-      )
-    ).flat();
+    const { getCatalogProductBySlug } = await import("@/lib/store/catalog/products");
+    const row = await getCatalogProductBySlug(slug);
+    if (!row) continue;
 
-    await upsertSearchDrafts(remoteDrafts);
+    const refreshed = await refreshCatalogFromCj(row, priorView.retailPriceCents);
+    if (refreshed.unavailable || !refreshed.row) continue;
+    if (refreshed.notice) priceChangeNotices.push(refreshed.notice);
 
-    for (const draft of remoteDrafts) {
-      const view = draftToCatalogView(draft);
-      if (filters.category && view.category !== filters.category) continue;
-      if (!matchesRetailFilters(view.retailPriceCents, filters)) continue;
-      const key = dedupeKey(view.slug);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      merged.push(view);
-    }
-  }
-
-  if (enabledPlatforms.includes("curated")) {
-    const curated = await searchCuratedCatalog(query, {
-      category: filters.category,
-      minRetailCents: filters.minRetailCents,
-      maxRetailCents: filters.maxRetailCents,
-      limit: perSourceLimit,
+    const view = toCatalogProductView(refreshed.row, {
+      priceChangeNotice: refreshed.notice ?? undefined,
     });
-
-    for (const row of curated) {
-      const key = dedupeKey(row.slug);
-      if (seen.has(key)) continue;
-      seen.add(key);
-      merged.push(toCatalogProductView(row));
-    }
+    if (!matchesRetailFilters(view, filters)) continue;
+    merged.push(view);
   }
 
-  merged.sort((a, b) => {
-    const scoreA = (a.reviewCount ?? 0) + (a.viralScore ?? 0);
-    const scoreB = (b.reviewCount ?? 0) + (b.viralScore ?? 0);
-    return scoreB - scoreA || a.name.localeCompare(b.name);
-  });
+  merged.sort((a, b) => a.name.localeCompare(b.name));
 
   const total = merged.length;
   const offset = (filters.page - 1) * filters.limit;
@@ -109,6 +85,7 @@ export async function searchStoreProducts(
     page: filters.page,
     limit: filters.limit,
     query,
-    platforms: enabledPlatforms,
+    platforms: ["cj"],
+    priceChangeNotices,
   };
 }

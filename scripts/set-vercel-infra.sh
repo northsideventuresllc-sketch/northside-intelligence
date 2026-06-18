@@ -68,16 +68,4 @@ else
   echo "SKIP SERPAPI_API_KEY (optional web image fallback)"
 fi
 
-if [[ -n "${SPOCKET_API_KEY:-}" ]]; then
-  upsert_env SPOCKET_API_KEY "$SPOCKET_API_KEY"
-else
-  echo "SKIP SPOCKET_API_KEY (set when Spocket account is ready)"
-fi
-
-if [[ -n "${ZENDROP_API_KEY:-}" ]]; then
-  upsert_env ZENDROP_API_KEY "$ZENDROP_API_KEY"
-else
-  echo "SKIP ZENDROP_API_KEY (set when Zendrop MCP token is ready)"
-fi
-
 echo "Done. Redeploy production to pick up new env vars."

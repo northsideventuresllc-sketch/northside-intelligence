@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
+import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
 import { expeditedDeliveryDays } from "@/lib/store/cart/types";
 import { useStoreCart } from "@/components/store/StoreCartProvider";
 import type { ShippingTier } from "@/lib/store/cart/types";
@@ -20,19 +22,36 @@ export function ProductPurchasePanel({
   const { addItem } = useStoreCart();
   const [shippingTier, setShippingTier] = useState<ShippingTier>("standard");
   const [added, setAdded] = useState(false);
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    product.variants?.[0]?.id ?? null
+  );
 
   const standardDays = product.estimatedDeliveryDays;
   const expressDays = expeditedDeliveryDays(standardDays);
+
+  const selectedVariant = useMemo(
+    () => product.variants?.find((v) => v.id === selectedVariantId) ?? null,
+    [product.variants, selectedVariantId]
+  );
+
+  const displayRetailCents = selectedVariant?.retailPriceCents ?? product.retailPriceCents;
+  const priceLabel = formatRetailPriceRange(
+    displayRetailCents,
+    selectedVariant ? selectedVariant.retailPriceCents : product.retailPriceMinCents,
+    selectedVariant ? selectedVariant.retailPriceCents : product.retailPriceMaxCents,
+    product.currency
+  );
 
   function handleAddToCart() {
     addItem({
       slug: product.slug,
       name: product.name,
-      imageUrl: product.imageUrl,
-      retailPriceCents: product.retailPriceCents,
+      imageUrl: selectedVariant?.imageUrl ?? product.imageUrl,
+      retailPriceCents: displayRetailCents,
       currency: product.currency,
       sourcePlatform: product.sourcePlatform,
       sourceProductId,
+      variantId: selectedVariant?.id ?? null,
       quantity: 1,
       shippingTier,
     });
@@ -42,6 +61,41 @@ export function ProductPurchasePanel({
 
   return (
     <div className="mt-8 space-y-4">
+      {product.variants && product.variants.length > 1 && (
+        <div>
+          <p className="mb-2 text-sm font-semibold text-white">CJ Variations</p>
+          <p className="mb-3 text-xs text-ni-muted">
+            NI price = CJ variation listing price + 10% for each option below.
+          </p>
+          <ul className="max-h-48 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-3">
+            {product.variants.map((variant) => (
+              <li key={variant.id}>
+                <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
+                  <span className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="cj-variant"
+                      checked={selectedVariantId === variant.id}
+                      onChange={() => setSelectedVariantId(variant.id)}
+                    />
+                    <span className="text-white">{variant.name}</span>
+                  </span>
+                  <span className="shrink-0 font-semibold text-cyan-200">
+                    {formatRetailPriceRange(variant.retailPriceCents, null, null, product.currency)}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {product.imageIsStockPhoto && <StockImageDisclaimer />}
+
+      <p className="text-sm text-ni-muted">
+        Selected NI price: <span className="font-semibold text-white">{priceLabel}</span>
+      </p>
+
       <fieldset>
         <legend className="mb-2 text-sm font-semibold text-white">Shipping Speed</legend>
         <div className="space-y-2">
@@ -84,8 +138,7 @@ export function ProductPurchasePanel({
       </button>
 
       <p className="text-center text-[11px] text-ni-muted">
-        Estimated shipping & handling is collected at checkout. Unused shipping is refunded after
-        fulfillment.
+        Prices are verified against CJ at checkout. NI retail = CJ listing price + 10%.
       </p>
     </div>
   );

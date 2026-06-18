@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CatalogProductView, StoreSearchResponse } from "@/lib/store/catalog/types";
 import { STORE_ITEM_CATEGORIES, formatCategoryLabel } from "@/lib/store/categories";
+import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { SearchResultCard } from "@/components/store/SearchResultCard";
 import { StoreCartLink } from "@/components/store/StoreCartLink";
 import type { StoreSearchFilters } from "@/components/store/StorePageClient";
@@ -197,6 +198,10 @@ export function StoreSearchResults({
 
       {loading && <p className="text-center text-sm text-ni-muted">Searching…</p>}
       {error && <p className="text-center text-sm text-red-300">{error}</p>}
+
+      {!loading && data?.priceChangeNotices && data.priceChangeNotices.length > 0 && (
+        <PriceChangeNotices notices={data.priceChangeNotices} className="mb-6" />
+      )}
 
       {!loading && data && (
         <>

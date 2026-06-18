@@ -3,13 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
+import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { ProductPurchasePanel } from "@/components/store/ProductPurchasePanel";
 import { StoreCartProvider } from "@/components/store/StoreCartProvider";
+import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
+import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
+import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { getCatalogProductBySlug, toCatalogProductView } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
 import { getStoreGateStatus } from "@/lib/store/gate";
-import { formatStorePrice } from "@/lib/store/client";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +35,19 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
   const row = await getCatalogProductBySlug(params.slug);
   if (!row) notFound();
 
-  const product = toCatalogProductView(row);
+  const refreshed = await refreshCatalogFromCj(row);
+  if (refreshed.unavailable || !refreshed.row) notFound();
+
+  const product = toCatalogProductView(refreshed.row, {
+    priceChangeNotice: refreshed.notice ?? undefined,
+  });
   const gate = getStoreGateStatus();
+  const priceLabel = formatRetailPriceRange(
+    product.retailPriceCents,
+    product.retailPriceMinCents,
+    product.retailPriceMaxCents,
+    product.currency
+  );
 
   return (
     <main className="min-h-screen bg-ni-bg">
@@ -64,9 +78,17 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                     {product.category.replace(/-/g, " ")}
                   </p>
                   <h1 className="mt-2 text-2xl font-semibold text-white">{product.name}</h1>
-                  <p className="mt-4 text-3xl font-bold text-white">
-                    {formatStorePrice(product.retailPriceCents, product.currency)}
+                  <p className="mt-2 text-xs text-ni-muted">
+                    Exact CJ listing title — copy and paste this name into CJ to find the product.
                   </p>
+                  <p className="mt-4 text-3xl font-bold text-white">{priceLabel}</p>
+                  {product.priceChangeNotice && (
+                    <PriceChangeNotices
+                      notices={[product.priceChangeNotice]}
+                      className="mt-4"
+                    />
+                  )}
+                  {product.imageIsStockPhoto && <StockImageDisclaimer className="mt-4" />}
                   {product.reviewRating != null && product.reviewCount > 0 ? (
                     <p className="mt-2 text-sm text-ni-muted">
                       ★ {product.reviewRating.toFixed(1)} · {product.reviewCount.toLocaleString()}{" "}
@@ -87,11 +109,15 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                       <dt className="text-ni-muted">Standard ETA</dt>
                       <dd className="text-white">~{product.estimatedDeliveryDays} business days</dd>
                     </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-ni-muted">NI pricing</dt>
+                      <dd className="text-right text-white">CJ listing price + 10%</dd>
+                    </div>
                   </dl>
 
                   <ProductPurchasePanel
                     product={product}
-                    sourceProductId={row.sourceProductId}
+                    sourceProductId={refreshed.row.sourceProductId}
                     checkoutLive={gate.live}
                   />
                 </div>

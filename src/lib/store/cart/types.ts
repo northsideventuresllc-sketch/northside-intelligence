@@ -8,15 +8,17 @@ export interface CartLineItem {
   currency: string;
   sourcePlatform: string;
   sourceProductId: string | null;
+  variantId: string | null;
   quantity: number;
   shippingTier: ShippingTier;
 }
 
 export interface CartState {
   items: CartLineItem[];
+  savedAt?: string;
 }
 
-export const CART_STORAGE_KEY = "ni_store_cart_v1";
+export const CART_STORAGE_KEY = "ni_store_cart_v2";
 
 export function expeditedDeliveryDays(standardDays: number): number {
   return Math.max(3, Math.ceil(standardDays * 0.45));

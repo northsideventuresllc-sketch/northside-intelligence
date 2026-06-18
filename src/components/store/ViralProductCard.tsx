@@ -3,7 +3,8 @@
 import Link from "next/link";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
-import { formatStorePrice } from "@/lib/store/client";
+import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
+import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
 interface ViralProductCardProps {
@@ -14,6 +15,12 @@ interface ViralProductCardProps {
 
 export function ViralProductCard({ product, variant, onSelect }: ViralProductCardProps) {
   const isCenter = variant === "center";
+  const priceLabel = formatRetailPriceRange(
+    product.retailPriceCents,
+    product.retailPriceMinCents,
+    product.retailPriceMaxCents,
+    product.currency
+  );
 
   const content = (
     <article
@@ -55,9 +62,12 @@ export function ViralProductCard({ product, variant, onSelect }: ViralProductCar
         {isCenter && (
           <p className="mt-2 line-clamp-2 text-sm text-ni-muted">{product.description}</p>
         )}
+        {product.imageIsStockPhoto && isCenter && (
+          <StockImageDisclaimer className="mt-3" />
+        )}
         <div className="mt-auto flex items-center justify-between pt-3">
           <p className={`font-bold text-white ${isCenter ? "text-2xl" : "text-base"}`}>
-            {formatStorePrice(product.retailPriceCents, product.currency)}
+            {priceLabel}
           </p>
           {isCenter && product.reviewRating != null && (
             <p className="text-xs text-ni-muted">

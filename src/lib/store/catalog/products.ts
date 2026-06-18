@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createServiceClient } from "@/lib/supabase/server";
+import type { CatalogVariantView } from "@/lib/store/sources/types";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
 
 export interface CatalogProductRow {
@@ -9,46 +9,85 @@ export interface CatalogProductRow {
   name: string;
   description: string;
   imageUrl: string | null;
+  imageSource: "cj" | "serpapi" | null;
   category: string;
   tags: string[];
   sourcePlatform: string;
   sourceProductId: string | null;
   supplierCostCents: number;
   retailPriceCents: number;
+  retailPriceMinCents: number | null;
+  retailPriceMaxCents: number | null;
   currency: string;
   estimatedDeliveryDays: number;
   trendScore: number;
   siteScore: number;
   reviewRating: number | null;
   reviewCount: number;
+  variants: CatalogVariantView[];
 }
 
-function mapRow(row: Record<string, unknown>): CatalogProductRow {
+function parseVariants(raw: unknown): CatalogVariantView[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      const v = entry as Record<string, unknown>;
+      const id = v.id != null ? String(v.id) : "";
+      const name = v.name != null ? String(v.name) : "";
+      const retailPriceCents = Number(v.retail_price_cents ?? v.retailPriceCents);
+      if (!id || !name || !Number.isFinite(retailPriceCents)) return null;
+      const imageUrl = v.image_url ?? v.imageUrl;
+      return {
+        id,
+        name,
+        retailPriceCents,
+        imageUrl: typeof imageUrl === "string" ? imageUrl : null,
+      };
+    })
+    .filter((v): v is CatalogVariantView => Boolean(v));
+}
+
+export function mapRow(row: Record<string, unknown>): CatalogProductRow {
+  const imageSourceRaw = row.image_source as string | null | undefined;
+  const imageSource =
+    imageSourceRaw === "cj" || imageSourceRaw === "serpapi" ? imageSourceRaw : null;
+
   return {
     id: String(row.id),
     slug: String(row.slug),
     name: String(row.name),
     description: String(row.description ?? ""),
     imageUrl: (row.image_url as string) ?? null,
+    imageSource,
     category: String(row.category ?? "general"),
     tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
-    sourcePlatform: String(row.source_platform ?? "curated"),
+    sourcePlatform: String(row.source_platform ?? "cj"),
     sourceProductId: row.source_product_id != null ? String(row.source_product_id) : null,
     supplierCostCents: Number(row.supplier_cost_cents),
     retailPriceCents: Number(row.retail_price_cents),
+    retailPriceMinCents:
+      row.retail_price_min_cents != null ? Number(row.retail_price_min_cents) : null,
+    retailPriceMaxCents:
+      row.retail_price_max_cents != null ? Number(row.retail_price_max_cents) : null,
     currency: String(row.currency ?? "usd"),
     estimatedDeliveryDays: Number(row.estimated_delivery_days ?? 12),
     trendScore: Number(row.trend_score ?? 0),
     siteScore: Number(row.site_score ?? 0),
     reviewRating: row.review_rating != null ? Number(row.review_rating) : null,
     reviewCount: Number(row.review_count ?? 0),
+    variants: parseVariants(row.cj_variants),
   };
 }
 
 /** Strip backend-only fields before sending to the browser. */
 export function toCatalogProductView(
   row: CatalogProductRow,
-  extras?: Partial<Pick<CatalogProductView, "viralRank" | "viralScore" | "personalized">>
+  extras?: Partial<
+    Pick<
+      CatalogProductView,
+      "viralRank" | "viralScore" | "personalized" | "priceChangeNotice"
+    >
+  >
 ): CatalogProductView {
   return {
     id: row.id,
@@ -56,24 +95,29 @@ export function toCatalogProductView(
     name: row.name,
     description: row.description,
     imageUrl: row.imageUrl,
+    imageIsStockPhoto: row.imageSource === "serpapi",
     category: row.category,
     tags: row.tags,
     retailPriceCents: row.retailPriceCents,
+    retailPriceMinCents: row.retailPriceMinCents,
+    retailPriceMaxCents: row.retailPriceMaxCents,
     currency: row.currency,
     estimatedDeliveryDays: row.estimatedDeliveryDays,
     reviewRating: row.reviewRating,
     reviewCount: row.reviewCount,
     sourcePlatform: row.sourcePlatform,
+    variants: row.variants,
     ...extras,
   };
 }
 
-export async function listActiveCatalogProducts(): Promise<CatalogProductRow[]> {
-  const supabase = createServiceClient();
+export async function listActiveCjCatalogProducts(): Promise<CatalogProductRow[]> {
+  const supabase = (await import("@/lib/supabase/server")).createServiceClient();
   const { data, error } = await supabase
     .from("ni_store_catalog")
     .select("*")
     .eq("active", true)
+    .eq("source_platform", "cj")
     .order("trend_score", { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -81,24 +125,30 @@ export async function listActiveCatalogProducts(): Promise<CatalogProductRow[]> 
 }
 
 export async function getCatalogProductBySlug(slug: string): Promise<CatalogProductRow | null> {
-  const supabase = createServiceClient();
+  const supabase = (await import("@/lib/supabase/server")).createServiceClient();
   const { data, error } = await supabase
     .from("ni_store_catalog")
     .select("*")
     .eq("slug", slug)
     .eq("active", true)
+    .eq("source_platform", "cj")
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  return data ? mapRow(data) : null;
+  return data ? mapRow(data as Record<string, unknown>) : null;
 }
 
 export async function getCatalogProductsByIds(ids: string[]): Promise<CatalogProductRow[]> {
   if (!ids.length) return [];
-  const supabase = createServiceClient();
-  const { data, error } = await supabase.from("ni_store_catalog").select("*").in("id", ids);
+  const supabase = (await import("@/lib/supabase/server")).createServiceClient();
+  const { data, error } = await supabase
+    .from("ni_store_catalog")
+    .select("*")
+    .in("id", ids)
+    .eq("source_platform", "cj")
+    .eq("active", true);
 
   if (error) throw new Error(error.message);
-  const byId = new Map((data ?? []).map((row) => [String(row.id), mapRow(row)]));
+  const byId = new Map((data ?? []).map((row) => [String(row.id), mapRow(row as Record<string, unknown>)]));
   return ids.map((id) => byId.get(id)).filter((p): p is CatalogProductRow => Boolean(p));
 }
