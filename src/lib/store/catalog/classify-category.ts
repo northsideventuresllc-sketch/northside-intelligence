@@ -82,6 +82,14 @@ async function anthropicClassify(name: string, description?: string): Promise<St
   return null;
 }
 
+/** Keyword-only classification for high-volume catalog sync (no Anthropic calls). */
+export function classifyStoreCategoryByKeywords(
+  name: string,
+  description?: string
+): StoreCategoryId {
+  return keywordClassify(name, description);
+}
+
 /** Assign an internal Smart Store category — never trust supplier taxonomy. */
 export async function classifyStoreCategory(input: {
   name: string;

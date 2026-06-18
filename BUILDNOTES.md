@@ -24,6 +24,18 @@ CJ `listV2` returns price ranges like `"0.66 -- 3.54"`. We parse the **listing h
 
 Daily cron also runs `refreshCjCatalogListings()` to re-price existing CJ rows in `ni_store_catalog`.
 
+## CJ bulk catalog sync
+
+CJ `listV2` caps **6,000 SKUs per keyword slice** (100/page, max 60 pages). We cannot mirror CJ’s full global catalog in one call — the API is search/browse oriented, not a full export.
+
+| Layer | Path | Purpose |
+|-------|------|---------|
+| Bulk sync | `GET /api/cron/store-catalog-sync` | Hourly ingest: 10 pages × 100 SKUs/run |
+| Sync cursor | `ni_store_catalog_sync` | Tracks keyword slice + page (rotates 25 slices) |
+| Browse | `GET /api/store/search` (empty `q`) | Paginated local Smart Store catalog |
+
+Empty search queries browse the synced `ni_store_catalog` table. Text search still hits CJ live, upserts new SKUs, and refreshes prices on results.
+
 ## Phase 2 (shipped): CJ search with live pricing
 
 | Layer | Path / service | Purpose |

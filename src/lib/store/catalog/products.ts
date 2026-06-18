@@ -152,3 +152,42 @@ export async function getCatalogProductsByIds(ids: string[]): Promise<CatalogPro
   const byId = new Map((data ?? []).map((row) => [String(row.id), mapRow(row as Record<string, unknown>)]));
   return ids.map((id) => byId.get(id)).filter((p): p is CatalogProductRow => Boolean(p));
 }
+
+export interface LocalCatalogSearchOptions {
+  category?: string;
+  minRetailCents?: number;
+  maxRetailCents?: number;
+  page: number;
+  limit: number;
+}
+
+export async function searchLocalCatalog(
+  options: LocalCatalogSearchOptions
+): Promise<{ rows: CatalogProductRow[]; total: number }> {
+  const supabase = (await import("@/lib/supabase/server")).createServiceClient();
+  const page = Math.max(1, options.page);
+  const limit = Math.min(Math.max(1, options.limit), 48);
+  const offset = (page - 1) * limit;
+
+  let query = supabase
+    .from("ni_store_catalog")
+    .select("*", { count: "exact" })
+    .eq("active", true)
+    .eq("source_platform", "cj");
+
+  if (options.category) query = query.eq("category", options.category);
+  if (options.minRetailCents != null) query = query.gte("retail_price_cents", options.minRetailCents);
+  if (options.maxRetailCents != null) query = query.lte("retail_price_cents", options.maxRetailCents);
+
+  const { data, error, count } = await query
+    .order("trend_score", { ascending: false })
+    .order("site_score", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw new Error(error.message);
+
+  return {
+    rows: (data ?? []).map((row) => mapRow(row as Record<string, unknown>)),
+    total: count ?? 0,
+  };
+}
