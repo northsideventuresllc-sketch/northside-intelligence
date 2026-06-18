@@ -97,6 +97,20 @@ export async function POST(req: NextRequest) {
             expiresAt: periodEndIso(sub),
             stripeSubscriptionId: session.subscription as string,
           });
+          break;
+        }
+
+        if (session.metadata?.serviceCheckout === "true" && session.metadata?.quoteId) {
+          const supabase = createServiceClient();
+          const now = new Date().toISOString();
+          await supabase
+            .from("ni_service_quotes")
+            .update({ status: "paid", updated_at: now })
+            .eq("id", session.metadata.quoteId);
+          await supabase
+            .from("ni_service_requests")
+            .update({ status: "accepted", updated_at: now })
+            .eq("stripe_session_id", session.id);
         }
         break;
       }

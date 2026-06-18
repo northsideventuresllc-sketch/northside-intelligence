@@ -105,7 +105,7 @@ export function ServiceDetailModal({
             href={ctaHref}
             className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-center text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
           >
-            {isLoggedIn ? service.modalCopy.ctaLabel : "Create Free Account & Order"}
+            {isLoggedIn ? "Get My Quote" : "Create Free Account & Get Quote"}
           </Link>
           <button
             type="button"

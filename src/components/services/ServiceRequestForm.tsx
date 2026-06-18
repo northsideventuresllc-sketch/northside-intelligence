@@ -9,6 +9,11 @@ import {
   type AccountType,
   type ServiceOffering,
 } from "@/lib/services/offerings";
+import type { ServiceQuoteResult } from "@/lib/services/pricing-engine";
+import { QuoteLoadingScreen } from "@/components/services/QuoteLoadingScreen";
+import { ServiceQuotePanel } from "@/components/services/ServiceQuotePanel";
+
+type FormStep = "intake" | "loading" | "quote";
 
 interface ServiceRequestFormProps {
   service: ServiceOffering;
@@ -21,6 +26,7 @@ interface ServiceRequestFormProps {
 }
 
 export function ServiceRequestForm({ service, initialData }: ServiceRequestFormProps) {
+  const [step, setStep] = useState<FormStep>("intake");
   const [contactName, setContactName] = useState(initialData.contactName);
   const [email, setEmail] = useState(initialData.email);
   const [accountType, setAccountType] = useState<AccountType>(initialData.accountType);
@@ -31,69 +37,77 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
   const [desiredOutcomes, setDesiredOutcomes] = useState("");
   const [timeline, setTimeline] = useState("");
   const [budgetRange, setBudgetRange] = useState("");
+  const [customBudget, setCustomBudget] = useState("");
   const [teamSize, setTeamSize] = useState("");
   const [additionalContext, setAdditionalContext] = useState("");
   const [referralSource, setReferralSource] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  const [quote, setQuote] = useState<(ServiceQuoteResult & { quoteId: string }) | null>(null);
+  const [currentPriceCents, setCurrentPriceCents] = useState(0);
+
+  async function handleGetQuote(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setStep("loading");
+
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 1800));
 
     try {
-      const res = await fetch("/api/services/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          serviceSlug: service.slug,
-          contactName,
-          email,
-          accountType,
-          businessName: accountType === "business" ? businessName : undefined,
-          industry,
-          currentSystems,
-          painPoints,
-          desiredOutcomes,
-          timeline,
-          budgetRange,
-          teamSize,
-          additionalContext,
-          referralSource: referralSource || undefined,
+      const [res] = await Promise.all([
+        fetch("/api/services/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            serviceSlug: service.slug,
+            contactName,
+            email,
+            accountType,
+            businessName: accountType === "business" ? businessName : undefined,
+            industry,
+            currentSystems,
+            painPoints,
+            desiredOutcomes,
+            timeline,
+            budgetRange,
+            customBudget: customBudget || undefined,
+            teamSize,
+            additionalContext,
+            referralSource: referralSource || undefined,
+          }),
         }),
-      });
+        minDelay,
+      ]);
 
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        setError(data.error ?? "Failed to submit request");
+      const quoteRes = res as Response;
+      const data = (await quoteRes.json()) as (ServiceQuoteResult & { quoteId: string; error?: string });
+
+      if (!quoteRes.ok) {
+        setError(data.error ?? "Failed to generate quote");
+        setStep("intake");
         return;
       }
 
-      setSubmitted(true);
+      setQuote(data);
+      setCurrentPriceCents(data.topPriceCents);
+      setStep("quote");
     } catch {
       setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
+      setStep("intake");
     }
   }
 
-  if (submitted) {
+  if (step === "loading") {
+    return <QuoteLoadingScreen />;
+  }
+
+  if (step === "quote" && quote) {
     return (
-      <div className="glass-panel p-8 text-center">
-        <p className="mb-2 text-lg font-semibold text-white">Request Submitted</p>
-        <p className="mb-6 text-sm text-ni-muted">
-          Thank you for your interest in {service.name}. Our team will review your request and
-          reach out within 2–3 business days.
-        </p>
-        <Link
-          href="/services"
-          className="inline-block rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-        >
-          Back to Services
-        </Link>
-      </div>
+      <ServiceQuotePanel
+        quote={quote}
+        currentPriceCents={currentPriceCents}
+        onPriceChange={setCurrentPriceCents}
+      />
     );
   }
 
@@ -101,7 +115,7 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
     "w-full rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500/50";
 
   return (
-    <form onSubmit={handleSubmit} className="glass-panel space-y-6 p-8">
+    <form onSubmit={handleGetQuote} className="glass-panel space-y-6 p-8">
       {error && (
         <p
           className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
@@ -291,6 +305,22 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
             </select>
           </div>
           <div>
+            <label htmlFor="customBudget" className="mb-1 block text-sm text-ni-muted">
+              Your Budget (Optional)
+            </label>
+            <input
+              id="customBudget"
+              type="text"
+              value={customBudget}
+              onChange={(e) => setCustomBudget(e.target.value)}
+              placeholder="e.g. $2,500 — exact amount you can invest"
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-ni-muted">
+              Providing your exact budget helps us tailor a quote within your range.
+            </p>
+          </div>
+          <div>
             <label htmlFor="teamSize" className="mb-1 block text-sm text-ni-muted">
               Team Size / Users Affected
             </label>
@@ -340,11 +370,16 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
 
       <button
         type="submit"
-        disabled={loading}
-        className="w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20 disabled:opacity-50"
+        className="w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 py-3 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
       >
-        {loading ? "Submitting…" : "Submit Request"}
+        Get My Quote
       </button>
+
+      <p className="text-center text-xs text-ni-muted">
+        <Link href="/services" className="text-cyan-300/80 hover:underline">
+          Back to Services
+        </Link>
+      </p>
     </form>
   );
 }
