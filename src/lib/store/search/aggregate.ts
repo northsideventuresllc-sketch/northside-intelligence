@@ -6,8 +6,8 @@ import { draftToCatalogView } from "@/lib/store/search/draft-to-view";
 import { upsertSearchDrafts } from "@/lib/store/search/upsert-catalog";
 import { searchCuratedCatalog } from "@/lib/store/sources/curated-search";
 import { searchCjProducts } from "@/lib/store/sources/cj";
-import { searchAliExpressProducts } from "@/lib/store/sources/aliexpress";
-import { searchTemuProducts } from "@/lib/store/sources/temu";
+import { searchSpocketProducts } from "@/lib/store/sources/spocket";
+import { searchZendropProducts } from "@/lib/store/sources/zendrop";
 import type { DropshipPlatform, StoreSearchFilters } from "@/lib/store/sources/types";
 
 const SOURCE_SEARCHERS: Record<
@@ -15,8 +15,8 @@ const SOURCE_SEARCHERS: Record<
   (query: string, limit: number) => Promise<import("@/lib/store/sources/types").SourceProductDraft[]>
 > = {
   cj: searchCjProducts,
-  aliexpress: searchAliExpressProducts,
-  temu: searchTemuProducts,
+  spocket: searchSpocketProducts,
+  zendrop: searchZendropProducts,
 };
 
 function dedupeKey(slug: string): string {
@@ -48,7 +48,7 @@ export async function searchStoreProducts(
   const perSourceLimit = Math.min(filters.limit * 2, 40);
   const enabledPlatforms = filters.platforms.length
     ? filters.platforms
-    : (["cj", "aliexpress", "temu", "curated"] as DropshipPlatform[]);
+    : (["cj", "spocket", "zendrop", "curated"] as DropshipPlatform[]);
 
   const seen = new Set<string>();
   const merged: CatalogProductView[] = [];

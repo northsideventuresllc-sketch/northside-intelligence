@@ -11,6 +11,9 @@ export interface MakeStoreOrderPayload {
   items: Array<{
     productSlug: string;
     productName: string;
+    sourcePlatform: string;
+    sourceProductId: string | null;
+    /** @deprecated Use sourcePlatform + sourceProductId. Kept for existing Make scenarios. */
     cjProductId: string | null;
     quantity: number;
     unitPriceCents: number;

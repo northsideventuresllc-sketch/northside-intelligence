@@ -110,19 +110,19 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
     );
     if (serpApi) process.env.SERPAPI_API_KEY = serpApi;
 
-    const aliexpressKey = await resolvePlatformSecret(
-      "ALIEXPRESS_API_KEY",
-      process.env.ALIEXPRESS_API_KEY,
+    const spocketKey = await resolvePlatformSecret(
+      "SPOCKET_API_KEY",
+      process.env.SPOCKET_API_KEY,
       (value) => !value?.trim()
     );
-    if (aliexpressKey) process.env.ALIEXPRESS_API_KEY = aliexpressKey;
+    if (spocketKey) process.env.SPOCKET_API_KEY = spocketKey;
 
-    const temuKey = await resolvePlatformSecret(
-      "TEMU_API_KEY",
-      process.env.TEMU_API_KEY,
+    const zendropKey = await resolvePlatformSecret(
+      "ZENDROP_API_KEY",
+      process.env.ZENDROP_API_KEY,
       (value) => !value?.trim()
     );
-    if (temuKey) process.env.TEMU_API_KEY = temuKey;
+    if (zendropKey) process.env.ZENDROP_API_KEY = zendropKey;
   })();
 
   return hydratePromise;
