@@ -1,6 +1,7 @@
 import "server-only";
 
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
+import { classifyStoreCategory } from "@/lib/store/catalog/classify-category";
 import { enrichCjProductDetail } from "@/lib/store/sources/cj-detail";
 import { getCjAccessToken } from "@/lib/store/sources/cj-auth";
 import { parseCjListingPriceUsd, supplierCostCentsFromUsd } from "@/lib/store/sources/cj-pricing";
@@ -75,12 +76,13 @@ async function mapCjProduct(
     if (supplierUsd == null || supplierUsd <= 0) return null;
     const supplierCostCents = supplierCostCentsFromUsd(supplierUsd);
     const retail = calculateRetailPriceCents(supplierCostCents);
+    const category = await classifyStoreCategory({ name: listName, description: listName });
     return {
       name: listName,
       description: listName,
       imageUrl: item.bigImage || "",
       imageSource: item.bigImage ? "cj" : "serpapi",
-      category: normalizeCategory(item.threeCategoryName),
+      category,
       tags,
       sourcePlatform: "cj",
       sourceProductId: id,
@@ -94,12 +96,17 @@ async function mapCjProduct(
     };
   }
 
+  const category = await classifyStoreCategory({
+    name: enriched.name,
+    description: enriched.description,
+  });
+
   return {
     name: enriched.name,
     description: enriched.description,
     imageUrl: enriched.imageUrl || item.bigImage || "",
     imageSource: enriched.imageSource,
-    category: normalizeCategory(item.threeCategoryName),
+    category,
     tags,
     sourcePlatform: "cj",
     sourceProductId: id,
@@ -116,10 +123,6 @@ async function mapCjProduct(
     })),
     estimatedDeliveryDays: 12,
   };
-}
-
-function normalizeCategory(raw: string | null | undefined): string {
-  return (raw ?? "general").toLowerCase().replace(/\s+/g, "-").slice(0, 40) || "general";
 }
 
 export async function searchCjProducts(query: string, limit = 20): Promise<SourceProductDraft[]> {

@@ -1,4 +1,4 @@
-# NI Store — Build Notes
+# Smart Store — Build Notes
 
 Dropship storefront for Northside Intelligence (`shop.northsideintelligence.com` → `/store`).
 

@@ -5,10 +5,12 @@ import { Nav } from "@/components/landing/Nav";
 import { StoreCartProvider } from "@/components/store/StoreCartProvider";
 import { StorePageClient } from "@/components/store/StorePageClient";
 
+import { SMART_STORE_NAME, smartStorePageTitle } from "@/lib/store/branding";
+
 export const metadata: Metadata = {
-  title: "Store | Northside Intelligence",
+  title: smartStorePageTitle(),
   description:
-    "Viral deals curated daily — smart prices on trending products with NI intelligence behind every pick.",
+    "Viral deals curated daily — smart prices on trending products with Northside Intelligence behind every pick.",
 };
 
 export const dynamic = "force-dynamic";
@@ -24,7 +26,7 @@ export default function StorePage() {
             <Suspense
               fallback={
                 <div className="glass-panel animate-pulse p-12 text-center text-ni-muted">
-                  Loading store…
+                  Loading {SMART_STORE_NAME}…
                 </div>
               }
             >

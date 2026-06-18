@@ -1,4 +1,4 @@
-/** NI Store markup: 10% on supplier listing price. Supplier cost is never exposed to clients. */
+/** Smart Store markup: 10% on supplier listing price. Supplier cost is never exposed to clients. */
 
 export const STORE_MARKUP_RATE = 0.1;
 
