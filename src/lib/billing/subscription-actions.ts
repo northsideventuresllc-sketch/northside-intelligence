@@ -14,6 +14,31 @@ export function getNextNiTier(tier: NiTier): NiTier | null {
   return null;
 }
 
+export function getPreviousNiTier(tier: NiTier): NiTier | null {
+  if (tier === "power") return "pro";
+  if (tier === "pro") return "core";
+  if (tier === "core") return "free";
+  return null;
+}
+
+export function getDowngradeCheckoutPayload(state: UserBillingState): {
+  type: "ni_subscription";
+  tier: NiTier;
+  interval: "monthly" | "annual";
+} | null {
+  const previousTier = getPreviousNiTier(state.niTier);
+  if (!previousTier || previousTier === "free") return null;
+  return {
+    type: "ni_subscription",
+    tier: previousTier,
+    interval: state.billingInterval ?? "monthly",
+  };
+}
+
+export function canDowngradeNiTier(tier: NiTier): boolean {
+  return tier !== "free";
+}
+
 export function getPausableSubscriptionId(
   state: UserBillingState,
   context: "portal" | "tool",

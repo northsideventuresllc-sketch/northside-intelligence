@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 
 export function Nav() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -41,58 +42,63 @@ export function Nav() {
           </span>
         </Link>
         <nav className="flex items-center gap-4 sm:gap-6">
-          <a
-            href="/#tools"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Tools
-          </a>
-          <a
-            href="/store"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Store
-          </a>
-          <Link
-            href="/services"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Intelligence Services
-          </Link>
-          <a
-            href="/#pricing"
-            className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
-          >
-            Plans
-          </a>
-          <a
-            href="/#mission"
-            className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
-          >
-            Mission
-          </a>
-          <a
-            href="/#ecosystem"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Ecosystem
-          </a>
           {isLoggedIn ? (
             <>
               <Link
                 href="/toolkit"
-                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
               >
                 Toolkit
               </Link>
               <Link
-                href="/account"
-                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
+                href="/store"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
               >
-                Account
+                Store
               </Link>
+              <AccountMenuDropdown />
             </>
           ) : (
+            <>
+              <a
+                href="/#tools"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Tools
+              </a>
+              <Link
+                href="/store"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Store
+              </Link>
+              <Link
+                href="/services"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Intelligence Services
+              </Link>
+              <a
+                href="/#pricing"
+                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+              >
+                Plans
+              </a>
+              <a
+                href="/#mission"
+                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+              >
+                Mission
+              </a>
+              <a
+                href="/#ecosystem"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Ecosystem
+              </a>
+            </>
+          )}
+          {!isLoggedIn && (
             <>
               <Link
                 href="/auth/signin"

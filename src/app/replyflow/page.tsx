@@ -87,15 +87,6 @@ export default async function ReplyFlowHome() {
 
         <ReplyFlowPricingSection />
       </main>
-
-      <footer className="relative z-10 border-t border-white/10 py-8 text-center text-sm text-rf-muted">
-        <p>
-          © {new Date().getFullYear()} ReplyFlow ·{" "}
-          <a href="https://northsideintelligence.com" className="text-rf-rose hover:underline">
-            Northside Intelligence
-          </a>
-        </p>
-      </footer>
     </div>
   );
 }

@@ -96,7 +96,7 @@ export function StorePageClient() {
         </aside>
       </div>
 
-      <p className="mt-8 text-center text-xs text-ni-muted lg:text-left">
+      <p className="mx-auto mt-8 max-w-xl text-center text-sm text-ni-muted">
         NI price = supplier listing price + 10%. Supplier costs are never shown.
       </p>
     </>

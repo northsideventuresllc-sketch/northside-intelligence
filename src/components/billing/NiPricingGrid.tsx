@@ -14,6 +14,16 @@ interface NiPricingGridProps {
 export function NiPricingGrid({ annual, isLoggedIn = false, niTier = "free" }: NiPricingGridProps) {
   const signupUrl = buildPortalAuthUrl("signup");
   const tiers = ["free", ...PAID_NI_TIERS] as NiTier[];
+  const tierOrder: NiTier[] = ["free", "core", "pro", "power"];
+
+  function tierRank(tier: NiTier): number {
+    return tierOrder.indexOf(tier);
+  }
+
+  function actionLabel(tier: NiTier): string {
+    if (niTier === tier) return "Current Plan";
+    return tierRank(tier) > tierRank(niTier) ? "Upgrade" : "Downgrade";
+  }
 
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -57,29 +67,37 @@ export function NiPricingGrid({ annual, isLoggedIn = false, niTier = "free" }: N
             <p className="mt-2 text-sm text-ni-muted">{plan.description}</p>
 
             <div className="mt-6">
-              {tier === "free" ? (
+              {isLoggedIn ? (
+                niTier === tier ? (
+                  <Link
+                    href="/account/billing"
+                    className="block rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-2.5 text-center text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
+                  >
+                    Current Plan
+                  </Link>
+                ) : tier === "free" ? (
+                  <Link
+                    href="/account/billing"
+                    className="block rounded-xl border border-white/15 bg-white/5 py-2.5 text-center text-sm font-medium text-white/90 transition hover:bg-white/10"
+                  >
+                    Downgrade in Billing
+                  </Link>
+                ) : (
+                  <CheckoutButton
+                    label={actionLabel(tier)}
+                    payload={{
+                      type: "ni_subscription",
+                      tier,
+                      interval: annual ? "annual" : "monthly",
+                    }}
+                  />
+                )
+              ) : tier === "free" ? (
                 <Link
                   href={signupUrl}
                   className="block rounded-xl border border-cyan-500/30 bg-cyan-500/10 py-2.5 text-center text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
                 >
                   Get Started
-                </Link>
-              ) : isLoggedIn && niTier !== tier ? (
-                <CheckoutButton
-                  label={isCurrent ? "Current Plan" : "Upgrade"}
-                  disabled={isCurrent}
-                  payload={{
-                    type: "ni_subscription",
-                    tier,
-                    interval: annual ? "annual" : "monthly",
-                  }}
-                />
-              ) : isLoggedIn ? (
-                <Link
-                  href="/toolkit"
-                  className="block rounded-xl border border-white/15 bg-white/5 py-2.5 text-center text-sm font-medium text-white/90 transition hover:bg-white/10"
-                >
-                  Open Toolkit
                 </Link>
               ) : (
                 <Link

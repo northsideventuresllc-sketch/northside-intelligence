@@ -48,3 +48,8 @@ export function resolvePostAuthRedirect(returnTo: string | null | undefined): st
   const safe = sanitizeReturnTo(returnTo);
   return safe ?? "/";
 }
+
+/** Portal home URL — same route, auth-aware rendering on `/`. */
+export function portalHomeUrl(_isLoggedIn: boolean): string {
+  return "/";
+}

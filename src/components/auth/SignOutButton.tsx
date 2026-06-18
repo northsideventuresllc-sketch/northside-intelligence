@@ -3,7 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SignOutButton() {
+interface SignOutButtonProps {
+  className?: string;
+  label?: string;
+}
+
+export function SignOutButton({
+  className = "w-full rounded-xl border border-white/10 px-6 py-3 text-sm text-ni-muted transition hover:border-white/20 hover:text-white disabled:opacity-50 sm:w-auto",
+  label = "Log Out",
+}: SignOutButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -23,9 +31,9 @@ export function SignOutButton() {
       type="button"
       onClick={handleSignOut}
       disabled={loading}
-      className="w-full rounded-xl border border-white/10 px-6 py-3 text-sm text-ni-muted transition hover:border-white/20 hover:text-white disabled:opacity-50 sm:w-auto"
+      className={className}
     >
-      {loading ? "Signing Out…" : "Sign Out"}
+      {loading ? "Signing Out…" : label}
     </button>
   );
 }
