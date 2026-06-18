@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { normalizeStoreCategory } from "@/lib/store/catalog/classify-category";
 import { ensureStoreEnv } from "@/lib/store/env";
 import { enrichCjProductDetail } from "@/lib/store/sources/cj-detail";
 
@@ -23,7 +24,7 @@ export async function refreshCjCatalogListings(limit = 40): Promise<number> {
   const supabase = createServiceClient();
   const { data: rows, error } = await supabase
     .from("ni_store_catalog")
-    .select("id, slug, name, source_product_id, supplier_cost_cents, retail_price_cents, image_url")
+    .select("id, slug, name, category, source_product_id, supplier_cost_cents, retail_price_cents, image_url")
     .eq("active", true)
     .eq("source_platform", "cj")
     .not("source_product_id", "is", null)
@@ -42,11 +43,18 @@ export async function refreshCjCatalogListings(limit = 40): Promise<number> {
     });
     if (!enriched) continue;
 
+    const category = await normalizeStoreCategory({
+      name: enriched.name,
+      description: enriched.description,
+      existingCategory: row.category != null ? String(row.category) : null,
+    });
+
     const { error: updateError } = await supabase
       .from("ni_store_catalog")
       .update({
         name: enriched.name,
         description: enriched.description,
+        category,
         supplier_cost_cents: enriched.supplierCostCents,
         retail_price_cents: enriched.retailPriceCents,
         retail_price_min_cents: enriched.retailPriceMinCents,

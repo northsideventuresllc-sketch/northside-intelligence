@@ -6,6 +6,7 @@ import { STORE_ITEM_CATEGORIES, formatCategoryLabel } from "@/lib/store/categori
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { SearchResultCard } from "@/components/store/SearchResultCard";
 import { StoreCartLink } from "@/components/store/StoreCartLink";
+import { SMART_STORE_NAME } from "@/lib/store/branding";
 import type { StoreSearchFilters } from "@/components/store/StorePageClient";
 
 function getSessionId(): string {
@@ -110,7 +111,7 @@ export function StoreSearchResults({
           onClick={onBack}
           className="text-sm font-semibold text-cyan-300 hover:underline"
         >
-          ← Back to Deals
+          ← Back to {SMART_STORE_NAME}
         </button>
         <StoreCartLink />
       </div>

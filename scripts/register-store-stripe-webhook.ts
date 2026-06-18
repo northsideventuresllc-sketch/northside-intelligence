@@ -29,7 +29,7 @@ async function main() {
   const endpoint = await stripe.webhookEndpoints.create({
     url: STORE_WEBHOOK_URL,
     enabled_events: [...STORE_WEBHOOK_EVENTS],
-    description: "Northside Intelligence NI Store checkout",
+    description: "Northside Intelligence Smart Store checkout",
   });
 
   console.log(`Created store webhook: ${endpoint.id}`);

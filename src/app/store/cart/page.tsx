@@ -15,6 +15,7 @@ import type { PriceChangeNoticeView } from "@/lib/store/catalog/types";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 import type { StoreGateStatus } from "@/lib/store/types";
 import type { ShippingTier } from "@/lib/store/cart/types";
+import { SMART_STORE_NAME } from "@/lib/store/branding";
 
 function cartLineKey(item: Pick<CartLineItem, "slug" | "variantId">): string {
   return `${item.slug}::${item.variantId ?? ""}`;
@@ -102,7 +103,7 @@ function CartContent() {
     <section className="relative px-6 pb-20 pt-24">
       <div className="mx-auto max-w-3xl">
         <Link href="/store" className="text-sm text-cyan-300 hover:underline">
-          ← Back to Store
+          ← Back to {SMART_STORE_NAME}
         </Link>
         <h1 className="mt-4 text-2xl font-semibold text-white">Your Cart</h1>
         <p className="mt-2 text-xs text-ni-muted">

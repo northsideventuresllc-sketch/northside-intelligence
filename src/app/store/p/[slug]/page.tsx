@@ -13,6 +13,7 @@ import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { getCatalogProductBySlug, toCatalogProductView } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
 import { getStoreGateStatus } from "@/lib/store/gate";
+import { SMART_STORE_NAME, smartStorePageTitle } from "@/lib/store/branding";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
 export const dynamic = "force-dynamic";
@@ -23,9 +24,9 @@ export async function generateMetadata({
   params: { slug: string };
 }): Promise<Metadata> {
   const product = await getCatalogProductBySlug(params.slug);
-  if (!product) return { title: "Product | NI Store" };
+  if (!product) return { title: smartStorePageTitle("Product") };
   return {
-    title: `${product.name} | NI Store`,
+    title: smartStorePageTitle(product.name),
     description: product.description,
   };
 }
@@ -56,7 +57,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
         <section className="relative px-6 pb-20 pt-24">
           <div className="mx-auto max-w-4xl">
             <Link href="/store" className="text-sm text-cyan-300 hover:underline">
-              ← Back to Store
+              ← Back to {SMART_STORE_NAME}
             </Link>
             <div className="glass-panel mt-6 overflow-hidden">
               <div className="flex flex-col lg:flex-row">

@@ -54,7 +54,7 @@ export function Nav() {
                 href="/store"
                 className="text-sm text-ni-muted transition hover:text-cyan-300"
               >
-                Store
+                Smart Store
               </Link>
               <AccountMenuDropdown />
             </>
@@ -70,7 +70,7 @@ export function Nav() {
                 href="/store"
                 className="text-sm text-ni-muted transition hover:text-cyan-300"
               >
-                Store
+                Smart Store
               </Link>
               <Link
                 href="/services"

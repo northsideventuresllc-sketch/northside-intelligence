@@ -7,6 +7,7 @@ import { StoreSearchSidebar } from "@/components/store/StoreSearchSidebar";
 import { StoreSearchResults } from "@/components/store/StoreSearchResults";
 import { WebTrackingOptIn } from "@/components/store/WebTrackingOptIn";
 import { StoreCartLink } from "@/components/store/StoreCartLink";
+import { SMART_STORE_NAME } from "@/lib/store/branding";
 
 export interface StoreSearchFilters {
   category: string;
@@ -68,12 +69,12 @@ export function StorePageClient() {
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="text-center sm:text-left">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
-            NI Deals
+            Daily Picks
           </p>
-          <h1 className="text-3xl font-semibold text-white">NI Store</h1>
+          <h1 className="text-3xl font-semibold text-white">{SMART_STORE_NAME}</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-ni-muted sm:mx-0">
             Ten viral products refreshed every 24 hours — scored from what&apos;s trending online
-            and what shoppers love on NI.
+            and what shoppers love on Northside Intelligence.
           </p>
         </div>
         <StoreCartLink />

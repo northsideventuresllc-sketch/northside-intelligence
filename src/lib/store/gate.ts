@@ -1,8 +1,10 @@
 import "server-only";
 
+import { SMART_STORE_NAME } from "@/lib/store/branding";
 import type { StoreGateStatus } from "@/lib/store/types";
 
 export type { StoreGateStatus } from "@/lib/store/types";
+
 export function isCjDropshippingWired(): boolean {
   return Boolean(process.env.CJ_DROPSHIPPING_API_KEY?.trim());
 }
@@ -32,19 +34,15 @@ export function getStoreGateStatus(): StoreGateStatus {
   const launchFlag = isStoreLaunchFlagSet();
   const live = cjWired && makeConfigured && launchFlag;
 
-  let message =
-    "The NI Store is coming soon. Mock products are shown for preview — checkout opens after CJDropshipping is wired.";
+  let message = `${SMART_STORE_NAME} is coming soon. Preview products are shown — checkout opens after fulfillment is wired.`;
   if (live) {
-    message = "Store checkout is live.";
+    message = `${SMART_STORE_NAME} checkout is live.`;
   } else if (!cjWired) {
-    message =
-      "Coming soon — CJDropshipping integration is not configured yet. Preview products only; checkout is disabled.";
+    message = `Coming soon — CJDropshipping is not configured yet. Preview products only; ${SMART_STORE_NAME} checkout is disabled.`;
   } else if (!makeConfigured) {
-    message =
-      "Coming soon — order fulfillment automation (Make.com) is not configured yet. Checkout is disabled.";
+    message = `Coming soon — order fulfillment automation (Make.com) is not configured yet. ${SMART_STORE_NAME} checkout is disabled.`;
   } else if (!launchFlag) {
-    message =
-      "Coming soon — store launch flag is off. Preview products only; checkout is disabled.";
+    message = `Coming soon — launch flag is off. Preview products only; ${SMART_STORE_NAME} checkout is disabled.`;
   }
 
   return { live, cjWired, makeConfigured, launchFlag, message };
