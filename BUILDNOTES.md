@@ -74,7 +74,7 @@ Search returns exact CJ listing titles and live NI retail prices (CJ listing + 1
 |----------|----------|-------|
 | `CJ_DROPSHIPPING_API_KEY` | Recommended | Pulls live trending SKUs into daily picks |
 | `SERPAPI_API_KEY` | Optional | Web image fallback when supplier image is missing |
-| `CRON_SECRET` | Production cron | Bearer token for viral refresh (also in `ni_platform_secrets`) |
+| `CRON_SECRET` | Production cron | Bearer token for cron routes (also in `ni_platform_secrets`) |
 | `STRIPE_SECRET_KEY` | Checkout phases | Shared with portal billing |
 | `STRIPE_WEBHOOK_SECRET_STORE` | Checkout phases | Store webhook only |
 | `MAKE_STORE_WEBHOOK_URL` | Fulfillment | Make → CJDropshipping |
@@ -97,6 +97,12 @@ Stripe webhook payload includes per line item:
 - `variantId` — CJ variation when selected
 
 Route in Make: `cj` → CJDropshipping module.
+
+### Catalog bulk sync
+
+- Cron: `GET /api/cron/store-catalog-sync` (hourly via `vercel.json`)
+- Manual: `npm run sync:cj-catalog -- 5` (requires Supabase + CJ env; see `scripts/run-cj-catalog-sync.ts`)
+- CJ `listV2` caps at **6,000 SKUs per keyword slice** (100/page × 60 pages). We rotate **25 keyword slices** to maximize unique SKUs over time — not a full CJ database export (their API does not offer one).
 
 ### Test checklist
 
