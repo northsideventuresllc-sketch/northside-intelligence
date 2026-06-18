@@ -109,20 +109,6 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       (value) => !value?.trim()
     );
     if (serpApi) process.env.SERPAPI_API_KEY = serpApi;
-
-    const spocketKey = await resolvePlatformSecret(
-      "SPOCKET_API_KEY",
-      process.env.SPOCKET_API_KEY,
-      (value) => !value?.trim()
-    );
-    if (spocketKey) process.env.SPOCKET_API_KEY = spocketKey;
-
-    const zendropKey = await resolvePlatformSecret(
-      "ZENDROP_API_KEY",
-      process.env.ZENDROP_API_KEY,
-      (value) => !value?.trim()
-    );
-    if (zendropKey) process.env.ZENDROP_API_KEY = zendropKey;
   })();
 
   return hydratePromise;

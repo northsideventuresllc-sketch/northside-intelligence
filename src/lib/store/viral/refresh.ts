@@ -1,15 +1,26 @@
 import "server-only";
 
 import { refreshCjCatalogListings } from "@/lib/store/catalog/refresh-cj";
+import { mapRow } from "@/lib/store/catalog/products";
 import { createServiceClient } from "@/lib/supabase/server";
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
 import { ensureStoreEnv } from "@/lib/store/env";
 import { fetchCjTrendingProducts } from "@/lib/store/sources/cj";
 import { getTodaysTrendTags } from "@/lib/store/sources/trends";
 import { EVENT_WEIGHTS, scoreCatalogProduct } from "@/lib/store/viral/scoring";
+import type { SourceProductDraft } from "@/lib/store/sources/types";
 
 function utcDateString(d = new Date()): string {
   return d.toISOString().slice(0, 10);
+}
+
+function variantsForDb(draft: SourceProductDraft) {
+  return draft.variants.map((v) => ({
+    id: v.id,
+    name: v.name,
+    retail_price_cents: v.retailPriceCents,
+    image_url: v.imageUrl,
+  }));
 }
 
 async function getSiteEventCounts(): Promise<Map<string, number>> {
@@ -36,7 +47,7 @@ async function getSiteEventCounts(): Promise<Map<string, number>> {
 
 async function upsertCjProducts(): Promise<void> {
   await ensureStoreEnv();
-  const drafts = await fetchCjTrendingProducts(5);
+  const drafts = await fetchCjTrendingProducts(25);
   if (!drafts.length) return;
 
   const supabase = createServiceClient();
@@ -49,12 +60,16 @@ async function upsertCjProducts(): Promise<void> {
         name: draft.name,
         description: draft.description,
         image_url: draft.imageUrl,
+        image_source: draft.imageSource,
         category: draft.category,
         tags: draft.tags,
         source_platform: "cj",
         source_product_id: draft.sourceProductId,
         supplier_cost_cents: draft.supplierCostCents,
         retail_price_cents: retail,
+        retail_price_min_cents: draft.retailPriceMinCents,
+        retail_price_max_cents: draft.retailPriceMaxCents,
+        cj_variants: variantsForDb(draft),
         estimated_delivery_days: draft.estimatedDeliveryDays,
         trend_score: 95,
         active: true,
@@ -65,10 +80,10 @@ async function upsertCjProducts(): Promise<void> {
   }
 }
 
-/** Refresh global top-10 viral picks for today (24h cycle). */
+/** Refresh global top-10 viral picks for today (24h cycle). CJ products only. */
 export async function refreshDailyViralPicks(): Promise<{ pickDate: string; count: number }> {
   await upsertCjProducts();
-  await refreshCjCatalogListings(40);
+  await refreshCjCatalogListings(50);
 
   const supabase = createServiceClient();
   const pickDate = utcDateString();
@@ -78,42 +93,15 @@ export async function refreshDailyViralPicks(): Promise<{ pickDate: string; coun
   const { data: catalog, error: catalogError } = await supabase
     .from("ni_store_catalog")
     .select("*")
-    .eq("active", true);
+    .eq("active", true)
+    .eq("source_platform", "cj");
 
   if (catalogError) throw new Error(catalogError.message);
 
   const scored = (catalog ?? [])
     .map((row) => {
-      const product = {
-        id: String(row.id),
-        trendScore: Number(row.trend_score ?? 0),
-        siteScore: Number(row.site_score ?? 0),
-        tags: Array.isArray(row.tags) ? (row.tags as string[]) : [],
-        category: String(row.category ?? "general"),
-      };
-      const score = scoreCatalogProduct(
-        {
-          id: product.id,
-          slug: "",
-          name: "",
-          description: "",
-          imageUrl: null,
-          category: product.category,
-          tags: product.tags,
-          sourcePlatform: "curated",
-          sourceProductId: null,
-          supplierCostCents: 0,
-          retailPriceCents: 0,
-          currency: "usd",
-          estimatedDeliveryDays: 12,
-          trendScore: product.trendScore,
-          siteScore: product.siteScore,
-          reviewRating: null,
-          reviewCount: 0,
-        },
-        siteCounts,
-        trendTags
-      );
+      const product = mapRow(row as Record<string, unknown>);
+      const score = scoreCatalogProduct(product, siteCounts, trendTags);
       return { id: product.id, score };
     })
     .sort((a, b) => b.score - a.score)
@@ -128,7 +116,7 @@ export async function refreshDailyViralPicks(): Promise<{ pickDate: string; coun
         rank: i + 1,
         catalog_id: item.id,
         viral_score: item.score,
-        trend_source: trendTags.has("cj") ? "cj+blended" : "blended",
+        trend_source: "cj+blended",
       }))
     );
     if (insertError) throw new Error(insertError.message);

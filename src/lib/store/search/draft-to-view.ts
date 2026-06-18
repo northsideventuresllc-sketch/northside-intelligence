@@ -12,19 +12,24 @@ export function draftSlug(draft: SourceProductDraft): string {
 
 export function draftToCatalogView(draft: SourceProductDraft): CatalogProductView {
   const slug = draftSlug(draft);
+  const retailPriceCents = calculateRetailPriceCents(draft.supplierCostCents);
   return {
     id: slug,
     slug,
     name: draft.name,
     description: draft.description,
     imageUrl: draft.imageUrl || null,
+    imageIsStockPhoto: draft.imageSource === "serpapi",
     category: draft.category,
     tags: draft.tags,
-    retailPriceCents: calculateRetailPriceCents(draft.supplierCostCents),
+    retailPriceCents,
+    retailPriceMinCents: draft.retailPriceMinCents,
+    retailPriceMaxCents: draft.retailPriceMaxCents,
     currency: "usd",
     estimatedDeliveryDays: draft.estimatedDeliveryDays,
     reviewRating: null,
     reviewCount: 0,
     sourcePlatform: draft.sourcePlatform,
+    variants: draft.variants,
   };
 }

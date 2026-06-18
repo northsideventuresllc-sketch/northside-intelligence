@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { calculateCartTotals } from "@/lib/store/cart/pricing";
 import type { CartLineItem, ShippingTier } from "@/lib/store/cart/types";
+import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
 import { getStoreGateStatus } from "@/lib/store/gate";
 import { ensureStoreStripeEnv, getStoreStripe, storeAppUrl } from "@/lib/store/stripe";
+import type { PriceChangeNotice } from "@/lib/store/sources/types";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 interface CheckoutItemBody {
   slug?: string;
   quantity?: number;
   shippingTier?: ShippingTier;
+  retailPriceCents?: number;
+  variantId?: string | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -35,27 +39,72 @@ export async function POST(req: NextRequest) {
   }
 
   const cartLines: CartLineItem[] = [];
+  const priceChangeNotices: PriceChangeNotice[] = [];
+
   for (const raw of rawItems) {
     const slug = raw.slug?.trim();
     if (!slug) continue;
-    const catalog = await getCatalogProductBySlug(slug);
+
+    let catalog = await getCatalogProductBySlug(slug);
     if (!catalog) {
       return NextResponse.json({ error: `Product not found: ${slug}` }, { status: 404 });
     }
+
+    const refreshed = await refreshCatalogFromCj(catalog, raw.retailPriceCents ?? catalog.retailPriceCents);
+    if (refreshed.unavailable || !refreshed.row) {
+      return NextResponse.json(
+        { error: `${catalog.name} is no longer available on CJ.` },
+        { status: 409 }
+      );
+    }
+    catalog = refreshed.row;
+    if (refreshed.notice) priceChangeNotices.push(refreshed.notice);
+
+    let retailPriceCents = catalog.retailPriceCents;
+    const variantId = raw.variantId?.trim() || null;
+    if (variantId) {
+      const variant = catalog.variants.find((v) => v.id === variantId);
+      if (variant) retailPriceCents = variant.retailPriceCents;
+    }
+
     const quantity = Math.max(1, Math.min(10, Number(raw.quantity) || 1));
     const shippingTier: ShippingTier =
       raw.shippingTier === "expedited" ? "expedited" : "standard";
+
     cartLines.push({
       slug: catalog.slug,
       name: catalog.name,
       imageUrl: catalog.imageUrl,
-      retailPriceCents: catalog.retailPriceCents,
+      retailPriceCents,
       currency: catalog.currency,
       sourcePlatform: catalog.sourcePlatform,
       sourceProductId: catalog.sourceProductId,
+      variantId,
       quantity,
       shippingTier,
     });
+  }
+
+  if (priceChangeNotices.length) {
+    return NextResponse.json(
+      {
+        error: "Prices updated from CJ before checkout.",
+        priceChangeNotices,
+        items: cartLines.map((line) => ({
+          slug: line.slug,
+          name: line.name,
+          imageUrl: line.imageUrl,
+          retailPriceCents: line.retailPriceCents,
+          currency: line.currency,
+          sourcePlatform: line.sourcePlatform,
+          sourceProductId: line.sourceProductId,
+          variantId: line.variantId,
+          quantity: line.quantity,
+          shippingTier: line.shippingTier,
+        })),
+      },
+      { status: 409 }
+    );
   }
 
   if (!cartLines.length) {
@@ -82,6 +131,7 @@ export async function POST(req: NextRequest) {
           metadata: {
             catalogSlug: item.slug,
             sourcePlatform: item.sourcePlatform,
+            variantId: item.variantId ?? "",
           },
         },
       },
@@ -122,6 +172,7 @@ export async function POST(req: NextRequest) {
             slug: item.slug,
             quantity: item.quantity,
             shippingTier: item.shippingTier,
+            variantId: item.variantId,
           }))
         ),
       },
