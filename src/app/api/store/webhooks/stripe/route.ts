@@ -115,6 +115,8 @@ export async function POST(req: NextRequest) {
         items: lines.map((line) => ({
           productSlug: line.catalog.slug,
           productName: line.catalog.name,
+          sourcePlatform: line.catalog.sourcePlatform,
+          sourceProductId: line.catalog.sourceProductId,
           cjProductId:
             line.catalog.sourcePlatform === "cj" ? line.catalog.sourceProductId : null,
           quantity: line.quantity,

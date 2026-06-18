@@ -30,7 +30,7 @@ Daily cron also runs `refreshCjCatalogListings()` to re-price existing CJ rows i
 |-------|----------------|---------|
 | Search API | `GET /api/store/search` | CJ + curated catalog search with filters |
 | Search UI | `StoreSearchSidebar` + `StoreSearchResults` on `/store` | Query, item-type category filter, retail price range |
-| Sources | `src/lib/store/sources/` | CJ live search; AliExpress/Temu stubs for future keys |
+| Sources | `src/lib/store/sources/` | CJ + Spocket + Zendrop search; curated NI deals |
 | Categories | `src/lib/store/categories.ts` | Item-type filters (kitchen, tech, etc.) — not supplier platforms |
 
 Search returns `CatalogProductView[]` only — supplier costs never exposed. CJ hits are upserted into `ni_store_catalog` for PDP links.
@@ -66,81 +66,66 @@ Search returns `CatalogProductView[]` only — supplier costs never exposed. CJ 
 | `STRIPE_WEBHOOK_SECRET_STORE` | Checkout phases | Store webhook only |
 | `MAKE_STORE_WEBHOOK_URL` | Fulfillment | Make → CJDropshipping |
 | `NI_STORE_LIVE` | Launch flag | Enables live checkout when wired |
-| `ALIEXPRESS_API_KEY` | Future | AliExpress Open Platform (see below) |
-| `TEMU_API_KEY` | Future | Temu partner API (see below) |
+| `SPOCKET_API_KEY` | Recommended | US/EU fast-ship catalog via Spocket REST API |
+| `ZENDROP_API_KEY` | Recommended | US fast-ship catalog via Zendrop MCP (`catalog:read`) |
 
-## Adding AliExpress and Temu (next dropship platforms)
+## Dropship platforms (CJ + Spocket + Zendrop)
 
-Both adapters are stubbed in `src/lib/store/sources/aliexpress.ts` and `temu.ts`. They return `[]` until credentials are set. Follow this pattern to go live:
+| Platform | Role | Credentials |
+|----------|------|-------------|
+| **CJ Dropshipping** | Global viral catalog, low cost | `CJ_DROPSHIPPING_API_KEY` ✅ |
+| **Spocket** | US/EU suppliers, 2–7 day shipping | `SPOCKET_API_KEY` |
+| **Zendrop** | US warehouse catalog, fast shipping | `ZENDROP_API_KEY` (MCP token) |
 
-### 1. Partner API access
+Search aggregates all three plus curated NI deals. Retail = supplier listing + 10%.
 
-**AliExpress**
+### Spocket setup
 
-1. Register at [AliExpress Open Platform](https://openservice.aliexpress.com/) (Affiliate or Dropshipping program).
-2. Create an app and obtain **App Key** + **App Secret** (OAuth or server-to-server depending on program).
-3. Enable product search / item detail APIs for your app scope.
-4. Store credentials in `ni_platform_secrets` as `ALIEXPRESS_API_KEY` (or split into `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` if you extend the adapter).
+1. Sign up at [spocket.co](https://www.spocket.co/) and choose a plan with API access.
+2. In the Spocket dashboard, open **Settings → API** (or Integrations) and copy your **API key**.
+3. Store as `SPOCKET_API_KEY` in `ni_platform_secrets` and Vercel (`northside-intelligence`).
 
-**Temu**
+Adapter: `src/lib/store/sources/spocket.ts` → `GET https://api.spocket.co/v1/products` with Bearer auth.
 
-1. Apply for [Temu Open Platform](https://partner.temu.com/) seller or partner API access (program availability varies by region).
-2. Obtain API credentials for product catalog search.
-3. Store in `ni_platform_secrets` as `TEMU_API_KEY`.
+### Zendrop setup
 
-### 2. Implement the source adapter
+1. Sign up at [zendrop.com](https://www.zendrop.com/).
+2. In account settings, generate an **MCP access token** with **`catalog:read`** scope (and `orders:write` when ready for fulfillment).
+3. Store as `ZENDROP_API_KEY` in `ni_platform_secrets` and Vercel.
 
-Mirror `src/lib/store/sources/cj.ts`:
+Adapter: `src/lib/store/sources/zendrop.ts` → Zendrop MCP `get_catalog_products` at `https://app.zendrop.com/mcp/v1`.
 
-| Step | What to build |
-|------|----------------|
-| Auth | `aliexpress-auth.ts` / `temu-auth.ts` — token refresh if needed |
-| Search | `searchAliExpressProducts(query, limit)` → `SourceProductDraft[]` |
-| Pricing | Parse supplier USD cost; never expose to client |
-| Images | Use platform image URL; fallback to `searchWebProductImage(name)` |
-| Detail | Optional enrich endpoint for accurate variant price + gallery |
-
-Each draft must set: `name`, `description`, `imageUrl`, `category` (item type, e.g. `kitchen`), `tags`, `sourceProductId`, `supplierCostCents`, `estimatedDeliveryDays`, `sourcePlatform: "aliexpress" | "temu"`.
-
-Retail is always `calculateRetailPriceCents(supplierCostCents)` — supplier + 10%.
-
-### 3. Wire into search aggregation
-
-`src/lib/store/search/aggregate.ts` already imports both stubs. Once adapters return data, hits are upserted via `upsertSearchDrafts()` and appear in search + PDP.
-
-Add platform labels in `src/lib/store/platform-labels.ts` if not present.
-
-### 4. Hydrate secrets at runtime
-
-`src/lib/hydrate-platform-env.ts` already loads `ALIEXPRESS_API_KEY` and `TEMU_API_KEY` from `ni_platform_secrets`. Add rows:
+### Vault insert (NI Brain)
 
 ```sql
 INSERT INTO ni_platform_secrets (key, value) VALUES
-  ('ALIEXPRESS_API_KEY', 'your-key'),
-  ('TEMU_API_KEY', 'your-key')
-ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+  ('SPOCKET_API_KEY', 'your-spocket-key'),
+  ('ZENDROP_API_KEY', 'your-zendrop-mcp-token')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now();
 ```
 
-### 5. Fulfillment (Make.com)
+Or run: `SPOCKET_API_KEY=... ZENDROP_API_KEY=... ./scripts/set-vercel-infra.sh` (with `VERCEL_TOKEN` set).
 
-Extend your Make scenario to route orders by `source_platform`:
+### Fulfillment (Make.com)
 
-- `cj` → existing CJDropshipping module
-- `aliexpress` → AliExpress order API
-- `temu` → Temu order API
+Stripe webhook payload includes per line item:
 
-Webhook payload from `/api/store/webhooks/stripe` includes `source_platform` and `source_product_id` per line item.
+- `sourcePlatform` — `cj` | `spocket` | `zendrop`
+- `sourceProductId` — supplier SKU id
+- `cjProductId` — legacy field (CJ only)
 
-### 6. Images in Next.js
+Route in Make:
 
-Store components use `StoreProductImage` with `unoptimized` so AliExpress/Temu CDN hostnames work without editing `next.config.mjs` for every domain.
+- `cj` → CJDropshipping module
+- `spocket` → Spocket order API
+- `zendrop` → Zendrop order fulfillment
 
-### 7. Test checklist
+### Test checklist
 
-- [ ] Search returns mixed CJ + AliExpress + Temu results
-- [ ] Retail = supplier listing + 10% on PDP and cards
-- [ ] Supplier name only in small footer (“via AliExpress”), not in category filters
-- [ ] Checkout webhook sends correct platform per SKU
+- [ ] Search returns CJ + Spocket + Zendrop results
+- [ ] Retail = supplier listing + 10%
+- [ ] Footer shows “via Spocket” / “via Zendrop” (not in category filters)
+- [ ] Make receives `sourcePlatform` + `sourceProductId` per item
 
 ## Stripe webhook events
 

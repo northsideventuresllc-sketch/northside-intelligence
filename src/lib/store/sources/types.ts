@@ -1,6 +1,6 @@
 import "server-only";
 
-export type DropshipPlatform = "cj" | "aliexpress" | "temu" | "curated";
+export type DropshipPlatform = "cj" | "spocket" | "zendrop" | "curated";
 
 export interface SourceProductDraft {
   name: string;
