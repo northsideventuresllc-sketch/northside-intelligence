@@ -474,6 +474,7 @@ export interface ServiceRequestPayload {
   desiredOutcomes: string;
   timeline: string;
   budgetRange: string;
+  customBudget?: string;
   teamSize: string;
   additionalContext: string;
   referralSource?: string;
