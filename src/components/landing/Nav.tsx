@@ -2,13 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 
 export function Nav() {
+  const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
+  const refreshAuth = useCallback(() => {
     let cancelled = false;
     fetch("/api/auth/me")
       .then((res) => res.json())
@@ -22,6 +24,8 @@ export function Nav() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => refreshAuth(), [pathname, refreshAuth]);
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-cyan-500/10 bg-ni-bg/70 shadow-[0_4px_30px_rgba(0,0,0,0.3),inset_0_-1px_0_rgba(0,212,255,0.1)] backdrop-blur-xl">
