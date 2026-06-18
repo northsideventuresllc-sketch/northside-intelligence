@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscriptionActions";
 import { NiPricingGrid } from "@/components/billing/NiPricingGrid";
@@ -65,6 +66,13 @@ export function PricingSection() {
             Pick your plan for unlimited usage across Intelligence Tools. Free tier users can also
             purchase individual tools à la carte.
           </p>
+
+          <Link
+            href="/subscriptions"
+            className="mt-5 inline-block rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-white/90 transition hover:border-cyan-400/30 hover:bg-white/10"
+          >
+            Subscription Info
+          </Link>
 
           {!isLoggedIn && (
             <div className="mt-6 inline-flex rounded-xl border border-white/10 bg-white/5 p-1">
