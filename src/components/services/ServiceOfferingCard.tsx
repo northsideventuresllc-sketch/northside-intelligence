@@ -1,6 +1,7 @@
 "use client";
 
 import type { ServiceOffering } from "@/lib/services/offerings";
+import { formatServicePrice } from "@/lib/services/offerings";
 
 interface ServiceOfferingCardProps {
   service: ServiceOffering;
@@ -34,6 +35,13 @@ export function ServiceOfferingCard({ service, onLearnMore }: ServiceOfferingCar
         >
           {service.status}
         </span>
+      </div>
+
+      <div className="mb-3">
+        <p className="text-lg font-semibold text-cyan-300">{formatServicePrice(service.pricing)}</p>
+        {service.pricing.note && (
+          <p className="text-xs text-ni-muted">{service.pricing.note}</p>
+        )}
       </div>
 
       <p className="mb-4 flex-1 text-sm leading-relaxed text-ni-muted">{service.description}</p>

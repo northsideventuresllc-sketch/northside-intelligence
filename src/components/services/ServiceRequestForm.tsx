@@ -7,9 +7,11 @@ import {
   TEAM_SIZE_OPTIONS,
   TIMELINE_OPTIONS,
   type AccountType,
+  type ServiceOffering,
 } from "@/lib/services/offerings";
 
-interface TailoredServerRequestFormProps {
+interface ServiceRequestFormProps {
+  service: ServiceOffering;
   initialData: {
     contactName: string;
     email: string;
@@ -18,7 +20,7 @@ interface TailoredServerRequestFormProps {
   };
 }
 
-export function TailoredServerRequestForm({ initialData }: TailoredServerRequestFormProps) {
+export function ServiceRequestForm({ service, initialData }: ServiceRequestFormProps) {
   const [contactName, setContactName] = useState(initialData.contactName);
   const [email, setEmail] = useState(initialData.email);
   const [accountType, setAccountType] = useState<AccountType>(initialData.accountType);
@@ -46,7 +48,7 @@ export function TailoredServerRequestForm({ initialData }: TailoredServerRequest
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          serviceSlug: "tailored-intelligence-server",
+          serviceSlug: service.slug,
           contactName,
           email,
           accountType,
@@ -82,8 +84,8 @@ export function TailoredServerRequestForm({ initialData }: TailoredServerRequest
       <div className="glass-panel p-8 text-center">
         <p className="mb-2 text-lg font-semibold text-white">Request Submitted</p>
         <p className="mb-6 text-sm text-ni-muted">
-          Thank you for your interest in a Tailored Intelligence Server. Our team will review
-          your request and reach out within 2–3 business days.
+          Thank you for your interest in {service.name}. Our team will review your request and
+          reach out within 2–3 business days.
         </p>
         <Link
           href="/services"
@@ -101,7 +103,10 @@ export function TailoredServerRequestForm({ initialData }: TailoredServerRequest
   return (
     <form onSubmit={handleSubmit} className="glass-panel space-y-6 p-8">
       {error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300" role="alert">
+        <p
+          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+          role="alert"
+        >
           {error}
         </p>
       )}
@@ -223,7 +228,7 @@ export function TailoredServerRequestForm({ initialData }: TailoredServerRequest
               onChange={(e) => setPainPoints(e.target.value)}
               required
               rows={3}
-              placeholder="What problems are you trying to solve? Where are the gaps in your current workflows?"
+              placeholder="What problems are you trying to solve?"
               className={inputClass}
             />
           </div>
@@ -237,7 +242,7 @@ export function TailoredServerRequestForm({ initialData }: TailoredServerRequest
               onChange={(e) => setDesiredOutcomes(e.target.value)}
               required
               rows={3}
-              placeholder="What does success look like? What should this intelligence server enable you to do?"
+              placeholder="What does success look like?"
               className={inputClass}
             />
           </div>
@@ -313,7 +318,7 @@ export function TailoredServerRequestForm({ initialData }: TailoredServerRequest
               value={additionalContext}
               onChange={(e) => setAdditionalContext(e.target.value)}
               rows={4}
-              placeholder="Anything else we should know — compliance requirements, integrations, security needs, etc."
+              placeholder="Compliance requirements, integrations, security needs, etc."
               className={inputClass}
             />
           </div>

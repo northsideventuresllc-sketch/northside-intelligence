@@ -56,6 +56,12 @@ export function Nav() {
               >
                 Smart Store
               </Link>
+              <Link
+                href="/services"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Services
+              </Link>
               <AccountMenuDropdown />
             </>
           ) : (

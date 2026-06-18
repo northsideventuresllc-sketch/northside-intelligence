@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import type { AccountType } from "@/lib/services/offerings";
+import { getServiceBySlug, type AccountType } from "@/lib/services/offerings";
 
 interface ServiceRequestBody {
   serviceSlug: string;
@@ -41,6 +41,11 @@ export async function POST(request: NextRequest) {
 
   if (!body.serviceSlug?.trim()) {
     return NextResponse.json({ error: "Service slug is required" }, { status: 400 });
+  }
+
+  const service = getServiceBySlug(body.serviceSlug.trim());
+  if (!service) {
+    return NextResponse.json({ error: "Invalid service" }, { status: 400 });
   }
 
   if (!VALID_ACCOUNT_TYPES.includes(body.accountType)) {

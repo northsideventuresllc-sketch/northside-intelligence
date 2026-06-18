@@ -1,13 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { BRAND } from "@/lib/constants";
-import { INTELLIGENCE_SERVICES } from "@/lib/services/offerings";
+import {
+  getServiceBySlug,
+  getServicesByAudience,
+  SERVICE_ACCOUNT_NOTE,
+} from "@/lib/services/offerings";
 import { ServiceOfferingCard } from "@/components/services/ServiceOfferingCard";
-import { TailoredServerModal } from "@/components/services/TailoredServerModal";
+import { ServiceDetailModal } from "@/components/services/ServiceDetailModal";
+import {
+  ServiceAudienceFilter,
+  type AudienceFilter,
+} from "@/components/services/ServiceAudienceFilter";
+import { ServiceReviews } from "@/components/services/ServiceReviews";
+import { buildPortalAuthUrl } from "@/lib/ni-auth";
 
 export function ServicesPageClient() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [audienceFilter, setAudienceFilter] = useState<AudienceFilter>("all");
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
@@ -27,15 +40,28 @@ export function ServicesPageClient() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("service") === "tailored-intelligence-server") {
+    const serviceParam = params.get("service");
+    if (serviceParam && getServiceBySlug(serviceParam)) {
+      setSelectedSlug(serviceParam);
       setModalOpen(true);
     }
   }, []);
 
+  const filteredServices = useMemo(
+    () => getServicesByAudience(audienceFilter),
+    [audienceFilter]
+  );
+
+  const selectedService = selectedSlug ? getServiceBySlug(selectedSlug) ?? null : null;
+
   function handleLearnMore(slug: string) {
-    if (slug === "tailored-intelligence-server") {
-      setModalOpen(true);
-    }
+    setSelectedSlug(slug);
+    setModalOpen(true);
+  }
+
+  function handleCloseModal() {
+    setModalOpen(false);
+    setSelectedSlug(null);
   }
 
   return (
@@ -54,16 +80,26 @@ export function ServicesPageClient() {
         </p>
       </div>
 
-      <div className="mb-10 rounded-2xl border border-cyan-500/15 bg-cyan-500/5 p-6 text-center">
-        <p className="text-sm text-ni-muted">
-          To order a service, you&apos;ll need an{" "}
-          <span className="text-cyan-300">NI Portal account</span>. Browse our offerings below,
-          then sign up or sign in when you&apos;re ready to submit a request.
-        </p>
+      <div className="mb-8 flex justify-center">
+        <ServiceAudienceFilter value={audienceFilter} onChange={setAudienceFilter} />
       </div>
 
+      {!isLoggedIn && (
+        <div className="mb-10 rounded-2xl border border-cyan-500/15 bg-cyan-500/5 p-6 text-center">
+          <p className="text-sm text-ni-muted">
+            {SERVICE_ACCOUNT_NOTE}{" "}
+            <Link
+              href={buildPortalAuthUrl("signup", "/services")}
+              className="font-medium text-cyan-300 underline-offset-2 hover:underline"
+            >
+              Create Free Account
+            </Link>
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-6 sm:grid-cols-2">
-        {INTELLIGENCE_SERVICES.map((service) => (
+        {filteredServices.map((service) => (
           <ServiceOfferingCard
             key={service.slug}
             service={service}
@@ -72,9 +108,16 @@ export function ServicesPageClient() {
         ))}
       </div>
 
-      <TailoredServerModal
+      {filteredServices.length === 0 && (
+        <p className="mt-8 text-center text-ni-muted">No services match this filter.</p>
+      )}
+
+      <ServiceReviews />
+
+      <ServiceDetailModal
+        service={selectedService}
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         isLoggedIn={isLoggedIn}
       />
     </>

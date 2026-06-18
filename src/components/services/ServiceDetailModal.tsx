@@ -2,16 +2,23 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { TAILORED_SERVER_MODAL_COPY } from "@/lib/services/offerings";
+import type { ServiceOffering } from "@/lib/services/offerings";
+import { formatServicePrice, SERVICE_ACCOUNT_NOTE } from "@/lib/services/offerings";
 import { buildPortalAuthUrl } from "@/lib/ni-auth";
 
-interface TailoredServerModalProps {
+interface ServiceDetailModalProps {
+  service: ServiceOffering | null;
   isOpen: boolean;
   onClose: () => void;
   isLoggedIn: boolean;
 }
 
-export function TailoredServerModal({ isOpen, onClose, isLoggedIn }: TailoredServerModalProps) {
+export function ServiceDetailModal({
+  service,
+  isOpen,
+  onClose,
+  isLoggedIn,
+}: ServiceDetailModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,18 +37,13 @@ export function TailoredServerModal({ isOpen, onClose, isLoggedIn }: TailoredSer
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !service) return null;
 
-  const requestPath = "/services/tailored-intelligence-server/request";
-  const ctaHref = isLoggedIn
-    ? requestPath
-    : buildPortalAuthUrl("signup", requestPath);
+  const requestPath = `/services/${service.slug}/request`;
+  const ctaHref = isLoggedIn ? requestPath : buildPortalAuthUrl("signup", requestPath);
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      role="presentation"
-    >
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="presentation">
       <button
         type="button"
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -52,7 +54,7 @@ export function TailoredServerModal({ isOpen, onClose, isLoggedIn }: TailoredSer
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="tailored-server-modal-title"
+        aria-labelledby="service-modal-title"
         className="glass-panel relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto p-8"
       >
         <button
@@ -69,15 +71,22 @@ export function TailoredServerModal({ isOpen, onClose, isLoggedIn }: TailoredSer
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
           Intelligence Services
         </p>
-        <h2 id="tailored-server-modal-title" className="mb-1 text-2xl font-semibold text-white">
-          {TAILORED_SERVER_MODAL_COPY.title}
+        <h2 id="service-modal-title" className="mb-1 text-2xl font-semibold text-white">
+          {service.name}
         </h2>
-        <p className="mb-6 text-sm text-cyan-300/80">{TAILORED_SERVER_MODAL_COPY.subtitle}</p>
+        <p className="mb-4 text-sm text-cyan-300/80">{service.modalCopy.subtitle}</p>
 
-        <p className="mb-6 leading-relaxed text-ni-muted">{TAILORED_SERVER_MODAL_COPY.description}</p>
+        <div className="mb-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3">
+          <p className="text-lg font-semibold text-white">{formatServicePrice(service.pricing)}</p>
+          {service.pricing.note && (
+            <p className="mt-0.5 text-xs text-ni-muted">{service.pricing.note}</p>
+          )}
+        </div>
+
+        <p className="mb-6 leading-relaxed text-ni-muted">{service.modalCopy.description}</p>
 
         <div className="mb-8 space-y-5">
-          {TAILORED_SERVER_MODAL_COPY.sections.map((section) => (
+          {service.modalCopy.sections.map((section) => (
             <div key={section.heading}>
               <h3 className="mb-1 text-sm font-semibold text-white">{section.heading}</h3>
               <p className="text-sm leading-relaxed text-ni-muted">{section.body}</p>
@@ -85,14 +94,18 @@ export function TailoredServerModal({ isOpen, onClose, isLoggedIn }: TailoredSer
           ))}
         </div>
 
-        <p className="mb-6 text-xs text-ni-muted">{TAILORED_SERVER_MODAL_COPY.accountNote}</p>
+        {!isLoggedIn && (
+          <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+            <p className="text-sm text-amber-200/90">{SERVICE_ACCOUNT_NOTE}</p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
             href={ctaHref}
             className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-center text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
           >
-            {TAILORED_SERVER_MODAL_COPY.ctaLabel}
+            {isLoggedIn ? service.modalCopy.ctaLabel : "Create Free Account & Order"}
           </Link>
           <button
             type="button"

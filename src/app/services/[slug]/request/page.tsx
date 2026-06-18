@@ -1,26 +1,38 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
-import { TailoredServerRequestForm } from "@/components/services/TailoredServerRequestForm";
+import { ServiceRequestForm } from "@/components/services/ServiceRequestForm";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import type { AccountType } from "@/lib/services/offerings";
+import { formatServicePrice, getServiceBySlug, type AccountType } from "@/lib/services/offerings";
 
-export const metadata: Metadata = {
-  title: "Tailored Intelligence Server Request | Northside Intelligence",
-  description:
-    "Submit your request for a custom intelligence server built around your workflows and systems.",
-};
+interface PageProps {
+  params: { slug: string };
+}
 
-export default async function TailoredServerRequestPage() {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const service = getServiceBySlug(params.slug);
+  if (!service) {
+    return { title: "Service Not Found | Northside Intelligence" };
+  }
+  return {
+    title: `${service.name} Request | Northside Intelligence`,
+    description: service.description,
+  };
+}
+
+export default async function ServiceRequestPage({ params }: PageProps) {
+  const service = getServiceBySlug(params.slug);
+  if (!service) notFound();
+
   const supabase = await createServerAuthClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/signin?returnTo=/services/tailored-intelligence-server/request");
+    redirect(`/auth/signup?returnTo=/services/${params.slug}/request`);
   }
 
   const { data: profile } = await supabase
@@ -48,14 +60,16 @@ export default async function TailoredServerRequestPage() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
           Service Request
         </p>
-        <h1 className="mb-2 text-3xl font-semibold text-white">
-          Tailored Intelligence Server Request
-        </h1>
+        <h1 className="mb-2 text-3xl font-semibold text-white">{service.name}</h1>
+        <p className="mb-2 text-lg font-medium text-cyan-300">
+          {formatServicePrice(service.pricing)}
+        </p>
         <p className="mb-8 text-ni-muted">
           Tell us about your workflows, systems, and goals. The more detail you provide, the
           better we can tailor our approach to your needs.
         </p>
-        <TailoredServerRequestForm
+        <ServiceRequestForm
+          service={service}
           initialData={{
             contactName,
             email,
