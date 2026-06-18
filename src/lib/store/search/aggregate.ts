@@ -1,10 +1,13 @@
 import "server-only";
 
-import { toCatalogProductView } from "@/lib/store/catalog/products";
+import {
+  searchLocalCatalog,
+  toCatalogProductView,
+} from "@/lib/store/catalog/products";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
 import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { draftToCatalogView } from "@/lib/store/search/draft-to-view";
-import { upsertSearchDrafts } from "@/lib/store/search/upsert-catalog";
+import { upsertCatalogDrafts } from "@/lib/store/search/upsert-catalog";
 import { searchCjProducts } from "@/lib/store/sources/cj";
 import type { PriceChangeNotice, StoreSearchFilters } from "@/lib/store/sources/types";
 
@@ -28,29 +31,40 @@ export interface StoreSearchResult {
   query: string;
   platforms: ["cj"];
   priceChangeNotices: PriceChangeNotice[];
+  source: "local" | "cj-live";
 }
 
 export async function searchStoreProducts(
   filters: StoreSearchFilters
 ): Promise<StoreSearchResult> {
   const query = filters.query.trim();
-  const perSourceLimit = Math.min(filters.limit * 2, 40);
   const priceChangeNotices: PriceChangeNotice[] = [];
 
   if (!query) {
+    const local = await searchLocalCatalog({
+      category: filters.category,
+      minRetailCents: filters.minRetailCents,
+      maxRetailCents: filters.maxRetailCents,
+      page: filters.page,
+      limit: filters.limit,
+    });
+
     return {
-      results: [],
-      total: 0,
+      results: local.rows.map((row) => toCatalogProductView(row)),
+      total: local.total,
       page: filters.page,
       limit: filters.limit,
       query,
       platforms: ["cj"],
       priceChangeNotices,
+      source: "local",
     };
   }
 
+  const perSourceLimit = Math.min(filters.limit * 2, 40);
+
   const drafts = await searchCjProducts(query, perSourceLimit);
-  await upsertSearchDrafts(drafts);
+  await upsertCatalogDrafts(drafts);
 
   const merged: CatalogProductView[] = [];
 
@@ -87,5 +101,6 @@ export async function searchStoreProducts(
     query,
     platforms: ["cj"],
     priceChangeNotices,
+    source: "cj-live",
   };
 }

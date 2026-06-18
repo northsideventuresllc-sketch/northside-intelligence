@@ -210,10 +210,16 @@ export function StoreSearchResults({
             {data.total === 0
               ? query
                 ? `No results for “${query}”.`
-                : "No products match your filters."
-              : `${data.total} result${data.total === 1 ? "" : "s"}${query ? ` for “${query}”` : ""}${
-                  filters.category ? ` in ${formatCategoryLabel(filters.category)}` : ""
-                }`}
+                : filters.category || filters.minPrice || filters.maxPrice
+                  ? "No products match your filters."
+                  : "Smart Store catalog is syncing from CJ — check back shortly."
+              : query
+                ? `${data.total} result${data.total === 1 ? "" : "s"} for “${query}”${
+                    filters.category ? ` in ${formatCategoryLabel(filters.category)}` : ""
+                  }`
+                : `${data.total.toLocaleString()} product${data.total === 1 ? "" : "s"} in Smart Store${
+                    filters.category ? ` · ${formatCategoryLabel(filters.category)}` : ""
+                  }`}
           </p>
 
           {data.results.length > 0 && (

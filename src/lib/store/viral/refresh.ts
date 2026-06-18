@@ -2,25 +2,15 @@ import "server-only";
 
 import { refreshCjCatalogListings } from "@/lib/store/catalog/refresh-cj";
 import { mapRow } from "@/lib/store/catalog/products";
-import { createServiceClient } from "@/lib/supabase/server";
-import { calculateRetailPriceCents } from "@/lib/store/pricing";
 import { ensureStoreEnv } from "@/lib/store/env";
+import { upsertCatalogDrafts } from "@/lib/store/search/upsert-catalog";
 import { fetchCjTrendingProducts } from "@/lib/store/sources/cj";
 import { getTodaysTrendTags } from "@/lib/store/sources/trends";
 import { EVENT_WEIGHTS, scoreCatalogProduct } from "@/lib/store/viral/scoring";
-import type { SourceProductDraft } from "@/lib/store/sources/types";
+import { createServiceClient } from "@/lib/supabase/server";
 
 function utcDateString(d = new Date()): string {
   return d.toISOString().slice(0, 10);
-}
-
-function variantsForDb(draft: SourceProductDraft) {
-  return draft.variants.map((v) => ({
-    id: v.id,
-    name: v.name,
-    retail_price_cents: v.retailPriceCents,
-    image_url: v.imageUrl,
-  }));
 }
 
 async function getSiteEventCounts(): Promise<Map<string, number>> {
@@ -49,35 +39,7 @@ async function upsertCjProducts(): Promise<void> {
   await ensureStoreEnv();
   const drafts = await fetchCjTrendingProducts(25);
   if (!drafts.length) return;
-
-  const supabase = createServiceClient();
-  for (const draft of drafts) {
-    const slug = `cj-${draft.sourceProductId}`.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-    const retail = calculateRetailPriceCents(draft.supplierCostCents);
-    await supabase.from("ni_store_catalog").upsert(
-      {
-        slug,
-        name: draft.name,
-        description: draft.description,
-        image_url: draft.imageUrl,
-        image_source: draft.imageSource,
-        category: draft.category,
-        tags: draft.tags,
-        source_platform: "cj",
-        source_product_id: draft.sourceProductId,
-        supplier_cost_cents: draft.supplierCostCents,
-        retail_price_cents: retail,
-        retail_price_min_cents: draft.retailPriceMinCents,
-        retail_price_max_cents: draft.retailPriceMaxCents,
-        cj_variants: variantsForDb(draft),
-        estimated_delivery_days: draft.estimatedDeliveryDays,
-        trend_score: 95,
-        active: true,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "slug" }
-    );
-  }
+  await upsertCatalogDrafts(drafts);
 }
 
 /** Refresh global top-10 viral picks for today (24h cycle). CJ products only. */
