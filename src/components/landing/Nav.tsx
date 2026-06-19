@@ -9,16 +9,23 @@ import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 export function Nav() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMasterAccount, setIsMasterAccount] = useState(false);
 
   const refreshAuth = useCallback(() => {
     let cancelled = false;
     fetch("/api/auth/me")
       .then((res) => res.json())
-      .then((data: { user?: unknown }) => {
-        if (!cancelled) setIsLoggedIn(!!data.user);
+      .then((data: { user?: unknown; isMasterAccount?: boolean }) => {
+        if (!cancelled) {
+          setIsLoggedIn(!!data.user);
+          setIsMasterAccount(data.isMasterAccount === true);
+        }
       })
       .catch(() => {
-        if (!cancelled) setIsLoggedIn(false);
+        if (!cancelled) {
+          setIsLoggedIn(false);
+          setIsMasterAccount(false);
+        }
       });
     return () => {
       cancelled = true;
@@ -66,6 +73,14 @@ export function Nav() {
               >
                 Services
               </Link>
+              {isMasterAccount && (
+                <Link
+                  href="/admin"
+                  className="text-sm text-ni-muted transition hover:text-cyan-300"
+                >
+                  Admin Dashboard
+                </Link>
+              )}
               <AccountMenuDropdown />
             </>
           ) : (

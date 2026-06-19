@@ -11,6 +11,7 @@ const PUBLIC_OPS_PATHS = ["/ops/login", "/api/ops/auth"];
 const PORTAL_PATH_PREFIXES = [
   "/toolkit",
   "/account",
+  "/admin",
   "/auth",
   "/tools",
   "/store",

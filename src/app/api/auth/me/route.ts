@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isMasterAccountFlag } from "@/lib/billing/master-account";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 export async function GET() {
@@ -8,12 +9,14 @@ export async function GET() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ user: null });
+    return NextResponse.json({ user: null, isMasterAccount: false });
   }
 
   const { data: profile } = await supabase
     .from("ni_portal_profiles")
-    .select("full_name, email, username, two_factor_enabled, account_type, business_name")
+    .select(
+      "full_name, email, username, two_factor_enabled, account_type, business_name, is_master_account"
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -27,5 +30,6 @@ export async function GET() {
       accountType: profile?.account_type ?? "personal",
       businessName: profile?.business_name ?? null,
     },
+    isMasterAccount: isMasterAccountFlag(profile?.is_master_account),
   });
 }
