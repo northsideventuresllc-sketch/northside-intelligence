@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
+import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { replyflowPath } from "@/lib/replyflow/auth";
+import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
+import type { NiTier } from "@/lib/billing/ni-tiers";
+import type { ReplyFlowHistoryEntry } from "@/lib/replyflow/history";
 import { createBrowserClient } from "@supabase/ssr";
 
 const TONES = ["Professional", "Friendly", "Empathetic", "Firm"] as const;
@@ -22,6 +26,13 @@ interface Props {
   planLabel: string;
   repliesUsed: number;
   repliesLimit: number;
+  hasUnlimitedAccess: boolean;
+  niTier: string;
+  initialTone?: string;
+  initialScenario?: string;
+  history: ReplyFlowHistoryEntry[];
+  gated?: boolean;
+  gateContent?: React.ReactNode;
 }
 
 function createClient() {
@@ -31,26 +42,41 @@ function createClient() {
   );
 }
 
+function isValidTone(value: string | undefined): value is (typeof TONES)[number] {
+  return !!value && TONES.includes(value as (typeof TONES)[number]);
+}
+
 export default function DashboardClient({
   email,
   plan,
   planLabel,
   repliesUsed,
   repliesLimit,
+  hasUnlimitedAccess,
+  niTier,
+  initialTone,
+  initialScenario,
+  history: initialHistory,
+  gated = false,
+  gateContent,
 }: Props) {
   const [message, setMessage] = useState("");
-  const [tone, setTone] = useState<(typeof TONES)[number]>("Professional");
-  const [scenario, setScenario] = useState("General inquiry");
+  const [tone, setTone] = useState<(typeof TONES)[number]>(
+    isValidTone(initialTone) ? initialTone : "Professional"
+  );
+  const [scenario, setScenario] = useState(initialScenario ?? "General inquiry");
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [used, setUsed] = useState(repliesUsed);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [history, setHistory] = useState(initialHistory);
   const router = useRouter();
   const supabase = createClient();
-  const atLimit = used >= repliesLimit;
-  const usagePercent = Math.min((used / (repliesLimit === 999999 ? 1 : repliesLimit)) * 100, 100);
+  const effectiveLimit = hasUnlimitedAccess ? 999999 : repliesLimit;
+  const atLimit = !hasUnlimitedAccess && used >= effectiveLimit;
+  const usagePercent = Math.min((used / (effectiveLimit === 999999 ? 1 : effectiveLimit)) * 100, 100);
+  const showUpgrade = atLimit && !isHighestPaidNiTier(niTier as NiTier);
 
   async function handleGenerate() {
     if (!message.trim()) return;
@@ -70,6 +96,25 @@ export default function DashboardClient({
     }
     setReply(data.reply);
     if (data.usage) setUsed(data.usage.used);
+    setHistory((prev) => [
+      {
+        id: crypto.randomUUID(),
+        customerMessage: message,
+        tone,
+        scenario,
+        generatedReply: data.reply,
+        createdAt: new Date().toISOString(),
+      },
+      ...prev,
+    ].slice(0, 50));
+  }
+
+  function loadHistoryEntry(entry: ReplyFlowHistoryEntry) {
+    setMessage(entry.customerMessage);
+    if (isValidTone(entry.tone)) setTone(entry.tone);
+    setScenario(entry.scenario);
+    setReply(entry.generatedReply);
+    setError("");
   }
 
   async function handleCopy() {
@@ -83,38 +128,14 @@ export default function DashboardClient({
     router.push(replyflowPath("/"));
   }
 
-  async function handleUpgrade(planName: string) {
-    setCheckoutLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/replyflow/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: planName }),
-      });
-      const raw = await res.text();
-      let data: { error?: string; url?: string } = {};
-      try {
-        data = raw ? (JSON.parse(raw) as { error?: string; url?: string }) : {};
-      } catch {
-        setError(
-          res.ok
-            ? "Checkout unavailable"
-            : "Billing is not configured yet. Please try again shortly."
-        );
-        return;
-      }
-      if (!res.ok || !data.url) {
-        setError(data.error ?? "Checkout unavailable");
-        return;
-      }
-      window.location.href = data.url;
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setCheckoutLoading(false);
-    }
-  }
+  const upgradePayload =
+    niTier === "free"
+      ? { type: "ni_subscription" as const, tier: "core" as const, interval: "monthly" as const }
+      : niTier === "core"
+        ? { type: "ni_subscription" as const, tier: "pro" as const, interval: "monthly" as const }
+        : niTier === "pro"
+          ? { type: "ni_subscription" as const, tier: "power" as const, interval: "monthly" as const }
+          : null;
 
   return (
     <div className="relative min-h-screen">
@@ -122,6 +143,10 @@ export default function DashboardClient({
       <ReplyFlowNav email={email} planLabel={planLabel} onSignOut={handleSignOut} />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
+        {gated && gateContent ? (
+          gateContent
+        ) : (
+          <>
         <div className="rf-glass rounded-2xl p-5">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-white/80">Monthly replies</span>
@@ -129,7 +154,7 @@ export default function DashboardClient({
               <span className={atLimit ? "font-semibold text-rf-rose" : "font-semibold text-white"}>
                 {used}
               </span>{" "}
-              / {repliesLimit === 999999 ? "∞" : repliesLimit}
+              / {effectiveLimit === 999999 ? "∞" : effectiveLimit}
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -142,18 +167,14 @@ export default function DashboardClient({
               style={{ width: `${usagePercent}%` }}
             />
           </div>
-          {atLimit && plan !== "agency" && (
+          {showUpgrade && upgradePayload && (
             <div className="mt-3 flex items-center justify-between gap-4">
               <p className="text-sm text-rf-rose">Limit reached — upgrade to keep going.</p>
-              <button
-                onClick={() =>
-                  handleUpgrade(plan === "free" ? "solo" : plan === "solo" ? "team" : "agency")
-                }
-                disabled={checkoutLoading}
+              <CheckoutButton
+                label="Upgrade Subscription"
+                payload={upgradePayload}
                 className="rounded-xl bg-gradient-to-r from-rf-rose to-rf-coral px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {checkoutLoading ? "Loading…" : "Upgrade"}
-              </button>
+              />
             </div>
           )}
         </div>
@@ -255,6 +276,37 @@ export default function DashboardClient({
             </div>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/90">{reply}</p>
           </div>
+        )}
+
+        {history.length > 0 && (
+          <div className="rf-glass rounded-3xl p-6">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-rf-muted">
+              Recent Replies
+            </h2>
+            <ul className="space-y-3">
+              {history.map((entry) => (
+                <li key={entry.id}>
+                  <button
+                    type="button"
+                    onClick={() => loadHistoryEntry(entry)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-rf-violet/40 hover:bg-white/10"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="line-clamp-2 text-sm text-white/90">{entry.customerMessage}</p>
+                      <span className="shrink-0 text-xs text-rf-muted">
+                        {new Date(entry.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-rf-muted">
+                      {entry.tone} · {entry.scenario}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+          </>
         )}
       </main>
     </div>

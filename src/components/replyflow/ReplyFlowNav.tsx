@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 import { portalSignInUrl, portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
 
 interface Props {
@@ -29,12 +30,7 @@ export function ReplyFlowNav({ email, planLabel, onSignOut }: Props) {
                   {planLabel}
                 </span>
               )}
-              <a
-                href="https://northsideintelligence.com/account"
-                className="text-sm text-rf-muted transition hover:text-rf-rose"
-              >
-                NI Account
-              </a>
+              <AccountMenuDropdown variant="replyflow" triggerLabel="NI Account" />
               {onSignOut && (
                 <button
                   onClick={onSignOut}

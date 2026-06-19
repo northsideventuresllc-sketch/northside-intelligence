@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Sector3BackToHome } from "@/components/sector3/Sector3BackToHome";
 
 export const metadata: Metadata = {
   title: "ReplyFlow — AI Customer Service Replies",
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
 
 export default function ReplyFlowLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="replyflow-root min-h-screen bg-rf-bg text-white antialiased">{children}</div>
+    <div className="replyflow-root flex min-h-screen flex-col bg-rf-bg text-white antialiased">
+      <div className="flex-1">{children}</div>
+      <Sector3BackToHome variant="replyflow" />
+    </div>
   );
 }

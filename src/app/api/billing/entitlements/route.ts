@@ -18,11 +18,15 @@ export async function GET() {
     niTier: state.niTier,
     billingInterval: state.billingInterval,
     currentPeriodEnd: state.currentPeriodEnd,
+    niStripeSubscriptionId: state.niStripeSubscriptionId,
     isMasterAccount: state.isMasterAccount,
     toolkit: state.toolkit,
     toolSlotsUsed: state.toolSlotsUsed,
     toolSlotLimit: state.toolSlotLimit,
     hasNiPaidPlan: state.hasNiPaidPlan,
+    canSwapUnlimitedTool: state.canSwapUnlimitedTool,
+    nextUnlimitedSwapAt: state.nextUnlimitedSwapAt,
+    lastUnlimitedSwapAt: state.lastUnlimitedSwapAt,
     canAddNiPlanTool:
       !state.isMasterAccount &&
       state.niTier !== "free" &&

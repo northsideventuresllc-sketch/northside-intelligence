@@ -9,6 +9,7 @@ import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
 import { tierHasUnlimitedToolAccess } from "@/lib/billing/ni-tiers";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
+/** @deprecated Use /api/billing/toolkit/add-free then /api/billing/toolkit/assign-unlimited */
 export async function POST(req: NextRequest) {
   const supabase = await createServerAuthClient();
   const {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
   await grantToolkitAccess({
     userId: user.id,
     toolSlug,
-    accessType: "ni_plan",
+    accessType: tierHasUnlimitedToolAccess(state.niTier) ? "ni_plan" : "ni_plan",
     expiresAt: state.currentPeriodEnd,
   });
 

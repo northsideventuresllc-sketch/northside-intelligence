@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Push Stripe env vars to Vercel production + preview.
+# Push Stripe + NI Store env vars to Vercel production + preview.
 # Requires: VERCEL_TOKEN (https://vercel.com/account/tokens)
 #
 # Usage:
@@ -49,6 +49,18 @@ fi
 
 if [[ -n "${STRIPE_REPLYFLOW_WEBHOOK_SECRET:-}" ]]; then
   upsert_env STRIPE_REPLYFLOW_WEBHOOK_SECRET "$STRIPE_REPLYFLOW_WEBHOOK_SECRET"
+fi
+
+if [[ -n "${STRIPE_WEBHOOK_SECRET_STORE:-}" ]]; then
+  upsert_env STRIPE_WEBHOOK_SECRET_STORE "$STRIPE_WEBHOOK_SECRET_STORE"
+fi
+
+if [[ -n "${MAKE_STORE_WEBHOOK_URL:-}" ]]; then
+  upsert_env MAKE_STORE_WEBHOOK_URL "$MAKE_STORE_WEBHOOK_URL"
+fi
+
+if [[ -n "${NI_STORE_LIVE:-}" ]]; then
+  upsert_env NI_STORE_LIVE "$NI_STORE_LIVE"
 fi
 
 for tier in CORE PRO POWER; do

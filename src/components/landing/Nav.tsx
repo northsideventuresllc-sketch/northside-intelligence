@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 
 export function Nav() {
+  const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
+  const refreshAuth = useCallback(() => {
     let cancelled = false;
     fetch("/api/auth/me")
       .then((res) => res.json())
@@ -21,6 +24,8 @@ export function Nav() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => refreshAuth(), [pathname, refreshAuth]);
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-cyan-500/10 bg-ni-bg/70 shadow-[0_4px_30px_rgba(0,0,0,0.3),inset_0_-1px_0_rgba(0,212,255,0.1)] backdrop-blur-xl">
@@ -41,46 +46,69 @@ export function Nav() {
           </span>
         </Link>
         <nav className="flex items-center gap-4 sm:gap-6">
-          <a
-            href="/#tools"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Tools
-          </a>
-          <a
-            href="/#pricing"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Store
-          </a>
-          <a
-            href="/#mission"
-            className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
-          >
-            Mission
-          </a>
-          <a
-            href="/#ecosystem"
-            className="text-sm text-ni-muted transition hover:text-cyan-300"
-          >
-            Ecosystem
-          </a>
           {isLoggedIn ? (
             <>
               <Link
                 href="/toolkit"
-                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
               >
                 Toolkit
               </Link>
               <Link
-                href="/account"
-                className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-sm font-medium text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
+                href="/store"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
               >
-                Account
+                Smart Store
               </Link>
+              <Link
+                href="/services"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Services
+              </Link>
+              <AccountMenuDropdown />
             </>
           ) : (
+            <>
+              <a
+                href="/#tools"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Tools
+              </a>
+              <Link
+                href="/store"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Smart Store
+              </Link>
+              <Link
+                href="/services"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Intelligence Services
+              </Link>
+              <a
+                href="/#pricing"
+                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+              >
+                Plans
+              </a>
+              <a
+                href="/#mission"
+                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
+              >
+                Mission
+              </a>
+              <a
+                href="/#ecosystem"
+                className="text-sm text-ni-muted transition hover:text-cyan-300"
+              >
+                Ecosystem
+              </a>
+            </>
+          )}
+          {!isLoggedIn && (
             <>
               <Link
                 href="/auth/signin"

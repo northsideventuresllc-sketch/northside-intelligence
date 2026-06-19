@@ -31,19 +31,36 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
           className="mt-10 flex flex-wrap items-center justify-center gap-3"
           style={{ transform: "translateZ(40px)" }}
         >
-          <a
-            href="#tools"
-            className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-medium text-cyan-300 shadow-[0_4px_20px_rgba(0,212,255,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:shadow-[0_8px_32px_rgba(0,212,255,0.25)] hover:-translate-y-0.5"
-          >
-            Explore Tools
-          </a>
-          {!isLoggedIn && (
-            <Link
-              href="/auth/signup"
-              className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition hover:border-cyan-400/30 hover:bg-white/10 hover:-translate-y-0.5"
-            >
-              Create Account
-            </Link>
+          {isLoggedIn ? (
+            <>
+              <Link
+                href="/toolkit"
+                className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-cyan-300 shadow-[0_4px_20px_rgba(0,212,255,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:shadow-[0_8px_32px_rgba(0,212,255,0.25)] hover:-translate-y-0.5"
+              >
+                Toolkit
+              </Link>
+              <Link
+                href="/store"
+                className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition hover:border-cyan-400/30 hover:bg-white/10 hover:-translate-y-0.5"
+              >
+                Smart Store
+              </Link>
+            </>
+          ) : (
+            <>
+              <a
+                href="#tools"
+                className="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-medium text-cyan-300 shadow-[0_4px_20px_rgba(0,212,255,0.15),inset_0_1px_0_rgba(255,255,255,0.1)] transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:shadow-[0_8px_32px_rgba(0,212,255,0.25)] hover:-translate-y-0.5"
+              >
+                Explore Tools
+              </a>
+              <Link
+                href="/auth/signup"
+                className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition hover:border-cyan-400/30 hover:bg-white/10 hover:-translate-y-0.5"
+              >
+                Create Account
+              </Link>
+            </>
           )}
         </div>
       </Scene3D>

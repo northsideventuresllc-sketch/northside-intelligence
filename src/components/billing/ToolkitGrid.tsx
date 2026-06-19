@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { INTELLIGENCE_TOOLS } from "@/lib/constants";
 import type { ToolkitEntry } from "@/lib/billing/entitlements";
-import { NI_TIERS, type NiTier } from "@/lib/billing/ni-tiers";
+import { NI_TIERS, tierHasUnlimitedToolAccess, type NiTier } from "@/lib/billing/ni-tiers";
+import { ToolSubscriptionPanel } from "@/components/billing/ToolSubscriptionPanel";
+import type { ToolPricing } from "@/lib/billing/tool-pricing";
 
 interface ToolkitGridProps {
   toolkit: ToolkitEntry[];
@@ -15,13 +17,18 @@ interface ToolkitGridProps {
   canAddNiPlanTool: boolean;
   availableToAdd: string[];
   isMasterAccount?: boolean;
+  canSwapUnlimitedTool: boolean;
+  nextUnlimitedSwapAt: string | null;
+  toolPricingBySlug?: Record<string, ToolPricing>;
+  permanentOfferBySlug?: Record<string, boolean>;
 }
 
 function accessLabel(type: ToolkitEntry["accessType"], isMasterAccount?: boolean): string {
   if (isMasterAccount && type === "lifetime") return "Master Access";
-  if (type === "lifetime") return "Lifetime";
-  if (type === "ni_plan") return "NI Plan";
-  return "Subscription";
+  if (type === "free") return "Free Tier";
+  if (type === "lifetime") return "Permanent";
+  if (type === "ni_plan") return "NI Plan Unlimited";
+  return "Subscription Unlimited";
 }
 
 export function ToolkitGrid({
@@ -32,20 +39,32 @@ export function ToolkitGrid({
   canAddNiPlanTool,
   availableToAdd,
   isMasterAccount = false,
+  canSwapUnlimitedTool,
+  nextUnlimitedSwapAt,
+  toolPricingBySlug = {},
+  permanentOfferBySlug = {},
 }: ToolkitGridProps) {
   const [adding, setAdding] = useState<string | null>(null);
+  const [assigning, setAssigning] = useState<string | null>(null);
+  const [swapping, setSwapping] = useState<string | null>(null);
+  const [swapTarget, setSwapTarget] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const ownedSlugs = new Set(toolkit.map((t) => t.toolSlug));
   const tierConfig = NI_TIERS[niTier];
+  const niPlanTools = toolkit.filter((t) => t.accessType === "ni_plan");
+  const atSlotLimit =
+    !tierHasUnlimitedToolAccess(niTier) &&
+    toolSlotLimit !== null &&
+    toolSlotsUsed >= toolSlotLimit;
 
-  async function addTool(toolSlug: string) {
+  async function addFreeTool(toolSlug: string) {
     setAdding(toolSlug);
     setError("");
     setMessage("");
     try {
-      const res = await fetch("/api/billing/toolkit/add", {
+      const res = await fetch("/api/billing/toolkit/add-free", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ toolSlug }),
@@ -61,6 +80,55 @@ export function ToolkitGrid({
       setError("Network error. Please try again.");
     } finally {
       setAdding(null);
+    }
+  }
+
+  async function assignUnlimited(toolSlug: string) {
+    setAssigning(toolSlug);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch("/api/billing/toolkit/assign-unlimited", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ toolSlug }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Could not assign unlimited access");
+        return;
+      }
+      setMessage("Unlimited access assigned. Refreshing…");
+      window.location.reload();
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setAssigning(null);
+    }
+  }
+
+  async function swapUnlimited(fromToolSlug: string, toToolSlug: string) {
+    setSwapping(fromToolSlug);
+    setError("");
+    setMessage("");
+    try {
+      const res = await fetch("/api/billing/toolkit/swap-unlimited", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromToolSlug, toToolSlug }),
+      });
+      const data = (await res.json()) as { error?: string; nextSwapAt?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Could not swap unlimited tool");
+        return;
+      }
+      setMessage("Unlimited tool swapped. Refreshing…");
+      window.location.reload();
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSwapping(null);
+      setSwapTarget(null);
     }
   }
 
@@ -81,7 +149,13 @@ export function ToolkitGrid({
             <p className="mt-1 text-sm text-ni-muted">{tierConfig.description}</p>
             {toolSlotLimit !== null && niTier !== "free" && (
               <p className="mt-3 text-sm text-cyan-300/80">
-                Tool slots: {toolSlotsUsed} / {toolSlotLimit}
+                Unlimited tool slots: {toolSlotsUsed} / {toolSlotLimit}
+              </p>
+            )}
+            {atSlotLimit && !canSwapUnlimitedTool && nextUnlimitedSwapAt && (
+              <p className="mt-2 text-xs text-amber-300/90">
+                Swap cooldown active — you can change unlimited tools again on{" "}
+                {new Date(nextUnlimitedSwapAt).toLocaleString()}.
               </p>
             )}
             {niTier === "free" && (
@@ -124,6 +198,10 @@ export function ToolkitGrid({
             {toolkit.map((entry) => {
               const tool = INTELLIGENCE_TOOLS.find((t) => t.slug === entry.toolSlug);
               if (!tool) return null;
+              const pricing = toolPricingBySlug[entry.toolSlug];
+              const showSubscribe =
+                entry.accessType === "free" && pricing && !isMasterAccount && !tierHasUnlimitedToolAccess(niTier);
+
               return (
                 <article
                   key={entry.id}
@@ -152,7 +230,7 @@ export function ToolkitGrid({
                   <p className="mt-1 text-xs uppercase tracking-wider text-cyan-300/70">
                     {accessLabel(entry.accessType, isMasterAccount)}
                   </p>
-                  {entry.expiresAt && entry.accessType !== "lifetime" && (
+                  {entry.expiresAt && entry.accessType !== "lifetime" && entry.accessType !== "free" && (
                     <p className="mt-2 text-xs text-ni-muted">
                       Renews {new Date(entry.expiresAt).toLocaleDateString()}
                     </p>
@@ -172,6 +250,42 @@ export function ToolkitGrid({
                       View Tool
                     </Link>
                   )}
+                  {entry.accessType === "free" && canAddNiPlanTool && niTier !== "free" && (
+                    <button
+                      type="button"
+                      onClick={() => assignUnlimited(entry.toolSlug)}
+                      disabled={assigning === entry.toolSlug}
+                      className="mt-2 text-xs font-medium text-cyan-300 underline-offset-2 hover:underline disabled:opacity-50"
+                    >
+                      {assigning === entry.toolSlug ? "Assigning…" : "Use NI Plan Unlimited Slot"}
+                    </button>
+                  )}
+                  {showSubscribe && pricing && (
+                    <div className="mt-4 w-full">
+                      <ToolSubscriptionPanel
+                        toolSlug={entry.toolSlug}
+                        toolName={tool.name}
+                        pricing={pricing}
+                        billingState={{
+                          niTier,
+                          billingInterval: null,
+                          currentPeriodEnd: null,
+                          stripeCustomerId: null,
+                          niStripeSubscriptionId: null,
+                          isMasterAccount,
+                          toolkit,
+                          ownedToolSlugs: Array.from(ownedSlugs),
+                          toolSlotsUsed,
+                          toolSlotLimit,
+                          hasNiPaidPlan: niTier !== "free",
+                          lastUnlimitedSwapAt: null,
+                          canSwapUnlimitedTool,
+                          nextUnlimitedSwapAt,
+                        }}
+                        showPermanentOffer={permanentOfferBySlug[entry.toolSlug] ?? false}
+                      />
+                    </div>
+                  )}
                 </article>
               );
             })}
@@ -179,9 +293,54 @@ export function ToolkitGrid({
         )}
       </section>
 
-      {canAddNiPlanTool && availableToAdd.length > 0 && (
+      {atSlotLimit && niPlanTools.length > 0 && !tierHasUnlimitedToolAccess(niTier) && (
+        <section className="glass-panel p-6">
+          <h2 className="mb-2 text-lg font-semibold text-white">Swap Unlimited Tool</h2>
+          <p className="text-sm text-ni-muted">
+            You have reached your plan&apos;s unlimited tool limit. Swap which tool gets unlimited
+            access — {canSwapUnlimitedTool ? "available now" : "72-hour cooldown between swaps"}.
+          </p>
+          {canSwapUnlimitedTool && (
+            <div className="mt-4 space-y-3">
+              {niPlanTools.map((from) => {
+                const fromTool = INTELLIGENCE_TOOLS.find((t) => t.slug === from.toolSlug);
+                return (
+                  <div key={from.id} className="rounded-xl border border-white/10 p-4">
+                    <p className="text-sm text-white">
+                      Swap unlimited from <strong>{fromTool?.name}</strong> to:
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {toolkit
+                        .filter(
+                          (t) =>
+                            t.accessType === "free" && t.toolSlug !== from.toolSlug
+                        )
+                        .map((to) => {
+                          const toTool = INTELLIGENCE_TOOLS.find((t) => t.slug === to.toolSlug);
+                          return (
+                            <button
+                              key={to.id}
+                              type="button"
+                              onClick={() => swapUnlimited(from.toolSlug, to.toolSlug)}
+                              disabled={swapping === from.toolSlug}
+                              className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 disabled:opacity-50"
+                            >
+                              {swapping === from.toolSlug ? "Swapping…" : toTool?.name}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {availableToAdd.length > 0 && (
         <section>
-          <h2 className="mb-4 text-lg font-semibold text-white">Add Tools to Your Plan</h2>
+          <h2 className="mb-4 text-lg font-semibold text-white">Add Tools to Your Toolkit</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {availableToAdd.map((slug) => {
               const tool = INTELLIGENCE_TOOLS.find((t) => t.slug === slug);
@@ -199,7 +358,7 @@ export function ToolkitGrid({
                   <p className="mt-2 line-clamp-2 text-sm text-ni-muted">{tool.description}</p>
                   <button
                     type="button"
-                    onClick={() => addTool(slug)}
+                    onClick={() => addFreeTool(slug)}
                     disabled={adding === slug}
                     className="mt-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20 disabled:opacity-50"
                   >

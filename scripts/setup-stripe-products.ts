@@ -11,7 +11,7 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
 const TOOLS = [
-  { slug: "replyflow", name: "ReplyFlow", monthly: 22, annual: 220, lifetime: 531 },
+  { slug: "replyflow", name: "ReplyFlow", monthly: 15, annual: 150, lifetime: 315 },
   { slug: "grantbot", name: "GrantBot", monthly: 39, annual: 390, lifetime: 819 },
   { slug: "signaldesk", name: "SignalDesk", monthly: 24, annual: 240, lifetime: 504 },
   { slug: "gapscan", name: "GapScan", monthly: 18, annual: 180, lifetime: 378 },

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { ensureBillingEnvHydrated, getBillingConfigError } from "@/lib/billing/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   await ensureBillingEnvHydrated();
   const stripeError = getBillingConfigError();

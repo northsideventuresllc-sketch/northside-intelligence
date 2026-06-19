@@ -7,6 +7,10 @@ interface ProfileBody {
   fullName?: string;
   username?: string;
   email?: string;
+  accountType?: "personal" | "business";
+  businessName?: string | null;
+  businessWebsite?: string | null;
+  businessSize?: string | null;
 }
 
 export async function PATCH(request: NextRequest) {
@@ -29,6 +33,18 @@ export async function PATCH(request: NextRequest) {
   const fullName = body.fullName?.trim() || null;
   const username = body.username ? normalizeUsername(body.username) : null;
   const email = body.email?.trim().toLowerCase();
+  const accountType = body.accountType;
+  const businessName = body.businessName?.trim() || null;
+  const businessWebsite = body.businessWebsite?.trim() || null;
+  const businessSize = body.businessSize?.trim() || null;
+
+  if (accountType && accountType !== "personal" && accountType !== "business") {
+    return NextResponse.json({ error: "Invalid account type" }, { status: 400 });
+  }
+
+  if (accountType === "business" && body.businessName !== undefined && !businessName) {
+    return NextResponse.json({ error: "Business name is required for business accounts" }, { status: 400 });
+  }
 
   if (username && !isValidUsername(username)) {
     return NextResponse.json(
@@ -63,14 +79,21 @@ export async function PATCH(request: NextRequest) {
   }
 
   const now = new Date().toISOString();
+  const profileUpdate: Record<string, string | null> = {
+    email: email ?? user.email ?? "",
+    updated_at: now,
+  };
+
+  if (body.fullName !== undefined) profileUpdate.full_name = fullName;
+  if (body.username !== undefined) profileUpdate.username = username || null;
+  if (accountType) profileUpdate.account_type = accountType;
+  if (body.businessName !== undefined) profileUpdate.business_name = businessName;
+  if (body.businessWebsite !== undefined) profileUpdate.business_website = businessWebsite;
+  if (body.businessSize !== undefined) profileUpdate.business_size = businessSize;
+
   const { error: profileError } = await admin
     .from("ni_portal_profiles")
-    .update({
-      email: email ?? user.email ?? "",
-      full_name: fullName,
-      username: username || null,
-      updated_at: now,
-    })
+    .update(profileUpdate)
     .eq("id", user.id);
 
   if (profileError) {

@@ -97,6 +97,20 @@ export async function POST(req: NextRequest) {
             expiresAt: periodEndIso(sub),
             stripeSubscriptionId: session.subscription as string,
           });
+          break;
+        }
+
+        if (session.metadata?.serviceCheckout === "true" && session.metadata?.quoteId) {
+          const supabase = createServiceClient();
+          const now = new Date().toISOString();
+          await supabase
+            .from("ni_service_quotes")
+            .update({ status: "paid", updated_at: now })
+            .eq("id", session.metadata.quoteId);
+          await supabase
+            .from("ni_service_requests")
+            .update({ status: "accepted", updated_at: now })
+            .eq("stripe_session_id", session.id);
         }
         break;
       }
@@ -127,7 +141,7 @@ export async function POST(req: NextRequest) {
               stripeSubscriptionId: sub.id,
             });
           }
-        } else if (sub.status === "canceled" || sub.status === "unpaid" || sub.status === "past_due") {
+        } else if (sub.status === "canceled" || sub.status === "unpaid") {
           if (niMapped && userId) {
             await setNiSubscription({
               userId,
@@ -138,6 +152,26 @@ export async function POST(req: NextRequest) {
             });
           } else if (toolMapped && userId) {
             await revokeToolkitTool(userId, toolMapped.toolSlug);
+          }
+        } else if (sub.status === "past_due") {
+          const graceEnd = new Date(sub.current_period_end * 1000 + 48 * 60 * 60 * 1000);
+          if (niMapped && userId) {
+            await setNiSubscription({
+              userId,
+              tier: niMapped.tier,
+              billingInterval: niMapped.interval,
+              stripeCustomerId: sub.customer as string,
+              stripeSubscriptionId: sub.id,
+              currentPeriodEnd: graceEnd.toISOString(),
+            });
+          } else if (toolMapped && userId && toolMapped.interval !== "lifetime") {
+            await grantToolkitAccess({
+              userId,
+              toolSlug: toolMapped.toolSlug,
+              accessType: "tool_subscription",
+              expiresAt: graceEnd.toISOString(),
+              stripeSubscriptionId: sub.id,
+            });
           }
         }
         break;

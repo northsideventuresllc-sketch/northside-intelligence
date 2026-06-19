@@ -1,23 +1,15 @@
+import { redirectLoggedInSector3ToDashboard } from "@/lib/sector3-auth-redirect";
 import Link from "next/link";
 import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
+import { ReplyFlowPricingSection } from "@/components/replyflow/ReplyFlowPricingSection";
 import { portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
-
-const plans = [
-  { name: "Solo", price: "$9", desc: "100 replies / month", accent: "from-rf-rose/20 to-rf-coral/10" },
-  {
-    name: "Team",
-    price: "$49",
-    desc: "1,000 replies / month",
-    accent: "from-rf-violet/30 to-rf-rose/10",
-    popular: true,
-  },
-  { name: "Agency", price: "$99", desc: "Unlimited scale", accent: "from-rf-coral/20 to-rf-violet/20" },
-];
 
 const tones = ["Professional", "Friendly", "Empathetic", "Firm"];
 
-export default function ReplyFlowHome() {
+export default async function ReplyFlowHome() {
+  await redirectLoggedInSector3ToDashboard("/replyflow");
+
   const signupUrl = portalSignUpUrl();
 
   return (
@@ -93,52 +85,8 @@ export default function ReplyFlowHome() {
           </div>
         </section>
 
-        <section id="pricing" className="border-t border-white/10 px-6 py-20">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-center text-3xl font-bold rf-gradient-text">Simple pricing</h2>
-            <p className="mt-2 text-center text-rf-muted">
-              One Northside Intelligence account. Upgrade when you&apos;re ready.
-            </p>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {plans.map((p) => (
-                <div
-                  key={p.name}
-                  className={`rf-glass relative rounded-2xl bg-gradient-to-br ${p.accent} p-6 ${
-                    p.popular ? "ring-2 ring-rf-rose/50 shadow-rf-glow" : ""
-                  }`}
-                >
-                  {p.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-rf-rose px-3 py-0.5 text-xs font-bold text-white">
-                      Popular
-                    </span>
-                  )}
-                  <p className="text-3xl font-bold text-white">
-                    {p.price}
-                    <span className="text-sm font-normal text-rf-muted">/mo</span>
-                  </p>
-                  <p className="mt-1 font-semibold text-white">{p.name}</p>
-                  <p className="mt-2 text-sm text-rf-muted">{p.desc}</p>
-                  <a
-                    href={signupUrl}
-                    className="mt-6 block rounded-xl border border-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/10"
-                  >
-                    Get Started
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <ReplyFlowPricingSection />
       </main>
-
-      <footer className="relative z-10 border-t border-white/10 py-8 text-center text-sm text-rf-muted">
-        <p>
-          © {new Date().getFullYear()} ReplyFlow ·{" "}
-          <a href="https://northsideintelligence.com" className="text-rf-rose hover:underline">
-            Northside Intelligence
-          </a>
-        </p>
-      </footer>
     </div>
   );
 }
