@@ -2,13 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  INTELLIGENCE_TOOLS,
   TOOL_CATEGORIES,
   type IntelligenceTool,
   type ToolCategory,
 } from "@/lib/constants";
 import { useCarousel } from "@/hooks/useCarousel";
 import { ToolCard } from "./ToolCard";
+
+interface ToolsCarouselProps {
+  tools: IntelligenceTool[];
+}
 
 function matchesQuery(tool: IntelligenceTool, query: string, category: ToolCategory | "All") {
   const q = query.trim().toLowerCase();
@@ -30,7 +33,7 @@ function wrapIndex(i: number, len: number): number {
   return ((i % len) + len) % len;
 }
 
-export function ToolsCarousel() {
+export function ToolsCarousel({ tools }: ToolsCarouselProps) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ToolCategory | "All">("All");
   const [ownedToolSlugs, setOwnedToolSlugs] = useState<string[]>([]);
@@ -51,8 +54,8 @@ export function ToolsCarousel() {
   }, []);
 
   const filtered = useMemo(
-    () => INTELLIGENCE_TOOLS.filter((t) => matchesQuery(t, query, category)),
-    [query, category]
+    () => tools.filter((t) => matchesQuery(t, query, category)),
+    [tools, query, category]
   );
 
   const { safeIndex, fade, go, goTo, setIndex } = useCarousel(filtered.length);
