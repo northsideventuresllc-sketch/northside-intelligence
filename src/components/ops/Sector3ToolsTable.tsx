@@ -27,7 +27,7 @@ export function Sector3ToolsTable() {
   return (
     <section id="sector3" className="scroll-mt-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white">Sector 3 Tools</h2>
+        <h2 className="text-lg font-semibold text-white">Intelligence Tools</h2>
         <button
           type="button"
           disabled

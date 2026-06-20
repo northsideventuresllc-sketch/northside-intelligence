@@ -153,6 +153,39 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname.startsWith("/grantbot/dashboard")) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseAnonKey) {
+      let response = NextResponse.next({ request });
+      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, supabaseCookieOptions(options))
+            );
+          },
+        },
+      });
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        const signInUrl = new URL("/auth/signin", request.url);
+        signInUrl.searchParams.set("returnTo", `${pathname}${request.nextUrl.search}`);
+        return NextResponse.redirect(signInUrl);
+      }
+
+      return response;
+    }
+  }
+
   const dashboardGuard = await guardReplyFlowDashboard(request);
   if (dashboardGuard) return dashboardGuard;
 
@@ -186,6 +219,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/store") ||
     pathname.startsWith("/api/services") ||
     pathname.startsWith("/replyflow") ||
+    pathname.startsWith("/grantbot") ||
     isReplyFlowHost(host);
 
   if (!needsSessionRefresh) {
@@ -211,6 +245,7 @@ export const config = {
     "/replyflow/dashboard/:path*",
     "/replyflow/login",
     "/replyflow/signup",
+    "/grantbot/dashboard/:path*",
     "/((?!_next/static|_next/image).*)",
   ],
 };

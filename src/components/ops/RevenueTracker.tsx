@@ -84,17 +84,17 @@ export function RevenueTracker() {
             onChange={(v) => updateBreakdown("matchFit", v)}
           />
           <CurrencyInput
-            label="Sector 3"
+            label="Intelligence Tools"
             value={breakdown.sector3}
             onChange={(v) => updateBreakdown("sector3", v)}
           />
           <CurrencyInput
-            label="Sector 1B"
+            label="NI Labs"
             value={breakdown.sector1B}
             onChange={(v) => updateBreakdown("sector1B", v)}
           />
           <CurrencyInput
-            label="Sector 2"
+            label="Other Ventures"
             value={breakdown.sector2}
             onChange={(v) => updateBreakdown("sector2", v)}
           />

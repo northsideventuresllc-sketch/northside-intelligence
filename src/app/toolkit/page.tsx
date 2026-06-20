@@ -25,7 +25,9 @@ export default async function ToolkitPage() {
   }
 
   const state = await getUserBillingState(user.id);
-  const owned = new Set(state.ownedToolSlugs);
+  const owned = new Set(
+    state.isMasterAccount ? INTELLIGENCE_TOOL_SLUGS : state.ownedToolSlugs
+  );
   const availableToAdd = INTELLIGENCE_TOOL_SLUGS.filter((slug) => !owned.has(slug));
 
   const service = createServiceClient();
