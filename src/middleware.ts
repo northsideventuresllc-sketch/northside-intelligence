@@ -186,6 +186,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/store") ||
     pathname.startsWith("/api/services") ||
     pathname.startsWith("/replyflow") ||
+    pathname.startsWith("/grantbot") ||
     isReplyFlowHost(host);
 
   if (!needsSessionRefresh) {
@@ -211,6 +212,7 @@ export const config = {
     "/replyflow/dashboard/:path*",
     "/replyflow/login",
     "/replyflow/signup",
+    "/grantbot/:path*",
     "/((?!_next/static|_next/image).*)",
   ],
 };
