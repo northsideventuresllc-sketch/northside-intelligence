@@ -38,6 +38,10 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const tool = INTELLIGENCE_TOOLS.find((t) => t.slug === params.slug);
   if (!tool) notFound();
 
+  if (tool.slug === "ni-store") {
+    redirect(tool.url ?? "/store");
+  }
+
   const supabaseAuth = await createServerAuthClient();
   const {
     data: { user },
