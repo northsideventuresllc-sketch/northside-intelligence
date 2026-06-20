@@ -25,7 +25,7 @@ export function MatchFitSnapshot() {
       <h2 className="mb-4 text-lg font-semibold text-white">Match Fit Snapshot</h2>
       <div className="rounded-xl border border-white/10 bg-ni-navy/30 p-6">
         <p className="text-xl font-medium text-white">
-          {MATCH_FIT.sector} | {MATCH_FIT.domain} | {MATCH_FIT.version}
+          {MATCH_FIT.domain} | {MATCH_FIT.version}
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <a

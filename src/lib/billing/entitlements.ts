@@ -2,6 +2,7 @@ import {
   masterAccountHasProductAccess,
   isMasterAccountFlag,
 } from "@/lib/billing/master-account";
+import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
 import {
   getNiTierConfig,
   getToolSlotLimit,
@@ -67,12 +68,33 @@ export async function expireStaleEntitlements(): Promise<void> {
   await supabase.rpc("expire_ni_entitlements");
 }
 
+/** Keep master account toolkit rows in sync with the current intelligence tool catalog. */
+export async function syncMasterAccountToolkit(userId: string): Promise<void> {
+  const supabase = createServiceClient();
+  const now = new Date().toISOString();
+
+  for (const toolSlug of INTELLIGENCE_TOOL_SLUGS) {
+    const { error } = await supabase.from("ni_toolkit").upsert(
+      {
+        user_id: userId,
+        tool_slug: toolSlug,
+        access_type: "lifetime",
+        expires_at: null,
+        purchased_at: now,
+        updated_at: now,
+      },
+      { onConflict: "user_id,tool_slug" }
+    );
+    if (error) throw new Error(error.message);
+  }
+}
+
 export async function getUserBillingState(userId: string): Promise<UserBillingState> {
   await expireStaleEntitlements();
 
   const supabase = createServiceClient();
 
-  const [{ data: sub }, { data: toolkitRows }, { data: profile }] = await Promise.all([
+  const [{ data: sub }, { data: profile }] = await Promise.all([
     supabase
       .from("ni_subscriptions")
       .select(
@@ -81,13 +103,6 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
       .eq("id", userId)
       .maybeSingle(),
     supabase
-      .from("ni_toolkit")
-      .select(
-        "id, tool_slug, access_type, expires_at, purchased_at, stripe_subscription_id, unlimited_assigned_at"
-      )
-      .eq("user_id", userId)
-      .order("purchased_at", { ascending: false }),
-    supabase
       .from("ni_portal_profiles")
       .select("is_master_account")
       .eq("id", userId)
@@ -95,6 +110,18 @@ export async function getUserBillingState(userId: string): Promise<UserBillingSt
   ]);
 
   const isMasterAccount = isMasterAccountFlag(profile?.is_master_account);
+
+  if (isMasterAccount) {
+    await syncMasterAccountToolkit(userId);
+  }
+
+  const { data: toolkitRows } = await supabase
+    .from("ni_toolkit")
+    .select(
+      "id, tool_slug, access_type, expires_at, purchased_at, stripe_subscription_id, unlimited_assigned_at"
+    )
+    .eq("user_id", userId)
+    .order("purchased_at", { ascending: false });
 
   const subscription = (sub ?? { tier: "free" }) as SubscriptionRow;
   const niTier = normalizeNiTier(subscription.tier);

@@ -196,7 +196,6 @@ export const OPS_SECTOR_3_ROWS = SECTOR3_REGISTRY.map((t) => ({
 }));
 
 export const MATCH_FIT = {
-  sector: "Sector 1A",
   domain: "match-fit.net",
   version: "v1.1.2-BETA",
   appUrl: "https://match-fit.net",

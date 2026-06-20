@@ -1,11 +1,15 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   getToolBrand,
+  INTELLIGENCE_TOOLS,
   STATIC_COMING_SOON_TOOLS,
   type IntelligenceTool,
   type ToolCategory,
 } from "@/lib/constants";
-import { GITHUB_ORG, PORTAL_URL, SECTOR3_REGISTRY } from "@/lib/sector3-registry";
+import { GITHUB_ORG, SECTOR3_REGISTRY } from "@/lib/sector3-registry";
+
+/** Slugs that belong in the Intelligence Tools carousel — excludes ecosystem/labs products. */
+const INTELLIGENCE_TOOL_SLUGS = new Set(INTELLIGENCE_TOOLS.map((tool) => tool.slug));
 
 interface Arm3ToolRow {
   name: string;
@@ -52,11 +56,7 @@ function keywordsForTool(row: Arm3ToolRow): string[] {
 function mapArm3RowToIntelligenceTool(row: Arm3ToolRow): IntelligenceTool {
   const registryEntry = SECTOR3_REGISTRY.find((entry) => entry.slug === row.slug);
   const brand = getToolBrand(row.slug);
-  const appUrl =
-    registryEntry?.appUrl ??
-    (row.status === "live" || row.status === "scale"
-      ? `${PORTAL_URL}/${row.slug}`
-      : undefined);
+  const appUrl = registryEntry?.appUrl;
 
   return {
     name: row.name,
@@ -82,19 +82,21 @@ export async function getLiveArm3ToolsForCarousel(): Promise<IntelligenceTool[]>
     .order("created_at", { ascending: false });
 
   if (error || !data?.length) {
-    return SECTOR3_REGISTRY.map((entry) =>
+    return SECTOR3_REGISTRY.filter((entry) => entry.status === "LIVE").map((entry) =>
       mapArm3RowToIntelligenceTool({
         name: entry.name,
         slug: entry.slug,
         description: entry.description,
         category: entry.slug === "replyflow" ? "Automation" : "Intelligence",
-        status: entry.status === "LIVE" ? "live" : "building",
+        status: "live",
         target_user: null,
       })
     );
   }
 
-  return (data as Arm3ToolRow[]).map(mapArm3RowToIntelligenceTool);
+  return (data as Arm3ToolRow[])
+    .filter((row) => INTELLIGENCE_TOOL_SLUGS.has(row.slug))
+    .map(mapArm3RowToIntelligenceTool);
 }
 
 export async function getCarouselTools(): Promise<IntelligenceTool[]> {

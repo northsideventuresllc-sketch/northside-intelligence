@@ -140,7 +140,7 @@ export function ToolkitGrid({
           <>
             <p className="text-2xl font-bold text-white">Master Account</p>
             <p className="mt-1 text-sm text-ni-muted">
-              Permanent unlimited access to all Sector 3 tools and future NI products.
+              Permanent unlimited access to all Intelligence Tools and future NI products.
             </p>
           </>
         ) : (

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getUserBillingState } from "@/lib/billing/entitlements";
+import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 export async function GET() {
@@ -14,7 +15,7 @@ export async function GET() {
 
   const state = await getUserBillingState(user.id);
   return NextResponse.json({
-    ownedToolSlugs: state.ownedToolSlugs,
+    ownedToolSlugs: state.isMasterAccount ? INTELLIGENCE_TOOL_SLUGS : state.ownedToolSlugs,
     niTier: state.niTier,
     billingInterval: state.billingInterval,
     currentPeriodEnd: state.currentPeriodEnd,

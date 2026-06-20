@@ -2,7 +2,7 @@
 export const MASTER_ACCOUNT_LABEL = "Master Account User";
 
 export const MASTER_ACCOUNT_DESCRIPTION =
-  "Permanent and unlimited access to all Sector 3 intelligence tools, plus every future agent and education product released on Northside Intelligence.";
+  "Permanent and unlimited access to all Intelligence Tools and future NI products released on Northside Intelligence.";
 
 export function isMasterAccountFlag(value: boolean | null | undefined): boolean {
   return value === true;
