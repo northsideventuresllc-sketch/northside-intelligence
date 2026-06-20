@@ -45,6 +45,7 @@ export const SECTOR3_REGISTRY: Sector3RegistryEntry[] = [
     subdomain: "grantbot.northsideintelligence.com",
     description: "AI grant finder and drafter for nonprofits and creators",
     status: "COMING SOON",
+    dashboardPath: "/grantbot/dashboard",
     favicon: "/logos/grantbot.svg",
     github: `https://github.com/${GITHUB_ORG}/grantbot`,
     supabaseTable: "grantbot_profiles",
