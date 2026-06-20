@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "jsr:@supabase/supabase-js@2";
+import { readPlatformSecret } from "../_shared/platform-secrets.ts";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
 
@@ -186,7 +187,7 @@ Deno.serve(async (req) => {
 
   await runPatternLearner(supabase, evalResults);
 
-  const resendKey = Deno.env.get("RESEND_API_KEY");
+  const resendKey = await readPlatformSecret("RESEND_API_KEY");
   if (resendKey && evalResults.length > 0) {
     const rows = [...evalResults]
       .sort((a, b) => b.score - a.score)

@@ -109,6 +109,20 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       (value) => !value?.trim()
     );
     if (serpApi) process.env.SERPAPI_API_KEY = serpApi;
+
+    const resend = await resolvePlatformSecret(
+      "RESEND_API_KEY",
+      process.env.RESEND_API_KEY,
+      (value) => !value?.trim()
+    );
+    if (resend) process.env.RESEND_API_KEY = resend;
+
+    const serviceRole = await resolvePlatformSecret(
+      "SUPABASE_SERVICE_ROLE_KEY",
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      (value) => !value?.trim()
+    );
+    if (serviceRole) process.env.SUPABASE_SERVICE_ROLE_KEY = serviceRole;
   })();
 
   return hydratePromise;

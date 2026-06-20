@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { readPlatformSecret } from "../_shared/platform-secrets.ts";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const RESEND_API_URL = "https://api.resend.com/emails";
@@ -57,7 +58,6 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY");
 
   if (!supabaseUrl || !serviceRoleKey) {
     return new Response(
@@ -65,6 +65,8 @@ Deno.serve(async (req) => {
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
+
+  const anthropicApiKey = await readPlatformSecret("ANTHROPIC_API_KEY");
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
@@ -220,7 +222,7 @@ Respond ONLY in this JSON format (no markdown, no explanation):
     project: "NI Sector 3",
   });
 
-  const resendKey = Deno.env.get("RESEND_API_KEY");
+  const resendKey = await readPlatformSecret("RESEND_API_KEY");
   if (resendKey) {
     const buildTasks = toolSpec.cursor_build_priority
       .map((task) => `<li>${task}</li>`)
