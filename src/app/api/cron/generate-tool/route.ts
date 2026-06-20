@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     );
   }
 
-  const res = await fetch(`${supabaseUrl}/functions/v1/eval-tools`, {
+  const res = await fetch(`${supabaseUrl}/functions/v1/generate-tool`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${serviceRoleKey}`,
@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   });
 
   const data: unknown = await res.json().catch(() => ({
-    error: "Invalid JSON from eval-tools",
+    error: "Invalid JSON from generate-tool",
   }));
 
   if (!res.ok) {
