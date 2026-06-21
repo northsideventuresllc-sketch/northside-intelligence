@@ -39,12 +39,27 @@ export const PLAN_LIMITS = getPlanLimits(getDeploymentTier());
 
 export { PLAN_LABELS } from "@/lib/replyflow/tier";
 
+/**
+ * Single source of truth for plan <-> Stripe price ID. Checkout (creating the
+ * session) and the webhook (resolving the paid plan) must use the exact same
+ * mapping, or a real payment can silently resolve to "free" with no error.
+ */
+export const REPLYFLOW_PRICE_IDS: Record<"solo" | "team" | "agency", string> = {
+  solo: process.env.STRIPE_SOLO_PRICE_ID ?? "price_1Te0s8QXb5thRQWgqVQdW8Rl",
+  team: process.env.STRIPE_TEAM_PRICE_ID ?? "price_1Te0sBQXb5thRQWgYzuWMxTd",
+  agency: process.env.STRIPE_AGENCY_PRICE_ID ?? "price_1Te0sEQXb5thRQWgCiAzrClk",
+};
+
 export function getPlanFromPriceId(priceId: string | undefined): UserPlan {
-  const map: Record<string, UserPlan> = {
-    [process.env.STRIPE_SOLO_PRICE_ID!]: "solo",
-    [process.env.STRIPE_TEAM_PRICE_ID!]: "team",
-    [process.env.STRIPE_AGENCY_PRICE_ID!]: "agency",
-  };
   if (!priceId) return "free";
-  return map[priceId] ?? "free";
+  const match = (Object.entries(REPLYFLOW_PRICE_IDS) as [UserPlan, string][]).find(
+    ([, id]) => id === priceId
+  );
+  if (!match) {
+    console.error("[replyflow/stripe] Unrecognized Stripe price ID — defaulting to free plan", {
+      priceId,
+    });
+    return "free";
+  }
+  return match[0];
 }
