@@ -327,7 +327,7 @@ export default function DashboardClient({
             </div>
 
             {result && (
-              <div className="gb-glass animate-float-bubble rounded-3xl p-6">
+              <div className="gb-glass animate-bubble-in rounded-3xl p-6">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm font-medium text-gb-teal">
                     {mode === "search" ? "Grant matches" : "Application draft"}

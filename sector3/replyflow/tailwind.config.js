@@ -21,6 +21,7 @@ module.exports = {
       },
       animation: {
         'float-bubble': 'floatBubble 6s ease-in-out infinite',
+        'bubble-in': 'bubbleIn 0.45s ease-out forwards',
         'pulse-glow': 'pulseGlow 2.5s ease-in-out infinite',
         'wave': 'wave 1.2s ease-in-out infinite',
         'shimmer': 'shimmer 2s linear infinite',
@@ -29,6 +30,10 @@ module.exports = {
         floatBubble: {
           '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
           '50%': { transform: 'translateY(-12px) rotate(2deg)' },
+        },
+        bubbleIn: {
+          '0%': { opacity: '0', transform: 'translateY(16px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
         pulseGlow: {
           '0%, 100%': { opacity: '0.5', transform: 'scale(1)' },

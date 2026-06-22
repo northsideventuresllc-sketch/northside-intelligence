@@ -216,7 +216,7 @@ export default function DashboardClient({
         </div>
 
         {reply && (
-          <div className="rf-glass animate-float-bubble rounded-3xl p-6">
+          <div className="rf-glass animate-bubble-in rounded-3xl p-6">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm font-medium text-rf-violet">Generated reply</span>
               <button
