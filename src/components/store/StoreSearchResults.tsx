@@ -40,9 +40,11 @@ interface StoreSearchResultsProps {
   query: string;
   draftQuery: string;
   filters: StoreSearchFilters;
+  surpriseMode?: boolean;
   onQueryChange: (query: string) => void;
   onFiltersChange: (filters: StoreSearchFilters) => void;
   onSearch: (query: string) => void;
+  onSurprise?: () => void;
   onBack: () => void;
 }
 
@@ -50,9 +52,11 @@ export function StoreSearchResults({
   query,
   draftQuery,
   filters,
+  surpriseMode = false,
   onQueryChange,
   onFiltersChange,
   onSearch,
+  onSurprise,
   onBack,
 }: StoreSearchResultsProps) {
   const [page, setPage] = useState(1);
@@ -71,6 +75,7 @@ export function StoreSearchResults({
     try {
       const params = new URLSearchParams();
       if (query.trim()) params.set("q", query.trim());
+      if (surpriseMode) params.set("surprise", "1");
       if (filters.category) params.set("category", filters.category);
       if (filters.minPrice) params.set("minPrice", filters.minPrice);
       if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
@@ -87,15 +92,19 @@ export function StoreSearchResults({
     } finally {
       setLoading(false);
     }
-  }, [query, filters, page]);
+  }, [query, filters, page, surpriseMode]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [surpriseMode, query, filters.category, filters.minPrice, filters.maxPrice]);
 
   useEffect(() => {
     runSearch();
   }, [runSearch]);
 
   useEffect(() => {
-    if (query.trim()) trackSearch(query);
-  }, [query]);
+    if (query.trim() && !surpriseMode) trackSearch(query);
+  }, [query, surpriseMode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +140,18 @@ export function StoreSearchResults({
         >
           Search
         </button>
+        {onSurprise && (
+          <button
+            type="button"
+            onClick={() => {
+              setPage(1);
+              onSurprise();
+            }}
+            className="shrink-0 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
+          >
+            SUPRISE ME
+          </button>
+        )}
       </form>
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -208,12 +229,18 @@ export function StoreSearchResults({
         <>
           <p className="mb-4 text-sm text-ni-muted">
             {data.total === 0
-              ? query
+              ? surpriseMode
+                ? "No surprise picks available right now."
+                : query
                 ? `No results for “${query}”.`
                 : filters.category || filters.minPrice || filters.maxPrice
                   ? "No products match your filters."
                   : "Smart Store catalog is syncing — check back shortly."
-              : query
+              : surpriseMode
+                ? `${data.total} surprise pick${data.total === 1 ? "" : "s"} for you${
+                    filters.category ? ` · ${formatCategoryLabel(filters.category)}` : ""
+                  }`
+                : query
                 ? `${data.total} result${data.total === 1 ? "" : "s"} for “${query}”${
                     filters.category ? ` in ${formatCategoryLabel(filters.category)}` : ""
                   }`

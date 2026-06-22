@@ -35,6 +35,7 @@ export interface StoreSearchFilters {
   maxRetailCents?: number;
   page: number;
   limit: number;
+  surprise?: boolean;
 }
 
 export interface PriceChangeNotice {
