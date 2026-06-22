@@ -44,6 +44,7 @@ const config: Config = {
         "orbit-reverse": "orbit-reverse 32s linear infinite",
         "orbit-slow": "orbit-slow 40s linear infinite",
         "logo-reveal": "logoReveal 1.4s ease-out forwards",
+        "marquee-scroll": "marquee-scroll 45s linear infinite",
       },
       keyframes: {
         floatBubble: {
@@ -97,6 +98,10 @@ const config: Config = {
           "0%": { filter: "brightness(0.3) blur(6px)", opacity: "0.4" },
           "40%": { filter: "brightness(1.2) blur(0px)", opacity: "1" },
           "100%": { filter: "brightness(1) blur(0px)", opacity: "1" },
+        },
+        "marquee-scroll": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
         },
       },
       boxShadow: {

@@ -46,6 +46,12 @@ export interface ViralPicksResponse {
   webTrackingEnabled: boolean;
 }
 
+export interface PopularPicksResponse {
+  picks: CatalogProductView[];
+  pickDate: string;
+  resetsAt: string;
+}
+
 export interface StoreSearchResponse {
   results: CatalogProductView[];
   total: number;

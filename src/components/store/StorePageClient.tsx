@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ViralProductsCarousel } from "@/components/store/ViralProductsCarousel";
+import { PopularItemsMarquee } from "@/components/store/PopularItemsMarquee";
 import { StoreSearchSidebar } from "@/components/store/StoreSearchSidebar";
 import { StoreSearchResults } from "@/components/store/StoreSearchResults";
 import { WebTrackingOptIn } from "@/components/store/WebTrackingOptIn";
@@ -96,6 +97,8 @@ export function StorePageClient() {
           />
         </aside>
       </div>
+
+      <PopularItemsMarquee />
 
       <p className="mx-auto mt-8 max-w-xl text-center text-sm text-ni-muted">
         NI price = supplier listing price + 10%. Supplier costs are never shown.
