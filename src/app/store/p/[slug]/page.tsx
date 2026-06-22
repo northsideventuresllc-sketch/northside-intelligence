@@ -79,9 +79,6 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                     {product.category.replace(/-/g, " ")}
                   </p>
                   <h1 className="mt-2 text-2xl font-semibold text-white">{product.name}</h1>
-                  <p className="mt-2 text-xs text-ni-muted">
-                    Exact CJ listing title — copy and paste this name into CJ to find the product.
-                  </p>
                   <p className="mt-4 text-3xl font-bold text-white">{priceLabel}</p>
                   {product.priceChangeNotice && (
                     <PriceChangeNotices
@@ -101,18 +98,15 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                   <p className="mt-4 text-sm leading-relaxed text-ni-muted">{product.description}</p>
                   <dl className="mt-6 space-y-2 text-sm">
                     <div className="flex justify-between gap-4">
-                      <dt className="text-ni-muted">Fulfilled via</dt>
+                      <dt className="text-ni-muted">Fulfillment</dt>
                       <dd className="text-white">
+                        Fulfilled by{" "}
                         {STORE_PLATFORM_LABELS[product.sourcePlatform] ?? product.sourcePlatform}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-4">
                       <dt className="text-ni-muted">Standard ETA</dt>
                       <dd className="text-white">~{product.estimatedDeliveryDays} business days</dd>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-ni-muted">NI pricing</dt>
-                      <dd className="text-right text-white">CJ listing price + 10%</dd>
                     </div>
                   </dl>
 

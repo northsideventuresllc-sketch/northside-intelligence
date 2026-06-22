@@ -35,12 +35,6 @@ export function ProductPurchasePanel({
   );
 
   const displayRetailCents = selectedVariant?.retailPriceCents ?? product.retailPriceCents;
-  const priceLabel = formatRetailPriceRange(
-    displayRetailCents,
-    selectedVariant ? selectedVariant.retailPriceCents : product.retailPriceMinCents,
-    selectedVariant ? selectedVariant.retailPriceCents : product.retailPriceMaxCents,
-    product.currency
-  );
 
   function handleAddToCart() {
     addItem({
@@ -63,10 +57,7 @@ export function ProductPurchasePanel({
     <div className="mt-8 space-y-4">
       {product.variants && product.variants.length > 1 && (
         <div>
-          <p className="mb-2 text-sm font-semibold text-white">CJ Variations</p>
-          <p className="mb-3 text-xs text-ni-muted">
-            NI price = CJ variation listing price + 10% for each option below.
-          </p>
+          <p className="mb-2 text-sm font-semibold text-white">Options</p>
           <ul className="max-h-48 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-3">
             {product.variants.map((variant) => (
               <li key={variant.id}>
@@ -74,7 +65,7 @@ export function ProductPurchasePanel({
                   <span className="flex items-center gap-2">
                     <input
                       type="radio"
-                      name="cj-variant"
+                      name="product-variant"
                       checked={selectedVariantId === variant.id}
                       onChange={() => setSelectedVariantId(variant.id)}
                     />
@@ -91,10 +82,6 @@ export function ProductPurchasePanel({
       )}
 
       {product.imageIsStockPhoto && <StockImageDisclaimer />}
-
-      <p className="text-sm text-ni-muted">
-        Selected NI price: <span className="font-semibold text-white">{priceLabel}</span>
-      </p>
 
       <fieldset>
         <legend className="mb-2 text-sm font-semibold text-white">Shipping Speed</legend>
