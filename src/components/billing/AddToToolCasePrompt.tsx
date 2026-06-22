@@ -6,7 +6,7 @@ import Link from "next/link";
 interface AddToToolCasePromptProps {
   toolSlug: string;
   toolName: string;
-  variant?: "portal" | "replyflow";
+  variant?: "portal" | "replyflow" | "grantbot";
 }
 
 export function AddToToolCasePrompt({
@@ -17,6 +17,7 @@ export function AddToToolCasePrompt({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const isReplyflow = variant === "replyflow";
+  const isGrantbot = variant === "grantbot";
 
   async function handleAdd() {
     setLoading(true);
@@ -40,11 +41,17 @@ export function AddToToolCasePrompt({
     }
   }
 
-  const cardClass = isReplyflow ? "rf-glass rounded-3xl p-8 text-center" : "glass-panel p-8 text-center";
-  const mutedClass = isReplyflow ? "text-rf-muted" : "text-ni-muted";
+  const cardClass = isReplyflow
+    ? "rf-glass rounded-3xl p-8 text-center"
+    : isGrantbot
+      ? "gb-glass rounded-3xl p-8 text-center"
+      : "glass-panel p-8 text-center";
+  const mutedClass = isReplyflow ? "text-rf-muted" : isGrantbot ? "text-gb-muted" : "text-ni-muted";
   const buttonClass = isReplyflow
     ? "rounded-2xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet px-8 py-3 text-sm font-semibold text-white shadow-rf-glow disabled:opacity-50"
-    : "rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-2.5 text-sm font-semibold text-cyan-300 disabled:opacity-50";
+    : isGrantbot
+      ? "rounded-2xl bg-gradient-to-r from-gb-emerald to-gb-amber px-8 py-3 text-sm font-semibold text-gb-bg shadow-gb-glow disabled:opacity-50"
+      : "rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-2.5 text-sm font-semibold text-cyan-300 disabled:opacity-50";
 
   return (
     <div className={cardClass}>
@@ -68,7 +75,13 @@ export function AddToToolCasePrompt({
       )}
       <p className={`mt-4 text-xs ${mutedClass}`}>
         Or manage all tools in your{" "}
-        <Link href="/toolkit" className={isReplyflow ? "text-rf-rose hover:underline" : "text-cyan-300 hover:underline"}>
+        <Link href="/toolkit" className={
+          isReplyflow
+            ? "text-rf-rose hover:underline"
+            : isGrantbot
+              ? "text-gb-emerald hover:underline"
+              : "text-cyan-300 hover:underline"
+        }>
           Toolkit
         </Link>
       </p>

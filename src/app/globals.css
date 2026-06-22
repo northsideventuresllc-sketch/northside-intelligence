@@ -53,4 +53,17 @@ body {
     background: linear-gradient(90deg, transparent, rgba(251, 113, 133, 0.15), transparent);
     background-size: 200% 100%;
   }
+
+  .gb-gradient-text {
+    @apply bg-gradient-to-r from-gb-emerald via-gb-teal to-gb-amber bg-clip-text text-transparent;
+  }
+
+  .gb-glass {
+    @apply border border-white/10 bg-gb-card/80 backdrop-blur-xl;
+  }
+
+  .gb-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.15), transparent);
+    background-size: 200% 100%;
+  }
 }

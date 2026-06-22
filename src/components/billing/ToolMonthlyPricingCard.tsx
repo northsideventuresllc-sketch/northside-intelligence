@@ -8,7 +8,7 @@ interface ToolMonthlyPricingCardProps {
   pricing: ToolPricing;
   isLoggedIn: boolean;
   returnPath: string;
-  variant?: "portal" | "replyflow";
+  variant?: "portal" | "replyflow" | "grantbot";
 }
 
 export function ToolMonthlyPricingCard({
@@ -21,20 +21,27 @@ export function ToolMonthlyPricingCard({
 }: ToolMonthlyPricingCardProps) {
   const signupHref = `/auth/signup?returnTo=${encodeURIComponent(returnPath)}`;
   const isReplyflow = variant === "replyflow";
+  const isGrantbot = variant === "grantbot";
 
   const cardClass = isReplyflow
     ? "rf-glass mx-auto max-w-sm rounded-2xl p-8 text-center"
-    : "glass-panel mx-auto max-w-sm p-8 text-center";
+    : isGrantbot
+      ? "gb-glass mx-auto max-w-sm rounded-2xl p-8 text-center"
+      : "glass-panel mx-auto max-w-sm p-8 text-center";
 
   const priceClass = isReplyflow ? "text-4xl font-bold text-white" : "text-4xl font-bold text-white";
-  const mutedClass = isReplyflow ? "text-rf-muted" : "text-ni-muted";
+  const mutedClass = isReplyflow ? "text-rf-muted" : isGrantbot ? "text-gb-muted" : "text-ni-muted";
   const buttonClass = isReplyflow
     ? "mt-6 block w-full rounded-2xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet py-3.5 text-sm font-semibold text-white shadow-rf-glow transition hover:opacity-95"
-    : "mt-6 block w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20";
+    : isGrantbot
+      ? "mt-6 block w-full rounded-2xl bg-gradient-to-r from-gb-emerald to-gb-amber py-3.5 text-sm font-semibold text-gb-bg shadow-gb-glow transition hover:opacity-95"
+      : "mt-6 block w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20";
 
   const signupButtonClass = isReplyflow
     ? "mt-6 block w-full rounded-2xl border border-white/20 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-    : buttonClass;
+    : isGrantbot
+      ? "mt-6 block w-full rounded-2xl border border-gb-emerald/30 py-3.5 text-sm font-semibold text-white transition hover:bg-gb-emerald/10"
+      : buttonClass;
 
   return (
     <div className={cardClass}>

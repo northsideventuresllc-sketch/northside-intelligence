@@ -26,6 +26,15 @@ const config: Config = {
           mint: "#5eead4",
           muted: "#9d8bb8",
         },
+        gb: {
+          bg: "#071210",
+          surface: "#0f1a17",
+          card: "#142420",
+          emerald: "#34d399",
+          amber: "#fbbf24",
+          teal: "#2dd4bf",
+          muted: "#8ba89e",
+        },
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "Inter", "system-ui", "sans-serif"],
@@ -107,6 +116,8 @@ const config: Config = {
       boxShadow: {
         "rf-glow": "0 0 40px rgba(251, 113, 133, 0.25)",
         "rf-violet": "0 0 50px rgba(167, 139, 250, 0.2)",
+        "gb-glow": "0 0 40px rgba(52, 211, 153, 0.25)",
+        "gb-amber": "0 0 50px rgba(251, 191, 36, 0.2)",
         glow: "0 0 40px rgba(0, 212, 255, 0.15)",
         "glow-sm": "0 0 20px rgba(0, 212, 255, 0.2)",
         "glow-lg": "0 0 80px rgba(0, 212, 255, 0.25)",

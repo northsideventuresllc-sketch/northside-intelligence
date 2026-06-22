@@ -11,7 +11,7 @@ interface ToolSubscriptionPanelProps {
   pricing: ToolPricing;
   billingState: UserBillingState;
   showPermanentOffer: boolean;
-  variant?: "portal" | "replyflow";
+  variant?: "portal" | "replyflow" | "grantbot";
 }
 
 export function ToolSubscriptionPanel({
@@ -23,12 +23,19 @@ export function ToolSubscriptionPanel({
   variant = "portal",
 }: ToolSubscriptionPanelProps) {
   const isReplyflow = variant === "replyflow";
+  const isGrantbot = variant === "grantbot";
   const hasUnlimited = userHasUnlimitedToolAccess(billingState, toolSlug);
-  const mutedClass = isReplyflow ? "text-rf-muted" : "text-ni-muted";
-  const cardClass = isReplyflow ? "rf-glass rounded-2xl p-6" : "glass-panel p-6";
+  const mutedClass = isReplyflow ? "text-rf-muted" : isGrantbot ? "text-gb-muted" : "text-ni-muted";
+  const cardClass = isReplyflow
+    ? "rf-glass rounded-2xl p-6"
+    : isGrantbot
+      ? "gb-glass rounded-2xl p-6"
+      : "glass-panel p-6";
   const buttonClass = isReplyflow
     ? "w-full rounded-2xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet py-3 text-sm font-semibold text-white shadow-rf-glow transition hover:opacity-95 disabled:opacity-50"
-    : "w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20 disabled:opacity-50";
+    : isGrantbot
+      ? "w-full rounded-2xl bg-gradient-to-r from-gb-emerald to-gb-amber py-3 text-sm font-semibold text-gb-bg shadow-gb-glow transition hover:opacity-95 disabled:opacity-50"
+      : "w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 py-3 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-500/20 disabled:opacity-50";
 
   if (hasUnlimited) {
     return (
