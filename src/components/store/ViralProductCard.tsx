@@ -57,9 +57,6 @@ export function ViralProductCard({ product, variant, onSelect }: ViralProductCar
         <h3 className={`font-semibold text-white ${isCenter ? "text-lg" : "text-sm"}`}>
           {product.name}
         </h3>
-        {isCenter && (
-          <p className="mt-2 line-clamp-2 text-sm text-ni-muted">{product.description}</p>
-        )}
         {product.imageIsStockPhoto && isCenter && (
           <StockImageDisclaimer className="mt-3" />
         )}
