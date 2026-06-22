@@ -4,7 +4,6 @@ import {
   mapGrantBotHistoryRow,
   GRANTBOT_HISTORY_LIMIT,
   type GrantBotHistoryEntry,
-  type GrantBotMode,
 } from "@/lib/grantbot/history";
 import { portalSignInUrl } from "@/lib/grantbot/auth";
 import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
@@ -12,10 +11,6 @@ import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { createServiceClient } from "@/lib/supabase/server";
 import DashboardClient from "./DashboardClient";
 import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
-
-function isValidMode(value: string | null | undefined): value is GrantBotMode {
-  return value === "search" || value === "draft";
-}
 
 export default async function GrantBotDashboardPage() {
   const supabase = await createServerAuthClient();
@@ -34,7 +29,6 @@ export default async function GrantBotDashboardPage() {
       <div className="relative min-h-screen">
         <DashboardClient
           email={user.email ?? ""}
-          plan={access.plan}
           planLabel={access.planLabel}
           grantsUsed={0}
           grantsLimit={0}
@@ -71,13 +65,11 @@ export default async function GrantBotDashboardPage() {
   return (
     <DashboardClient
       email={user.email ?? ""}
-      plan={access.plan}
       planLabel={access.planLabel}
       grantsUsed={used}
       grantsLimit={access.grantsLimit}
       hasUnlimitedAccess={access.hasUnlimitedAccess}
       niTier={access.niTier}
-      initialMode={isValidMode(profile?.last_mode) ? profile.last_mode : undefined}
       initialCategory={profile?.last_category ?? undefined}
       history={history}
     />

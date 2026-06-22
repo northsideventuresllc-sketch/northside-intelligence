@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { GrantBotBackground } from "@/components/grantbot/GrantBotBackground";
 import { GrantBotNav } from "@/components/grantbot/GrantBotNav";
+import { GrantListingBubble } from "@/components/grantbot/GrantListingBubble";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { grantbotPath } from "@/lib/grantbot/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
-import type { GrantBotHistoryEntry, GrantBotMode } from "@/lib/grantbot/history";
+import type { GrantBotHistoryEntry } from "@/lib/grantbot/history";
+import { parseGrantListings, type GrantListing } from "@/lib/grantbot/listings";
 import { createBrowserClient } from "@supabase/ssr";
 
 const CATEGORIES = [
@@ -19,15 +21,20 @@ const CATEGORIES = [
   "Arts & Culture",
 ] as const;
 
+interface DraftState {
+  loading: boolean;
+  text?: string;
+  error?: string;
+  copied?: boolean;
+}
+
 interface Props {
   email: string;
-  plan: string;
   planLabel: string;
   grantsUsed: number;
   grantsLimit: number;
   hasUnlimitedAccess: boolean;
   niTier: string;
-  initialMode?: GrantBotMode;
   initialCategory?: string;
   history: GrantBotHistoryEntry[];
   gated?: boolean;
@@ -47,30 +54,24 @@ function isValidCategory(value: string | undefined): value is (typeof CATEGORIES
 
 export default function DashboardClient({
   email,
-  plan,
   planLabel,
   grantsUsed,
   grantsLimit,
   hasUnlimitedAccess,
   niTier,
-  initialMode,
   initialCategory,
   history: initialHistory,
   gated = false,
   gateContent,
 }: Props) {
-  const [mode, setMode] = useState<GrantBotMode>(initialMode ?? "search");
   const [orgDescription, setOrgDescription] = useState("");
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>(
     isValidCategory(initialCategory) ? initialCategory : "Nonprofit"
   );
-  const [grantTitle, setGrantTitle] = useState("");
-  const [funder, setFunder] = useState("");
-  const [promptQuestions, setPromptQuestions] = useState("");
-  const [result, setResult] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [listings, setListings] = useState<GrantListing[]>([]);
+  const [drafts, setDrafts] = useState<Record<string, DraftState>>({});
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
   const [used, setUsed] = useState(grantsUsed);
   const [history, setHistory] = useState(initialHistory);
   const router = useRouter();
@@ -80,47 +81,102 @@ export default function DashboardClient({
   const usagePercent = Math.min((used / (effectiveLimit === 999999 ? 1 : effectiveLimit)) * 100, 100);
   const showUpgrade = atLimit && !isHighestPaidNiTier(niTier as NiTier);
 
-  async function handleGenerate() {
+  async function handleSearch() {
     if (!orgDescription.trim()) return;
-    if (mode === "draft" && (!grantTitle.trim() || !promptQuestions.trim())) return;
 
-    setLoading(true);
+    setSearchLoading(true);
     setError("");
-    setResult("");
+    setListings([]);
+    setDrafts({});
 
     const res = await fetch("/api/grantbot/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        mode,
+        mode: "search",
         orgDescription,
         category,
-        grantTitle,
-        funder,
-        promptQuestions,
       }),
     });
     const data = await res.json();
-    setLoading(false);
+    setSearchLoading(false);
 
     if (!res.ok) {
       setError(data.error || "Something went wrong");
       return;
     }
 
-    setResult(data.result);
+    setListings(data.grants ?? []);
     if (data.usage) setUsed(data.usage.used);
     setHistory((prev) =>
       [
         {
           id: crypto.randomUUID(),
-          mode,
+          mode: "search" as const,
           orgDescription,
           category,
-          grantTitle: mode === "draft" ? grantTitle : undefined,
-          funder: mode === "draft" ? funder : undefined,
-          promptQuestions: mode === "draft" ? promptQuestions : undefined,
-          resultText: data.result,
+          resultText: JSON.stringify({ grants: data.grants ?? [] }),
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ].slice(0, 50)
+    );
+  }
+
+  async function handleDraft(listing: GrantListing) {
+    if (atLimit) {
+      setDrafts((prev) => ({
+        ...prev,
+        [listing.id]: { loading: false, error: "Monthly generation limit reached." },
+      }));
+      return;
+    }
+
+    setDrafts((prev) => ({
+      ...prev,
+      [listing.id]: { loading: true, error: undefined, text: prev[listing.id]?.text },
+    }));
+
+    const res = await fetch("/api/grantbot/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "draft",
+        orgDescription,
+        category,
+        grantTitle: listing.name,
+        funder: listing.funder,
+        platform: listing.platform,
+        platformUrl: listing.platformUrl,
+        awardRange: listing.awardRange,
+        fitReason: listing.fitReason,
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setDrafts((prev) => ({
+        ...prev,
+        [listing.id]: { loading: false, error: data.error || "Could not generate draft" },
+      }));
+      return;
+    }
+
+    if (data.usage) setUsed(data.usage.used);
+    setDrafts((prev) => ({
+      ...prev,
+      [listing.id]: { loading: false, text: data.draft, copied: false },
+    }));
+    setHistory((prev) =>
+      [
+        {
+          id: crypto.randomUUID(),
+          mode: "draft" as const,
+          orgDescription,
+          category,
+          grantTitle: listing.name,
+          funder: listing.funder,
+          resultText: data.draft,
           createdAt: new Date().toISOString(),
         },
         ...prev,
@@ -129,20 +185,43 @@ export default function DashboardClient({
   }
 
   function loadHistoryEntry(entry: GrantBotHistoryEntry) {
-    setMode(entry.mode);
     setOrgDescription(entry.orgDescription);
     if (isValidCategory(entry.category)) setCategory(entry.category);
-    setGrantTitle(entry.grantTitle ?? "");
-    setFunder(entry.funder ?? "");
-    setPromptQuestions(entry.promptQuestions ?? "");
-    setResult(entry.resultText);
     setError("");
+
+    if (entry.mode === "search") {
+      const parsed = parseGrantListings(entry.resultText);
+      setListings(parsed);
+      setDrafts({});
+      return;
+    }
+
+    const draftListing: GrantListing = {
+      id: entry.id,
+      name: entry.grantTitle ?? "Grant application",
+      funder: entry.funder ?? "",
+      platform: "Official site",
+      platformUrl: entry.promptQuestions ?? "https://www.grants.gov",
+      awardRange: "Varies",
+      fitReason: entry.orgDescription.slice(0, 160),
+      nextStep: "Review and edit your draft below.",
+    };
+    setListings([draftListing]);
+    setDrafts({ [draftListing.id]: { loading: false, text: entry.resultText } });
   }
 
-  async function handleCopy() {
-    await navigator.clipboard.writeText(result);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function handleCopyDraft(listingId: string, text: string) {
+    await navigator.clipboard.writeText(text);
+    setDrafts((prev) => ({
+      ...prev,
+      [listingId]: { ...prev[listingId], copied: true },
+    }));
+    setTimeout(() => {
+      setDrafts((prev) => ({
+        ...prev,
+        [listingId]: { ...prev[listingId], copied: false },
+      }));
+    }, 2000);
   }
 
   async function handleSignOut() {
@@ -158,10 +237,6 @@ export default function DashboardClient({
         : niTier === "pro"
           ? { type: "ni_subscription" as const, tier: "power" as const, interval: "monthly" as const }
           : null;
-
-  const canSubmit =
-    orgDescription.trim() &&
-    (mode === "search" || (grantTitle.trim() && promptQuestions.trim()));
 
   return (
     <div className="relative min-h-screen">
@@ -205,23 +280,6 @@ export default function DashboardClient({
               )}
             </div>
 
-            <div className="flex gap-2">
-              {(["search", "draft"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setMode(tab)}
-                  className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
-                    mode === tab
-                      ? "border-gb-emerald/50 bg-gb-emerald/15 text-gb-emerald"
-                      : "border-white/10 bg-white/5 text-gb-muted hover:border-white/20"
-                  }`}
-                >
-                  {tab === "search" ? "Find Grants" : "Draft Application"}
-                </button>
-              ))}
-            </div>
-
             <div className="gb-glass space-y-5 rounded-3xl p-6 shadow-gb-glow">
               <div>
                 <label className="mb-2 block text-sm font-medium text-gb-muted">
@@ -236,62 +294,25 @@ export default function DashboardClient({
                 />
               </div>
 
-              {mode === "search" ? (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gb-muted">Category</label>
-                  <div className="flex flex-wrap gap-2">
-                    {CATEGORIES.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setCategory(c)}
-                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                          category === c
-                            ? "border border-gb-emerald/60 bg-gb-emerald/20 text-gb-emerald shadow-gb-glow"
-                            : "border border-white/10 bg-white/5 text-gb-muted hover:border-gb-teal/40 hover:text-white"
-                        }`}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gb-muted">Category</label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCategory(c)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        category === c
+                          ? "border border-gb-emerald/60 bg-gb-emerald/20 text-gb-emerald shadow-gb-glow"
+                          : "border border-white/10 bg-white/5 text-gb-muted hover:border-gb-teal/40 hover:text-white"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gb-muted">Grant name</label>
-                      <input
-                        value={grantTitle}
-                        onChange={(e) => setGrantTitle(e.target.value)}
-                        placeholder="e.g. Community Impact Fund"
-                        className="w-full rounded-2xl border border-white/10 bg-gb-bg/80 px-4 py-3 text-sm text-white outline-none transition focus:border-gb-emerald/50"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gb-muted">Funder</label>
-                      <input
-                        value={funder}
-                        onChange={(e) => setFunder(e.target.value)}
-                        placeholder="e.g. Ford Foundation"
-                        className="w-full rounded-2xl border border-white/10 bg-gb-bg/80 px-4 py-3 text-sm text-white outline-none transition focus:border-gb-emerald/50"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gb-muted">
-                      Application prompts
-                    </label>
-                    <textarea
-                      value={promptQuestions}
-                      onChange={(e) => setPromptQuestions(e.target.value)}
-                      rows={4}
-                      placeholder="Paste the grant questions or prompts you need answered…"
-                      className="w-full resize-none rounded-2xl border border-white/10 bg-gb-bg/80 px-4 py-3 text-sm text-white outline-none transition focus:border-gb-emerald/50 focus:ring-1 focus:ring-gb-emerald/30"
-                    />
-                  </div>
-                </>
-              )}
+              </div>
 
               {error && (
                 <p className="rounded-xl border border-gb-amber/30 bg-gb-amber/10 px-4 py-3 text-sm text-gb-amber">
@@ -300,13 +321,14 @@ export default function DashboardClient({
               )}
 
               <button
-                onClick={handleGenerate}
-                disabled={loading || atLimit || !canSubmit}
+                type="button"
+                onClick={handleSearch}
+                disabled={searchLoading || atLimit || !orgDescription.trim()}
                 className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-gb-emerald via-gb-teal to-gb-amber py-3.5 font-semibold text-gb-bg shadow-gb-glow transition hover:opacity-95 disabled:opacity-40"
               >
-                {loading && <span className="absolute inset-0 gb-shimmer animate-shimmer" />}
+                {searchLoading && <span className="absolute inset-0 gb-shimmer animate-shimmer" />}
                 <span className="relative flex items-center justify-center gap-2">
-                  {loading ? (
+                  {searchLoading ? (
                     <>
                       {[0, 1, 2, 3, 4].map((i) => (
                         <span
@@ -315,31 +337,30 @@ export default function DashboardClient({
                           style={{ animationDelay: `${i * 0.1}s` }}
                         />
                       ))}
-                      {mode === "search" ? "Finding Grants…" : "Drafting Application…"}
+                      Finding Grants…
                     </>
-                  ) : mode === "search" ? (
-                    "Find Grants"
                   ) : (
-                    "Generate Draft"
+                    "Find Grants"
                   )}
                 </span>
               </button>
             </div>
 
-            {result && (
-              <div className="gb-glass animate-bubble-in rounded-3xl p-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-gb-teal">
-                    {mode === "search" ? "Grant matches" : "Application draft"}
-                  </span>
-                  <button
-                    onClick={handleCopy}
-                    className="text-sm font-medium text-gb-emerald transition hover:text-gb-teal"
-                  >
-                    {copied ? "✓ Copied!" : "Copy"}
-                  </button>
-                </div>
-                <div className="whitespace-pre-wrap text-sm leading-relaxed text-white/90">{result}</div>
+            {listings.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-gb-muted">
+                  Grant Matches
+                </h2>
+                {listings.map((listing) => (
+                  <GrantListingBubble
+                    key={listing.id}
+                    listing={listing}
+                    draftState={drafts[listing.id]}
+                    draftDisabled={atLimit}
+                    onDraft={handleDraft}
+                    onCopyDraft={handleCopyDraft}
+                  />
+                ))}
               </div>
             )}
 
@@ -367,7 +388,8 @@ export default function DashboardClient({
                           </span>
                         </div>
                         <p className="mt-2 text-xs text-gb-muted">
-                          {entry.mode === "search" ? "Find Grants" : "Draft"} · {entry.category}
+                          {entry.mode === "search" ? "Find Grants" : "Application Draft"} ·{" "}
+                          {entry.category}
                         </p>
                       </button>
                     </li>
