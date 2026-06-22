@@ -81,6 +81,19 @@ export function getToolBrand(slug: string) {
 
 export const STATIC_COMING_SOON_TOOLS: IntelligenceTool[] = [
   {
+    name: "NI Store",
+    slug: "ni-store",
+    subdomain: "shop.northsideintelligence.com",
+    description: "Official NORTHSiDE merch — AI-assisted shopping, dropship fulfillment",
+    status: "LIVE",
+    category: "Productivity",
+    keywords: ["merch", "store", "shop", "clothing", "northside"],
+    url: "/store",
+    logo: "/logos/ni-store.svg",
+    brandColor: "#6366f1",
+    brandGradient: "from-indigo-400 to-violet-400",
+  },
+  {
     name: "SignalDesk",
     slug: "signaldesk",
     subdomain: "Coming soon",

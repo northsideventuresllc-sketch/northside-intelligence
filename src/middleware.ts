@@ -245,7 +245,7 @@ export const config = {
     "/replyflow/dashboard/:path*",
     "/replyflow/login",
     "/replyflow/signup",
-    "/grantbot/dashboard/:path*",
+    "/grantbot/:path*",
     "/((?!_next/static|_next/image).*)",
   ],
 };
