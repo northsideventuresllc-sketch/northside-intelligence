@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function GrantBotLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grantbot-root flex min-h-screen flex-col bg-ni-bg text-white antialiased">
+    <div className="grantbot-root flex min-h-screen flex-col bg-gb-bg text-white antialiased">
       <div className="flex-1">{children}</div>
       <Sector3BackToHome variant="grantbot" />
     </div>

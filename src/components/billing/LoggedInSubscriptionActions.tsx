@@ -28,7 +28,7 @@ interface LoggedInSubscriptionActionsProps {
   >;
   context?: SubscriptionContext;
   toolSlug?: string;
-  variant?: "portal" | "replyflow";
+  variant?: "portal" | "replyflow" | "grantbot";
   className?: string;
 }
 
@@ -44,6 +44,7 @@ export function LoggedInSubscriptionActions({
   const [pauseError, setPauseError] = useState("");
 
   const isReplyflow = variant === "replyflow";
+  const isGrantbot = variant === "grantbot";
   const atHighestTier = isHighestPaidNiTier(billingState.niTier);
   const upgradePayload = getUpgradeCheckoutPayload(billingState as UserBillingState);
   const downgradePayload = getDowngradeCheckoutPayload(billingState as UserBillingState);
@@ -53,15 +54,21 @@ export function LoggedInSubscriptionActions({
 
   const primaryButtonClass = isReplyflow
     ? "w-full rounded-2xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet px-6 py-3 text-sm font-semibold text-white shadow-rf-glow transition hover:scale-[1.02] hover:opacity-95 disabled:opacity-50"
-    : "w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20 disabled:opacity-50";
+    : isGrantbot
+      ? "w-full rounded-2xl bg-gradient-to-r from-gb-emerald to-gb-amber px-6 py-3 text-sm font-semibold text-gb-bg shadow-gb-glow transition hover:scale-[1.02] hover:opacity-95 disabled:opacity-50"
+      : "w-full rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-6 py-3 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20 disabled:opacity-50";
 
   const secondaryButtonClass = isReplyflow
     ? "w-full rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/90 transition hover:border-rf-rose/40 hover:bg-white/10 disabled:opacity-50"
-    : "w-full rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:opacity-50";
+    : isGrantbot
+      ? "w-full rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/90 transition hover:border-gb-emerald/40 hover:bg-white/10 disabled:opacity-50"
+      : "w-full rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:opacity-50";
 
   const billingLinkClass = isReplyflow
     ? "mt-4 inline-block text-rf-rose hover:underline"
-    : "mt-4 inline-block rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10";
+    : isGrantbot
+      ? "mt-4 inline-block text-gb-emerald hover:underline"
+      : "mt-4 inline-block rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10";
 
   async function handlePause() {
     setPauseLoading(true);
@@ -93,7 +100,7 @@ export function LoggedInSubscriptionActions({
           Your Plan
         </p>
         <p className="mt-2 text-xl font-semibold capitalize text-white">{planSummary.tierName}</p>
-        <p className={`mt-1 text-sm ${isReplyflow ? "text-rf-muted" : "text-ni-muted"}`}>
+        <p className={`mt-1 text-sm ${isReplyflow ? "text-rf-muted" : isGrantbot ? "text-gb-muted" : "text-ni-muted"}`}>
           {planSummary.description}
         </p>
       </div>
@@ -165,7 +172,7 @@ export function LoggedInSubscriptionActions({
 interface LoggedInSubscriptionActionsFromApiProps {
   context?: SubscriptionContext;
   toolSlug?: string;
-  variant?: "portal" | "replyflow";
+  variant?: "portal" | "replyflow" | "grantbot";
   className?: string;
 }
 

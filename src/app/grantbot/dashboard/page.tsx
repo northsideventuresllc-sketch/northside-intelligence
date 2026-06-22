@@ -1,10 +1,19 @@
 import { redirect } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
-import { userCanUseTool, getUserBillingState } from "@/lib/billing/entitlements";
+import { getGrantBotAccess } from "@/lib/grantbot/access";
+import {
+  mapGrantBotHistoryRow,
+  GRANTBOT_HISTORY_LIMIT,
+  type GrantBotHistoryEntry,
+  type GrantBotMode,
+} from "@/lib/grantbot/history";
 import { portalSignInUrl } from "@/lib/grantbot/auth";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import DashboardClient from "./DashboardClient";
+import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
+
+function isValidMode(value: string | null | undefined): value is GrantBotMode {
+  return value === "search" || value === "draft";
+}
 
 export default async function GrantBotDashboardPage() {
   const supabase = await createServerAuthClient();
@@ -13,56 +22,59 @@ export default async function GrantBotDashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect(portalSignInUrl());
 
-  const billing = await getUserBillingState(user.id);
-  const canUse = userCanUseTool(billing, "grantbot");
+  const access = await getGrantBotAccess(user.id);
 
-  if (!canUse) {
+  if (!access.canUseTool) {
     return (
-      <div className="relative min-h-screen px-6 py-16">
-        <div className="mx-auto max-w-lg text-center">
-          <Image
-            src="/logos/grantbot.svg"
-            alt="GrantBot"
-            width={72}
-            height={72}
-            className="mx-auto mb-6"
-          />
-          <h1 className="text-2xl font-semibold text-white">GrantBot Dashboard</h1>
-          <div className="mt-8">
-            <AddToToolCasePrompt toolSlug="grantbot" toolName="GrantBot" variant="portal" />
-          </div>
-        </div>
+      <div className="relative min-h-screen">
+        <DashboardClient
+          email={user.email ?? ""}
+          plan={access.plan}
+          planLabel={access.planLabel}
+          grantsUsed={0}
+          grantsLimit={0}
+          hasUnlimitedAccess={false}
+          niTier={access.niTier}
+          history={[]}
+          gated
+          gateContent={
+            <AddToToolCasePrompt toolSlug="grantbot" toolName="GrantBot" variant="grantbot" />
+          }
+        />
       </div>
     );
   }
 
-  return (
-    <div className="relative min-h-screen px-6 py-16">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-8 flex items-center gap-4">
-          <Image src="/logos/grantbot.svg" alt="GrantBot" width={48} height={48} />
-          <div>
-            <h1 className="text-2xl font-semibold text-white">GrantBot Dashboard</h1>
-            <p className="text-sm text-ni-muted">Signed in as {user.email}</p>
-          </div>
-        </div>
+  const { data: profile } = await supabase
+    .from("grantbot_profiles")
+    .select("grants_used_this_month, last_mode, last_category")
+    .eq("id", user.id)
+    .single();
 
-        <div className="glass-panel p-8 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-300">
-            You Have Access
-          </p>
-          <p className="mx-auto mt-3 max-w-md text-ni-muted">
-            Grant discovery and drafting tools are rolling out here. Check back soon for grant
-            search, eligibility matching, and AI-assisted application drafts.
-          </p>
-          <Link
-            href="/toolkit"
-            className="mt-6 inline-block rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-2.5 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/20"
-          >
-            View Toolkit
-          </Link>
-        </div>
-      </div>
-    </div>
+  const { data: historyRows } = await supabase
+    .from("grantbot_sessions")
+    .select(
+      "id, mode, org_description, category, grant_title, funder, prompt_questions, result_text, created_at"
+    )
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(GRANTBOT_HISTORY_LIMIT);
+
+  const used = profile?.grants_used_this_month || 0;
+  const history: GrantBotHistoryEntry[] = (historyRows ?? []).map(mapGrantBotHistoryRow);
+
+  return (
+    <DashboardClient
+      email={user.email ?? ""}
+      plan={access.plan}
+      planLabel={access.planLabel}
+      grantsUsed={used}
+      grantsLimit={access.grantsLimit}
+      hasUnlimitedAccess={access.hasUnlimitedAccess}
+      niTier={access.niTier}
+      initialMode={isValidMode(profile?.last_mode) ? profile.last_mode : undefined}
+      initialCategory={profile?.last_category ?? undefined}
+      history={history}
+    />
   );
 }
