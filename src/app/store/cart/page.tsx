@@ -12,7 +12,6 @@ import { calculateCartTotals } from "@/lib/store/cart/pricing";
 import type { CartLineItem } from "@/lib/store/cart/types";
 import { formatStorePrice } from "@/lib/store/client";
 import type { PriceChangeNoticeView } from "@/lib/store/catalog/types";
-import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 import type { StoreGateStatus } from "@/lib/store/types";
 import type { ShippingTier } from "@/lib/store/cart/types";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
@@ -84,7 +83,7 @@ function CartContent() {
         if (json.items?.length) {
           syncFromVerification(json.items, json.priceChangeNotices);
         }
-        setError("CJ prices changed. Review the updates below, then try checkout again.");
+        setError("Prices changed. Review the updates below, then try checkout again.");
         return;
       }
 
@@ -117,7 +116,7 @@ function CartContent() {
         )}
 
         {verifying && items.length > 0 && (
-          <p className="mt-4 text-sm text-ni-muted">Verifying live CJ prices…</p>
+          <p className="mt-4 text-sm text-ni-muted">Verifying live prices…</p>
         )}
 
         {allNotices.length > 0 && (
@@ -155,8 +154,7 @@ function CartContent() {
                       {item.name}
                     </Link>
                     <p className="mt-1 text-sm text-ni-muted">
-                      {formatStorePrice(item.retailPriceCents, item.currency)} · via{" "}
-                      {STORE_PLATFORM_LABELS[item.sourcePlatform] ?? item.sourcePlatform}
+                      {formatStorePrice(item.retailPriceCents, item.currency)}
                     </p>
                     <div className="mt-3 flex flex-wrap items-center gap-3">
                       <label className="text-xs text-ni-muted">

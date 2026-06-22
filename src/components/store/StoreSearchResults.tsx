@@ -212,7 +212,7 @@ export function StoreSearchResults({
                 ? `No results for “${query}”.`
                 : filters.category || filters.minPrice || filters.maxPrice
                   ? "No products match your filters."
-                  : "Smart Store catalog is syncing from CJ — check back shortly."
+                  : "Smart Store catalog is syncing — check back shortly."
               : query
                 ? `${data.total} result${data.total === 1 ? "" : "s"} for “${query}”${
                     filters.category ? ` in ${formatCategoryLabel(filters.category)}` : ""

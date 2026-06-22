@@ -5,8 +5,6 @@ import type { CatalogProductView } from "@/lib/store/catalog/types";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
 import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
-import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
-
 interface SearchResultCardProps {
   product: CatalogProductView;
   onSelect?: () => void;
@@ -44,8 +42,7 @@ export function SearchResultCard({ product, onSelect }: SearchResultCardProps) {
         <p className="mt-2 text-lg font-bold text-white">{priceLabel}</p>
         {product.imageIsStockPhoto && <StockImageDisclaimer className="mt-3" />}
         <p className="mt-2 text-[11px] text-ni-muted">
-          Ships in ~{product.estimatedDeliveryDays} days · via{" "}
-          {STORE_PLATFORM_LABELS[product.sourcePlatform] ?? product.sourcePlatform}
+          Ships in ~{product.estimatedDeliveryDays} days
         </p>
       </div>
     </Link>

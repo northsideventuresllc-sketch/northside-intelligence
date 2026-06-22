@@ -5,8 +5,6 @@ import type { CatalogProductView } from "@/lib/store/catalog/types";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
 import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
-import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
-
 interface ViralProductCardProps {
   product: CatalogProductView;
   variant: "center" | "side";
@@ -77,8 +75,7 @@ export function ViralProductCard({ product, variant, onSelect }: ViralProductCar
         </div>
         {isCenter && (
           <p className="mt-2 text-[11px] text-ni-muted">
-            Ships in ~{product.estimatedDeliveryDays} days · via{" "}
-            {STORE_PLATFORM_LABELS[product.sourcePlatform] ?? product.sourcePlatform}
+            Ships in ~{product.estimatedDeliveryDays} days
           </p>
         )}
       </div>
