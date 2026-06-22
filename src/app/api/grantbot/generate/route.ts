@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getGrantBotAccess } from "@/lib/grantbot/access";
 import { generateGrantBotText } from "@/lib/grantbot/ai";
+import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
 import { getUserBillingState, userCanUseTool } from "@/lib/billing/entitlements";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -71,13 +72,16 @@ export async function POST(req: NextRequest) {
 
     const access = await getGrantBotAccess(user.id);
 
+    const svc = createServiceClient();
+    await ensureGrantBotProfile(svc, user.id, user.email);
+
     const { data: profile, error: profileError } = await supabase
       .from("grantbot_profiles")
       .select("grants_used_this_month, grants_reset_at")
       .eq("id", user.id)
       .single();
     if (profileError || !profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return NextResponse.json({ error: "Could not load GrantBot profile" }, { status: 500 });
     }
 
     const limit = access.grantsLimit;
@@ -88,7 +92,6 @@ export async function POST(req: NextRequest) {
     let grantsUsed = profile.grants_used_this_month;
     if (monthsSince >= 1) {
       grantsUsed = 0;
-      const svc = createServiceClient();
       await svc
         .from("grantbot_profiles")
         .update({ grants_used_this_month: 0, grants_reset_at: now.toISOString() })
