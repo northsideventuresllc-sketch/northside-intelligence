@@ -25,29 +25,46 @@ const DEFAULT_FILTERS: StoreSearchFilters = {
 export function StorePageClient() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q")?.trim() ?? "";
+  const initialSurprise = searchParams.get("surprise") === "1";
 
-  const [searchActive, setSearchActive] = useState(Boolean(initialQuery));
+  const [searchActive, setSearchActive] = useState(Boolean(initialQuery) || initialSurprise);
+  const [surpriseMode, setSurpriseMode] = useState(initialSurprise);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [draftQuery, setDraftQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<StoreSearchFilters>(DEFAULT_FILTERS);
 
   const handleSearch = useCallback((query: string) => {
     const trimmed = query.trim();
+    setSurpriseMode(false);
     setSubmittedQuery(trimmed);
     setDraftQuery(trimmed);
     setSearchActive(true);
     const url = new URL(window.location.href);
     if (trimmed) url.searchParams.set("q", trimmed);
     else url.searchParams.delete("q");
+    url.searchParams.delete("surprise");
+    window.history.replaceState({}, "", url.toString());
+  }, []);
+
+  const handleSurprise = useCallback(() => {
+    setSurpriseMode(true);
+    setSubmittedQuery("");
+    setDraftQuery("");
+    setSearchActive(true);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("q");
+    url.searchParams.set("surprise", "1");
     window.history.replaceState({}, "", url.toString());
   }, []);
 
   const handleBackToDeals = useCallback(() => {
     setSearchActive(false);
+    setSurpriseMode(false);
     setSubmittedQuery("");
     setDraftQuery("");
     const url = new URL(window.location.href);
     url.searchParams.delete("q");
+    url.searchParams.delete("surprise");
     window.history.replaceState({}, "", url.toString());
   }, []);
 
@@ -57,9 +74,11 @@ export function StorePageClient() {
         query={submittedQuery}
         draftQuery={draftQuery}
         filters={filters}
+        surpriseMode={surpriseMode}
         onFiltersChange={setFilters}
         onQueryChange={setDraftQuery}
         onSearch={handleSearch}
+        onSurprise={handleSurprise}
         onBack={handleBackToDeals}
       />
     );
@@ -94,6 +113,7 @@ export function StorePageClient() {
             onQueryChange={setDraftQuery}
             onFiltersChange={setFilters}
             onSearch={handleSearch}
+            onSurprise={handleSurprise}
           />
         </aside>
       </div>

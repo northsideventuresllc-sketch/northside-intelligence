@@ -31,12 +31,52 @@ export interface StoreSearchResult {
   query: string;
   platforms: ["cj"];
   priceChangeNotices: PriceChangeNotice[];
-  source: "local" | "cj-live";
+  source: "local" | "cj-live" | "surprise";
+}
+
+function shuffleArray<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+async function searchSurpriseProducts(
+  filters: StoreSearchFilters
+): Promise<StoreSearchResult> {
+  const pool = await searchLocalCatalog({
+    category: filters.category,
+    minRetailCents: filters.minRetailCents,
+    maxRetailCents: filters.maxRetailCents,
+    page: 1,
+    limit: 120,
+  });
+
+  const shuffled = shuffleArray(pool.rows);
+  const offset = (filters.page - 1) * filters.limit;
+  const pageRows = shuffled.slice(offset, offset + filters.limit);
+
+  return {
+    results: pageRows.map((row) => toCatalogProductView(row)),
+    total: shuffled.length,
+    page: filters.page,
+    limit: filters.limit,
+    query: "",
+    platforms: ["cj"],
+    priceChangeNotices: [],
+    source: "surprise",
+  };
 }
 
 export async function searchStoreProducts(
   filters: StoreSearchFilters
 ): Promise<StoreSearchResult> {
+  if (filters.surprise) {
+    return searchSurpriseProducts(filters);
+  }
+
   const query = filters.query.trim();
   const priceChangeNotices: PriceChangeNotice[] = [];
 

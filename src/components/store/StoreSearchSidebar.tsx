@@ -9,6 +9,7 @@ interface StoreSearchSidebarProps {
   onQueryChange: (query: string) => void;
   onFiltersChange: (filters: StoreSearchFilters) => void;
   onSearch: (query: string) => void;
+  onSurprise: () => void;
 }
 
 export function StoreSearchSidebar({
@@ -17,6 +18,7 @@ export function StoreSearchSidebar({
   onQueryChange,
   onFiltersChange,
   onSearch,
+  onSurprise,
 }: StoreSearchSidebarProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +39,21 @@ export function StoreSearchSidebar({
           className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-ni-muted focus:border-cyan-400/50 focus:outline-none"
           aria-label="Search products"
         />
-        <button
-          type="submit"
-          className="mt-2 w-full rounded-xl bg-ni-cyan py-2.5 text-sm font-semibold text-ni-bg transition hover:bg-cyan-300"
-        >
-          Search
-        </button>
+        <div className="mt-2 flex gap-2">
+          <button
+            type="submit"
+            className="flex-1 rounded-xl bg-ni-cyan py-2.5 text-sm font-semibold text-ni-bg transition hover:bg-cyan-300"
+          >
+            Search
+          </button>
+          <button
+            type="button"
+            onClick={onSurprise}
+            className="shrink-0 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
+          >
+            SUPRISE ME
+          </button>
+        </div>
       </form>
 
       <div className="mt-4">
