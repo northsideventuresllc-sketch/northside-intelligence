@@ -27,7 +27,7 @@ export async function generateMetadata({
   if (!product) return { title: smartStorePageTitle("Product") };
   return {
     title: smartStorePageTitle(product.name),
-    description: product.description,
+    description: `Shop ${product.name} on ${SMART_STORE_NAME}.`,
   };
 }
 
@@ -95,7 +95,6 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                   ) : (
                     <p className="mt-2 text-sm text-ni-muted">New listing — reviews coming soon</p>
                   )}
-                  <p className="mt-4 text-sm leading-relaxed text-ni-muted">{product.description}</p>
                   <dl className="mt-6 space-y-2 text-sm">
                     <div className="flex justify-between gap-4">
                       <dt className="text-ni-muted">Fulfillment</dt>
