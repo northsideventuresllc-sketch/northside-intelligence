@@ -7,7 +7,9 @@ import {
   type GrantBotMode,
 } from "@/lib/grantbot/history";
 import { portalSignInUrl } from "@/lib/grantbot/auth";
+import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { createServiceClient } from "@/lib/supabase/server";
 import DashboardClient from "./DashboardClient";
 import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
 
@@ -23,6 +25,9 @@ export default async function GrantBotDashboardPage() {
   if (!user) redirect(portalSignInUrl());
 
   const access = await getGrantBotAccess(user.id);
+
+  const admin = createServiceClient();
+  await ensureGrantBotProfile(admin, user.id, user.email);
 
   if (!access.canUseTool) {
     return (

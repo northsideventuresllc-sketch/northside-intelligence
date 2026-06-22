@@ -1,5 +1,6 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { normalizeUsername } from "@/lib/auth/username";
+import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
 
 type AuthUser = Pick<User, "id" | "email" | "user_metadata">;
 
@@ -57,6 +58,8 @@ export async function ensurePortalProfile(
     },
     { onConflict: "id" }
   );
+
+  await ensureGrantBotProfile(admin, user.id, email);
 
   await admin.from("ni_subscriptions").upsert(
     { id: user.id, tier: "free", updated_at: now },

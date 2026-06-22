@@ -327,6 +327,19 @@ Deno.serve(async (req) => {
         { onConflict: "id", ignoreDuplicates: true }
       );
 
+      await admin.from("grantbot_profiles").upsert(
+        {
+          id: created.user.id,
+          email: pending.email,
+          tier: "free",
+          grants_used_this_month: 0,
+          grants_reset_at: now,
+          created_at: now,
+          updated_at: now,
+        },
+        { onConflict: "id", ignoreDuplicates: true }
+      );
+
       await admin.from("ni_subscriptions").upsert(
         { id: created.user.id, tier: "free", updated_at: now },
         { onConflict: "id", ignoreDuplicates: true }
