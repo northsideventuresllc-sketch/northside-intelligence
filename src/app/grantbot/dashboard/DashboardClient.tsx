@@ -11,6 +11,11 @@ import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
 import type { GrantBotHistoryEntry } from "@/lib/grantbot/history";
 import { parseGrantListings, type GrantListing } from "@/lib/grantbot/listings";
+import {
+  buildEnrichedOrgProfile,
+  parseStoredClarifyingAnswers,
+  type ClarifyingQuestion,
+} from "@/lib/grantbot/questions";
 import { createBrowserClient } from "@supabase/ssr";
 
 const CATEGORIES = [
@@ -20,6 +25,8 @@ const CATEGORIES = [
   "Small Business",
   "Arts & Culture",
 ] as const;
+
+type FlowStep = "intake" | "questions";
 
 interface DraftState {
   loading: boolean;
@@ -64,12 +71,16 @@ export default function DashboardClient({
   gated = false,
   gateContent,
 }: Props) {
+  const [flowStep, setFlowStep] = useState<FlowStep>("intake");
   const [orgDescription, setOrgDescription] = useState("");
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>(
     isValidCategory(initialCategory) ? initialCategory : "Nonprofit"
   );
+  const [clarifyingQuestions, setClarifyingQuestions] = useState<ClarifyingQuestion[]>([]);
+  const [clarifyingAnswers, setClarifyingAnswers] = useState<Record<string, string>>({});
   const [listings, setListings] = useState<GrantListing[]>([]);
   const [drafts, setDrafts] = useState<Record<string, DraftState>>({});
+  const [questionsLoading, setQuestionsLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
   const [used, setUsed] = useState(grantsUsed);
@@ -80,6 +91,51 @@ export default function DashboardClient({
   const atLimit = !hasUnlimitedAccess && used >= effectiveLimit;
   const usagePercent = Math.min((used / (effectiveLimit === 999999 ? 1 : effectiveLimit)) * 100, 100);
   const showUpgrade = atLimit && !isHighestPaidNiTier(niTier as NiTier);
+
+  function requestPayload(extra: Record<string, unknown> = {}) {
+    return {
+      orgDescription,
+      category,
+      clarifyingQuestions,
+      clarifyingAnswers,
+      ...extra,
+    };
+  }
+
+  async function handleContinue() {
+    if (!orgDescription.trim()) return;
+
+    setQuestionsLoading(true);
+    setError("");
+    setListings([]);
+    setDrafts({});
+    setClarifyingQuestions([]);
+    setClarifyingAnswers({});
+
+    const res = await fetch("/api/grantbot/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "questions",
+        orgDescription,
+        category,
+      }),
+    });
+    const data = await res.json();
+    setQuestionsLoading(false);
+
+    if (!res.ok) {
+      setError(data.error || "Something went wrong");
+      return;
+    }
+
+    const questions = (data.questions ?? []) as ClarifyingQuestion[];
+    setClarifyingQuestions(questions);
+    setClarifyingAnswers(
+      Object.fromEntries(questions.map((q) => [q.id, ""]))
+    );
+    setFlowStep("questions");
+  }
 
   async function handleSearch() {
     if (!orgDescription.trim()) return;
@@ -94,8 +150,7 @@ export default function DashboardClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mode: "search",
-        orgDescription,
-        category,
+        ...requestPayload(),
       }),
     });
     const data = await res.json();
@@ -115,6 +170,7 @@ export default function DashboardClient({
           mode: "search" as const,
           orgDescription,
           category,
+          promptQuestions: JSON.stringify({ answers: clarifyingAnswers }),
           resultText: JSON.stringify({ grants: data.grants ?? [] }),
           createdAt: new Date().toISOString(),
         },
@@ -142,14 +198,14 @@ export default function DashboardClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mode: "draft",
-        orgDescription,
-        category,
-        grantTitle: listing.name,
-        funder: listing.funder,
-        platform: listing.platform,
-        platformUrl: listing.platformUrl,
-        awardRange: listing.awardRange,
-        fitReason: listing.fitReason,
+        ...requestPayload({
+          grantTitle: listing.name,
+          funder: listing.funder,
+          platform: listing.platform,
+          platformUrl: listing.platformUrl,
+          awardRange: listing.awardRange,
+          fitReason: listing.fitReason,
+        }),
       }),
     });
     const data = await res.json();
@@ -185,14 +241,21 @@ export default function DashboardClient({
   }
 
   function loadHistoryEntry(entry: GrantBotHistoryEntry) {
+    const restoredAnswers = parseStoredClarifyingAnswers(entry.promptQuestions);
     setOrgDescription(entry.orgDescription);
     if (isValidCategory(entry.category)) setCategory(entry.category);
     setError("");
+    setClarifyingAnswers(restoredAnswers);
+    setClarifyingQuestions([]);
+    setFlowStep("intake");
 
     if (entry.mode === "search") {
       const parsed = parseGrantListings(entry.resultText);
       setListings(parsed);
       setDrafts({});
+      if (Object.keys(restoredAnswers).length > 0) {
+        setFlowStep("questions");
+      }
       return;
     }
 
@@ -203,7 +266,7 @@ export default function DashboardClient({
       platform: "Official site",
       platformUrl: entry.promptQuestions ?? "https://www.grants.gov",
       awardRange: "Varies",
-      fitReason: entry.orgDescription.slice(0, 160),
+      fitReason: buildEnrichedOrgProfile(entry.orgDescription, [], restoredAnswers).slice(0, 160),
       nextStep: "Review and edit your draft below.",
     };
     setListings([draftListing]);
@@ -287,7 +350,14 @@ export default function DashboardClient({
                 </label>
                 <textarea
                   value={orgDescription}
-                  onChange={(e) => setOrgDescription(e.target.value)}
+                  onChange={(e) => {
+                    setOrgDescription(e.target.value);
+                    if (flowStep === "questions") {
+                      setFlowStep("intake");
+                      setClarifyingQuestions([]);
+                      setClarifyingAnswers({});
+                    }
+                  }}
                   rows={4}
                   placeholder="Describe your mission, audience, location, and what funding would support…"
                   className="w-full resize-none rounded-2xl border border-white/10 bg-gb-bg/80 px-4 py-3 text-sm text-white outline-none transition focus:border-gb-emerald/50 focus:ring-1 focus:ring-gb-emerald/30"
@@ -320,31 +390,109 @@ export default function DashboardClient({
                 </p>
               )}
 
-              <button
-                type="button"
-                onClick={handleSearch}
-                disabled={searchLoading || atLimit || !orgDescription.trim()}
-                className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-gb-emerald via-gb-teal to-gb-amber py-3.5 font-semibold text-gb-bg shadow-gb-glow transition hover:opacity-95 disabled:opacity-40"
-              >
-                {searchLoading && <span className="absolute inset-0 gb-shimmer animate-shimmer" />}
-                <span className="relative flex items-center justify-center gap-2">
-                  {searchLoading ? (
-                    <>
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <span
-                          key={i}
-                          className="h-4 w-1 rounded-full bg-gb-bg/80 animate-wave"
-                          style={{ animationDelay: `${i * 0.1}s` }}
-                        />
-                      ))}
-                      Finding Grants…
-                    </>
-                  ) : (
-                    "Find Grants"
+              {flowStep === "intake" && (
+                <button
+                  type="button"
+                  onClick={handleContinue}
+                  disabled={questionsLoading || !orgDescription.trim()}
+                  className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-gb-emerald via-gb-teal to-gb-amber py-3.5 font-semibold text-gb-bg shadow-gb-glow transition hover:opacity-95 disabled:opacity-40"
+                >
+                  {questionsLoading && (
+                    <span className="absolute inset-0 gb-shimmer animate-shimmer" />
                   )}
-                </span>
-              </button>
+                  <span className="relative flex items-center justify-center gap-2">
+                    {questionsLoading ? (
+                      <>
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <span
+                            key={i}
+                            className="h-4 w-1 rounded-full bg-gb-bg/80 animate-wave"
+                            style={{ animationDelay: `${i * 0.1}s` }}
+                          />
+                        ))}
+                        Preparing Questions…
+                      </>
+                    ) : (
+                      "Continue"
+                    )}
+                  </span>
+                </button>
+              )}
             </div>
+
+            {flowStep === "questions" && clarifyingQuestions.length > 0 && (
+              <div className="gb-glass space-y-5 rounded-3xl p-6 shadow-gb-glow">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-gb-emerald">
+                    A Few More Details
+                  </h2>
+                  <p className="mt-2 text-sm text-gb-muted">
+                    Answer these so we can match you to grants that actually fit your organization.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {clarifyingQuestions.map((q) => (
+                    <div key={q.id}>
+                      <label className="mb-2 block text-sm font-medium text-white/90">
+                        {q.question}
+                      </label>
+                      <input
+                        value={clarifyingAnswers[q.id] ?? ""}
+                        onChange={(e) =>
+                          setClarifyingAnswers((prev) => ({
+                            ...prev,
+                            [q.id]: e.target.value,
+                          }))
+                        }
+                        placeholder={q.placeholder ?? "Your answer…"}
+                        className="w-full rounded-2xl border border-white/10 bg-gb-bg/80 px-4 py-3 text-sm text-white outline-none transition focus:border-gb-emerald/50 focus:ring-1 focus:ring-gb-emerald/30"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFlowStep("intake");
+                      setClarifyingQuestions([]);
+                      setClarifyingAnswers({});
+                    }}
+                    className="rounded-2xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/90 transition hover:border-gb-emerald/40 hover:bg-white/10"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSearch}
+                    disabled={searchLoading || atLimit}
+                    className="relative flex-1 overflow-hidden rounded-2xl bg-gradient-to-r from-gb-emerald via-gb-teal to-gb-amber py-3 text-sm font-semibold text-gb-bg shadow-gb-glow transition hover:opacity-95 disabled:opacity-40"
+                  >
+                    {searchLoading && (
+                      <span className="absolute inset-0 gb-shimmer animate-shimmer" />
+                    )}
+                    <span className="relative flex items-center justify-center gap-2">
+                      {searchLoading ? (
+                        <>
+                          {[0, 1, 2, 3, 4].map((i) => (
+                            <span
+                              key={i}
+                              className="h-4 w-1 rounded-full bg-gb-bg/80 animate-wave"
+                              style={{ animationDelay: `${i * 0.1}s` }}
+                            />
+                          ))}
+                          Finding Grants…
+                        </>
+                      ) : (
+                        "Find Grants"
+                      )}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {listings.length > 0 && (
               <div className="space-y-4">
