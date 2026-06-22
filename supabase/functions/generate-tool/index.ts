@@ -51,11 +51,6 @@ function isToolSpec(value: unknown): value is ToolSpec {
 }
 
 Deno.serve(async (req) => {
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -64,6 +59,11 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: "Missing Supabase configuration" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (authHeader !== `Bearer ${serviceRoleKey}`) {
+    return new Response("Unauthorized", { status: 401 });
   }
 
   const anthropicApiKey = await readPlatformSecret("ANTHROPIC_API_KEY");
