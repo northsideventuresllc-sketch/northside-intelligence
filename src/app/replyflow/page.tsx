@@ -4,6 +4,7 @@ import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground"
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
 import { ReplyFlowPricingSection } from "@/components/replyflow/ReplyFlowPricingSection";
 import { portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
+import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
 
 const tones = ["Professional", "Friendly", "Empathetic", "Firm"];
 
@@ -11,6 +12,7 @@ export default async function ReplyFlowHome() {
   await redirectLoggedInSector3ToDashboard("/replyflow");
 
   const signupUrl = portalSignUpUrl();
+  const freeTierLabel = formatFreeTierHeroLabel("replyflow");
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -47,7 +49,7 @@ export default async function ReplyFlowHome() {
               href={signupUrl}
               className="rounded-2xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet px-8 py-3.5 text-lg font-semibold text-white shadow-rf-glow transition hover:scale-[1.02] hover:opacity-95"
             >
-              Start Free — 10 Replies/Mo
+              Start Free — {freeTierLabel}
             </a>
             <Link
               href={replyflowPath("/dashboard")}

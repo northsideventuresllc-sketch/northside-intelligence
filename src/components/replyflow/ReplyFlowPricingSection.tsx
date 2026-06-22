@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscriptionActions";
-import { ToolMonthlyPricingCard } from "@/components/billing/ToolMonthlyPricingCard";
+import { ToolFreemiumPricingGrid } from "@/components/billing/ToolFreemiumPricingGrid";
 import { ToolSubscriptionPanel } from "@/components/billing/ToolSubscriptionPanel";
 import type { UserBillingState } from "@/lib/billing/entitlements";
 import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
@@ -76,7 +76,7 @@ export function ReplyFlowPricingSection({ pricing }: ReplyFlowPricingSectionProp
       <div className="mx-auto max-w-4xl">
         <h2 className="text-center text-3xl font-bold rf-gradient-text">Simple Pricing</h2>
         <p className="mt-2 text-center text-rf-muted">
-          One monthly subscription for unlimited ReplyFlow access.
+          Start free with capped usage, or subscribe for unlimited ReplyFlow access.
         </p>
 
         {loading ? (
@@ -107,7 +107,7 @@ export function ReplyFlowPricingSection({ pricing }: ReplyFlowPricingSectionProp
           </div>
         ) : (
           <div className="mt-12">
-            <ToolMonthlyPricingCard
+            <ToolFreemiumPricingGrid
               toolSlug="replyflow"
               toolName="ReplyFlow"
               pricing={fallbackPricing}

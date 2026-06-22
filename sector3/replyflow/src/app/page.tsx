@@ -4,9 +4,25 @@ import { ReplyFlowNav } from '@/components/ReplyFlowNav'
 import { portalSignUpUrl } from '@/lib/ni-auth'
 
 const plans = [
-  { name: 'Solo', price: '$9', desc: '100 replies / month', accent: 'from-rf-rose/20 to-rf-coral/10' },
-  { name: 'Team', price: '$49', desc: '1,000 replies / month', accent: 'from-rf-violet/30 to-rf-rose/10', popular: true },
-  { name: 'Agency', price: '$99', desc: 'Unlimited scale', accent: 'from-rf-coral/20 to-rf-violet/20' },
+  {
+    name: 'Free',
+    price: '$0',
+    subtitle: 'Starter Access',
+    summary: 'Try ReplyFlow with a monthly usage cap before upgrading.',
+    features: ['10 replies/month', 'Add to your NI Toolkit', 'Core AI features included', 'Upgrade anytime'],
+    accent: 'from-rf-violet/20 to-rf-rose/5',
+    cta: 'Start Free',
+  },
+  {
+    name: 'Unlimited',
+    price: '$15',
+    subtitle: 'Unlimited Access',
+    summary: 'Full ReplyFlow access with one monthly subscription.',
+    features: ['Unlimited replies', 'No monthly usage cap', 'Cancel anytime'],
+    accent: 'from-rf-rose/20 to-rf-coral/10',
+    popular: true,
+    cta: 'Sign Up to Subscribe',
+  },
 ]
 
 const tones = ['Professional', 'Friendly', 'Empathetic', 'Firm']
@@ -86,9 +102,11 @@ export default function Home() {
 
         <section id="pricing" className="border-t border-white/10 px-6 py-20">
           <div className="mx-auto max-w-4xl">
-            <h2 className="text-center text-3xl font-bold rf-gradient-text">Simple pricing</h2>
-            <p className="mt-2 text-center text-rf-muted">One Northside Intelligence account. Upgrade when you&apos;re ready.</p>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
+            <h2 className="text-center text-3xl font-bold rf-gradient-text">Simple Pricing</h2>
+            <p className="mt-2 text-center text-rf-muted">
+              Start free with capped usage, or subscribe for unlimited ReplyFlow access.
+            </p>
+            <div className="mt-12 grid gap-6 md:grid-cols-2">
               {plans.map((p) => (
                 <div
                   key={p.name}
@@ -101,14 +119,30 @@ export default function Home() {
                       Popular
                     </span>
                   )}
-                  <p className="text-3xl font-bold text-white">{p.price}<span className="text-sm font-normal text-rf-muted">/mo</span></p>
-                  <p className="mt-1 font-semibold text-white">{p.name}</p>
-                  <p className="mt-2 text-sm text-rf-muted">{p.desc}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rf-muted">{p.name}</p>
+                  <p className="mt-4 text-3xl font-bold text-white">
+                    {p.price}
+                    <span className="text-sm font-normal text-rf-muted">/mo</span>
+                  </p>
+                  <p className="mt-1 font-semibold text-white">{p.subtitle}</p>
+                  <p className="mt-2 text-sm text-rf-muted">{p.summary}</p>
+                  <ul className="mt-5 space-y-2 text-left text-sm text-rf-muted">
+                    {p.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2">
+                        <span className="mt-0.5 text-rf-rose">✓</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                   <a
                     href={signupUrl}
-                    className="mt-6 block rounded-xl border border-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/10"
+                    className={`mt-6 block rounded-xl py-2.5 text-center text-sm font-semibold text-white transition ${
+                      p.popular
+                        ? 'bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet shadow-rf-glow hover:opacity-95'
+                        : 'border border-white/20 hover:bg-white/10'
+                    }`}
                   >
-                    Get started
+                    {p.cta}
                   </a>
                 </div>
               ))}
