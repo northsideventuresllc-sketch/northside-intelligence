@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { draftGrantApplication, searchGrantListings } from "@/lib/grantbot/ai";
+import {
+  draftGrantApplication,
+  generateClarifyingQuestions,
+  searchGrantListings,
+} from "@/lib/grantbot/ai";
 import { getGrantBotAccess } from "@/lib/grantbot/access";
 import { serializeGrantListings } from "@/lib/grantbot/listings";
+import {
+  buildEnrichedOrgProfile,
+  serializeClarifyingAnswers,
+  type ClarifyingQuestion,
+} from "@/lib/grantbot/questions";
 import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
 import { getUserBillingState, userCanUseTool } from "@/lib/billing/entitlements";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
@@ -15,7 +24,18 @@ const CATEGORIES = [
   "Arts & Culture",
 ] as const;
 
-type GrantBotMode = "search" | "draft";
+type GrantBotMode = "questions" | "search" | "draft";
+
+async function ensureToolkitAccess(userId: string, email: string | undefined) {
+  const billingState = await getUserBillingState(userId);
+  if (!userCanUseTool(billingState, "grantbot")) {
+    return { ok: false as const, status: 403, error: "Add GrantBot to your Toolkit before using it" };
+  }
+
+  const svc = createServiceClient();
+  await ensureGrantBotProfile(svc, userId, email);
+  return { ok: true as const, svc };
+}
 
 async function checkUsageAndIncrement(userId: string, email: string | undefined) {
   const access = await getGrantBotAccess(userId);
@@ -66,6 +86,36 @@ async function checkUsageAndIncrement(userId: string, email: string | undefined)
   };
 }
 
+function parseAnswers(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== "object") return {};
+  const answers: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof value === "string" && value.trim()) {
+      answers[key] = value.trim();
+    }
+  }
+  return answers;
+}
+
+function parseQuestionsPayload(raw: unknown): ClarifyingQuestion[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry, index): ClarifyingQuestion | null => {
+      if (!entry || typeof entry !== "object") return null;
+      const item = entry as { id?: unknown; question?: unknown; placeholder?: unknown };
+      const question = typeof item.question === "string" ? item.question.trim() : "";
+      if (!question) return null;
+      const placeholder =
+        typeof item.placeholder === "string" ? item.placeholder.trim() : undefined;
+      return {
+        id: typeof item.id === "string" ? item.id : `q${index + 1}`,
+        question,
+        ...(placeholder ? { placeholder } : {}),
+      };
+    })
+    .filter((entry): entry is ClarifyingQuestion => entry !== null);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createServerAuthClient();
@@ -76,21 +126,6 @@ export async function POST(req: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const billingState = await getUserBillingState(user.id);
-    if (!userCanUseTool(billingState, "grantbot")) {
-      return NextResponse.json(
-        { error: "Add GrantBot to your Toolkit before using it", code: "TOOL_NOT_IN_CASE" },
-        { status: 403 }
-      );
-    }
-
-    const usageCheck = await checkUsageAndIncrement(user.id, user.email);
-    if (!usageCheck.ok) {
-      return NextResponse.json({ error: usageCheck.error }, { status: usageCheck.status });
-    }
-
-    const { access, grantsUsed, now, svc } = usageCheck;
 
     const body = await req.json();
     const mode = body.mode as GrantBotMode;
@@ -105,8 +140,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Organization description is required" }, { status: 400 });
     }
 
+    const toolkit = await ensureToolkitAccess(user.id, user.email);
+    if (!toolkit.ok) {
+      return NextResponse.json({ error: toolkit.error, code: "TOOL_NOT_IN_CASE" }, { status: toolkit.status });
+    }
+
+    if (mode === "questions") {
+      const questions = await generateClarifyingQuestions(category, orgDescription);
+      return NextResponse.json({ questions });
+    }
+
+    const usageCheck = await checkUsageAndIncrement(user.id, user.email);
+    if (!usageCheck.ok) {
+      return NextResponse.json({ error: usageCheck.error }, { status: usageCheck.status });
+    }
+
+    const { access, grantsUsed, now, svc } = usageCheck;
+    const clarifyingAnswers = parseAnswers(body.clarifyingAnswers);
+    const clarifyingQuestions = parseQuestionsPayload(body.clarifyingQuestions);
+    const enrichedProfile = buildEnrichedOrgProfile(
+      orgDescription,
+      clarifyingQuestions,
+      clarifyingAnswers
+    );
+
     if (mode === "search") {
-      const grants = await searchGrantListings(category, orgDescription);
+      const grants = await searchGrantListings(category, enrichedProfile);
       const resultText = serializeGrantListings(grants);
 
       await Promise.all([
@@ -124,6 +183,7 @@ export async function POST(req: NextRequest) {
           mode: "search",
           org_description: orgDescription,
           category,
+          prompt_questions: serializeClarifyingAnswers(clarifyingAnswers),
           result_text: resultText,
         }),
       ]);
@@ -161,7 +221,7 @@ export async function POST(req: NextRequest) {
         platformUrl,
         awardRange,
         fitReason,
-        orgDescription,
+        orgDescription: enrichedProfile,
       });
 
       await Promise.all([
