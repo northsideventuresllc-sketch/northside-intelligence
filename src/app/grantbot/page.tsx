@@ -79,10 +79,22 @@ export default async function GrantBotHome() {
                 </span>
               ))}
             </div>
-            <div className="rounded-2xl border border-gb-teal/30 bg-gradient-to-br from-gb-emerald/10 to-gb-amber/5 p-4 text-sm leading-relaxed text-white/90">
-              <strong>NEA Grants for Arts Projects</strong> — National Endowment for the Arts ·
-              $10K–$100K · Strong fit for community-based arts education. Next step: review eligibility
-              and prepare a project narrative draft.
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-gb-emerald/20 bg-gb-bg/60 p-4 text-sm text-white/90">
+                <p className="font-semibold text-white">NEA Grants for Arts Projects</p>
+                <p className="mt-1 text-gb-muted">National Endowment for the Arts · $10K–$100K</p>
+                <p className="mt-3 text-white/85">
+                  Strong fit for community-based arts education programs serving youth.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded-xl border border-gb-teal/40 bg-gb-teal/10 px-3 py-1.5 text-xs font-medium text-gb-teal">
+                    Open on NEA
+                  </span>
+                  <span className="rounded-xl bg-gradient-to-r from-gb-emerald to-gb-amber px-3 py-1.5 text-xs font-semibold text-gb-bg">
+                    Draft Application
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
