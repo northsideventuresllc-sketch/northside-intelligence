@@ -38,7 +38,7 @@ export interface IntelligenceTool {
   github?: string;
 }
 
-const TOOL_BRAND: Record<
+export const TOOL_BRAND: Record<
   string,
   { logo: string; brandColor: string; brandGradient: string }
 > = {
@@ -69,24 +69,17 @@ const TOOL_BRAND: Record<
   },
 };
 
-const wiredTools: IntelligenceTool[] = SECTOR3_REGISTRY.map((t) => ({
-  name: t.name,
-  slug: t.slug,
-  subdomain: t.subdomain,
-  description: t.description,
-  status: t.status,
-  category: t.slug === "replyflow" ? "Automation" : "Intelligence",
-  keywords:
-    t.slug === "replyflow"
-      ? ["customer service", "replies", "support", "email", "automation"]
-      : ["grants", "nonprofit", "creators", "funding", "drafting"],
-  url: t.appUrl,
-  github: t.github,
-  ...TOOL_BRAND[t.slug],
-}));
+const DEFAULT_TOOL_BRAND = {
+  logo: "/logos/replyflow.svg",
+  brandColor: "#38bdf8",
+  brandGradient: "from-sky-400 to-cyan-300",
+};
 
-export const INTELLIGENCE_TOOLS: IntelligenceTool[] = [
-  ...wiredTools,
+export function getToolBrand(slug: string) {
+  return TOOL_BRAND[slug] ?? DEFAULT_TOOL_BRAND;
+}
+
+export const STATIC_COMING_SOON_TOOLS: IntelligenceTool[] = [
   {
     name: "NI Store",
     slug: "ni-store",
@@ -130,6 +123,27 @@ export const INTELLIGENCE_TOOLS: IntelligenceTool[] = [
     keywords: ["orchestration", "ai", "integration", "platform"],
     ...TOOL_BRAND.bridgeai,
   },
+];
+
+const wiredTools: IntelligenceTool[] = SECTOR3_REGISTRY.map((t) => ({
+  name: t.name,
+  slug: t.slug,
+  subdomain: t.subdomain,
+  description: t.description,
+  status: t.status,
+  category: t.slug === "replyflow" ? "Automation" : "Intelligence",
+  keywords:
+    t.slug === "replyflow"
+      ? ["customer service", "replies", "support", "email", "automation"]
+      : ["grants", "nonprofit", "creators", "funding", "drafting"],
+  url: t.appUrl,
+  github: t.github,
+  ...TOOL_BRAND[t.slug],
+}));
+
+export const INTELLIGENCE_TOOLS: IntelligenceTool[] = [
+  ...wiredTools,
+  ...STATIC_COMING_SOON_TOOLS,
 ];
 
 /** @deprecated Use INTELLIGENCE_TOOLS */
@@ -195,7 +209,6 @@ export const OPS_SECTOR_3_ROWS = SECTOR3_REGISTRY.map((t) => ({
 }));
 
 export const MATCH_FIT = {
-  sector: "Sector 1A",
   domain: "match-fit.net",
   version: "v1.1.2-BETA",
   appUrl: "https://match-fit.net",

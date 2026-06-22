@@ -1,0 +1,22 @@
+name: Sector 3 Tool Generator
+
+on:
+  schedule:
+    # 10am ET Mon / Wed / Fri
+    - cron: "0 15 * * 1,3,5"
+  workflow_dispatch:
+
+jobs:
+  generate-tool:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Supabase Edge Function — generate-tool
+        run: |
+          curl -X POST \
+            "${{ secrets.SUPABASE_EDGE_FUNCTION_URL }}/generate-tool" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"source": "github_actions_cron"}'
+        env:
+          SUPABASE_EDGE_FUNCTION_URL: ${{ secrets.SUPABASE_EDGE_FUNCTION_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

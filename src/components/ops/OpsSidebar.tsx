@@ -7,7 +7,7 @@ import { BRAND } from "@/lib/constants";
 
 const NAV_ITEMS = [
   { href: "/ops", label: "Dashboard", exact: true },
-  { href: "/ops#sector3", label: "Sector 3 Tools" },
+  { href: "/ops#sector3", label: "Intelligence Tools" },
   { href: "/ops#matchfit", label: "Match Fit" },
   { href: "/ops#revenue", label: "Revenue Tracker" },
   { href: "/ops#links", label: "Quick Links" },

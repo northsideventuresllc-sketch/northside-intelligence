@@ -5,6 +5,7 @@ import { Mission } from "@/components/landing/Mission";
 import { IntelligenceEcosystem } from "@/components/landing/IntelligenceEcosystem";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { Footer } from "@/components/landing/Footer";
+import { getCarouselTools } from "@/lib/arm3-live-tools";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 export default async function HomePage() {
@@ -12,13 +13,14 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const tools = await getCarouselTools();
 
   return (
     <main className="min-h-screen bg-ni-bg">
       <Nav />
       <Hero isLoggedIn={!!user} />
       <Mission />
-      <ToolsCarousel />
+      <ToolsCarousel tools={tools} />
       <IntelligenceEcosystem />
       <PricingSection />
       <Footer />
