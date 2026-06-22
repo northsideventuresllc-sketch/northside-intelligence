@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscriptionActions";
-import { ToolMonthlyPricingCard } from "@/components/billing/ToolMonthlyPricingCard";
+import { ToolFreemiumPricingGrid } from "@/components/billing/ToolFreemiumPricingGrid";
 import { ToolSubscriptionPanel } from "@/components/billing/ToolSubscriptionPanel";
 import type { UserBillingState } from "@/lib/billing/entitlements";
 import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
@@ -75,7 +75,7 @@ export function GrantBotPricingSection({ pricing }: GrantBotPricingSectionProps)
       <div className="mx-auto max-w-4xl">
         <h2 className="text-center text-3xl font-bold gb-gradient-text">Simple Pricing</h2>
         <p className="mt-2 text-center text-gb-muted">
-          One monthly subscription for unlimited GrantBot access.
+          Start free with capped usage, or subscribe for unlimited GrantBot access.
         </p>
 
         {loading ? (
@@ -106,7 +106,7 @@ export function GrantBotPricingSection({ pricing }: GrantBotPricingSectionProps)
           </div>
         ) : (
           <div className="mt-12">
-            <ToolMonthlyPricingCard
+            <ToolFreemiumPricingGrid
               toolSlug="grantbot"
               toolName="GrantBot"
               pricing={fallbackPricing}

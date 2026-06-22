@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ToolMonthlyPricingCard } from "@/components/billing/ToolMonthlyPricingCard";
+import { ToolFreemiumPricingGrid } from "@/components/billing/ToolFreemiumPricingGrid";
 import type { ToolPricing } from "@/lib/billing/tool-pricing";
 
 interface ToolPricingGridProps {
@@ -20,12 +20,9 @@ export function ToolPricingGrid({
 }: ToolPricingGridProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-center text-lg font-semibold text-white">Get Unlimited Access</h2>
-      <p className="text-center text-xs text-ni-muted">
-        One monthly subscription per tool for unlimited use.
-      </p>
+      <h2 className="text-center text-lg font-semibold text-white">Choose Your Plan</h2>
 
-      <ToolMonthlyPricingCard
+      <ToolFreemiumPricingGrid
         toolSlug={toolSlug}
         toolName={toolName}
         pricing={pricing}

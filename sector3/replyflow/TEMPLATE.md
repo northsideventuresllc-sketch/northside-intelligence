@@ -62,6 +62,19 @@ Handled in `src/app/api/webhooks/stripe/route.ts`:
 | `customer.subscription.deleted` | Downgrade `plan` to `free`, clear subscription id |
 | `customer.subscription.updated` | Active → sync plan from price; canceled/unpaid → `free` |
 
+## Billing section (landing `#pricing`)
+
+Every Sector 3 tool landing page must show **two plans side by side**:
+
+| Plan | Price | Specs |
+|------|-------|-------|
+| **Free** | $0/mo | Monthly usage cap (e.g. 10 replies/month), add to NI Toolkit, core AI features |
+| **Unlimited** | Base monthly from catalog | Unlimited usage, no cap, cancel anytime |
+
+Canonical free-tier caps and units live in `northside-intelligence` → `src/lib/billing/sector3-tool-pricing.ts`. Portal tools use `ToolFreemiumPricingGrid` (`ToolFreePricingCard` + `ToolMonthlyPricingCard`).
+
+When forking this template, update the `plans` array in `src/app/page.tsx` with your tool’s free cap and paid monthly price.
+
 ## Tier gating
 
 - **Deployment**: `TIER` env (`lite` \| `pro`) caps `PLAN_LIMITS` in `src/lib/tier.ts`.

@@ -17,7 +17,24 @@ export interface Sector3ToolPricingProfile {
   /** Lifetime ≈ monthly × this factor × demand multiplier. */
   lifetimeMonthsFactor: number;
   demandSignal: "high" | "medium" | "low";
+  /** Free tier monthly usage cap (pro deployment). */
+  freeTierMonthlyCap: number;
+  /** Unit label for free tier usage (e.g. replies, grants, uses). */
+  freeTierUnit: string;
 }
+
+export interface Sector3FreeTierSpec {
+  monthlyCap: number;
+  unit: string;
+  summary: string;
+  features: string[];
+}
+
+const DEFAULT_FREE_TIER_FEATURES = [
+  "Add to your NI Toolkit",
+  "Core AI features included",
+  "Upgrade anytime for unlimited access",
+] as const;
 
 export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
   {
@@ -29,6 +46,8 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "medium",
+    freeTierMonthlyCap: 10,
+    freeTierUnit: "replies",
   },
   {
     toolSlug: "grantbot",
@@ -39,6 +58,8 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "medium",
+    freeTierMonthlyCap: 5,
+    freeTierUnit: "grants",
   },
   {
     toolSlug: "signaldesk",
@@ -49,6 +70,8 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "medium",
+    freeTierMonthlyCap: 10,
+    freeTierUnit: "signals",
   },
   {
     toolSlug: "gapscan",
@@ -59,6 +82,8 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "medium",
+    freeTierMonthlyCap: 10,
+    freeTierUnit: "scans",
   },
   {
     toolSlug: "bridgeai",
@@ -69,6 +94,8 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "high",
+    freeTierMonthlyCap: 10,
+    freeTierUnit: "workflows",
   },
 ];
 
@@ -82,4 +109,29 @@ export function getSector3ToolProfile(toolSlug: string): Sector3ToolPricingProfi
 
 export function getAllSector3ToolProfiles(): Sector3ToolPricingProfile[] {
   return SECTOR3_TOOL_PRICING_CATALOG;
+}
+
+export function getSector3FreeTierSpec(toolSlug: string): Sector3FreeTierSpec {
+  const profile = getSector3ToolProfile(toolSlug);
+  const monthlyCap = profile?.freeTierMonthlyCap ?? 10;
+  const unit = profile?.freeTierUnit ?? "uses";
+  const summary = `${monthlyCap} ${unit}/month`;
+
+  return {
+    monthlyCap,
+    unit,
+    summary,
+    features: [...DEFAULT_FREE_TIER_FEATURES],
+  };
+}
+
+export function formatFreeTierCapLabel(toolSlug: string): string {
+  const { monthlyCap, unit } = getSector3FreeTierSpec(toolSlug);
+  return `${monthlyCap} ${unit}/mo`;
+}
+
+export function formatFreeTierHeroLabel(toolSlug: string): string {
+  const { monthlyCap, unit } = getSector3FreeTierSpec(toolSlug);
+  const unitTitle = unit.charAt(0).toUpperCase() + unit.slice(1);
+  return `${monthlyCap} ${unitTitle}/Mo`;
 }

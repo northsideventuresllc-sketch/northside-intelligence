@@ -4,6 +4,7 @@ import { GrantBotBackground } from "@/components/grantbot/GrantBotBackground";
 import { GrantBotNav } from "@/components/grantbot/GrantBotNav";
 import { GrantBotPricingSection } from "@/components/grantbot/GrantBotPricingSection";
 import { grantbotPath, portalSignUpUrl } from "@/lib/grantbot/auth";
+import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
 
 const categories = ["Nonprofit", "Creator", "Research", "Small Business", "Arts & Culture"];
 
@@ -11,6 +12,7 @@ export default async function GrantBotHome() {
   await redirectLoggedInSector3ToDashboard("/grantbot");
 
   const signupUrl = portalSignUpUrl();
+  const freeTierLabel = formatFreeTierHeroLabel("grantbot");
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -47,7 +49,7 @@ export default async function GrantBotHome() {
               href={signupUrl}
               className="rounded-2xl bg-gradient-to-r from-gb-emerald via-gb-teal to-gb-amber px-8 py-3.5 text-lg font-semibold text-gb-bg shadow-gb-glow transition hover:scale-[1.02] hover:opacity-95"
             >
-              Get Started
+              Start Free — {freeTierLabel}
             </a>
             <Link
               href={grantbotPath("/dashboard")}
