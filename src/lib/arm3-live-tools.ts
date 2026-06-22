@@ -8,7 +8,7 @@ import {
 } from "@/lib/constants";
 import { GITHUB_ORG, SECTOR3_REGISTRY } from "@/lib/sector3-registry";
 
-/** Slugs that belong in the Intelligence Tools carousel — excludes ecosystem/labs products. */
+/** Slugs that belong in the Intelligence Tools carousel — Sector 3 only; Smart Store is at /store. */
 const INTELLIGENCE_TOOL_SLUGS = new Set(INTELLIGENCE_TOOLS.map((tool) => tool.slug));
 
 interface Arm3ToolRow {

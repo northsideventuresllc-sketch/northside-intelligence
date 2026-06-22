@@ -79,20 +79,8 @@ export function getToolBrand(slug: string) {
   return TOOL_BRAND[slug] ?? DEFAULT_TOOL_BRAND;
 }
 
+/** Upcoming Sector 3 intelligence tools — not Smart Store (see /store). */
 export const STATIC_COMING_SOON_TOOLS: IntelligenceTool[] = [
-  {
-    name: "NI Store",
-    slug: "ni-store",
-    subdomain: "shop.northsideintelligence.com",
-    description: "Official NORTHSiDE merch — AI-assisted shopping, dropship fulfillment",
-    status: "LIVE",
-    category: "Productivity",
-    keywords: ["merch", "store", "shop", "clothing", "northside"],
-    url: "/store",
-    logo: "/logos/ni-store.svg",
-    brandColor: "#6366f1",
-    brandGradient: "from-indigo-400 to-violet-400",
-  },
   {
     name: "SignalDesk",
     slug: "signaldesk",
@@ -141,6 +129,7 @@ const wiredTools: IntelligenceTool[] = SECTOR3_REGISTRY.map((t) => ({
   ...TOOL_BRAND[t.slug],
 }));
 
+/** Sector 3 intelligence tools only — Smart Store is separate at /store. */
 export const INTELLIGENCE_TOOLS: IntelligenceTool[] = [
   ...wiredTools,
   ...STATIC_COMING_SOON_TOOLS,
