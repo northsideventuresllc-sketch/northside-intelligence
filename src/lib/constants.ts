@@ -80,38 +80,7 @@ export function getToolBrand(slug: string) {
 }
 
 /** Upcoming Sector 3 intelligence tools — not Smart Store (see /store). */
-export const STATIC_COMING_SOON_TOOLS: IntelligenceTool[] = [
-  {
-    name: "SignalDesk",
-    slug: "signaldesk",
-    subdomain: "Coming soon",
-    description: "Unified intelligence signals hub",
-    status: "COMING SOON",
-    category: "Intelligence",
-    keywords: ["signals", "alerts", "hub", "monitoring"],
-    ...TOOL_BRAND.signaldesk,
-  },
-  {
-    name: "GapScan",
-    slug: "gapscan",
-    subdomain: "Coming soon",
-    description: "Automated workflow gap detection",
-    status: "COMING SOON",
-    category: "Productivity",
-    keywords: ["gaps", "workflow", "audit", "detection"],
-    ...TOOL_BRAND.gapscan,
-  },
-  {
-    name: "BridgeAI",
-    slug: "bridgeai",
-    subdomain: "Coming soon",
-    description: "Cross-platform AI orchestration",
-    status: "COMING SOON",
-    category: "Orchestration",
-    keywords: ["orchestration", "ai", "integration", "platform"],
-    ...TOOL_BRAND.bridgeai,
-  },
-];
+export const STATIC_COMING_SOON_TOOLS: IntelligenceTool[] = [];
 
 const wiredTools: IntelligenceTool[] = SECTOR3_REGISTRY.map((t) => ({
   name: t.name,
@@ -119,11 +88,24 @@ const wiredTools: IntelligenceTool[] = SECTOR3_REGISTRY.map((t) => ({
   subdomain: t.subdomain,
   description: t.description,
   status: t.status,
-  category: t.slug === "replyflow" ? "Automation" : "Intelligence",
+  category:
+    t.slug === "replyflow"
+      ? "Automation"
+      : t.slug === "gapscan"
+        ? "Productivity"
+        : t.slug === "bridgeai"
+          ? "Orchestration"
+          : "Intelligence",
   keywords:
     t.slug === "replyflow"
       ? ["customer service", "replies", "support", "email", "automation"]
-      : ["grants", "nonprofit", "creators", "funding", "drafting"],
+      : t.slug === "grantbot"
+        ? ["grants", "nonprofit", "creators", "funding", "drafting"]
+        : t.slug === "signaldesk"
+          ? ["signals", "alerts", "hub", "monitoring"]
+          : t.slug === "gapscan"
+            ? ["gaps", "workflow", "audit", "detection"]
+            : ["orchestration", "integration", "platform", "automation"],
   url: t.appUrl,
   github: t.github,
   ...TOOL_BRAND[t.slug],

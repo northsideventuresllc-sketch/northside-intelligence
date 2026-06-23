@@ -63,7 +63,7 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
   },
   {
     toolSlug: "signaldesk",
-    name: "SignalDesk",
+    name: "Signal Desk",
     targetAudience: "Analysts, marketers, and operators monitoring market signals",
     marketTier: "growth",
     baseMonthlyUsd: 24,

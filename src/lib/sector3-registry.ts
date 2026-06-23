@@ -7,7 +7,12 @@ export const PORTAL_URL = "https://northsideintelligence.com" as const;
 export const PORTAL_SIGNUP_URL = `${PORTAL_URL}/auth/signup` as const;
 export const PORTAL_SIGNIN_URL = `${PORTAL_URL}/auth/signin` as const;
 
-export type Sector3ToolSlug = "replyflow" | "grantbot";
+export type Sector3ToolSlug =
+  | "replyflow"
+  | "grantbot"
+  | "signaldesk"
+  | "gapscan"
+  | "bridgeai";
 
 export interface Sector3RegistryEntry {
   slug: Sector3ToolSlug;
@@ -51,6 +56,45 @@ export const SECTOR3_REGISTRY: Sector3RegistryEntry[] = [
     github: `https://github.com/${GITHUB_ORG}/grantbot`,
     supabaseTable: "grantbot_profiles",
     arm3Status: "scale",
+  },
+  {
+    slug: "signaldesk",
+    name: "Signal Desk",
+    subdomain: "signaldesk.northsideintelligence.com",
+    description: "Unified intelligence signals hub",
+    status: "LIVE",
+    appUrl: "https://northsideintelligence.com/signaldesk",
+    dashboardPath: "/signaldesk/dashboard",
+    favicon: "/logos/signaldesk.svg",
+    github: `https://github.com/${GITHUB_ORG}/signaldesk`,
+    supabaseTable: "signaldesk_profiles",
+    arm3Status: "live",
+  },
+  {
+    slug: "gapscan",
+    name: "GapScan",
+    subdomain: "gapscan.northsideintelligence.com",
+    description: "Automated workflow gap detection",
+    status: "LIVE",
+    appUrl: "https://northsideintelligence.com/gapscan",
+    dashboardPath: "/gapscan/dashboard",
+    favicon: "/logos/gapscan.svg",
+    github: `https://github.com/${GITHUB_ORG}/gapscan`,
+    supabaseTable: "gapscan_profiles",
+    arm3Status: "live",
+  },
+  {
+    slug: "bridgeai",
+    name: "BridgeAI",
+    subdomain: "bridgeai.northsideintelligence.com",
+    description: "Cross-platform AI orchestration",
+    status: "LIVE",
+    appUrl: "https://northsideintelligence.com/bridgeai",
+    dashboardPath: "/bridgeai/dashboard",
+    favicon: "/logos/bridgeai.svg",
+    github: `https://github.com/${GITHUB_ORG}/bridgeai`,
+    supabaseTable: "bridgeai_profiles",
+    arm3Status: "live",
   },
 ];
 

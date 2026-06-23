@@ -340,6 +340,37 @@ Deno.serve(async (req) => {
         { onConflict: "id", ignoreDuplicates: true }
       );
 
+      for (const row of [
+        {
+          table: "signaldesk_profiles",
+          usageField: "signals_used_this_month",
+          resetField: "signals_reset_at",
+        },
+        {
+          table: "gapscan_profiles",
+          usageField: "scans_used_this_month",
+          resetField: "scans_reset_at",
+        },
+        {
+          table: "bridgeai_profiles",
+          usageField: "workflows_used_this_month",
+          resetField: "workflows_reset_at",
+        },
+      ]) {
+        await admin.from(row.table).upsert(
+          {
+            id: created.user.id,
+            email: pending.email,
+            tier: "free",
+            [row.usageField]: 0,
+            [row.resetField]: now,
+            created_at: now,
+            updated_at: now,
+          },
+          { onConflict: "id", ignoreDuplicates: true }
+        );
+      }
+
       await admin.from("ni_subscriptions").upsert(
         { id: created.user.id, tier: "free", updated_at: now },
         { onConflict: "id", ignoreDuplicates: true }
