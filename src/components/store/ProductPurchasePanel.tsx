@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
@@ -8,39 +8,30 @@ import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
 import { expeditedDeliveryDays } from "@/lib/store/cart/types";
 import type { CartLineItem } from "@/lib/store/cart/types";
 import { useStoreCart } from "@/components/store/StoreCartProvider";
+import { useStoreGate } from "@/components/store/StoreGateProvider";
 import { useStoreCheckout } from "@/hooks/useStoreCheckout";
 import type { ShippingTier } from "@/lib/store/cart/types";
-import type { StoreGateStatus } from "@/lib/store/types";
 
 interface ProductPurchasePanelProps {
   product: CatalogProductView;
   sourceProductId: string | null;
-  checkoutLive: boolean;
 }
 
 export function ProductPurchasePanel({
   product,
   sourceProductId,
-  checkoutLive,
 }: ProductPurchasePanelProps) {
   const router = useRouter();
+  const gate = useStoreGate();
   const { addItem, items } = useStoreCart();
   const { checkout, loading: checkoutLoading, error: checkoutError, setError } = useStoreCheckout();
   const [shippingTier, setShippingTier] = useState<ShippingTier>("standard");
   const [added, setAdded] = useState(false);
-  const [gate, setGate] = useState<StoreGateStatus | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState(
     product.variants?.[0]?.id ?? null
   );
 
-  useEffect(() => {
-    fetch("/api/store/gate")
-      .then((r) => r.json())
-      .then((json: StoreGateStatus) => setGate(json))
-      .catch(() => setGate(null));
-  }, []);
-
-  const checkoutEnabled = gate?.live ?? checkoutLive;
+  const checkoutEnabled = gate.live;
 
   const standardDays = product.estimatedDeliveryDays;
   const expressDays = expeditedDeliveryDays(standardDays);

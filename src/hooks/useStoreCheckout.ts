@@ -27,7 +27,7 @@ function toCartLines(items: CartLineItem[]): CartLineItem[] {
 }
 
 export function useStoreCheckout() {
-  const { items, verifying, syncFromVerification, clearCart } = useStoreCart();
+  const { items, verifying, syncFromVerification } = useStoreCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,7 +44,7 @@ export function useStoreCheckout() {
       let attemptLines = toCartLines(lines);
 
       try {
-        for (let attempt = 0; attempt < 2; attempt++) {
+        for (let attempt = 0; attempt < 3; attempt++) {
           const res = await fetch("/api/store/checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -69,7 +69,7 @@ export function useStoreCheckout() {
           if (res.status === 409 && json.priceChangeNotices?.length && json.items?.length) {
             const updatedLines = toCartLines(json.items);
             syncFromVerification(updatedLines, json.priceChangeNotices);
-            if (attempt === 0) {
+            if (attempt < 2) {
               attemptLines = updatedLines;
               continue;
             }
@@ -88,8 +88,7 @@ export function useStoreCheckout() {
             throw new Error("Checkout URL unavailable");
           }
 
-          clearCart();
-          window.location.assign(json.url);
+          window.location.href = json.url;
           return { ok: true };
         }
 
@@ -102,7 +101,7 @@ export function useStoreCheckout() {
         setLoading(false);
       }
     },
-    [items, syncFromVerification, clearCart]
+    [items, syncFromVerification]
   );
 
   return { checkout, loading, error, setError, verifying, itemCount: items.length };

@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -16,6 +17,8 @@ import {
   type ShippingTier,
 } from "@/lib/store/cart/types";
 import type { PriceChangeNoticeView } from "@/lib/store/catalog/types";
+
+const LEGACY_CART_STORAGE_KEY = "ni_store_cart_v1";
 
 interface AddItemInput {
   slug: string;
@@ -48,7 +51,14 @@ const StoreCartContext = createContext<StoreCartContextValue | null>(null);
 function loadCart(): CartState {
   if (typeof window === "undefined") return { items: [] };
   try {
-    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    let raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) {
+      raw = localStorage.getItem(LEGACY_CART_STORAGE_KEY);
+      if (raw) {
+        localStorage.setItem(CART_STORAGE_KEY, raw);
+        localStorage.removeItem(LEGACY_CART_STORAGE_KEY);
+      }
+    }
     if (!raw) return { items: [] };
     const parsed = JSON.parse(raw) as CartState;
     const items = Array.isArray(parsed.items)
@@ -75,14 +85,16 @@ export function StoreCartProvider({ children }: { children: ReactNode }) {
   const [priceNotices, setPriceNotices] = useState<PriceChangeNoticeView[]>([]);
   const [verifying, setVerifying] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const hasLoadedCartRef = useRef(false);
 
   useEffect(() => {
     setItems(loadCart().items);
+    hasLoadedCartRef.current = true;
     setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !hasLoadedCartRef.current) return;
     persistCart({ items });
   }, [items, hydrated]);
 
@@ -123,10 +135,7 @@ export function StoreCartProvider({ children }: { children: ReactNode }) {
           setPriceNotices(notices);
 
           const syncedByKey = new Map(
-            (json.items ?? []).map((item) => [
-              `${item.slug}::${item.variantId ?? ""}`,
-              item,
-            ])
+            (json.items ?? []).map((item) => [`${item.slug}::${item.variantId ?? ""}`, item])
           );
           setItems((prev) =>
             prev
@@ -151,7 +160,7 @@ export function StoreCartProvider({ children }: { children: ReactNode }) {
         if (!cancelled) setPriceNotices([]);
       })
       .finally(() => {
-        if (!cancelled) setVerifying(false);
+        setVerifying(false);
       });
 
     return () => {

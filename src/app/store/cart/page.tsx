@@ -8,13 +8,13 @@ import { Nav } from "@/components/landing/Nav";
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { StoreCartHeader } from "@/components/store/StoreCartHeader";
 import { useStoreCart } from "@/components/store/StoreCartProvider";
+import { useStoreGate } from "@/components/store/StoreGateProvider";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { calculateCartTotals } from "@/lib/store/cart/pricing";
 import type { CartLineItem } from "@/lib/store/cart/types";
 import { formatStorePrice } from "@/lib/store/client";
 import { useStoreCheckout } from "@/hooks/useStoreCheckout";
 import type { PriceChangeNoticeView } from "@/lib/store/catalog/types";
-import type { StoreGateStatus } from "@/lib/store/types";
 import type { ShippingTier } from "@/lib/store/cart/types";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
 
@@ -33,17 +33,15 @@ function CartContent() {
     removeItem,
     updateQuantity,
     updateShippingTier,
+    clearCart,
   } = useStoreCart();
-  const { checkout, loading, error, setError, verifying: checkoutVerifying } = useStoreCheckout();
-  const [gate, setGate] = useState<StoreGateStatus | null>(null);
+  const gate = useStoreGate();
+  const { checkout, loading, error, setError } = useStoreCheckout();
   const [checkoutNotices, setCheckoutNotices] = useState<PriceChangeNoticeView[]>([]);
 
   useEffect(() => {
-    fetch("/api/store/gate")
-      .then((r) => r.json())
-      .then((json: StoreGateStatus) => setGate(json))
-      .catch(() => setGate(null));
-  }, []);
+    if (ordered) clearCart();
+  }, [ordered, clearCart]);
 
   const totals = useMemo(() => calculateCartTotals(items), [items]);
   const allNotices = useMemo(
@@ -67,7 +65,7 @@ function CartContent() {
     }
   }
 
-  const checkoutEnabled = Boolean(gate?.live) && items.length > 0 && !verifying && !checkoutVerifying;
+  const checkoutEnabled = gate.live && items.length > 0;
 
   return (
     <section className="relative px-6 pb-28 pt-24">
