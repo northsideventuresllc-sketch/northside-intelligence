@@ -467,15 +467,54 @@ export function getServiceBySlug(slug: string): ServiceOffering | undefined {
 export function getServicesByAudience(
   filter: "all" | "individual" | "business"
 ): ServiceOffering[] {
-  if (filter === "all") return INTELLIGENCE_SERVICES;
-  if (filter === "individual") {
-    return INTELLIGENCE_SERVICES.filter(
+  let services: ServiceOffering[];
+  if (filter === "all") {
+    services = [...INTELLIGENCE_SERVICES];
+  } else if (filter === "individual") {
+    services = INTELLIGENCE_SERVICES.filter(
       (s) => s.audience === "individual" || s.audience === "both"
     );
+  } else {
+    services = INTELLIGENCE_SERVICES.filter(
+      (s) => s.audience === "business" || s.audience === "both"
+    );
   }
-  return INTELLIGENCE_SERVICES.filter(
-    (s) => s.audience === "business" || s.audience === "both"
+
+  return services.sort(
+    (a, b) => getServiceSortPriceUsd(a, filter) - getServiceSortPriceUsd(b, filter)
   );
+}
+
+/** Lowest displayed price (USD) for sorting listings — respects active audience filter. */
+export function getServiceSortPriceUsd(
+  service: ServiceOffering,
+  filter: "all" | "individual" | "business" = "all"
+): number {
+  const tiers: ServicePriceTier[] = [];
+
+  if (filter === "individual" || filter === "all") {
+    if (service.pricing.individual) tiers.push(service.pricing.individual);
+  }
+  if (filter === "business" || filter === "all") {
+    if (service.pricing.business) tiers.push(service.pricing.business);
+  }
+
+  const minimums = tiers
+    .map((tier) => parseMinimumPriceUsd(tier.amount))
+    .filter((value): value is number => value !== null);
+
+  return minimums.length > 0 ? Math.min(...minimums) : Number.MAX_SAFE_INTEGER;
+}
+
+function parseMinimumPriceUsd(amount: string): number | null {
+  const numbers: number[] = [];
+  const pattern = /\$([\d,]+(?:\.\d+)?)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(amount)) !== null) {
+    numbers.push(Number(match[1].replace(/,/g, "")));
+  }
+  if (numbers.length === 0) return null;
+  return Math.min(...numbers);
 }
 
 export function formatPriceTier(tier: ServicePriceTier): string {
