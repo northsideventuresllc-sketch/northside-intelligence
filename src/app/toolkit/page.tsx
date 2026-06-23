@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ToolkitGrid } from "@/components/billing/ToolkitGrid";
 import { Footer } from "@/components/landing/Footer";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { canAddNiPlanTool, getUserBillingState } from "@/lib/billing/entitlements";
 import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
 import { INTELLIGENCE_TOOL_SLUGS, mapDbPricing } from "@/lib/billing/tool-pricing";
@@ -45,7 +45,7 @@ export default async function ToolkitPage() {
 
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <section className="relative px-6 pb-20 pt-24">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">

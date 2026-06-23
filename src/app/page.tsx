@@ -1,4 +1,4 @@
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { Hero } from "@/components/landing/Hero";
 import { ToolsCarousel } from "@/components/landing/ToolsCarousel";
 import { Mission } from "@/components/landing/Mission";
@@ -17,7 +17,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <Hero isLoggedIn={!!user} />
       <Mission />
       <ToolsCarousel tools={tools} />

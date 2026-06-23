@@ -2,38 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
 import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 
-export function Nav() {
-  const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isMasterAccount, setIsMasterAccount] = useState(false);
+interface NavProps {
+  isLoggedIn: boolean;
+  isMasterAccount: boolean;
+}
 
-  const refreshAuth = useCallback(() => {
-    let cancelled = false;
-    fetch("/api/auth/me")
-      .then((res) => res.json())
-      .then((data: { user?: unknown; isMasterAccount?: boolean }) => {
-        if (!cancelled) {
-          setIsLoggedIn(!!data.user);
-          setIsMasterAccount(data.isMasterAccount === true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsLoggedIn(false);
-          setIsMasterAccount(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => refreshAuth(), [pathname, refreshAuth]);
-
+export function Nav({ isLoggedIn, isMasterAccount }: NavProps) {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-cyan-500/10 bg-ni-bg/70 shadow-[0_4px_30px_rgba(0,0,0,0.3),inset_0_-1px_0_rgba(0,212,255,0.1)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -121,10 +97,6 @@ export function Nav() {
               >
                 Ecosystem
               </a>
-            </>
-          )}
-          {!isLoggedIn && (
-            <>
               <Link
                 href="/auth/signin"
                 className="text-sm text-ni-muted transition hover:text-cyan-300"

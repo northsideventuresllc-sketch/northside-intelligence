@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Footer } from "@/components/landing/Footer";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { StorePageClient } from "@/components/store/StorePageClient";
 
 import { SMART_STORE_NAME, smartStorePageTitle } from "@/lib/store/branding";
@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default function StorePage() {
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <section className="relative px-6 pb-28 pt-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/[0.04] via-transparent to-transparent" />
         <div className="relative mx-auto max-w-6xl">

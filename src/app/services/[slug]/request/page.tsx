@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { ServiceRequestForm } from "@/components/services/ServiceRequestForm";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { formatServicePrice, getServiceBySlug, type AccountType } from "@/lib/services/offerings";
@@ -49,7 +49,7 @@ export default async function ServiceRequestPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <div className="mx-auto max-w-2xl px-6 pb-16 pt-28">
         <Link
           href="/services"
