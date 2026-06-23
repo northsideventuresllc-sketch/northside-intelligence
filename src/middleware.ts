@@ -153,7 +153,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith("/grantbot/dashboard")) {
+  if (
+    pathname.startsWith("/grantbot/dashboard") ||
+    pathname.startsWith("/signaldesk/dashboard") ||
+    pathname.startsWith("/gapscan/dashboard") ||
+    pathname.startsWith("/bridgeai/dashboard")
+  ) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (supabaseUrl && supabaseAnonKey) {
@@ -220,6 +225,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api/services") ||
     pathname.startsWith("/replyflow") ||
     pathname.startsWith("/grantbot") ||
+    pathname.startsWith("/signaldesk") ||
+    pathname.startsWith("/gapscan") ||
+    pathname.startsWith("/bridgeai") ||
     isReplyFlowHost(host);
 
   if (!needsSessionRefresh) {
@@ -246,6 +254,9 @@ export const config = {
     "/replyflow/login",
     "/replyflow/signup",
     "/grantbot/:path*",
+    "/signaldesk/:path*",
+    "/gapscan/:path*",
+    "/bridgeai/:path*",
     "/((?!_next/static|_next/image).*)",
   ],
 };
