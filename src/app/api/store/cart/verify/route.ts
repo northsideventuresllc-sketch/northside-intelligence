@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { STORE_ITEM_CATEGORIES } from "@/lib/store/categories";
-import { refreshCatalogBySlug } from "@/lib/store/catalog/live-cj";
-import { toCatalogProductView } from "@/lib/store/catalog/products";
+import { resolveCatalogLineRetailCents } from "@/lib/store/catalog/line-price";
+import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
+import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
 
 interface VerifyItemBody {
   slug?: string;
   retailPriceCents?: number;
+  variantId?: string | null;
 }
 
 /** Live CJ price/name refresh for saved cart lines. */
@@ -22,7 +24,15 @@ export async function POST(req: NextRequest) {
     }
 
     const items = body.items ?? [];
-    const synced: Array<ReturnType<typeof toCatalogProductView> & { quantity?: number }> = [];
+    const synced: Array<{
+      slug: string;
+      name: string;
+      imageUrl: string | null;
+      retailPriceCents: number;
+      currency: string;
+      sourcePlatform: string;
+      variantId: string | null;
+    }> = [];
     const priceChangeNotices = [];
     const unavailable: string[] = [];
 
@@ -30,13 +40,46 @@ export async function POST(req: NextRequest) {
       const slug = item.slug?.trim();
       if (!slug) continue;
 
-      const refreshed = await refreshCatalogBySlug(slug, item.retailPriceCents);
+      const row = await getCatalogProductBySlug(slug);
+      if (!row) {
+        unavailable.push(slug);
+        continue;
+      }
+
+      const refreshed = await refreshCatalogFromCj(row);
       if (refreshed.unavailable || !refreshed.row) {
         unavailable.push(slug);
         continue;
       }
-      if (refreshed.notice) priceChangeNotices.push(refreshed.notice);
-      synced.push(toCatalogProductView(refreshed.row));
+
+      const variantId = item.variantId?.trim() || null;
+      const currentRetailCents = resolveCatalogLineRetailCents(refreshed.row, variantId);
+      const clientRetailCents = item.retailPriceCents;
+
+      if (
+        clientRetailCents != null &&
+        Number.isFinite(clientRetailCents) &&
+        clientRetailCents !== currentRetailCents
+      ) {
+        priceChangeNotices.push({
+          slug: refreshed.row.slug,
+          name: refreshed.row.name,
+          previousRetailCents: clientRetailCents,
+          currentRetailCents,
+          reason:
+            "CJ supplier pricing changed since your last view. NI retail is always supplier listing price + 10%.",
+        });
+      }
+
+      synced.push({
+        slug: refreshed.row.slug,
+        name: refreshed.row.name,
+        imageUrl: refreshed.row.imageUrl,
+        retailPriceCents: currentRetailCents,
+        currency: refreshed.row.currency,
+        sourcePlatform: refreshed.row.sourcePlatform,
+        variantId,
+      });
     }
 
     return NextResponse.json({

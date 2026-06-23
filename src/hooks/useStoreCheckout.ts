@@ -11,6 +11,21 @@ interface CheckoutResult {
   items?: CartLineItem[];
 }
 
+function toCartLines(items: CartLineItem[]): CartLineItem[] {
+  return items.map((item) => ({
+    slug: item.slug,
+    name: item.name,
+    imageUrl: item.imageUrl,
+    retailPriceCents: item.retailPriceCents,
+    currency: item.currency,
+    sourcePlatform: item.sourcePlatform,
+    sourceProductId: item.sourceProductId ?? null,
+    variantId: item.variantId ?? null,
+    quantity: item.quantity,
+    shippingTier: item.shippingTier,
+  }));
+}
+
 export function useStoreCheckout() {
   const { items, verifying, syncFromVerification, clearCart } = useStoreCart();
   const [loading, setLoading] = useState(false);
@@ -26,46 +41,59 @@ export function useStoreCheckout() {
       setLoading(true);
       setError("");
 
+      let attemptLines = toCartLines(lines);
+
       try {
-        const res = await fetch("/api/store/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            items: lines.map((item) => ({
-              slug: item.slug,
-              quantity: item.quantity,
-              shippingTier: item.shippingTier,
-              retailPriceCents: item.retailPriceCents,
-              variantId: item.variantId,
-            })),
-          }),
-        });
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const res = await fetch("/api/store/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: attemptLines.map((item) => ({
+                slug: item.slug,
+                quantity: item.quantity,
+                shippingTier: item.shippingTier,
+                retailPriceCents: item.retailPriceCents,
+                variantId: item.variantId,
+              })),
+            }),
+          });
 
-        const json = (await res.json()) as {
-          url?: string;
-          error?: string;
-          priceChangeNotices?: PriceChangeNoticeView[];
-          items?: CartLineItem[];
-        };
-
-        if (res.status === 409 && json.priceChangeNotices?.length) {
-          if (json.items?.length) {
-            syncFromVerification(json.items, json.priceChangeNotices);
-          }
-          setError("Prices changed. Review your cart and try again.");
-          return {
-            ok: false,
-            priceChangeNotices: json.priceChangeNotices,
-            items: json.items,
+          const json = (await res.json()) as {
+            url?: string;
+            error?: string;
+            priceChangeNotices?: PriceChangeNoticeView[];
+            items?: CartLineItem[];
           };
+
+          if (res.status === 409 && json.priceChangeNotices?.length && json.items?.length) {
+            const updatedLines = toCartLines(json.items);
+            syncFromVerification(updatedLines, json.priceChangeNotices);
+            if (attempt === 0) {
+              attemptLines = updatedLines;
+              continue;
+            }
+            setError("Prices changed. Review your cart and try again.");
+            return {
+              ok: false,
+              priceChangeNotices: json.priceChangeNotices,
+              items: updatedLines,
+            };
+          }
+
+          if (!res.ok) {
+            throw new Error(json.error ?? "Checkout failed");
+          }
+          if (!json.url) {
+            throw new Error("Checkout URL unavailable");
+          }
+
+          clearCart();
+          window.location.assign(json.url);
+          return { ok: true };
         }
 
-        if (!res.ok) throw new Error(json.error ?? "Checkout failed");
-        if (!json.url) throw new Error("Checkout URL unavailable");
-
-        clearCart();
-        window.location.href = json.url;
-        return { ok: true };
+        throw new Error("Checkout failed after price refresh.");
       } catch (e) {
         const message = e instanceof Error ? e.message : "Checkout failed";
         setError(message);
