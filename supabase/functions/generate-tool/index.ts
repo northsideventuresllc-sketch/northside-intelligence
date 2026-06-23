@@ -1,58 +1,32 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { readPlatformSecret } from "../_shared/platform-secrets.ts";
-
-const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const RESEND_API_URL = "https://api.resend.com/emails";
+import { logArm3Weekly } from "../_shared/arm3-weekly-log.ts";
+import { scaffoldSector3Repo } from "../_shared/github-scaffold.ts";
 
 interface Arm3Opportunity {
   id: number;
   name: string;
   description: string | null;
-  market_signal: string | null;
+  sector3_slug: string | null;
   estimated_margin_pct: number | null;
-  build_complexity: string | null;
+  market_signal: string | null;
 }
 
-interface PatternSignal {
-  signal_type: string;
-  value: string;
-  weight: number | null;
-}
-
-interface ToolSpec {
-  slug: string;
-  name: string;
-  tagline: string;
-  description: string;
-  core_feature: string;
-  input_type: string;
-  output_type: string;
-  tone_options: string[];
-  free_tier_cap: string;
-  supabase_table: string;
-  subdomain: string;
-  github_repo: string;
-  category: string;
-  target_user: string;
-  cursor_build_priority: string[];
-}
-
-function isToolSpec(value: unknown): value is ToolSpec {
-  if (!value || typeof value !== "object") return false;
-  const spec = value as Record<string, unknown>;
-  return (
-    typeof spec.slug === "string" &&
-    typeof spec.name === "string" &&
-    typeof spec.description === "string" &&
-    typeof spec.category === "string" &&
-    typeof spec.target_user === "string"
-  );
+function deriveSlug(opportunity: Arm3Opportunity): string {
+  if (opportunity.sector3_slug?.trim()) {
+    return opportunity.sector3_slug.trim().toLowerCase();
+  }
+  return opportunity.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+    .slice(0, 32);
 }
 
 Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const runDate = new Date().toISOString();
 
   if (!supabaseUrl || !serviceRoleKey) {
     return new Response(
@@ -66,204 +40,139 @@ Deno.serve(async (req) => {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const anthropicApiKey = await readPlatformSecret("ANTHROPIC_API_KEY");
-
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   const { data: opportunity, error: oppError } = await supabase
     .from("arm3_opportunities")
-    .select("*")
+    .select("id, name, description, sector3_slug, estimated_margin_pct, market_signal")
     .eq("status", "approved")
     .is("launched_at", null)
     .order("priority_score", { ascending: false })
     .limit(1)
-    .single<Arm3Opportunity>();
+    .maybeSingle<Arm3Opportunity>();
 
-  if (oppError || !opportunity) {
+  if (oppError) {
+    return new Response(
+      JSON.stringify({ error: "Opportunity query failed", detail: oppError }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  if (!opportunity) {
+    await logArm3Weekly(supabase, {
+      logType: "pipeline",
+      summary: "no approved tools",
+      detail: { status: "idle", run_date: runDate },
+    });
+
+    return new Response(
+      JSON.stringify({ success: true, status: "no_approved_tools" }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const slug = deriveSlug(opportunity);
+  const githubPat = await readPlatformSecret("GITHUB_PAT");
+
+  if (!githubPat) {
+    return new Response(
+      JSON.stringify({ error: "GITHUB_PAT is not configured" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const { error: toolInsertError } = await supabase.from("arm3_tools").insert({
+    slug,
+    name: opportunity.name,
+    description: opportunity.description,
+    status: "building",
+    source_opportunity_id: opportunity.id,
+    demand_signal: opportunity.market_signal,
+    estimated_margin_pct: opportunity.estimated_margin_pct,
+    pricing_model: "freemium",
+    price_usd: 15,
+  });
+
+  if (toolInsertError) {
     return new Response(
       JSON.stringify({
-        error: "No approved opportunities found",
-        detail: oppError,
+        error: "Failed to insert arm3_tools",
+        detail: toolInsertError,
       }),
-      { status: 404, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  const { data: patterns } = await supabase
-    .from("arm3_pattern_signals")
-    .select("signal_type, value, weight")
-    .order("weight", { ascending: false })
-    .limit(10);
-
-  const patternContext =
-    patterns && patterns.length > 0
-      ? `\n\nLearned patterns from past tools:\n${(patterns as PatternSignal[])
-          .map((p) => `- [${p.signal_type}] ${p.value}`)
-          .join("\n")}`
-      : "";
-
-  if (!anthropicApiKey) {
-    return new Response(
-      JSON.stringify({ error: "ANTHROPIC_API_KEY is not configured" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 
-  const claudeRes = await fetch(ANTHROPIC_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": anthropicApiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1000,
-      messages: [
-        {
-          role: "user",
-          content: `You are the autonomous tool generator for NORTHSiDE Intelligence (NI) Sector 3.
-
-Generate a complete tool spec for the following opportunity:
-
-Name: ${opportunity.name}
-Description: ${opportunity.description ?? ""}
-Market signal: ${opportunity.market_signal ?? ""}
-Target user: ${opportunity.name}
-Estimated margin: ${opportunity.estimated_margin_pct ?? 0}%
-Build complexity: ${opportunity.build_complexity ?? "unknown"}
-${patternContext}
-
-RULES:
-- The tool must follow the NI Sector 3 template (Next.js, Supabase, Stripe, Claude AI, Vercel)
-- Auth: shared NI portal account (northsideintelligence.com/auth)
-- Supabase table prefix: use the tool slug (e.g. outreachhq_profiles)
-- Pricing: free tier (capped) + $15/mo subscription + $99 lifetime option
-- The tool name must be marketable as a standalone product — short, punchy, no generic AI names
-- If the suggested name can be improved for marketability, suggest a better one
-
-Respond ONLY in this JSON format (no markdown, no explanation):
-{
-  "slug": "lowercase-no-spaces",
-  "name": "Product Name",
-  "tagline": "One sentence. Punchy. Benefit-first.",
-  "description": "2-3 sentences on what it does and who it's for.",
-  "core_feature": "The single main thing the AI does",
-  "input_type": "What the user pastes or enters",
-  "output_type": "What the tool generates",
-  "tone_options": ["option1", "option2", "option3"],
-  "free_tier_cap": "e.g. 10 uses/month",
-  "supabase_table": "slug_profiles",
-  "subdomain": "slug.northsideintelligence.com",
-  "github_repo": "northsideventuresllc-sketch/slug",
-  "category": "Automation | Intelligence | Productivity | Orchestration",
-  "target_user": "Who this is built for",
-  "cursor_build_priority": ["task1", "task2", "task3"]
-}`,
-        },
-      ],
-    }),
-  });
-
-  if (!claudeRes.ok) {
-    return new Response(
-      JSON.stringify({ error: "Claude API failed", status: claudeRes.status }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  const claudeData = (await claudeRes.json()) as {
-    content?: Array<{ text?: string }>;
-  };
-  const rawText = claudeData.content?.[0]?.text ?? "";
-
-  let toolSpec: ToolSpec;
+  let scaffold;
   try {
-    const parsed: unknown = JSON.parse(rawText);
-    if (!isToolSpec(parsed)) {
-      throw new Error("Invalid tool spec shape");
-    }
-    toolSpec = parsed;
-  } catch {
-    return new Response(
-      JSON.stringify({ error: "Failed to parse Claude response", raw: rawText }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  const { error: toolError } = await supabase.from("arm3_tools").upsert(
-    {
-      name: toolSpec.name,
-      slug: toolSpec.slug,
-      description: toolSpec.description,
-      status: "building",
-      category: toolSpec.category,
-      target_user: toolSpec.target_user,
-      pricing_model: "freemium",
-      price_usd: 15,
-      estimated_margin_pct: opportunity.estimated_margin_pct,
-      demand_signal: opportunity.market_signal,
-      notes: JSON.stringify(toolSpec),
-    },
-    { onConflict: "slug" }
-  );
-
-  if (toolError) {
-    return new Response(
-      JSON.stringify({ error: "Failed to write arm3_tools", detail: toolError }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
-  await supabase.from("Learnings").insert({
-    learning: `[SECTOR3] Tool queued for build: ${toolSpec.name} (${toolSpec.slug}). Opportunity: ${opportunity.name}.`,
-    source: "sector3-generator",
-    category: "STACK",
-    project: "NI Sector 3",
-  });
-
-  const resendKey = await readPlatformSecret("RESEND_API_KEY");
-  if (resendKey) {
-    const buildTasks = toolSpec.cursor_build_priority
-      .map((task) => `<li>${task}</li>`)
-      .join("");
-
-    await fetch(RESEND_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "NI System <system@northsideintelligence.com>",
-        to: ["jb@northsideventuresgroup.com"],
-        subject: `🚀 New Sector 3 Tool Queued: ${toolSpec.name}`,
-        html: `
-          <h2>${toolSpec.name}</h2>
-          <p><strong>Tagline:</strong> ${toolSpec.tagline}</p>
-          <p><strong>Description:</strong> ${toolSpec.description}</p>
-          <p><strong>Core feature:</strong> ${toolSpec.core_feature}</p>
-          <p><strong>Target user:</strong> ${toolSpec.target_user}</p>
-          <p><strong>Free tier cap:</strong> ${toolSpec.free_tier_cap}</p>
-          <p><strong>Subdomain:</strong> ${toolSpec.subdomain}</p>
-          <p><strong>GitHub repo to create:</strong> ${toolSpec.github_repo}</p>
-          <hr/>
-          <p><strong>Next Cursor build tasks:</strong></p>
-          <ol>${buildTasks}</ol>
-          <hr/>
-          <p style="color:#888;font-size:12px">Sent by NI Sector 3 autonomous pipeline · ${new Date().toISOString()}</p>
-        `,
-      }),
+    scaffold = await scaffoldSector3Repo(githubPat, {
+      slug,
+      displayName: opportunity.name,
+      description: opportunity.description,
     });
+  } catch (error) {
+    await supabase.from("arm3_tools").update({ status: "failed" }).eq("slug", slug);
+
+    await logArm3Weekly(supabase, {
+      logType: "pipeline",
+      toolSlug: slug,
+      summary: `scaffold failed: ${error instanceof Error ? error.message : "unknown error"}`,
+      detail: {
+        status: "failed",
+        run_date: runDate,
+        opportunity_id: opportunity.id,
+      },
+      actionRequired: true,
+      actionFor: "JB",
+    });
+
+    return new Response(
+      JSON.stringify({
+        error: "GitHub scaffold failed",
+        detail: error instanceof Error ? error.message : String(error),
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
+
+  const launchedAt = new Date().toISOString();
+  const githubRepo = scaffold.repoFullName;
 
   await supabase
     .from("arm3_opportunities")
-    .update({ launched_at: new Date().toISOString() })
+    .update({
+      launched_at: launchedAt,
+      github_repo: githubRepo,
+      sector3_slug: slug,
+    })
     .eq("id", opportunity.id);
 
-  return new Response(JSON.stringify({ success: true, tool: toolSpec }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
+  await supabase
+    .from("arm3_tools")
+    .update({ status: "scaffolded" })
+    .eq("slug", slug);
+
+  await logArm3Weekly(supabase, {
+    logType: "pipeline",
+    toolSlug: slug,
+    summary: `Tool scaffolded: ${opportunity.name} (${slug})`,
+    detail: {
+      status: "scaffolded",
+      run_date: runDate,
+      github_repo: githubRepo,
+      commit_sha: scaffold.commitSha,
+      files_pushed: scaffold.filesPushed,
+    },
   });
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      status: "scaffolded",
+      tool_slug: slug,
+      github_repo: githubRepo,
+      run_date: runDate,
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
 });
