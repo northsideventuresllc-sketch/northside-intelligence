@@ -71,8 +71,10 @@ export function ServicesPageClient() {
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
           Services
         </p>
-        <h1 className="mb-4 bg-gradient-to-r from-white via-cyan-100 to-cyan-300 bg-clip-text text-4xl font-semibold text-transparent sm:text-5xl">
-          Intelligence Services
+        <h1 className="mb-4 text-4xl font-semibold sm:text-5xl">
+          <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-300 bg-clip-text pb-1 leading-[1.15] text-transparent">
+            Intelligence Services
+          </span>
         </h1>
         <p className="mx-auto max-w-2xl text-ni-muted">
           {BRAND.company} delivers tailored intelligence solutions for individuals and
