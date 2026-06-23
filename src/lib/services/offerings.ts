@@ -2,7 +2,24 @@ export type ServiceStatus = "LIVE" | "COMING SOON";
 
 export type ServiceAudience = "individual" | "business" | "both";
 
-export type ServicePricingModel = "fixed" | "starting_at" | "monthly" | "custom";
+export type ServicePricingModel =
+  | "fixed"
+  | "starting_at"
+  | "monthly"
+  | "hourly"
+  | "range"
+  | "custom";
+
+export interface ServicePriceTier {
+  model: ServicePricingModel;
+  amount: string;
+  note?: string;
+}
+
+export interface ServicePricing {
+  individual?: ServicePriceTier;
+  business?: ServicePriceTier;
+}
 
 export interface ServiceOffering {
   slug: string;
@@ -11,11 +28,7 @@ export interface ServiceOffering {
   status: ServiceStatus;
   audience: ServiceAudience;
   highlights: string[];
-  pricing: {
-    model: ServicePricingModel;
-    amount: string;
-    note?: string;
-  };
+  pricing: ServicePricing;
   modalCopy: {
     subtitle: string;
     description: string;
@@ -39,9 +52,16 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Planned path forward with milestones and deliverables",
     ],
     pricing: {
-      model: "custom",
-      amount: "Custom Quote",
-      note: "Typical engagements from $5,000 – $100,000+",
+      individual: {
+        model: "range",
+        amount: "$499 – $4,500",
+        note: "Scoped personal automation & home-office setups",
+      },
+      business: {
+        model: "range",
+        amount: "$5,000 – $100,000+",
+        note: "Enterprise builds priced by scope, integrations, and support",
+      },
     },
     modalCopy: {
       subtitle: "Built for you. Built with you.",
@@ -78,9 +98,16 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "30-day follow-up consultation included",
     ],
     pricing: {
-      model: "fixed",
-      amount: "$3,500",
-      note: "Delivered in 2–3 weeks",
+      individual: {
+        model: "range",
+        amount: "$299 – $799",
+        note: "Personal workflow audit — delivered in 1–2 weeks",
+      },
+      business: {
+        model: "range",
+        amount: "$2,500 – $5,000",
+        note: "Team & org-wide audit — delivered in 2–3 weeks",
+      },
     },
     modalCopy: {
       subtitle: "Know where you stand before you build.",
@@ -117,9 +144,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Privacy-first architecture",
     ],
     pricing: {
-      model: "starting_at",
-      amount: "$1,499",
-      note: "One-time setup fee",
+      individual: {
+        model: "range",
+        amount: "$149 – $499",
+        note: "One-time setup — most personal stacks land around $249",
+      },
     },
     modalCopy: {
       subtitle: "Your intelligence stack, configured for you.",
@@ -156,9 +185,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Ongoing tuning for 60 days",
     ],
     pricing: {
-      model: "starting_at",
-      amount: "$899",
-      note: "Includes 60-day tuning period",
+      individual: {
+        model: "range",
+        amount: "$99 – $399",
+        note: "Includes 60-day tuning — starter setups from $149",
+      },
     },
     modalCopy: {
       subtitle: "Research that matches your standards.",
@@ -195,9 +226,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Migration from existing notes",
     ],
     pricing: {
-      model: "starting_at",
-      amount: "$1,299",
-      note: "Includes data migration",
+      individual: {
+        model: "range",
+        amount: "$149 – $449",
+        note: "Includes data migration — typical builds around $249",
+      },
     },
     modalCopy: {
       subtitle: "Everything you know, instantly accessible.",
@@ -234,9 +267,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Delivery via email or dashboard",
     ],
     pricing: {
-      model: "monthly",
-      amount: "$249/mo",
-      note: "Setup fee: $749 (waived with annual plan)",
+      individual: {
+        model: "monthly",
+        amount: "$39 – $79/mo",
+        note: "Setup: $99 – $249 (waived with annual plan)",
+      },
     },
     modalCopy: {
       subtitle: "Stay ahead without the information overload.",
@@ -273,9 +308,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Executive stakeholder alignment",
     ],
     pricing: {
-      model: "starting_at",
-      amount: "$15,000",
-      note: "4–6 week engagement",
+      business: {
+        model: "range",
+        amount: "$12,000 – $35,000",
+        note: "4–6 week engagement — scoped by org size and complexity",
+      },
     },
     modalCopy: {
       subtitle: "AI strategy that survives the boardroom.",
@@ -312,9 +349,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Team training included",
     ],
     pricing: {
-      model: "starting_at",
-      amount: "$8,500",
-      note: "Scoped per integration complexity",
+      business: {
+        model: "range",
+        amount: "$4,500 – $15,000",
+        note: "Or $175/hr for scoped integration work",
+      },
     },
     modalCopy: {
       subtitle: "Your tools should talk to each other.",
@@ -351,9 +390,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "Employee training program",
     ],
     pricing: {
-      model: "starting_at",
-      amount: "$12,000",
-      note: "Includes 90-day implementation support",
+      business: {
+        model: "range",
+        amount: "$8,000 – $25,000",
+        note: "Includes 90-day implementation support",
+      },
     },
     modalCopy: {
       subtitle: "Use AI confidently, stay compliant.",
@@ -390,9 +431,11 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       "30-day post-training support",
     ],
     pricing: {
-      model: "starting_at",
-      amount: "$4,500",
-      note: "Up to 25 participants per cohort",
+      business: {
+        model: "range",
+        amount: "$2,500 – $8,500",
+        note: "Up to 25 participants per cohort — additional seats quoted separately",
+      },
     },
     modalCopy: {
       subtitle: "Tools are useless if your team won't use them.",
@@ -435,17 +478,58 @@ export function getServicesByAudience(
   );
 }
 
-export function formatServicePrice(pricing: ServiceOffering["pricing"]): string {
-  switch (pricing.model) {
+export function formatPriceTier(tier: ServicePriceTier): string {
+  switch (tier.model) {
     case "fixed":
-      return pricing.amount;
-    case "starting_at":
-      return `From ${pricing.amount}`;
+    case "range":
     case "monthly":
-      return pricing.amount;
+    case "hourly":
     case "custom":
-      return pricing.amount;
+      return tier.amount;
+    case "starting_at":
+      return tier.amount.toLowerCase().startsWith("from ")
+        ? tier.amount
+        : `From ${tier.amount}`;
   }
+}
+
+export interface ServicePriceLine {
+  label: string;
+  price: string;
+  note?: string;
+}
+
+export function getServicePriceLines(
+  pricing: ServicePricing,
+  audience: ServiceAudience
+): ServicePriceLine[] {
+  const lines: ServicePriceLine[] = [];
+
+  if (pricing.individual && (audience === "individual" || audience === "both")) {
+    lines.push({
+      label: audience === "both" ? "Individual" : "Price",
+      price: formatPriceTier(pricing.individual),
+      note: pricing.individual.note,
+    });
+  }
+
+  if (pricing.business && (audience === "business" || audience === "both")) {
+    lines.push({
+      label: audience === "both" ? "Business" : "Price",
+      price: formatPriceTier(pricing.business),
+      note: pricing.business.note,
+    });
+  }
+
+  return lines;
+}
+
+/** @deprecated Use getServicePriceLines for multi-tier display */
+export function formatServicePrice(pricing: ServicePricing): string {
+  const lines = getServicePriceLines(pricing, "both");
+  if (lines.length === 0) return "Contact for pricing";
+  if (lines.length === 1) return lines[0].price;
+  return lines.map((l) => `${l.label}: ${l.price}`).join(" · ");
 }
 
 /** @deprecated Use getServiceBySlug("tailored-intelligence-server") */
@@ -489,6 +573,7 @@ export const TIMELINE_OPTIONS = [
 ] as const;
 
 export const BUDGET_OPTIONS = [
+  "Under $500",
   "Under $1,000",
   "$1,000 – $5,000",
   "$5,000 – $15,000",

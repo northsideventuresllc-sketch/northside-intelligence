@@ -9,7 +9,7 @@ import {
   FLOOR_RATIO,
   INDIVIDUAL_PRICE_MULTIPLIER,
   NEGOTIATION_TIERS,
-  SERVICE_MARKET_RATES_CENTS,
+  resolveMarketRateCents,
   TEAM_SIZE_MULTIPLIERS,
   TIMELINE_MULTIPLIERS,
   maxPaymentPlanMonths,
@@ -109,9 +109,6 @@ export function generateServiceQuote(input: QuoteInput): ServiceQuoteResult {
     throw new Error("Unknown service");
   }
 
-  const marketReferenceCents =
-    SERVICE_MARKET_RATES_CENTS[input.serviceSlug] ?? 500000;
-
   const teamMult = TEAM_SIZE_MULTIPLIERS[input.teamSize] ?? 1.0;
   const timelineMult = TIMELINE_MULTIPLIERS[input.timeline] ?? 1.0;
   const complexityMult = complexityMultiplier(input);
@@ -119,6 +116,8 @@ export function generateServiceQuote(input: QuoteInput): ServiceQuoteResult {
     input.accountType,
     service.audience
   );
+
+  const marketReferenceCents = resolveMarketRateCents(input.serviceSlug, isIndividual);
 
   const scopeMultiplier = teamMult * timelineMult * complexityMult;
 
