@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { GrantBotBackground } from "@/components/grantbot/GrantBotBackground";
 import { GrantBotNav } from "@/components/grantbot/GrantBotNav";
 import { GrantListingBubble } from "@/components/grantbot/GrantListingBubble";
+import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { grantbotPath } from "@/lib/grantbot/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
@@ -301,10 +302,16 @@ export default function DashboardClient({
           ? { type: "ni_subscription" as const, tier: "power" as const, interval: "monthly" as const }
           : null;
 
+  const isGenerating =
+    questionsLoading ||
+    searchLoading ||
+    Object.values(drafts).some((draft) => draft.loading);
+
   return (
     <div className="relative min-h-screen">
       <GrantBotBackground />
       <GrantBotNav email={email} planLabel={planLabel} onSignOut={handleSignOut} />
+      <Sector3LoadingBar loading={isGenerating} variant="grantbot" />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
         {gated && gateContent ? (

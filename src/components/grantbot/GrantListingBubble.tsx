@@ -28,7 +28,7 @@ export function GrantListingBubble({
   const hasDraft = !!draftState?.text;
 
   return (
-    <article className="gb-glass animate-float-bubble rounded-3xl border border-gb-emerald/20 p-5 shadow-gb-glow">
+    <article className="gb-glass animate-bubble-in rounded-3xl border border-gb-emerald/20 p-5 shadow-gb-glow">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-white">{listing.name}</h3>
@@ -68,7 +68,7 @@ export function GrantListingBubble({
       )}
 
       {hasDraft && draftState.text && (
-        <div className="mt-5 rounded-2xl border border-white/10 bg-gb-bg/60 p-4">
+        <div className="animate-bubble-in mt-5 rounded-2xl border border-white/10 bg-gb-bg/60 p-4">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm font-medium text-gb-emerald">Application Draft</span>
             <button

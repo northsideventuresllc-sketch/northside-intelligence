@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
+import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { replyflowPath } from "@/lib/replyflow/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
@@ -141,6 +142,7 @@ export default function DashboardClient({
     <div className="relative min-h-screen">
       <ReplyFlowBackground />
       <ReplyFlowNav email={email} planLabel={planLabel} onSignOut={handleSignOut} />
+      <Sector3LoadingBar loading={loading} variant="replyflow" />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
         {gated && gateContent ? (

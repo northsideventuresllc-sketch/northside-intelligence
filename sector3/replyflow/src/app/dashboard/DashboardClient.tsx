@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ReplyFlowBackground } from '@/components/ReplyFlowBackground'
 import { ReplyFlowNav } from '@/components/ReplyFlowNav'
+import { Sector3LoadingBar } from '@/components/Sector3LoadingBar'
 import { createClient } from '@/lib/supabase/client'
 
 const TONES = ['Professional', 'Friendly', 'Empathetic', 'Firm'] as const
@@ -91,6 +92,7 @@ export default function DashboardClient({
     <div className="relative min-h-screen">
       <ReplyFlowBackground />
       <ReplyFlowNav email={email} planLabel={planLabel} onSignOut={handleSignOut} />
+      <Sector3LoadingBar loading={loading} variant="replyflow" />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
         {/* Usage meter */}
