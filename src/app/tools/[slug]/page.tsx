@@ -18,6 +18,7 @@ import { getNiTierConfig } from "@/lib/billing/ni-tiers";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
 import { INTELLIGENCE_TOOLS } from "@/lib/constants";
 import { getSector3DashboardPath } from "@/lib/sector3-routing";
+import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -43,6 +44,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
     data: { user },
   } = await supabaseAuth.auth.getUser();
 
+  await hydratePlatformEnvFromDatabase();
   const service = createServiceClient();
   const { data: pricingRow } = await service
     .from("ni_tool_pricing")

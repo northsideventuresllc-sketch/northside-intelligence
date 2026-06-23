@@ -1,6 +1,6 @@
 import { getSector3ToolAccess } from "./access";
 import { ensureSector3ToolProfile } from "./profile";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createSector3ServiceClient } from "./service-client";
 import type { Sector3ToolRuntimeConfig } from "./types";
 import type { Sector3ToolAccess } from "./access";
 
@@ -8,7 +8,7 @@ interface UsageOk {
   ok: true;
   access: Sector3ToolAccess;
   usageCount: number;
-  svc: ReturnType<typeof createServiceClient>;
+  svc: Awaited<ReturnType<typeof createSector3ServiceClient>>;
 }
 
 interface UsageFail {
@@ -25,7 +25,7 @@ export async function checkSector3Usage(
   config: Sector3ToolRuntimeConfig
 ): Promise<UsageOk | UsageFail> {
   const access = await getSector3ToolAccess(userId, config);
-  const svc = createServiceClient();
+  const svc = await createSector3ServiceClient();
   await ensureSector3ToolProfile(svc, config, userId, email);
 
   const { data: profile, error } = await svc
@@ -71,7 +71,7 @@ export async function checkSector3Usage(
 }
 
 export async function incrementSector3Usage(
-  svc: ReturnType<typeof createServiceClient>,
+  svc: Awaited<ReturnType<typeof createSector3ServiceClient>>,
   userId: string,
   config: Sector3ToolRuntimeConfig,
   currentCount: number

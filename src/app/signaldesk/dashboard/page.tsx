@@ -1,8 +1,6 @@
 import { createSector3DashboardPage } from "@/lib/sector3-tools/create-dashboard-page";
 import { SIGNALDESK_CONFIG } from "@/lib/sector3-tools/configs";
 
-const FOCUS_AREAS = ["General", "Market", "Product", "Competitive", "Regulatory"];
-
 export default createSector3DashboardPage(SIGNALDESK_CONFIG, {
   apiPath: "/api/signaldesk/generate",
   primaryLabel: "Generate Signal Brief",
@@ -11,7 +9,7 @@ export default createSector3DashboardPage(SIGNALDESK_CONFIG, {
     {
       id: "focusArea",
       label: "Focus area",
-      placeholder: "General",
+      placeholder: "General, Market, Product, Competitive, or Regulatory",
     },
     {
       id: "rawSignals",
@@ -20,10 +18,4 @@ export default createSector3DashboardPage(SIGNALDESK_CONFIG, {
       multiline: true,
     },
   ],
-  buildPayload: (values) => ({
-    focusArea: FOCUS_AREAS.includes(values.focusArea)
-      ? values.focusArea
-      : values.focusArea || "General",
-    rawSignals: values.rawSignals,
-  }),
 });

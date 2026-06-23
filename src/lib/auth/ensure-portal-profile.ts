@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { normalizeUsername } from "@/lib/auth/username";
 import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
+import { ensureAllSector3ToolProfiles } from "@/lib/sector3-tools/profile";
 
 type AuthUser = Pick<User, "id" | "email" | "user_metadata">;
 
@@ -60,6 +61,7 @@ export async function ensurePortalProfile(
   );
 
   await ensureGrantBotProfile(admin, user.id, email);
+  await ensureAllSector3ToolProfiles(admin, user.id, email);
 
   await admin.from("ni_subscriptions").upsert(
     { id: user.id, tier: "free", updated_at: now },

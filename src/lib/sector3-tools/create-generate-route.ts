@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserBillingState, userCanUseTool } from "@/lib/billing/entitlements";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createSector3ServiceClient } from "@/lib/sector3-tools/service-client";
 import { ensureSector3ToolProfile } from "@/lib/sector3-tools/profile";
 import {
   checkSector3Usage,
@@ -59,7 +59,7 @@ export function createSector3GenerateRoute(
       await incrementSector3Usage(usage.svc, user.id, config, usage.usageCount);
     }
 
-    const admin = createServiceClient();
+    const admin = await createSector3ServiceClient();
     await ensureSector3ToolProfile(admin, config, user.id, user.email);
 
     const sessionPayload: Record<string, unknown> = {

@@ -7,8 +7,8 @@ import {
 } from "@/lib/grantbot/history";
 import { portalSignInUrl } from "@/lib/grantbot/auth";
 import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
+import { createSector3ServiceClient } from "@/lib/sector3-tools/service-client";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import { createServiceClient } from "@/lib/supabase/server";
 import DashboardClient from "./DashboardClient";
 import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
 
@@ -21,7 +21,7 @@ export default async function GrantBotDashboardPage() {
 
   const access = await getGrantBotAccess(user.id);
 
-  const admin = createServiceClient();
+  const admin = await createSector3ServiceClient();
   await ensureGrantBotProfile(admin, user.id, user.email);
 
   if (!access.canUseTool) {

@@ -5,16 +5,15 @@ import type { DashboardField } from "@/components/sector3/Sector3ToolDashboard";
 import { getSector3ToolAccess } from "@/lib/sector3-tools/access";
 import { createSector3ToolAuth } from "@/lib/sector3-tools/auth";
 import { ensureSector3ToolProfile } from "@/lib/sector3-tools/profile";
+import { createSector3ServiceClient } from "@/lib/sector3-tools/service-client";
 import type { Sector3SessionRow, Sector3ToolRuntimeConfig } from "@/lib/sector3-tools/types";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import { createServiceClient } from "@/lib/supabase/server";
 
 interface DashboardPageOptions {
   apiPath: string;
   fields: DashboardField[];
   primaryLabel: string;
   usageColumn: string;
-  buildPayload: (values: Record<string, string>) => Record<string, unknown>;
 }
 
 export function createSector3DashboardPage(
@@ -30,9 +29,10 @@ export function createSector3DashboardPage(
 
     if (!user) redirect(auth.portalSignInUrl());
 
-    const access = await getSector3ToolAccess(user.id, config);
-    const admin = createServiceClient();
+    const admin = await createSector3ServiceClient();
     await ensureSector3ToolProfile(admin, config, user.id, user.email);
+
+    const access = await getSector3ToolAccess(user.id, config);
 
     if (!access.canUseTool) {
       return (
@@ -56,7 +56,6 @@ export function createSector3DashboardPage(
               variant="portal"
             />
           }
-          buildPayload={options.buildPayload}
         />
       );
     }
@@ -65,7 +64,7 @@ export function createSector3DashboardPage(
       .from(config.profileTable)
       .select("*")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     const { data: historyRows } = await supabase
       .from(config.sessionsTable)
@@ -91,7 +90,6 @@ export function createSector3DashboardPage(
         usageLimit={access.usageLimit}
         hasUnlimitedAccess={access.hasUnlimitedAccess}
         niTier={access.niTier}
-        buildPayload={options.buildPayload}
       />
     );
   };

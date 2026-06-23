@@ -4,7 +4,7 @@ import {
   userCanUseTool,
   userHasUnlimitedToolAccess,
 } from "@/lib/billing/entitlements";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createSector3ServiceClient } from "./service-client";
 import type { Sector3ToolRuntimeConfig } from "./types";
 
 const UNLIMITED = 999999;
@@ -39,7 +39,7 @@ export async function getSector3ToolAccess(
   const canUse = userCanUseTool(state, config.slug);
   const hasUnlimited = userHasUnlimitedToolAccess(state, config.slug);
 
-  const service = createServiceClient();
+  const service = await createSector3ServiceClient();
   const { data: profile } = await service
     .from(config.profileTable)
     .select("tier")
