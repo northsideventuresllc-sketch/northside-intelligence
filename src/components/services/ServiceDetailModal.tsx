@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import type { ServiceOffering } from "@/lib/services/offerings";
-import { formatServicePrice, SERVICE_ACCOUNT_NOTE } from "@/lib/services/offerings";
+import { SERVICE_ACCOUNT_NOTE } from "@/lib/services/offerings";
+import { ServicePriceDisplay } from "@/components/services/ServicePriceDisplay";
 import { buildPortalAuthUrl } from "@/lib/ni-auth";
 
 interface ServiceDetailModalProps {
@@ -77,10 +78,7 @@ export function ServiceDetailModal({
         <p className="mb-4 text-sm text-cyan-300/80">{service.modalCopy.subtitle}</p>
 
         <div className="mb-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3">
-          <p className="text-lg font-semibold text-white">{formatServicePrice(service.pricing)}</p>
-          {service.pricing.note && (
-            <p className="mt-0.5 text-xs text-ni-muted">{service.pricing.note}</p>
-          )}
+          <ServicePriceDisplay pricing={service.pricing} audience={service.audience} size="modal" />
         </div>
 
         <p className="mb-6 leading-relaxed text-ni-muted">{service.modalCopy.description}</p>

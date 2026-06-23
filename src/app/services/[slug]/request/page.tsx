@@ -5,7 +5,8 @@ import { Footer } from "@/components/landing/Footer";
 import { NavServer } from "@/components/landing/NavServer";
 import { ServiceRequestForm } from "@/components/services/ServiceRequestForm";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import { formatServicePrice, getServiceBySlug, type AccountType } from "@/lib/services/offerings";
+import { getServiceBySlug, type AccountType } from "@/lib/services/offerings";
+import { ServicePriceDisplay } from "@/components/services/ServicePriceDisplay";
 
 interface PageProps {
   params: { slug: string };
@@ -61,9 +62,9 @@ export default async function ServiceRequestPage({ params }: PageProps) {
           Service Request
         </p>
         <h1 className="mb-2 text-3xl font-semibold text-white">{service.name}</h1>
-        <p className="mb-2 text-lg font-medium text-cyan-300">
-          {formatServicePrice(service.pricing)}
-        </p>
+        <div className="mb-4">
+          <ServicePriceDisplay pricing={service.pricing} audience={service.audience} size="modal" />
+        </div>
         <p className="mb-8 text-ni-muted">
           Tell us about your workflows, systems, and goals. The more detail you provide, the
           better we can tailor our approach to your needs.

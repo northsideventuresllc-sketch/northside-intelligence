@@ -15,6 +15,7 @@ import {
   type AudienceFilter,
 } from "@/components/services/ServiceAudienceFilter";
 import { ServiceReviews } from "@/components/services/ServiceReviews";
+import { ServiceAssistantWidget } from "@/components/services/ServiceAssistantWidget";
 import { buildPortalAuthUrl } from "@/lib/ni-auth";
 
 export function ServicesPageClient() {
@@ -119,6 +120,13 @@ export function ServicesPageClient() {
         isOpen={modalOpen}
         onClose={handleCloseModal}
         isLoggedIn={isLoggedIn}
+      />
+
+      <ServiceAssistantWidget
+        onServiceSelect={(slug) => {
+          setSelectedSlug(slug);
+          setModalOpen(true);
+        }}
       />
     </>
   );

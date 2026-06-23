@@ -1,18 +1,26 @@
 /**
  * Competitive market reference rates (USD cents) — what comparable providers typically charge.
  * NI quotes are generated 1–2% below these benchmarks.
+ *
+ * Individual rates are intentionally lower — personal automation scope is narrower.
  */
 export const SERVICE_MARKET_RATES_CENTS: Record<string, number> = {
   "tailored-intelligence-server": 4500000, // ~$45,000 avg enterprise build
-  "intelligence-audit": 360000, // ~$3,600
-  "personal-intelligence-setup": 165000, // ~$1,650
-  "ai-research-assistant": 98000, // ~$980
-  "personal-knowledge-base": 140000, // ~$1,400
-  "executive-briefing-intelligence": 320000, // ~$3,200 annual equivalent
+  "intelligence-audit": 360000, // ~$3,600 business audit
+  "personal-intelligence-setup": 35000, // ~$350 personal setup
+  "ai-research-assistant": 22000, // ~$220
+  "personal-knowledge-base": 28000, // ~$280
+  "executive-briefing-intelligence": 58800, // ~$588 annual equivalent ($49/mo)
   "enterprise-ai-strategy": 1580000, // ~$15,800
   "workflow-integration": 880000, // ~$8,800
   "ai-governance-compliance": 1250000, // ~$12,500
   "team-intelligence-training": 480000, // ~$4,800
+};
+
+/** Lower market references for personal-scope engagements on dual-audience services. */
+export const SERVICE_INDIVIDUAL_MARKET_RATES_CENTS: Partial<Record<string, number>> = {
+  "tailored-intelligence-server": 180000, // ~$1,800 personal build
+  "intelligence-audit": 52000, // ~$520 personal audit
 };
 
 /** Individual clients receive lower pricing — personal-use scope is narrower. */
@@ -67,6 +75,7 @@ export const TIMELINE_MULTIPLIERS: Record<string, number> = {
 
 /** Budget ceiling — caps quote if client's stated budget is lower. */
 export const BUDGET_CEILING_CENTS: Record<string, number | null> = {
+  "Under $500": 50000,
   "Under $1,000": 100000,
   "$1,000 – $5,000": 500000,
   "$5,000 – $15,000": 1500000,
@@ -75,3 +84,13 @@ export const BUDGET_CEILING_CENTS: Record<string, number | null> = {
   "$100,000+": null,
   "Prefer to discuss": null,
 };
+
+export function resolveMarketRateCents(
+  serviceSlug: string,
+  isIndividual: boolean
+): number {
+  if (isIndividual && SERVICE_INDIVIDUAL_MARKET_RATES_CENTS[serviceSlug] != null) {
+    return SERVICE_INDIVIDUAL_MARKET_RATES_CENTS[serviceSlug]!;
+  }
+  return SERVICE_MARKET_RATES_CENTS[serviceSlug] ?? 500000;
+}
