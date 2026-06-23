@@ -7,7 +7,7 @@ import { PopularItemsMarquee } from "@/components/store/PopularItemsMarquee";
 import { StoreSearchSidebar } from "@/components/store/StoreSearchSidebar";
 import { StoreSearchResults } from "@/components/store/StoreSearchResults";
 import { WebTrackingOptIn } from "@/components/store/WebTrackingOptIn";
-import { StoreCartLink } from "@/components/store/StoreCartLink";
+import { StoreCartHeader } from "@/components/store/StoreCartHeader";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
 
 export interface StoreSearchFilters {
@@ -97,7 +97,7 @@ export function StorePageClient() {
             and what shoppers love on Northside Intelligence.
           </p>
         </div>
-        <StoreCartLink />
+        <StoreCartHeader />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">

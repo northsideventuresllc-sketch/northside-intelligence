@@ -5,7 +5,7 @@ import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { ProductPurchasePanel } from "@/components/store/ProductPurchasePanel";
-import { StoreCartProvider } from "@/components/store/StoreCartProvider";
+import { StoreCartHeader } from "@/components/store/StoreCartHeader";
 import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
@@ -53,13 +53,15 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
   return (
     <main className="min-h-screen bg-ni-bg">
       <Nav />
-      <StoreCartProvider>
-        <section className="relative px-6 pb-20 pt-24">
-          <div className="mx-auto max-w-4xl">
+      <section className="relative px-6 pb-28 pt-24">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-6 flex items-center justify-between gap-4">
             <Link href="/store" className="text-sm text-cyan-300 hover:underline">
               ← Back to {SMART_STORE_NAME}
             </Link>
-            <div className="glass-panel mt-6 overflow-hidden">
+            <StoreCartHeader />
+          </div>
+          <div className="glass-panel overflow-hidden">
               <div className="flex flex-col lg:flex-row">
                 <div className="flex h-80 items-center justify-center border-b border-white/5 bg-gradient-to-br from-cyan-500/10 to-transparent p-8 lg:h-auto lg:w-2/5 lg:border-b-0 lg:border-r">
                   {product.imageUrl ? (
@@ -133,9 +135,8 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                 </p>
               </section>
             )}
-          </div>
-        </section>
-      </StoreCartProvider>
+        </div>
+      </section>
       <Footer />
     </main>
   );
