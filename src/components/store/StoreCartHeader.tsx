@@ -1,26 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { StoreCartLink } from "@/components/store/StoreCartLink";
+import { useStoreGate } from "@/components/store/StoreGateProvider";
 import { useStoreCheckout } from "@/hooks/useStoreCheckout";
-import type { StoreGateStatus } from "@/lib/store/types";
 
 interface StoreCartHeaderProps {
   showCheckout?: boolean;
 }
 
 export function StoreCartHeader({ showCheckout = true }: StoreCartHeaderProps) {
-  const { checkout, loading, error, setError, verifying, itemCount } = useStoreCheckout();
-  const [gate, setGate] = useState<StoreGateStatus | null>(null);
-
-  useEffect(() => {
-    fetch("/api/store/gate")
-      .then((r) => r.json())
-      .then((json: StoreGateStatus) => setGate(json))
-      .catch(() => setGate(null));
-  }, []);
-
-  const checkoutEnabled = Boolean(gate?.live) && itemCount > 0 && !verifying;
+  const gate = useStoreGate();
+  const { checkout, loading, error, setError, itemCount } = useStoreCheckout();
+  const checkoutEnabled = gate.live && itemCount > 0;
 
   return (
     <div className="flex flex-col items-end gap-1">

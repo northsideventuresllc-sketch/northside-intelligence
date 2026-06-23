@@ -12,7 +12,6 @@ import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
 import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { getCatalogProductBySlug, toCatalogProductView } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
-import { getStoreGateStatus } from "@/lib/store/gate";
 import { SMART_STORE_NAME, smartStorePageTitle } from "@/lib/store/branding";
 import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
@@ -42,7 +41,6 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
   const product = toCatalogProductView(refreshed.row, {
     priceChangeNotice: refreshed.notice ?? undefined,
   });
-  const gate = getStoreGateStatus();
   const priceLabel = formatRetailPriceRange(
     product.retailPriceCents,
     product.retailPriceMinCents,
@@ -114,7 +112,6 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                   <ProductPurchasePanel
                     product={product}
                     sourceProductId={refreshed.row.sourceProductId}
-                    checkoutLive={gate.live}
                   />
                 </div>
               </div>
