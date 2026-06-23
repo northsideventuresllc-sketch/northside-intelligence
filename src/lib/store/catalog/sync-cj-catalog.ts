@@ -11,7 +11,10 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 /** CJ listV2 returns at most 100 items/page and caps totalRecords at 6000 per keyword slice. */
 export const CJ_PAGE_SIZE = 100;
+/** Default pages per manual/hourly run. Daily cron passes a higher value. */
 export const CJ_PAGES_PER_CRON_RUN = 10;
+/** Pages ingested during the daily viral refresh (Hobby-safe once-per-day cadence). */
+export const CJ_PAGES_PER_DAILY_RUN = 15;
 
 export interface CjCatalogSyncResult {
   keywordSlice: string;
@@ -109,11 +112,22 @@ export async function syncCjCatalogBatch(
   let nextKeywordSlice: string | null = null;
 
   while (pagesProcessed < pagesPerRun) {
-    const pageResult = await fetchCjCatalogPage({
-      page: state.page_number,
-      size: CJ_PAGE_SIZE,
-      keyWord: state.keyword_slice || undefined,
-    });
+    let pageResult: Awaited<ReturnType<typeof fetchCjCatalogPage>>;
+    try {
+      pageResult = await fetchCjCatalogPage({
+        page: state.page_number,
+        size: CJ_PAGE_SIZE,
+        keyWord: state.keyword_slice || undefined,
+      });
+    } catch (err) {
+      console.error("[store/catalog-sync] CJ page fetch failed", {
+        slice: state.keyword_slice,
+        page: state.page_number,
+        err,
+      });
+      await saveSyncState(state);
+      throw err;
+    }
 
     if (!pageResult.products.length && state.page_number === 1) {
       sliceComplete = true;
@@ -125,6 +139,7 @@ export async function syncCjCatalogBatch(
         state.total_pages = null;
         state.total_records = null;
       }
+      await saveSyncState(state);
       break;
     }
 
@@ -159,13 +174,17 @@ export async function syncCjCatalogBatch(
         state.keyword_slice = CJ_CATALOG_KEYWORD_SLICES[0] ?? "";
         state.page_number = 1;
       }
+      await saveSyncState(state);
       break;
     }
 
     state.page_number += 1;
+    await saveSyncState(state);
   }
 
-  await saveSyncState(state);
+  if (pagesProcessed > 0 && !sliceComplete) {
+    await saveSyncState(state);
+  }
 
   return {
     keywordSlice: state.keyword_slice,

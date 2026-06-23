@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const sync = await syncCjCatalogBatch();
-    const enriched = await refreshCjCatalogListings(40);
+    const enriched = await refreshCjCatalogListings(20);
     return NextResponse.json({ ok: true, sync, enriched });
   } catch (err) {
     console.error("[cron/store-catalog-sync]", err);
