@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { Footer } from "@/components/landing/Footer";
 import { AccountSettingsNav } from "@/components/account/AccountSettingsNav";
 import { SignOutButton } from "@/components/auth/SignOutButton";
@@ -20,7 +20,7 @@ export default async function AccountLayout({ children }: AccountLayoutProps) {
 
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <section className="relative px-6 pb-20 pt-24">
         <div className="mx-auto max-w-2xl">
           <div className="mb-8 text-center">

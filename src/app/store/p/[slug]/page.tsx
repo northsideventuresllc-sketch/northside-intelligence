@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { ProductPurchasePanel } from "@/components/store/ProductPurchasePanel";
 import { StoreCartHeader } from "@/components/store/StoreCartHeader";
@@ -50,7 +50,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
 
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <section className="relative px-6 pb-28 pt-24">
         <div className="mx-auto max-w-4xl">
           <div className="mb-6 flex items-center justify-between gap-4">

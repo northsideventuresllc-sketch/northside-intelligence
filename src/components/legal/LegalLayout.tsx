@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { Footer } from "@/components/landing/Footer";
 
 interface LegalLayoutProps {
@@ -11,7 +11,7 @@ interface LegalLayoutProps {
 export function LegalLayout({ title, children }: LegalLayoutProps) {
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <article className="mx-auto max-w-3xl px-6 pb-16 pt-28">
         <Link href="/" className="mb-8 inline-block text-sm text-ni-muted transition hover:text-cyan-300">
           ← Back to home

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { getUserBillingState } from "@/lib/billing/entitlements";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -29,7 +29,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <section className="relative px-6 pb-20 pt-24">
         <div className="mx-auto max-w-2xl text-center">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">

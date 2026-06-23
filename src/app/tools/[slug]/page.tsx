@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ToolPricingGrid } from "@/components/billing/ToolPricingGrid";
 import { Footer } from "@/components/landing/Footer";
-import { Nav } from "@/components/landing/Nav";
+import { NavServer } from "@/components/landing/NavServer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   getUserBillingState,
@@ -76,7 +76,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
   return (
     <main className="min-h-screen bg-ni-bg">
-      <Nav />
+      <NavServer />
       <section className="relative px-6 pb-20 pt-24">
         <div className="mx-auto max-w-2xl">
           <Link href="/#tools" className="text-sm text-cyan-300/80 hover:text-cyan-200">
