@@ -9,12 +9,17 @@ export function isCjDropshippingWired(): boolean {
   return Boolean(process.env.CJ_DROPSHIPPING_API_KEY?.trim());
 }
 
+/** Placeholder or empty Make webhook values should fall through to ni_platform_secrets. */
+export function isPlaceholderMakeStoreWebhookUrl(value: string | null | undefined): boolean {
+  const url = value?.trim();
+  if (!url) return true;
+  if (url.includes("placeholder")) return true;
+  return false;
+}
+
 /** True when Make.com store fulfillment webhook is configured (not a placeholder). */
 export function isMakeStoreWebhookConfigured(): boolean {
-  const url = process.env.MAKE_STORE_WEBHOOK_URL?.trim();
-  if (!url) return false;
-  if (url.includes("placeholder")) return false;
-  return true;
+  return !isPlaceholderMakeStoreWebhookUrl(process.env.MAKE_STORE_WEBHOOK_URL);
 }
 
 /** Manual launch flag — must be explicitly enabled. */

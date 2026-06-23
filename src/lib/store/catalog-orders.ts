@@ -8,6 +8,8 @@ export interface CatalogCheckoutLine {
   catalog: CatalogProductRow;
   quantity: number;
   shippingTier: ShippingTier;
+  variantId: string | null;
+  unitPriceCents: number;
 }
 
 export interface CreateCatalogOrderInput {
@@ -50,8 +52,9 @@ export async function createPaidCatalogOrder(input: CreateCatalogOrderInput): Pr
     product_slug: line.catalog.slug,
     product_name: line.catalog.name,
     source_product_id: line.catalog.sourceProductId,
+    variant_id: line.variantId,
     quantity: line.quantity,
-    unit_price_cents: line.catalog.retailPriceCents,
+    unit_price_cents: line.unitPriceCents,
     shipping_tier: line.shippingTier,
   }));
 

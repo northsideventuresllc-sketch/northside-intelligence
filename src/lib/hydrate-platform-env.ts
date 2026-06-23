@@ -6,6 +6,7 @@ import {
   isPlaceholderStripeWebhookSecret,
   resolvePlatformSecret,
 } from "@/lib/platform-secrets";
+import { isPlaceholderMakeStoreWebhookUrl } from "@/lib/store/gate";
 
 function isMissingSecret(value: string | null | undefined): boolean {
   const trimmed = value?.trim();
@@ -71,7 +72,7 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
     const makeStoreUrl = await resolvePlatformSecret(
       "MAKE_STORE_WEBHOOK_URL",
       process.env.MAKE_STORE_WEBHOOK_URL,
-      (value) => !value?.trim()
+      isPlaceholderMakeStoreWebhookUrl
     );
     if (makeStoreUrl) process.env.MAKE_STORE_WEBHOOK_URL = makeStoreUrl;
 

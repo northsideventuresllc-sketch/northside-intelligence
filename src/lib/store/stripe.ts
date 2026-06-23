@@ -2,6 +2,7 @@ import "server-only";
 
 import Stripe from "stripe";
 import { ensureBillingEnvHydrated, getBillingStripe } from "@/lib/billing/stripe";
+import { isPlaceholderMakeStoreWebhookUrl } from "@/lib/store/gate";
 
 let storeWebhookHydrated = false;
 
@@ -15,9 +16,11 @@ export async function ensureStoreStripeEnv(): Promise<void> {
     const secret = await readPlatformSecret("STRIPE_WEBHOOK_SECRET_STORE");
     if (secret) process.env.STRIPE_WEBHOOK_SECRET_STORE = secret;
   }
-  if (!process.env.MAKE_STORE_WEBHOOK_URL?.trim()) {
+  if (isPlaceholderMakeStoreWebhookUrl(process.env.MAKE_STORE_WEBHOOK_URL)) {
     const url = await readPlatformSecret("MAKE_STORE_WEBHOOK_URL");
-    if (url) process.env.MAKE_STORE_WEBHOOK_URL = url;
+    if (url && !isPlaceholderMakeStoreWebhookUrl(url)) {
+      process.env.MAKE_STORE_WEBHOOK_URL = url;
+    }
   }
 }
 
