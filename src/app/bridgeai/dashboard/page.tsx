@@ -25,9 +25,4 @@ export default createSector3DashboardPage(BRIDGEAI_CONFIG, {
       multiline: true,
     },
   ],
-  buildPayload: (values) => ({
-    sourceSystem: values.sourceSystem,
-    targetSystem: values.targetSystem,
-    goal: values.goal,
-  }),
 });

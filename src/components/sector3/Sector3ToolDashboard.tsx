@@ -33,7 +33,6 @@ interface Props {
   niTier: string;
   gated?: boolean;
   gateContent?: React.ReactNode;
-  buildPayload: (values: Record<string, string>) => Record<string, unknown>;
 }
 
 function createClient() {
@@ -57,7 +56,6 @@ export function Sector3ToolDashboard({
   niTier,
   gated = false,
   gateContent,
-  buildPayload,
 }: Props) {
   const [values, setValues] = useState<Record<string, string>>(() =>
     Object.fromEntries(fields.map((f) => [f.id, ""]))
@@ -99,7 +97,7 @@ export function Sector3ToolDashboard({
     const res = await fetch(apiPath, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildPayload(values)),
+      body: JSON.stringify(values),
     });
 
     const data = (await res.json().catch(() => ({}))) as {

@@ -18,8 +18,4 @@ export default createSector3DashboardPage(GAPSCAN_CONFIG, {
       multiline: true,
     },
   ],
-  buildPayload: (values) => ({
-    scanType: values.scanType || "Workflow",
-    context: values.context,
-  }),
 });
