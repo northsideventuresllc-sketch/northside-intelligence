@@ -6,11 +6,13 @@ import { useSearchParams } from "next/navigation";
 import { Footer } from "@/components/landing/Footer";
 import { Nav } from "@/components/landing/Nav";
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
-import { StoreCartProvider, useStoreCart } from "@/components/store/StoreCartProvider";
+import { StoreCartHeader } from "@/components/store/StoreCartHeader";
+import { useStoreCart } from "@/components/store/StoreCartProvider";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
 import { calculateCartTotals } from "@/lib/store/cart/pricing";
 import type { CartLineItem } from "@/lib/store/cart/types";
 import { formatStorePrice } from "@/lib/store/client";
+import { useStoreCheckout } from "@/hooks/useStoreCheckout";
 import type { PriceChangeNoticeView } from "@/lib/store/catalog/types";
 import type { StoreGateStatus } from "@/lib/store/types";
 import type { ShippingTier } from "@/lib/store/cart/types";
@@ -31,12 +33,9 @@ function CartContent() {
     removeItem,
     updateQuantity,
     updateShippingTier,
-    syncFromVerification,
-    clearCart,
   } = useStoreCart();
+  const { checkout, loading, error, setError, verifying: checkoutVerifying } = useStoreCheckout();
   const [gate, setGate] = useState<StoreGateStatus | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [checkoutNotices, setCheckoutNotices] = useState<PriceChangeNoticeView[]>([]);
 
   useEffect(() => {
@@ -48,63 +47,38 @@ function CartContent() {
 
   const totals = useMemo(() => calculateCartTotals(items), [items]);
   const allNotices = useMemo(
-    () => [...priceNotices, ...checkoutNotices],
+    () => {
+      const seen = new Set<string>();
+      return [...priceNotices, ...checkoutNotices].filter((notice) => {
+        if (seen.has(notice.slug)) return false;
+        seen.add(notice.slug);
+        return true;
+      });
+    },
     [priceNotices, checkoutNotices]
   );
 
   async function handleCheckout() {
-    if (!items.length) return;
-    setLoading(true);
     setError("");
     setCheckoutNotices([]);
-    try {
-      const res = await fetch("/api/store/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map((item) => ({
-            slug: item.slug,
-            quantity: item.quantity,
-            shippingTier: item.shippingTier,
-            retailPriceCents: item.retailPriceCents,
-            variantId: item.variantId,
-          })),
-        }),
-      });
-      const json = (await res.json()) as {
-        url?: string;
-        error?: string;
-        priceChangeNotices?: PriceChangeNoticeView[];
-        items?: CartLineItem[];
-      };
-
-      if (res.status === 409 && json.priceChangeNotices?.length) {
-        setCheckoutNotices(json.priceChangeNotices);
-        if (json.items?.length) {
-          syncFromVerification(json.items, json.priceChangeNotices);
-        }
-        setError("Prices changed. Review the updates below, then try checkout again.");
-        return;
-      }
-
-      if (!res.ok) throw new Error(json.error ?? "Checkout failed");
-      if (!json.url) throw new Error("Checkout URL unavailable");
-      clearCart();
-      window.location.href = json.url;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Checkout failed");
-    } finally {
-      setLoading(false);
+    const result = await checkout();
+    if (!result.ok && result.priceChangeNotices?.length) {
+      setCheckoutNotices(result.priceChangeNotices);
     }
   }
 
+  const checkoutEnabled = Boolean(gate?.live) && items.length > 0 && !verifying && !checkoutVerifying;
+
   return (
-    <section className="relative px-6 pb-20 pt-24">
+    <section className="relative px-6 pb-28 pt-24">
       <div className="mx-auto max-w-3xl">
-        <Link href="/store" className="text-sm text-cyan-300 hover:underline">
-          ← Back to {SMART_STORE_NAME}
-        </Link>
-        <h1 className="mt-4 text-2xl font-semibold text-white">Your Cart</h1>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link href="/store" className="text-sm text-cyan-300 hover:underline">
+            ← Back to {SMART_STORE_NAME}
+          </Link>
+          <StoreCartHeader showCheckout={false} />
+        </div>
+        <h1 className="text-2xl font-semibold text-white">Your Cart</h1>
         <p className="mt-2 text-xs text-ni-muted">
           Your cart is saved on this device — add items anytime and return later.
         </p>
@@ -221,10 +195,10 @@ function CartContent() {
             <button
               type="button"
               onClick={handleCheckout}
-              disabled={loading || verifying || !gate?.live}
-              className="w-full rounded-xl bg-ni-cyan py-3 text-sm font-semibold text-ni-bg transition hover:bg-cyan-300 disabled:opacity-50"
+              disabled={!checkoutEnabled || loading}
+              className="w-full rounded-xl bg-ni-cyan py-3 text-sm font-semibold uppercase tracking-wider text-ni-bg transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Redirecting…" : "Checkout"}
+              {loading ? "Redirecting…" : "Checkout Now"}
             </button>
           </div>
         )}
@@ -237,13 +211,11 @@ export default function StoreCartPage() {
   return (
     <main className="min-h-screen bg-ni-bg">
       <Nav />
-      <StoreCartProvider>
-        <Suspense
-          fallback={<div className="px-6 pt-24 text-center text-ni-muted">Loading cart…</div>}
-        >
-          <CartContent />
-        </Suspense>
-      </StoreCartProvider>
+      <Suspense
+        fallback={<div className="px-6 pt-24 text-center text-ni-muted">Loading cart…</div>}
+      >
+        <CartContent />
+      </Suspense>
       <Footer />
     </main>
   );

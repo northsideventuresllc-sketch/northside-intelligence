@@ -5,7 +5,7 @@ import type { CatalogProductView, StoreSearchResponse } from "@/lib/store/catalo
 import { STORE_ITEM_CATEGORIES, formatCategoryLabel } from "@/lib/store/categories";
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { SearchResultCard } from "@/components/store/SearchResultCard";
-import { StoreCartLink } from "@/components/store/StoreCartLink";
+import { StoreCartHeader } from "@/components/store/StoreCartHeader";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
 import type { StoreSearchFilters } from "@/components/store/StorePageClient";
 
@@ -122,7 +122,7 @@ export function StoreSearchResults({
         >
           ← Back to {SMART_STORE_NAME}
         </button>
-        <StoreCartLink />
+        <StoreCartHeader showCheckout={false} />
       </div>
 
       <form onSubmit={handleSubmit} className="mb-6 flex gap-2">
