@@ -42,7 +42,8 @@ const config: Config = {
       },
       animation: {
         "float-bubble": "floatBubble 6s ease-in-out infinite",
-        "bubble-in": "bubbleIn 0.45s ease-out forwards",
+        "bubble-in": "bubbleIn 0.55s ease-out forwards",
+        "sector3-loading": "sector3Loading 1.2s ease-in-out infinite",
         "pulse-glow": "pulseGlow 2.5s ease-in-out infinite",
         wave: "wave 1.2s ease-in-out infinite",
         "grid-pulse": "grid-pulse 8s ease-in-out infinite",
@@ -62,8 +63,18 @@ const config: Config = {
           "50%": { transform: "translateY(-12px) rotate(2deg)" },
         },
         bubbleIn: {
-          "0%": { opacity: "0", transform: "translateY(16px) scale(0.98)" },
-          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+          "0%": {
+            opacity: "0",
+            transform: "translate(14px, 18px) scale(0.97) rotate(1.5deg)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translate(0, 0) scale(1) rotate(0deg)",
+          },
+        },
+        sector3Loading: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(400%)" },
         },
         pulseGlow: {
           "0%, 100%": { opacity: "0.5", transform: "scale(1)" },

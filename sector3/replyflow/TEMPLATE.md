@@ -80,6 +80,11 @@ When forking this template, update the `plans` array in `src/app/page.tsx` with 
 - **Deployment**: `TIER` env (`lite` \| `pro`) caps `PLAN_LIMITS` in `src/lib/tier.ts`.
 - **Per user**: Read `plan` from `{tool}_profiles` in API routes — never hardcode.
 
+## Generation UX (required for all Sector 3 tools)
+
+- **Loading bar**: Mount `Sector3LoadingBar` on every tool dashboard. Pass `loading={true}` while any generation request is in flight (search, draft, reply, etc.). Use `variant="replyflow"` or your tool’s theme key.
+- **Result bubbles**: Generated output panels use `animate-bubble-in` (one-shot diagonal entrance, then static). Do **not** use `animate-float-bubble` on results — that class is for decorative background skeletons only.
+
 ## Deploy
 
 Merge to `main` → GitHub Actions runs `npm run build` and `vercel --prod` with `VERCEL_TOKEN`.
