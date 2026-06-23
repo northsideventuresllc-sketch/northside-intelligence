@@ -31,6 +31,7 @@ function parseVariants(raw: unknown): CatalogVariantView[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .map((entry) => {
+      if (entry == null || typeof entry !== "object") return null;
       const v = entry as Record<string, unknown>;
       const id = v.id != null ? String(v.id) : "";
       const name = v.name != null ? String(v.name) : "";
