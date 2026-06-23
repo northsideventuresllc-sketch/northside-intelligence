@@ -25,7 +25,8 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
   for (let i = copy.length - 1; i > 0; i--) {
     state = Math.imul(state ^ (state >>> 15), 2246822507);
     state = Math.imul(state ^ (state >>> 13), 3266489909);
-    const j = state % (i + 1);
+    // Math.imul can go negative; plain % would yield negative indices and corrupt the array.
+    const j = (state >>> 0) % (i + 1);
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
 
