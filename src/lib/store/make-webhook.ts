@@ -17,18 +17,21 @@ export interface MakeStoreOrderPayload {
     cjProductId: string | null;
     quantity: number;
     unitPriceCents: number;
+    variantId: string | null;
     shippingTier?: string;
   }>;
 }
 
+import { isPlaceholderMakeStoreWebhookUrl } from "@/lib/store/gate";
+
 export async function sendMakeStoreWebhook(payload: MakeStoreOrderPayload): Promise<boolean> {
-  const url = process.env.MAKE_STORE_WEBHOOK_URL?.trim();
-  if (!url) {
+  const webhookUrl = process.env.MAKE_STORE_WEBHOOK_URL?.trim();
+  if (!webhookUrl || isPlaceholderMakeStoreWebhookUrl(webhookUrl)) {
     console.warn("[store/make] MAKE_STORE_WEBHOOK_URL not configured");
     return false;
   }
 
-  const res = await fetch(url, {
+  const res = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

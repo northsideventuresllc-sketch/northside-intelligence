@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import type { ShippingTier } from "@/lib/store/cart/types";
 import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
+import { resolveCatalogLineRetailCents } from "@/lib/store/catalog/line-price";
 import { createPaidCatalogOrder, type CatalogCheckoutLine } from "@/lib/store/catalog-orders";
 import { sendMakeStoreWebhook } from "@/lib/store/make-webhook";
 import { isStoreCheckoutLive } from "@/lib/store/gate";
@@ -52,12 +53,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing cart metadata" }, { status: 400 });
   }
 
-  let parsedItems: Array<{ slug: string; quantity: number; shippingTier: ShippingTier }>;
+  let parsedItems: Array<{
+    slug: string;
+    quantity: number;
+    shippingTier: ShippingTier;
+    variantId?: string | null;
+  }>;
   try {
     parsedItems = JSON.parse(itemsJson) as Array<{
       slug: string;
       quantity: number;
       shippingTier: ShippingTier;
+      variantId?: string | null;
     }>;
   } catch {
     return NextResponse.json({ error: "Invalid cart metadata" }, { status: 400 });
@@ -70,15 +77,19 @@ export async function POST(req: NextRequest) {
       if (!catalog) {
         return NextResponse.json({ error: `Product not found: ${item.slug}` }, { status: 404 });
       }
+      const variantId = item.variantId?.trim() || null;
+      const unitPriceCents = resolveCatalogLineRetailCents(catalog, variantId);
       lines.push({
         catalog,
         quantity: Math.max(1, Math.min(10, Number(item.quantity) || 1)),
         shippingTier: item.shippingTier === "expedited" ? "expedited" : "standard",
+        variantId,
+        unitPriceCents,
       });
     }
 
     const subtotalCents = lines.reduce(
-      (sum, line) => sum + line.catalog.retailPriceCents * line.quantity,
+      (sum, line) => sum + line.unitPriceCents * line.quantity,
       0
     );
     const shippingChargedCents = Number(session.metadata.shippingChargedCents) || 0;
@@ -119,8 +130,9 @@ export async function POST(req: NextRequest) {
           sourceProductId: line.catalog.sourceProductId,
           cjProductId:
             line.catalog.sourcePlatform === "cj" ? line.catalog.sourceProductId : null,
+          variantId: line.variantId,
           quantity: line.quantity,
-          unitPriceCents: line.catalog.retailPriceCents,
+          unitPriceCents: line.unitPriceCents,
           shippingTier: line.shippingTier,
         })),
       });
