@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { calculateCartTotals } from "@/lib/store/cart/pricing";
 import type { CartLineItem, ShippingTier } from "@/lib/store/cart/types";
+import { resolveCatalogLineRetailCents } from "@/lib/store/catalog/line-price";
 import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Product not found: ${slug}` }, { status: 404 });
     }
 
-    const refreshed = await refreshCatalogFromCj(catalog, raw.retailPriceCents ?? catalog.retailPriceCents);
+    const refreshed = await refreshCatalogFromCj(catalog);
     if (refreshed.unavailable || !refreshed.row) {
       return NextResponse.json(
         { error: `${catalog.name} is no longer available on CJ.` },
@@ -58,13 +59,24 @@ export async function POST(req: NextRequest) {
       );
     }
     catalog = refreshed.row;
-    if (refreshed.notice) priceChangeNotices.push(refreshed.notice);
 
-    let retailPriceCents = catalog.retailPriceCents;
     const variantId = raw.variantId?.trim() || null;
-    if (variantId) {
-      const variant = catalog.variants.find((v) => v.id === variantId);
-      if (variant) retailPriceCents = variant.retailPriceCents;
+    const currentRetailCents = resolveCatalogLineRetailCents(catalog, variantId);
+    const clientRetailCents = raw.retailPriceCents;
+
+    if (
+      clientRetailCents != null &&
+      Number.isFinite(clientRetailCents) &&
+      clientRetailCents !== currentRetailCents
+    ) {
+      priceChangeNotices.push({
+        slug: catalog.slug,
+        name: catalog.name,
+        previousRetailCents: clientRetailCents,
+        currentRetailCents,
+        reason:
+          "CJ supplier pricing changed since your last view. NI retail is always supplier listing price + 10%.",
+      });
     }
 
     const quantity = Math.max(1, Math.min(10, Number(raw.quantity) || 1));
@@ -75,7 +87,7 @@ export async function POST(req: NextRequest) {
       slug: catalog.slug,
       name: catalog.name,
       imageUrl: catalog.imageUrl,
-      retailPriceCents,
+      retailPriceCents: currentRetailCents,
       currency: catalog.currency,
       sourcePlatform: catalog.sourcePlatform,
       sourceProductId: catalog.sourceProductId,
@@ -127,7 +139,6 @@ export async function POST(req: NextRequest) {
         unit_amount: item.retailPriceCents,
         product_data: {
           name: item.name,
-          images: item.imageUrl ? [item.imageUrl] : undefined,
           metadata: {
             catalogSlug: item.slug,
             sourcePlatform: item.sourcePlatform,
@@ -185,6 +196,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error("[store/checkout]", err);
-    return NextResponse.json({ error: "Unable to start checkout." }, { status: 500 });
+    const message =
+      err instanceof Error && err.message ? err.message : "Unable to start checkout.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

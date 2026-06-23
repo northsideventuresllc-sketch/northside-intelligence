@@ -11,7 +11,7 @@ import type { StoreGateStatus } from "@/lib/store/types";
 
 export function StoreFloatingCartBar() {
   const { items, itemCount } = useStoreCart();
-  const { checkout, loading, verifying } = useStoreCheckout();
+  const { checkout, loading, error, setError, verifying } = useStoreCheckout();
   const [gate, setGate] = useState<StoreGateStatus | null>(null);
 
   useEffect(() => {
@@ -28,7 +28,11 @@ export function StoreFloatingCartBar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-cyan-500/20 bg-ni-bg/95 px-4 py-3 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+      <div className="mx-auto max-w-6xl">
+        {error && (
+          <p className="mb-2 text-center text-xs text-red-300">{error}</p>
+        )}
+        <div className="flex items-center justify-between gap-3">
         <Link
           href="/store/cart"
           className="flex min-w-0 items-center gap-3 text-white transition hover:text-cyan-200"
@@ -51,12 +55,16 @@ export function StoreFloatingCartBar() {
 
         <button
           type="button"
-          onClick={() => checkout()}
+          onClick={() => {
+            setError("");
+            void checkout();
+          }}
           disabled={!checkoutEnabled || loading}
           className="shrink-0 rounded-xl bg-ni-cyan px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ni-bg transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Redirecting…" : "Checkout Now"}
         </button>
+        </div>
       </div>
     </div>
   );

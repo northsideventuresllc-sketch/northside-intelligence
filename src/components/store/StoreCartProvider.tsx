@@ -95,6 +95,7 @@ export function StoreCartProvider({ children }: { children: ReactNode }) {
     const snapshot = items.map((item) => ({
       slug: item.slug,
       retailPriceCents: item.retailPriceCents,
+      variantId: item.variantId,
     }));
 
     fetch("/api/store/cart/verify", {
@@ -112,6 +113,7 @@ export function StoreCartProvider({ children }: { children: ReactNode }) {
             retailPriceCents: number;
             currency: string;
             sourcePlatform: string;
+            variantId?: string | null;
           }>;
           priceChangeNotices?: PriceChangeNoticeView[];
           unavailable?: string[];
@@ -120,12 +122,18 @@ export function StoreCartProvider({ children }: { children: ReactNode }) {
           const notices = json.priceChangeNotices ?? [];
           setPriceNotices(notices);
 
-          const syncedBySlug = new Map((json.items ?? []).map((item) => [item.slug, item]));
+          const syncedByKey = new Map(
+            (json.items ?? []).map((item) => [
+              `${item.slug}::${item.variantId ?? ""}`,
+              item,
+            ])
+          );
           setItems((prev) =>
             prev
               .filter((item) => !json.unavailable?.includes(item.slug))
               .map((item) => {
-                const synced = syncedBySlug.get(item.slug);
+                const key = `${item.slug}::${item.variantId ?? ""}`;
+                const synced = syncedByKey.get(key);
                 if (!synced) return item;
                 return {
                   ...item,
