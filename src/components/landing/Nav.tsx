@@ -86,6 +86,12 @@ export function Nav({ isLoggedIn, isMasterAccount }: NavProps) {
                 Plans
               </a>
               <a
+                href="/#faq"
+                className="hidden text-sm text-ni-muted transition hover:text-cyan-300 md:inline"
+              >
+                FAQ
+              </a>
+              <a
                 href="/#mission"
                 className="hidden text-sm text-ni-muted transition hover:text-cyan-300 sm:inline"
               >
