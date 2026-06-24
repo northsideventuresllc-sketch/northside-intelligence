@@ -6,6 +6,7 @@ import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground"
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
+import { Sector3DashboardToolbar } from "@/components/sector3/Sector3DashboardToolbar";
 import { ReplyFlowResult } from "@/components/sector3/results/ReplyFlowResult";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { getToolBrand } from "@/lib/constants";
@@ -75,8 +76,10 @@ export default function DashboardClient({
   const [error, setError] = useState("");
   const [used, setUsed] = useState(repliesUsed);
   const [history, setHistory] = useState(initialHistory);
+  const [viewMode, setViewMode] = useState<"input" | "results">("input");
   const router = useRouter();
   const supabase = createClient();
+  const showResults = viewMode === "results" && !!reply;
   const effectiveLimit = hasUnlimitedAccess ? 999999 : repliesLimit;
   const atLimit = !hasUnlimitedAccess && used >= effectiveLimit;
   const usagePercent = Math.min((used / (effectiveLimit === 999999 ? 1 : effectiveLimit)) * 100, 100);
@@ -99,6 +102,7 @@ export default function DashboardClient({
       return;
     }
     setReply(data.reply);
+    setViewMode("results");
     if (data.usage) setUsed(data.usage.used);
     setHistory((prev) => [
       {
@@ -118,6 +122,12 @@ export default function DashboardClient({
     if (isValidTone(entry.tone)) setTone(entry.tone);
     setScenario(entry.scenario);
     setReply(entry.generatedReply);
+    setViewMode("results");
+    setError("");
+  }
+
+  function handleEditPrompt() {
+    setViewMode("input");
     setError("");
   }
 
@@ -181,6 +191,15 @@ export default function DashboardClient({
           )}
         </div>
 
+        {showResults && (
+          <Sector3DashboardToolbar
+            onEdit={handleEditPrompt}
+            editLabel="Edit Prompt"
+            brandColor={replyflowBrand.brandColor}
+          />
+        )}
+
+        {!showResults && (
         <div className="rf-glass space-y-5 rounded-3xl p-6 shadow-rf-violet">
           <div>
             <label className="mb-2 block text-sm font-medium text-rf-muted">Customer message</label>
@@ -264,12 +283,13 @@ export default function DashboardClient({
             </span>
           </button>
         </div>
+        )}
 
-        {reply && (
+        {showResults && (
           <ReplyFlowResult reply={reply} tone={tone} scenario={scenario} />
         )}
 
-        {history.length > 0 && (
+        {!showResults && history.length > 0 && (
           <div className="rf-glass rounded-3xl p-6">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-rf-muted">
               Recent Replies

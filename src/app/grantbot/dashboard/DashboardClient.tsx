@@ -7,8 +7,11 @@ import { GrantBotNav } from "@/components/grantbot/GrantBotNav";
 import { GrantListingBubble } from "@/components/grantbot/GrantListingBubble";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
+import { Sector3DashboardToolbar } from "@/components/sector3/Sector3DashboardToolbar";
+import { Sector3ToolChatModal } from "@/components/sector3/Sector3ToolChatModal";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { getToolBrand } from "@/lib/constants";
+import { getSector3ToolChatConfig } from "@/lib/sector3-tools/chat-content";
 import { getSector3ToolHelpContent } from "@/lib/sector3-tools/help-content";
 import { grantbotPath } from "@/lib/grantbot/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
@@ -89,8 +92,11 @@ export default function DashboardClient({
   const [error, setError] = useState("");
   const [used, setUsed] = useState(grantsUsed);
   const [history, setHistory] = useState(initialHistory);
+  const [chatOpen, setChatOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const showResults = listings.length > 0;
+  const grantbotChat = getSector3ToolChatConfig("grantbot");
   const effectiveLimit = hasUnlimitedAccess ? 999999 : grantsLimit;
   const atLimit = !hasUnlimitedAccess && used >= effectiveLimit;
   const usagePercent = Math.min((used / (effectiveLimit === 999999 ? 1 : effectiveLimit)) * 100, 100);
@@ -277,6 +283,15 @@ export default function DashboardClient({
     setDrafts({ [draftListing.id]: { loading: false, text: entry.resultText } });
   }
 
+  function handleEditSearch() {
+    setListings([]);
+    setDrafts({});
+    setClarifyingQuestions([]);
+    setClarifyingAnswers({});
+    setFlowStep("intake");
+    setError("");
+  }
+
   async function handleCopyDraft(listingId: string, text: string) {
     await navigator.clipboard.writeText(text);
     setDrafts((prev) => ({
@@ -356,6 +371,8 @@ export default function DashboardClient({
               )}
             </div>
 
+            {!showResults && (
+            <>
             <div className="gb-glass space-y-5 rounded-3xl p-6 shadow-gb-glow">
               <div>
                 <label className="mb-2 block text-sm font-medium text-gb-muted">
@@ -506,6 +523,18 @@ export default function DashboardClient({
                 </div>
               </div>
             )}
+            </>
+            )}
+
+            {showResults && (
+              <Sector3DashboardToolbar
+                onEdit={handleEditSearch}
+                editLabel="Edit Search"
+                onChat={() => setChatOpen(true)}
+                chatLabel={grantbotChat?.buttonLabel}
+                brandColor={grantbotBrand.brandColor}
+              />
+            )}
 
             {listings.length > 0 && (
               <div className="space-y-4">
@@ -525,7 +554,7 @@ export default function DashboardClient({
               </div>
             )}
 
-            {history.length > 0 && (
+            {!showResults && history.length > 0 && (
               <div className="gb-glass rounded-3xl p-6">
                 <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gb-muted">
                   Recent Sessions
@@ -565,6 +594,17 @@ export default function DashboardClient({
               displayName="GrantBot"
               brandColor={grantbotBrand.brandColor}
               faqs={grantbotHelp.faqs}
+            />
+
+            <Sector3ToolChatModal
+              slug="grantbot"
+              brandColor={grantbotBrand.brandColor}
+              open={chatOpen}
+              onClose={() => setChatOpen(false)}
+              context={{
+                inputs: { orgDescription, category },
+                extra: { listings },
+              }}
             />
           </>
         )}
