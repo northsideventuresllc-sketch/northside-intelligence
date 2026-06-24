@@ -3,9 +3,13 @@
 import { CopyResultButton } from "@/components/sector3/results/CopyResultButton";
 import { RichParagraph } from "@/components/sector3/results/RichText";
 import {
+  friendlySectionLabel,
+  type Sector3PresentationMode,
+} from "@/lib/sector3-tools/presentation-mode";
+import {
   findSection,
   parseListItems,
-  parseMarkdownSections,
+  parseSectionsForMode,
   splitParagraphs,
   stripInlineMarkdown,
 } from "@/lib/sector3-tools/parse-result";
@@ -14,31 +18,43 @@ const SEVERITY_STYLES = {
   critical: {
     badge: "bg-rose-500/20 text-rose-300 border-rose-400/40",
     bar: "bg-rose-500",
-    label: "Critical",
+    label: "Needs Attention Now",
   },
   moderate: {
     badge: "bg-amber-500/20 text-amber-200 border-amber-400/40",
     bar: "bg-amber-400",
-    label: "Moderate",
+    label: "Should Fix Soon",
   },
   minor: {
     badge: "bg-white/10 text-white/60 border-white/15",
     bar: "bg-white/30",
-    label: "Minor",
+    label: "Nice to Improve",
   },
 } as const;
 
 interface Props {
   result: string;
   brandColor: string;
+  presentationMode?: Sector3PresentationMode;
 }
 
-export function GapScanResult({ result, brandColor }: Props) {
-  const sections = parseMarkdownSections(result);
-  const overview = findSection(sections, "overview");
-  const gaps = findSection(sections, "gap");
-  const quickWins = findSection(sections, "quick");
-  const strategic = findSection(sections, "strategic", "recommendation");
+export function GapScanResult({
+  result,
+  brandColor,
+  presentationMode = "simple",
+}: Props) {
+  const isSimple = presentationMode === "simple";
+  const sections = parseSectionsForMode(result, presentationMode);
+
+  const overview = findSection(sections, "what we found", "overview");
+  const gaps = findSection(sections, "problems to fix", "gap");
+  const quickWins = findSection(sections, "easy fixes first", "quick");
+  const strategic = findSection(
+    sections,
+    "longer-term ideas",
+    "strategic",
+    "recommendation"
+  );
 
   const gapItems = gaps?.items.length ? gaps.items : gaps ? parseListItems(gaps.body) : [];
   const winItems = quickWins?.items.length
@@ -67,9 +83,13 @@ export function GapScanResult({ result, brandColor }: Props) {
           </span>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-white/90">
-              Gap Report
+              {isSimple ? "Your Gap Report" : "Detailed Gap Analysis"}
             </h2>
-            <p className="text-xs text-white/45">Severity-ranked findings and quick wins</p>
+            <p className="text-xs text-white/45">
+              {isSimple
+                ? "Problems and fixes explained clearly"
+                : "Full severity-ranked audit detail"}
+            </p>
           </div>
         </div>
         <CopyResultButton text={result} className="text-amber-300" />
@@ -78,10 +98,10 @@ export function GapScanResult({ result, brandColor }: Props) {
       {overview && (
         <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/50">
-            Overview
+            {friendlySectionLabel(overview.title)}
           </p>
           {splitParagraphs(overview.body).map((p) => (
-            <RichParagraph key={p} text={p} className="text-sm text-white/85" />
+            <RichParagraph key={p} text={p} className="text-sm leading-relaxed text-white/90" />
           ))}
         </div>
       )}
@@ -89,7 +109,7 @@ export function GapScanResult({ result, brandColor }: Props) {
       {gapItems.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
-            Gaps Found
+            {isSimple ? "Problems to Fix" : "Gaps Found"}
           </p>
           {gapItems.map((item, i) => {
             const severity = item.severity ?? "moderate";
@@ -102,12 +122,12 @@ export function GapScanResult({ result, brandColor }: Props) {
                 <div className={`absolute left-0 top-0 h-full w-1 ${styles.bar}`} />
                 <div className="mb-2 flex items-center gap-2">
                   <span
-                    className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase ${styles.badge}`}
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${styles.badge}`}
                   >
-                    {styles.label}
+                    {isSimple ? styles.label : severity}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed text-white/85">{item.text}</p>
+                <p className="text-sm leading-relaxed text-white/90">{item.text}</p>
               </article>
             );
           })}
@@ -117,7 +137,7 @@ export function GapScanResult({ result, brandColor }: Props) {
       {winItems.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400/80">
-            Quick Wins
+            {isSimple ? "Easy Fixes First" : "Quick Wins"}
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {winItems.map((item, i) => (
@@ -126,9 +146,9 @@ export function GapScanResult({ result, brandColor }: Props) {
                 className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4"
               >
                 <span className="mb-2 inline-block text-xs font-semibold text-emerald-300">
-                  ⚡ Quick Win
+                  Quick win
                 </span>
-                <p className="text-sm text-white/85">{item.text}</p>
+                <p className="text-sm text-white/90">{item.text}</p>
               </div>
             ))}
           </div>
@@ -138,7 +158,7 @@ export function GapScanResult({ result, brandColor }: Props) {
       {strategicItems.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
-            Strategic Recommendations
+            {isSimple ? "Longer-Term Ideas" : "Strategic Recommendations"}
           </p>
           {strategicItems.map((item, i) => (
             <div
@@ -151,7 +171,7 @@ export function GapScanResult({ result, brandColor }: Props) {
               >
                 {i + 1}
               </span>
-              <p className="text-sm text-white/80">{item.text}</p>
+              <p className="text-sm text-white/85">{item.text}</p>
             </div>
           ))}
         </div>

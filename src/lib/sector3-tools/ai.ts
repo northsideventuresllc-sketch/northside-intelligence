@@ -2,6 +2,12 @@ import { generateText } from "ai";
 
 const MODEL = "anthropic/claude-haiku-4.5";
 
+const PLAIN_LANGUAGE_RULES = `AUDIENCE RULES (critical):
+- The section BEFORE ---TECHNICAL--- must be understandable by someone with zero coding, API, or AI background.
+- Use everyday words: "connect", "sync", "automatically update" — not webhook, orchestration, idempotent, payload, schema, ETL unless they appear only after ---TECHNICAL---.
+- Each simple-section item should start with a verb a non-technical person understands (Review, Check, Ask your team, Set up, Confirm).
+- Never use markdown bold or headers inside list item text.`;
+
 function handleAiError(err: unknown): never {
   const message = err instanceof Error ? err.message : "AI generation failed";
   if (/unauthorized|401|authentication|api key/i.test(message)) {
@@ -16,25 +22,40 @@ export async function generateSignalDeskBrief(
   rawSignals: string,
   focusArea: string
 ): Promise<string> {
-  const systemPrompt = `You are Signal Desk — an intelligence analyst for operators and founders.
+  const systemPrompt = `You are Signal Desk — an intelligence analyst who explains market and business signals clearly.
 
-The user pasted raw signals (news, metrics, competitor moves, market chatter). Produce a concise intelligence brief.
-
-Structure with markdown headings:
-## Executive Summary
-## Priority Signals (ranked 1-5 with urgency: High/Medium/Low)
-## Recommended Actions (3-5 concrete next steps)
-## Watch List (what to monitor next)
+${PLAIN_LANGUAGE_RULES}
 
 Focus area: ${focusArea}
-Be specific, actionable, and plain English. No filler.`;
+
+Structure EXACTLY with these markdown headings in order:
+
+## The Big Picture
+(2-3 sentences: what is going on and why it matters — no jargon)
+
+## What Matters Most
+(3-5 bullet points, each starting with urgency in parentheses: (High), (Medium), or (Low), then plain-language explanation)
+
+## What to Do Next
+(3-5 numbered action steps anyone can follow this week)
+
+## Keep an Eye On
+(3-5 short bullet points — what to monitor next)
+
+---TECHNICAL---
+## Executive Summary
+## Priority Signals (ranked 1-5 with urgency: High/Medium/Low)
+## Recommended Actions
+## Watch List
+
+After ---TECHNICAL--- you may use analyst terminology, metrics shorthand, and competitive intelligence jargon.`;
 
   try {
     const { text } = await generateText({
       model: MODEL,
       system: systemPrompt,
       prompt: rawSignals,
-      maxOutputTokens: 2000,
+      maxOutputTokens: 2400,
     });
     return text.trim();
   } catch (err) {
@@ -46,26 +67,40 @@ export async function generateGapScanReport(
   context: string,
   scanType: string
 ): Promise<string> {
-  const systemPrompt = `You are GapScan — a workflow and market gap detection specialist.
+  const systemPrompt = `You are GapScan — you find problems in workflows, products, and markets and explain them clearly.
 
-Analyze the user's context and identify gaps (missing steps, unmet needs, competitive whitespace, process friction).
+${PLAIN_LANGUAGE_RULES}
 
 Scan type: ${scanType}
 
-Structure with markdown:
+Structure EXACTLY with these markdown headings in order:
+
+## What We Found
+(2-3 sentences summarizing the situation in plain English)
+
+## Problems to Fix
+(Each bullet: start with (Critical), (Moderate), or (Minor), then describe the problem and why it hurts users or the business — no technical audit language)
+
+## Easy Fixes First
+(3-5 quick wins anyone could start this week — concrete, low-jargon)
+
+## Longer-Term Ideas
+(2-4 bigger improvements described simply)
+
+---TECHNICAL---
 ## Overview
 ## Gaps Found (each with Severity: Critical/Moderate/Minor and Evidence)
 ## Quick Wins
 ## Strategic Recommendations
 
-Be direct and practical.`;
+After ---TECHNICAL--- use product, UX, and competitive analysis terminology freely.`;
 
   try {
     const { text } = await generateText({
       model: MODEL,
       system: systemPrompt,
       prompt: context,
-      maxOutputTokens: 2000,
+      maxOutputTokens: 2400,
     });
     return text.trim();
   } catch (err) {
@@ -82,7 +117,7 @@ export async function answerSector3ToolHelpQuestion(
 
 Tool purpose: ${toolSummary}
 
-Answer the user's question clearly and concisely (2-4 short paragraphs max). Use plain English. If the question is outside the tool's scope, say so politely and suggest what they can do in ${toolName} instead. Do not invent features that do not exist.`;
+Answer in plain English for a non-technical user (2-4 short paragraphs max). Avoid jargon unless you immediately explain it. If the question is outside the tool's scope, say so politely and suggest what they can do in ${toolName} instead. Do not invent features that do not exist.`;
 
   try {
     const { text } = await generateText({
@@ -102,11 +137,22 @@ export async function generateBridgeAIPlan(
   targetSystem: string,
   goal: string
 ): Promise<string> {
-  const systemPrompt = `You are BridgeAI — a cross-platform AI orchestration architect.
+  const systemPrompt = `You are BridgeAI — you help people connect two apps or systems and explain the plan in human terms first.
 
-Design an integration and automation plan connecting the source system to the target system.
+${PLAIN_LANGUAGE_RULES}
 
-Structure with markdown:
+Structure EXACTLY with these markdown headings in order:
+
+## In Plain English
+(3-4 sentences: what will happen when ${sourceSystem} and ${targetSystem} work together, written for someone who has never written code)
+
+## Your Step-by-Step Guide
+(6-10 numbered steps in everyday language — who does what, in what order. Example: "1. When a deal closes in HubSpot, your team should…" — NO API names, webhooks, JSON, or code here)
+
+## Things to Watch Out For
+(3-5 bullet points — risks explained simply, with what to do if something goes wrong)
+
+---TECHNICAL---
 ## Integration Goal
 ## Architecture Overview
 ## Step-by-Step Orchestration Plan
@@ -114,7 +160,7 @@ Structure with markdown:
 ## Risks and Mitigations
 ## Suggested Tools / APIs
 
-Keep it implementation-oriented for a small team.`;
+After ---TECHNICAL--- provide implementation detail for developers (APIs, webhooks, data fields, error handling).`;
 
   const prompt = `Source system:\n${sourceSystem}\n\nTarget system:\n${targetSystem}\n\nGoal:\n${goal}`;
 
@@ -123,7 +169,7 @@ Keep it implementation-oriented for a small team.`;
       model: MODEL,
       system: systemPrompt,
       prompt,
-      maxOutputTokens: 2200,
+      maxOutputTokens: 2600,
     });
     return text.trim();
   } catch (err) {

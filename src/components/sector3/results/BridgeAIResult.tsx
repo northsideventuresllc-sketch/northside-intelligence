@@ -3,9 +3,13 @@
 import { CopyResultButton } from "@/components/sector3/results/CopyResultButton";
 import { RichParagraph } from "@/components/sector3/results/RichText";
 import {
+  friendlySectionLabel,
+  type Sector3PresentationMode,
+} from "@/lib/sector3-tools/presentation-mode";
+import {
   findSection,
   parseListItems,
-  parseMarkdownSections,
+  parseSectionsForMode,
   splitParagraphs,
   stripInlineMarkdown,
 } from "@/lib/sector3-tools/parse-result";
@@ -15,6 +19,7 @@ interface Props {
   brandColor: string;
   sourceSystem?: string;
   targetSystem?: string;
+  presentationMode?: Sector3PresentationMode;
 }
 
 export function BridgeAIResult({
@@ -22,17 +27,35 @@ export function BridgeAIResult({
   brandColor,
   sourceSystem,
   targetSystem,
+  presentationMode = "simple",
 }: Props) {
-  const sections = parseMarkdownSections(result);
+  const isSimple = presentationMode === "simple";
+  const sections = parseSectionsForMode(result, presentationMode);
+
+  const plainEnglish = findSection(
+    sections,
+    "in plain english",
+    "plain english"
+  );
+  const guide = findSection(
+    sections,
+    "your step-by-step guide",
+    "step-by-step guide",
+    "orchestration",
+    "plan"
+  );
+  const watchOut = findSection(sections, "things to watch out for", "watch out", "risk");
   const goal = findSection(sections, "integration goal", "goal");
   const architecture = findSection(sections, "architecture");
-  const steps = findSection(sections, "step", "orchestration", "plan");
   const mapping = findSection(sections, "data mapping", "mapping");
-  const risks = findSection(sections, "risk");
   const tools = findSection(sections, "tool", "api", "suggested");
 
-  const stepItems = steps?.items.length ? steps.items : steps ? parseListItems(steps.body) : [];
-  const riskItems = risks?.items.length ? risks.items : risks ? parseListItems(risks.body) : [];
+  const guideItems = guide?.items.length ? guide.items : guide ? parseListItems(guide.body) : [];
+  const watchItems = watchOut?.items.length
+    ? watchOut.items
+    : watchOut
+      ? parseListItems(watchOut.body)
+      : [];
   const toolItems = tools?.items.length ? tools.items : tools ? parseListItems(tools.body) : [];
 
   return (
@@ -50,9 +73,13 @@ export function BridgeAIResult({
           </span>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-white/90">
-              Orchestration Plan
+              {isSimple ? "Your Connection Plan" : "Orchestration Plan"}
             </h2>
-            <p className="text-xs text-white/45">Integration blueprint ready to implement</p>
+            <p className="text-xs text-white/45">
+              {isSimple
+                ? "How your tools will work together — no tech jargon"
+                : "Implementation blueprint for your team or developer"}
+            </p>
           </div>
         </div>
         <CopyResultButton text={result} className="text-indigo-300" />
@@ -60,20 +87,47 @@ export function BridgeAIResult({
 
       {(sourceSystem || targetSystem) && (
         <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/10 bg-black/25 p-4">
-          <span
-            className="rounded-xl border px-4 py-2 text-sm font-medium"
-            style={{ borderColor: `${brandColor}55`, color: brandColor }}
-          >
-            {sourceSystem || "Source"}
-          </span>
-          <span className="text-lg text-white/40">→</span>
-          <span className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80">
-            {targetSystem || "Target"}
-          </span>
+          <div className="text-center">
+            <p className="mb-1 text-[10px] font-medium uppercase tracking-widest text-white/40">
+              From
+            </p>
+            <span
+              className="inline-block rounded-xl border px-4 py-2 text-sm font-medium"
+              style={{ borderColor: `${brandColor}55`, color: brandColor }}
+            >
+              {sourceSystem || "Your first tool"}
+            </span>
+          </div>
+          <span className="text-2xl text-white/40">→</span>
+          <div className="text-center">
+            <p className="mb-1 text-[10px] font-medium uppercase tracking-widest text-white/40">
+              To
+            </p>
+            <span className="inline-block rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/80">
+              {targetSystem || "Your second tool"}
+            </span>
+          </div>
         </div>
       )}
 
-      {goal && (
+      {isSimple && plainEnglish && (
+        <div
+          className="rounded-2xl border p-5"
+          style={{
+            borderColor: `${brandColor}44`,
+            background: `linear-gradient(135deg, ${brandColor}15, transparent)`,
+          }}
+        >
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/50">
+            {friendlySectionLabel(plainEnglish.title)}
+          </p>
+          {splitParagraphs(plainEnglish.body).map((p) => (
+            <RichParagraph key={p} text={p} className="text-sm leading-relaxed text-white/90" />
+          ))}
+        </div>
+      )}
+
+      {!isSimple && goal && (
         <div
           className="rounded-2xl border p-5"
           style={{
@@ -90,7 +144,7 @@ export function BridgeAIResult({
         </div>
       )}
 
-      {architecture && (
+      {!isSimple && architecture && (
         <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/50">
             Architecture Overview
@@ -99,7 +153,7 @@ export function BridgeAIResult({
             {splitParagraphs(architecture.body).map((p, i) => (
               <div
                 key={p}
-                className="rounded-xl border border-white/10 bg-white/5 p-3 text-center text-xs text-white/75"
+                className="rounded-xl border border-white/10 bg-white/5 p-3"
               >
                 <span
                   className="mb-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-[#07080C]"
@@ -107,19 +161,19 @@ export function BridgeAIResult({
                 >
                   {i + 1}
                 </span>
-                <p className="text-left text-sm">{p}</p>
+                <p className="text-sm text-white/75">{p}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {stepItems.length > 0 && (
+      {guideItems.length > 0 && (
         <div className="space-y-0">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/50">
-            Step-by-Step Plan
+            {isSimple ? "Your Step-by-Step Guide" : "Step-by-Step Orchestration Plan"}
           </p>
-          {stepItems.map((item, i) => (
+          {guideItems.map((item, i) => (
             <div key={`${item.raw}-${i}`} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <span
@@ -128,19 +182,35 @@ export function BridgeAIResult({
                 >
                   {item.rank ?? i + 1}
                 </span>
-                {i < stepItems.length - 1 && (
+                {i < guideItems.length - 1 && (
                   <div className="my-1 w-px flex-1 bg-white/15" />
                 )}
               </div>
               <div className="mb-4 flex-1 rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-sm leading-relaxed text-white/85">{item.text}</p>
+                <p className="text-sm leading-relaxed text-white/90">{item.text}</p>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {mapping && (
+      {watchItems.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-amber-400/80">
+            {isSimple ? "Things to Watch Out For" : "Risks and Mitigations"}
+          </p>
+          {watchItems.map((item, i) => (
+            <div
+              key={`${item.raw}-${i}`}
+              className="rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4"
+            >
+              <p className="text-sm leading-relaxed text-white/90">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isSimple && mapping && (
         <div className="rounded-2xl border border-white/10 bg-black/25 p-5">
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/50">
             Data Mapping Notes
@@ -151,23 +221,7 @@ export function BridgeAIResult({
         </div>
       )}
 
-      {riskItems.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-400/80">
-            Risks and Mitigations
-          </p>
-          {riskItems.map((item, i) => (
-            <div
-              key={`${item.raw}-${i}`}
-              className="rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4"
-            >
-              <p className="text-sm text-white/85">{item.text}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {toolItems.length > 0 && (
+      {!isSimple && toolItems.length > 0 && (
         <div>
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/50">
             Suggested Tools and APIs
@@ -190,7 +244,7 @@ export function BridgeAIResult({
         </div>
       )}
 
-      {!goal && stepItems.length === 0 && (
+      {guideItems.length === 0 && !plainEnglish && !goal && (
         <p className="whitespace-pre-wrap text-sm text-white/80">{stripInlineMarkdown(result)}</p>
       )}
     </div>

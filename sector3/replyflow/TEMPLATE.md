@@ -94,6 +94,7 @@ When launching a tool inside `northside-intelligence` (not a standalone fork), u
 | Logged-out landing | `createSector3LandingPage` | Title Case headlines (`"Signal Intelligence"` not `"Signal intelligence"`). Centered hero, brand gradient, animated badge, glass preview card. |
 | Logged-in dashboard | `createSector3DashboardPage` + `Sector3ToolDashboard` | Centered `max-w-3xl` layout (match ReplyFlow / GrantBot). Glass panels, chip selectors for enum fields (`chipOptions`), usage bar, recent sessions below results. |
 | **Generation results** | `Sector3ToolResult` + tool-specific panel in `src/components/sector3/results/` | **Never** show raw markdown (`##`, `**`) to users. Parse AI output into branded UI: urgency badges (Signal Desk), severity cards (GapScan), step timeline (BridgeAI), message bubble (ReplyFlow). GrantBot uses structured JSON + `GrantListingBubble` — keep that pattern. |
+| **Simple vs Technical view** | `Sector3PresentationToggle` + `presentation-mode.ts` | **Default to Simple View** — plain-language sections only, no workflows/API jargon. Put technical detail **after** a `---TECHNICAL---` marker in AI prompts (`ai.ts`). **Technical View** unlocks only for paid NI plans, master accounts, or unlimited tool access (`canAccessTechnicalView` in `access.ts`). ReplyFlow and GrantBot stay simple-only. |
 | **Results view** | `Sector3DashboardToolbar` | When results appear, **hide the input form**. Show toolbar with **Edit Prompt** (or tool-specific label) to return to inputs. Optional **AI chat** button per tool — coded individually in `chat-content.ts` (`replyflow` disables chat). |
 | **AI follow-up chat** | `Sector3ToolChatModal` + `/api/sector3/[slug]/chat` | Per-tool chat config in `chat-content.ts` with custom welcome, button label, and system prompt context. Wire chat only where the tool benefits (GrantBot, Signal Desk, GapScan, BridgeAI). ReplyFlow typically skips chat. |
 | Help | `Sector3ToolDashboardFooter` + `help-content.ts` | Footer summary of what the tool does; `?` button opens FAQ modal with **Other** → `/api/sector3/[slug]/help` AI answers. |
@@ -101,7 +102,23 @@ When launching a tool inside `northside-intelligence` (not a standalone fork), u
 
 **Do not** pass functions from Server Components into client dashboards. The generate API receives field `values` JSON directly.
 
-When adding a new tool, create a dedicated result component (e.g. `MyToolResult.tsx`) and register it in `Sector3ToolResult.tsx`. Use `parseMarkdownSections` from `src/lib/sector3-tools/parse-result.ts` to turn structured AI output into cards, badges, and timelines — not plain text boxes.
+When adding a new tool, create a dedicated result component (e.g. `MyToolResult.tsx`) and register it in `Sector3ToolResult.tsx`. Use `parseSectionsForMode` from `src/lib/sector3-tools/parse-result.ts` to turn structured AI output into cards, badges, and timelines — not plain text boxes.
+
+**AI prompt pattern for tools with a technical layer:**
+
+```text
+## In Plain English
+(everyday summary — no jargon)
+
+## Your Step-by-Step Guide
+(numbered actions anyone can follow)
+
+---TECHNICAL---
+## Integration Goal
+(implementation detail for paid Technical View)
+```
+
+Register the slug in `TOOLS_WITH_TECHNICAL_VIEW` (`presentation-mode.ts`) and add `presentationMode` prop support in your result component.
 
 Example dashboard field with chips:
 

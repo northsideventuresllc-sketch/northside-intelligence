@@ -12,6 +12,7 @@
  * 9. Landing UI: use `createSector3LandingPage` with Title Case headlines; add help FAQs in `help-content.ts`
  * 10. Results UI: add tool-specific panel in `src/components/sector3/results/` and register in `Sector3ToolResult` — no raw markdown in the UI
  * 11. Results view: hide input form when results show; add `Sector3DashboardToolbar` with Edit Prompt + per-tool chat in `chat-content.ts`
+ * 12. Presentation: default Simple View for everyone; split AI output with `---TECHNICAL---` in prompts; gate Technical View to paid plans via `canAccessTechnicalView`
  */
 
 import { SECTOR3_TOOL_CONFIGS } from "./configs";

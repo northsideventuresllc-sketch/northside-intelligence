@@ -113,3 +113,36 @@ export function splitParagraphs(text: string): string[] {
     .map((p) => stripInlineMarkdown(p))
     .filter(Boolean);
 }
+
+const TECHNICAL_MARKER = /---\s*TECHNICAL\s*---/i;
+
+export function splitSimpleAndTechnical(text: string): {
+  simple: string;
+  technical: string;
+} {
+  const parts = text.split(TECHNICAL_MARKER);
+  if (parts.length < 2) {
+    return { simple: text.trim(), technical: "" };
+  }
+  return {
+    simple: parts[0].trim(),
+    technical: parts.slice(1).join("").trim(),
+  };
+}
+
+export function contentForPresentationMode(
+  text: string,
+  mode: "simple" | "technical"
+): string {
+  const { simple, technical } = splitSimpleAndTechnical(text);
+  if (mode === "simple" || !technical) return simple;
+  return `${simple}\n\n---TECHNICAL---\n\n${technical}`;
+}
+
+export function parseSectionsForMode(
+  text: string,
+  mode: "simple" | "technical"
+): ParsedSection[] {
+  const content = contentForPresentationMode(text, mode);
+  return parseMarkdownSections(content);
+}
