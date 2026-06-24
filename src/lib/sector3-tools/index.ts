@@ -10,6 +10,7 @@
  * 7. Use `createSector3ServiceClient()` for service-role writes (hydrates secrets)
  * 8. Dashboard UI: use `createSector3DashboardPage` + `Sector3ToolDashboard` (centered max-w-3xl, glass panels, chip selectors, help footer)
  * 9. Landing UI: use `createSector3LandingPage` with Title Case headlines; add help FAQs in `help-content.ts`
+ * 10. Results UI: add tool-specific panel in `src/components/sector3/results/` and register in `Sector3ToolResult` — no raw markdown in the UI
  */
 
 import { SECTOR3_TOOL_CONFIGS } from "./configs";
