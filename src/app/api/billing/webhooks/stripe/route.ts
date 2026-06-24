@@ -14,6 +14,8 @@ import {
   resolveToolCheckoutFromPriceId,
 } from "@/lib/billing/stripe";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
+import { createNotification } from "@/lib/notifications/service";
+import { recordPromoConversion } from "@/lib/promos/email-campaigns";
 import { createServiceClient } from "@/lib/supabase/server";
 
 async function loadAllToolPricing() {
@@ -30,6 +32,16 @@ async function loadNiPlanPricing() {
 
 function periodEndIso(sub: Stripe.Subscription): string {
   return new Date(sub.current_period_end * 1000).toISOString();
+}
+
+async function getUserEmail(userId: string): Promise<string | null> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("ni_portal_profiles")
+    .select("email")
+    .eq("id", userId)
+    .maybeSingle();
+  return data?.email ?? null;
 }
 
 export async function POST(req: NextRequest) {
@@ -59,6 +71,10 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
         if (!userId) break;
+
+        if (session.amount_total) {
+          await recordPromoConversion(userId, session.amount_total);
+        }
 
         const checkoutType = session.metadata?.checkoutType;
 
@@ -155,6 +171,17 @@ export async function POST(req: NextRequest) {
           }
         } else if (sub.status === "past_due") {
           const graceEnd = new Date(sub.current_period_end * 1000 + 48 * 60 * 60 * 1000);
+          if (userId) {
+            const email = await getUserEmail(userId);
+            await createNotification({
+              userId,
+              category: "billing",
+              title: "Billing Payment Failed",
+              body: "We could not process your latest payment. Update your billing details to avoid service interruption.",
+              link: "/account/billing",
+              userEmail: email,
+            });
+          }
           if (niMapped && userId) {
             await setNiSubscription({
               userId,

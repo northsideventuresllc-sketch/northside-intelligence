@@ -7,6 +7,9 @@ import { createPaidCatalogOrder, type CatalogCheckoutLine } from "@/lib/store/ca
 import { sendMakeStoreWebhook } from "@/lib/store/make-webhook";
 import { isStoreCheckoutLive } from "@/lib/store/gate";
 import { ensureStoreEnv } from "@/lib/store/env";
+import { createNotification } from "@/lib/notifications/service";
+import { recordPromoConversion } from "@/lib/promos/email-campaigns";
+import { createServiceClient } from "@/lib/supabase/server";
 import {
   ensureStoreStripeEnv,
   getStoreStripe,
@@ -140,6 +143,28 @@ export async function POST(req: NextRequest) {
         const { markOrderFulfillmentSent } = await import("@/lib/store/orders");
         await markOrderFulfillmentSent(orderId);
       }
+    }
+
+    if (userId) {
+      const totalCents = session.amount_total ?? 0;
+      await recordPromoConversion(userId, totalCents, { orderId, source: "store" });
+
+      const admin = createServiceClient();
+      const { data: profile } = await admin
+        .from("ni_portal_profiles")
+        .select("email")
+        .eq("id", userId)
+        .maybeSingle();
+
+      await createNotification({
+        userId,
+        category: "store_order",
+        title: "Smart Store Order Confirmed",
+        body: `Your order #${orderId.slice(0, 8).toUpperCase()} has been received and is being processed.`,
+        link: "/store",
+        userEmail: profile?.email ?? session.customer_details?.email ?? null,
+        metadata: { orderId },
+      });
     }
 
     return NextResponse.json({ received: true, orderId });

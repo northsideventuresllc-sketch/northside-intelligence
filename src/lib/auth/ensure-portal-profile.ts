@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { normalizeUsername } from "@/lib/auth/username";
 import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
+import { ensureNotificationPreferences } from "@/lib/notifications/preferences";
 import { ensureAllSector3ToolProfiles } from "@/lib/sector3-tools/profile";
 
 type AuthUser = Pick<User, "id" | "email" | "user_metadata">;
@@ -67,4 +68,6 @@ export async function ensurePortalProfile(
     { id: user.id, tier: "free", updated_at: now },
     { onConflict: "id", ignoreDuplicates: true }
   );
+
+  await ensureNotificationPreferences(user.id);
 }

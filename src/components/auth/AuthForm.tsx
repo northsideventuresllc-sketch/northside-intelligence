@@ -7,6 +7,7 @@ import { AnimatedBackground } from "@/components/landing/AnimatedBackground";
 import { Logo3D } from "@/components/landing/Logo3D";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { buildPortalAuthUrl, resolvePostAuthRedirect } from "@/lib/ni-auth";
+import { subscribeIfOptedIn } from "@/components/email/EmailListOptIn";
 
 type AuthMode = "signin" | "signup";
 type Step = "credentials" | "verify";
@@ -25,6 +26,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
+  const [emailListOptIn, setEmailListOptIn] = useState(false);
   const [code, setCode] = useState("");
   const [pendingId, setPendingId] = useState("");
   const [error, setError] = useState("");
@@ -107,6 +109,10 @@ export function AuthForm({ mode }: AuthFormProps) {
       if (!res.ok) {
         setError(data.error ?? "Invalid verification code");
         return;
+      }
+
+      if (mode === "signup" && emailListOptIn) {
+        await subscribeIfOptedIn(true);
       }
 
       window.location.href = resolvePostAuthRedirect(data.returnTo ?? returnTo);
@@ -225,6 +231,20 @@ export function AuthForm({ mode }: AuthFormProps) {
                   />
                   <span className="text-left text-sm text-ni-muted">
                     Enable two-factor authentication via email for future sign-ins
+                  </span>
+                </label>
+              )}
+              {mode === "signup" && (
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={emailListOptIn}
+                    onChange={(e) => setEmailListOptIn(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-white/20 bg-ni-bg text-cyan-500 focus:ring-cyan-500/30"
+                  />
+                  <span className="text-left text-sm text-ni-muted">
+                    Send me promos, product launches, and Smart Store deals from Northside
+                    Intelligence
                   </span>
                 </label>
               )}
