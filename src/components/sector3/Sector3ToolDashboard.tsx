@@ -7,11 +7,14 @@ import { Sector3ToolBackground } from "@/components/sector3/Sector3ToolBackgroun
 import { Sector3ToolNav } from "@/components/sector3/Sector3ToolNav";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
+import { Sector3DashboardToolbar } from "@/components/sector3/Sector3DashboardToolbar";
+import { Sector3ToolChatModal } from "@/components/sector3/Sector3ToolChatModal";
 import { Sector3ToolResult } from "@/components/sector3/results/Sector3ToolResult";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
 import { getToolBrand } from "@/lib/constants";
+import { getSector3ToolChatConfig } from "@/lib/sector3-tools/chat-content";
 import type { Sector3ToolRuntimeConfig, Sector3SessionRow } from "@/lib/sector3-tools/types";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -79,8 +82,12 @@ export function Sector3ToolDashboard({
   const [lastContext, setLastContext] = useState<Record<string, string>>({});
   const [used, setUsed] = useState(usageCount);
   const [history, setHistory] = useState(initialHistory);
+  const [viewMode, setViewMode] = useState<"input" | "results">("input");
+  const [chatOpen, setChatOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const chatConfig = getSector3ToolChatConfig(config.slug);
+  const showResults = viewMode === "results" && !!result;
 
   const effectiveLimit = hasUnlimitedAccess ? 999999 : usageLimit;
   const atLimit = !hasUnlimitedAccess && used >= effectiveLimit;
@@ -138,6 +145,7 @@ export function Sector3ToolDashboard({
 
     setResult(data.result ?? "");
     setLastContext({ ...values });
+    setViewMode("results");
     if (typeof data.usageCount === "number") setUsed(data.usageCount);
 
     const summary =
@@ -158,6 +166,16 @@ export function Sector3ToolDashboard({
         ...prev,
       ].slice(0, 20)
     );
+  }
+
+  function handleEditPrompt() {
+    setViewMode("input");
+    setError("");
+  }
+
+  function loadHistoryResult(item: Sector3SessionRow) {
+    setResult(item.result_text);
+    setViewMode("results");
   }
 
   const glassStyle = {
@@ -221,6 +239,21 @@ export function Sector3ToolDashboard({
               )}
             </div>
 
+            {showResults && (
+              <Sector3DashboardToolbar
+                onEdit={handleEditPrompt}
+                editLabel="Edit Prompt"
+                onChat={
+                  chatConfig?.enabled
+                    ? () => setChatOpen(true)
+                    : undefined
+                }
+                chatLabel={chatConfig?.buttonLabel}
+                brandColor={brand.brandColor}
+              />
+            )}
+
+            {!showResults && (
             <div
               className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
               style={glassStyle}
@@ -313,8 +346,9 @@ export function Sector3ToolDashboard({
                 {loading ? "Generating…" : primaryLabel}
               </button>
             </div>
+            )}
 
-            {result && (
+            {showResults && (
               <Sector3ToolResult
                 slug={config.slug}
                 result={result}
@@ -324,7 +358,7 @@ export function Sector3ToolDashboard({
               />
             )}
 
-            {history.length > 0 && (
+            {!showResults && history.length > 0 && (
               <div
                 className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
                 style={glassStyle}
@@ -337,7 +371,7 @@ export function Sector3ToolDashboard({
                     <li key={item.id}>
                       <button
                         type="button"
-                        onClick={() => setResult(item.result_text)}
+                        onClick={() => loadHistoryResult(item)}
                         className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:border-white/20 hover:bg-white/10"
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -361,6 +395,17 @@ export function Sector3ToolDashboard({
               displayName={config.displayName}
               brandColor={brand.brandColor}
               faqs={config.faqs}
+            />
+
+            <Sector3ToolChatModal
+              slug={config.slug}
+              brandColor={brand.brandColor}
+              open={chatOpen}
+              onClose={() => setChatOpen(false)}
+              context={{
+                inputs: lastContext,
+                result,
+              }}
             />
           </>
         )}
