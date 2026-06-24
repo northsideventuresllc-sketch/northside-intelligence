@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_SITE_UPDATED_AT: new Date().toISOString(),
+  },
   async redirects() {
     return [
       {
