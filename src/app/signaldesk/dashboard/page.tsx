@@ -8,12 +8,13 @@ export default createSector3DashboardPage(SIGNALDESK_CONFIG, {
   fields: [
     {
       id: "focusArea",
-      label: "Focus area",
+      label: "Focus Area",
       placeholder: "General, Market, Product, Competitive, or Regulatory",
+      chipOptions: ["General", "Market", "Product", "Competitive", "Regulatory"],
     },
     {
       id: "rawSignals",
-      label: "Raw signals",
+      label: "Raw Signals",
       placeholder: "Paste headlines, metrics, competitor updates, customer quotes…",
       multiline: true,
     },

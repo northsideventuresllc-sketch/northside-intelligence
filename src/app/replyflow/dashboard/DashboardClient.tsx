@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
+import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
+import { getToolBrand } from "@/lib/constants";
+import { getSector3ToolHelpContent } from "@/lib/sector3-tools/help-content";
 import { replyflowPath } from "@/lib/replyflow/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
@@ -137,6 +140,9 @@ export default function DashboardClient({
         : niTier === "pro"
           ? { type: "ni_subscription" as const, tier: "power" as const, interval: "monthly" as const }
           : null;
+
+  const replyflowHelp = getSector3ToolHelpContent("replyflow")!;
+  const replyflowBrand = getToolBrand("replyflow");
 
   return (
     <div className="relative min-h-screen">
@@ -308,6 +314,14 @@ export default function DashboardClient({
             </ul>
           </div>
         )}
+
+        <Sector3ToolDashboardFooter
+          summary={replyflowHelp.summary}
+          slug="replyflow"
+          displayName="ReplyFlow"
+          brandColor={replyflowBrand.brandColor}
+          faqs={replyflowHelp.faqs}
+        />
           </>
         )}
       </main>

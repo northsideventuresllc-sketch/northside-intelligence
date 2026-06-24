@@ -8,12 +8,13 @@ export default createSector3DashboardPage(GAPSCAN_CONFIG, {
   fields: [
     {
       id: "scanType",
-      label: "Scan type",
+      label: "Scan Type",
       placeholder: "Workflow, Product, or Market",
+      chipOptions: ["Workflow", "Product", "Market"],
     },
     {
       id: "context",
-      label: "Context to scan",
+      label: "Context to Scan",
       placeholder: "Describe the workflow, product surface, or market you want analyzed…",
       multiline: true,
     },
