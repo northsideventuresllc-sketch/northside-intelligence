@@ -3,9 +3,13 @@
 import { CopyResultButton } from "@/components/sector3/results/CopyResultButton";
 import { RichParagraph } from "@/components/sector3/results/RichText";
 import {
+  friendlySectionLabel,
+  type Sector3PresentationMode,
+} from "@/lib/sector3-tools/presentation-mode";
+import {
   findSection,
   parseListItems,
-  parseMarkdownSections,
+  parseSectionsForMode,
   splitParagraphs,
   stripInlineMarkdown,
 } from "@/lib/sector3-tools/parse-result";
@@ -15,30 +19,55 @@ const URGENCY_STYLES = {
     badge: "border-rose-400/40 bg-rose-500/15 text-rose-300",
     ring: "border-rose-400/30 shadow-[0_0_24px_rgba(244,63,94,0.15)]",
     dot: "bg-rose-400",
+    label: "Act Now",
   },
   medium: {
     badge: "border-amber-400/40 bg-amber-500/15 text-amber-200",
     ring: "border-amber-400/30 shadow-[0_0_24px_rgba(251,191,36,0.12)]",
     dot: "bg-amber-400",
+    label: "Soon",
   },
   low: {
     badge: "border-sky-400/40 bg-sky-500/15 text-sky-200",
     ring: "border-sky-400/30 shadow-[0_0_24px_rgba(56,189,248,0.12)]",
     dot: "bg-sky-400",
+    label: "Monitor",
   },
 } as const;
 
 interface Props {
   result: string;
   brandColor: string;
+  presentationMode?: Sector3PresentationMode;
 }
 
-export function SignalDeskResult({ result, brandColor }: Props) {
-  const sections = parseMarkdownSections(result);
-  const summary = findSection(sections, "executive", "summary");
-  const signals = findSection(sections, "priority", "signal");
-  const actions = findSection(sections, "recommended", "action");
-  const watch = findSection(sections, "watch");
+export function SignalDeskResult({
+  result,
+  brandColor,
+  presentationMode = "simple",
+}: Props) {
+  const isSimple = presentationMode === "simple";
+  const sections = parseSectionsForMode(result, presentationMode);
+
+  const summary = findSection(
+    sections,
+    "the big picture",
+    "executive",
+    "summary"
+  );
+  const signals = findSection(
+    sections,
+    "what matters most",
+    "priority",
+    "signal"
+  );
+  const actions = findSection(
+    sections,
+    "what to do next",
+    "recommended",
+    "action"
+  );
+  const watch = findSection(sections, "keep an eye on", "watch");
 
   const signalItems =
     signals?.items.length ? signals.items : signals ? parseListItems(signals.body) : [];
@@ -62,9 +91,13 @@ export function SignalDeskResult({ result, brandColor }: Props) {
           </span>
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-white/90">
-              Intelligence Brief
+              {isSimple ? "Your Intelligence Brief" : "Analyst Brief"}
             </h2>
-            <p className="text-xs text-white/45">Ranked signals and next moves</p>
+            <p className="text-xs text-white/45">
+              {isSimple
+                ? "What matters and what to do — in plain language"
+                : "Full analyst detail with ranked signals"}
+            </p>
           </div>
         </div>
         <CopyResultButton text={result} className="text-sky-300" />
@@ -79,10 +112,10 @@ export function SignalDeskResult({ result, brandColor }: Props) {
           }}
         >
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-white/50">
-            Executive Summary
+            {friendlySectionLabel(summary.title)}
           </p>
           {splitParagraphs(summary.body).map((p) => (
-            <RichParagraph key={p} text={p} className="text-sm text-white/85" />
+            <RichParagraph key={p} text={p} className="text-sm leading-relaxed text-white/90" />
           ))}
         </div>
       )}
@@ -90,7 +123,7 @@ export function SignalDeskResult({ result, brandColor }: Props) {
       {signalItems.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
-            Priority Signals
+            {isSimple ? "What Matters Most" : "Priority Signals"}
           </p>
           {signalItems.map((item, i) => {
             const urgency = item.urgency ?? (i === 0 ? "high" : i < 3 ? "medium" : "low");
@@ -110,11 +143,10 @@ export function SignalDeskResult({ result, brandColor }: Props) {
                   <span
                     className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase ${styles.badge}`}
                   >
-                    {urgency}
+                    {isSimple ? styles.label : urgency}
                   </span>
-                  <span className={`h-2 w-2 rounded-full ${styles.dot}`} />
                 </div>
-                <p className="text-sm leading-relaxed text-white/85">{item.text}</p>
+                <p className="text-sm leading-relaxed text-white/90">{item.text}</p>
               </article>
             );
           })}
@@ -124,7 +156,7 @@ export function SignalDeskResult({ result, brandColor }: Props) {
       {actionItems.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
-            Recommended Actions
+            {isSimple ? "What to Do Next" : "Recommended Actions"}
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {actionItems.map((item, i) => (
@@ -138,7 +170,7 @@ export function SignalDeskResult({ result, brandColor }: Props) {
                 >
                   {i + 1}
                 </span>
-                <p className="text-sm text-white/80">{item.text}</p>
+                <p className="text-sm text-white/85">{item.text}</p>
               </div>
             ))}
           </div>
@@ -148,13 +180,13 @@ export function SignalDeskResult({ result, brandColor }: Props) {
       {watchItems.length > 0 && (
         <div>
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/50">
-            Watch List
+            {isSimple ? "Keep an Eye On" : "Watch List"}
           </p>
           <div className="flex flex-wrap gap-2">
             {watchItems.map((item, i) => (
               <span
                 key={`${item.raw}-${i}`}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80"
               >
                 {item.text}
               </span>

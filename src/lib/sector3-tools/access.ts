@@ -17,6 +17,8 @@ export interface Sector3ToolAccess {
   niTier: string;
   ownsTool: boolean;
   canUseTool: boolean;
+  /** Paid NI plan or unlimited tool access — unlocks Technical View on results. */
+  canAccessTechnicalView: boolean;
 }
 
 function normalizeTier(tier: string | null | undefined): "free" | "lite" | "pro" {
@@ -57,8 +59,12 @@ export async function getSector3ToolAccess(
       niTier: state.niTier,
       ownsTool: false,
       canUseTool: false,
+      canAccessTechnicalView: false,
     };
   }
+
+  const canAccessTechnicalView =
+    state.hasNiPaidPlan || state.isMasterAccount || hasUnlimited;
 
   if (state.isMasterAccount || hasUnlimited) {
     return {
@@ -71,6 +77,7 @@ export async function getSector3ToolAccess(
       niTier: state.niTier,
       ownsTool: true,
       canUseTool: true,
+      canAccessTechnicalView: true,
     };
   }
 
@@ -91,6 +98,7 @@ export async function getSector3ToolAccess(
         niTier: state.niTier,
         ownsTool: true,
         canUseTool: true,
+        canAccessTechnicalView: true,
       };
     }
   }
@@ -105,5 +113,6 @@ export async function getSector3ToolAccess(
     niTier: state.niTier,
     ownsTool,
     canUseTool: true,
+    canAccessTechnicalView,
   };
 }

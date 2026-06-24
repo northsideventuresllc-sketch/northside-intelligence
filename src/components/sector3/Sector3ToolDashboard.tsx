@@ -9,12 +9,17 @@ import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
 import { Sector3DashboardToolbar } from "@/components/sector3/Sector3DashboardToolbar";
 import { Sector3ToolChatModal } from "@/components/sector3/Sector3ToolChatModal";
+import { Sector3PresentationToggle } from "@/components/sector3/Sector3PresentationToggle";
 import { Sector3ToolResult } from "@/components/sector3/results/Sector3ToolResult";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
 import { getToolBrand } from "@/lib/constants";
 import { getSector3ToolChatConfig } from "@/lib/sector3-tools/chat-content";
+import {
+  toolHasTechnicalView,
+  type Sector3PresentationMode,
+} from "@/lib/sector3-tools/presentation-mode";
 import type { Sector3ToolRuntimeConfig, Sector3SessionRow } from "@/lib/sector3-tools/types";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -39,6 +44,7 @@ interface Props {
   usageLimit: number;
   hasUnlimitedAccess: boolean;
   niTier: string;
+  canAccessTechnicalView?: boolean;
   gated?: boolean;
   gateContent?: React.ReactNode;
 }
@@ -67,6 +73,7 @@ export function Sector3ToolDashboard({
   usageLimit,
   hasUnlimitedAccess,
   niTier,
+  canAccessTechnicalView = false,
   gated = false,
   gateContent,
 }: Props) {
@@ -83,11 +90,22 @@ export function Sector3ToolDashboard({
   const [used, setUsed] = useState(usageCount);
   const [history, setHistory] = useState(initialHistory);
   const [viewMode, setViewMode] = useState<"input" | "results">("input");
+  const [presentationMode, setPresentationMode] =
+    useState<Sector3PresentationMode>("simple");
   const [chatOpen, setChatOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const chatConfig = getSector3ToolChatConfig(config.slug);
   const showResults = viewMode === "results" && !!result;
+  const showPresentationToggle =
+    showResults && toolHasTechnicalView(config.slug);
+  const effectivePresentationMode: Sector3PresentationMode =
+    canAccessTechnicalView ? presentationMode : "simple";
+
+  function handlePresentationModeChange(mode: Sector3PresentationMode) {
+    if (mode === "technical" && !canAccessTechnicalView) return;
+    setPresentationMode(mode);
+  }
 
   const effectiveLimit = hasUnlimitedAccess ? 999999 : usageLimit;
   const atLimit = !hasUnlimitedAccess && used >= effectiveLimit;
@@ -240,17 +258,27 @@ export function Sector3ToolDashboard({
             </div>
 
             {showResults && (
-              <Sector3DashboardToolbar
-                onEdit={handleEditPrompt}
-                editLabel="Edit Prompt"
-                onChat={
-                  chatConfig?.enabled
-                    ? () => setChatOpen(true)
-                    : undefined
-                }
-                chatLabel={chatConfig?.buttonLabel}
-                brandColor={brand.brandColor}
-              />
+              <>
+                <Sector3DashboardToolbar
+                  onEdit={handleEditPrompt}
+                  editLabel="Edit Prompt"
+                  onChat={
+                    chatConfig?.enabled
+                      ? () => setChatOpen(true)
+                      : undefined
+                  }
+                  chatLabel={chatConfig?.buttonLabel}
+                  brandColor={brand.brandColor}
+                />
+                {showPresentationToggle && (
+                  <Sector3PresentationToggle
+                    mode={effectivePresentationMode}
+                    onChange={handlePresentationModeChange}
+                    canAccessTechnical={canAccessTechnicalView}
+                    brandColor={brand.brandColor}
+                  />
+                )}
+              </>
             )}
 
             {!showResults && (
@@ -355,6 +383,7 @@ export function Sector3ToolDashboard({
                 brandColor={brand.brandColor}
                 sourceSystem={lastContext.sourceSystem}
                 targetSystem={lastContext.targetSystem}
+                presentationMode={effectivePresentationMode}
               />
             )}
 

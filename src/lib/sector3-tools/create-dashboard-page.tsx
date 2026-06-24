@@ -90,6 +90,7 @@ export function createSector3DashboardPage(
         usageLimit={access.usageLimit}
         hasUnlimitedAccess={access.hasUnlimitedAccess}
         niTier={access.niTier}
+        canAccessTechnicalView={access.canAccessTechnicalView}
       />
     );
   };
