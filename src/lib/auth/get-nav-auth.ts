@@ -1,9 +1,11 @@
 import { isMasterAccountFlag } from "@/lib/billing/master-account";
+import { getUnreadNotificationCount } from "@/lib/notifications/service";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 export interface NavAuthState {
   isLoggedIn: boolean;
   isMasterAccount: boolean;
+  unreadNotificationCount: number;
 }
 
 export async function getNavAuth(): Promise<NavAuthState> {
@@ -13,17 +15,21 @@ export async function getNavAuth(): Promise<NavAuthState> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { isLoggedIn: false, isMasterAccount: false };
+    return { isLoggedIn: false, isMasterAccount: false, unreadNotificationCount: 0 };
   }
 
-  const { data: profile } = await supabase
-    .from("ni_portal_profiles")
-    .select("is_master_account")
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, unreadNotificationCount] = await Promise.all([
+    supabase
+      .from("ni_portal_profiles")
+      .select("is_master_account")
+      .eq("id", user.id)
+      .maybeSingle(),
+    getUnreadNotificationCount(user.id).catch(() => 0),
+  ]);
 
   return {
     isLoggedIn: true,
     isMasterAccount: isMasterAccountFlag(profile?.is_master_account),
+    unreadNotificationCount,
   };
 }

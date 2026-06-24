@@ -2,7 +2,13 @@ import { getNavAuth } from "@/lib/auth/get-nav-auth";
 import { Nav } from "@/components/landing/Nav";
 
 export async function NavServer() {
-  const { isLoggedIn, isMasterAccount } = await getNavAuth();
+  const { isLoggedIn, isMasterAccount, unreadNotificationCount } = await getNavAuth();
 
-  return <Nav isLoggedIn={isLoggedIn} isMasterAccount={isMasterAccount} />;
+  return (
+    <Nav
+      isLoggedIn={isLoggedIn}
+      isMasterAccount={isMasterAccount}
+      unreadNotificationCount={unreadNotificationCount}
+    />
+  );
 }

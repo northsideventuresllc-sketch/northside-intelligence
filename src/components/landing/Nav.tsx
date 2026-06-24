@@ -3,13 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
+import { NotificationsDropdown } from "@/components/notifications/NotificationsDropdown";
 
 interface NavProps {
   isLoggedIn: boolean;
   isMasterAccount: boolean;
+  unreadNotificationCount?: number;
 }
 
-export function Nav({ isLoggedIn, isMasterAccount }: NavProps) {
+export function Nav({ isLoggedIn, isMasterAccount, unreadNotificationCount = 0 }: NavProps) {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-cyan-500/10 bg-ni-bg/70 shadow-[0_4px_30px_rgba(0,0,0,0.3),inset_0_-1px_0_rgba(0,212,255,0.1)] backdrop-blur-xl">
       <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
@@ -57,6 +59,13 @@ export function Nav({ isLoggedIn, isMasterAccount }: NavProps) {
                   Admin Dashboard
                 </Link>
               )}
+              <Link
+                href="/promos"
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-sm font-medium text-amber-300 transition hover:border-amber-400/50 hover:bg-amber-500/20"
+              >
+                Promos
+              </Link>
+              <NotificationsDropdown initialUnreadCount={unreadNotificationCount} />
               <AccountMenuDropdown />
             </>
           ) : (
@@ -78,6 +87,12 @@ export function Nav({ isLoggedIn, isMasterAccount }: NavProps) {
                 className="whitespace-nowrap text-sm text-ni-muted transition hover:text-cyan-300"
               >
                 Services
+              </Link>
+              <Link
+                href="/promos"
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-sm font-medium text-amber-300 transition hover:border-amber-400/50 hover:bg-amber-500/20"
+              >
+                Promos
               </Link>
               <a
                 href="/#pricing"

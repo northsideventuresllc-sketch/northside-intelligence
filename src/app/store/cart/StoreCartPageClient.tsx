@@ -15,6 +15,7 @@ import { useStoreCheckout } from "@/hooks/useStoreCheckout";
 import type { PriceChangeNoticeView } from "@/lib/store/catalog/types";
 import type { ShippingTier } from "@/lib/store/cart/types";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
+import { subscribeIfOptedIn } from "@/components/email/EmailListOptIn";
 
 function cartLineKey(item: Pick<CartLineItem, "slug" | "variantId">): string {
   return `${item.slug}::${item.variantId ?? ""}`;
@@ -36,6 +37,7 @@ export function StoreCartPageClient() {
   const gate = useStoreGate();
   const { checkout, loading, error, setError } = useStoreCheckout();
   const [checkoutNotices, setCheckoutNotices] = useState<PriceChangeNoticeView[]>([]);
+  const [emailListOptIn, setEmailListOptIn] = useState(false);
 
   useEffect(() => {
     if (ordered) clearCart();
@@ -57,6 +59,9 @@ export function StoreCartPageClient() {
   async function handleCheckout() {
     setError("");
     setCheckoutNotices([]);
+    if (emailListOptIn) {
+      await subscribeIfOptedIn(true);
+    }
     const result = await checkout();
     if (!result.ok && result.priceChangeNotices?.length) {
       setCheckoutNotices(result.priceChangeNotices);
@@ -186,9 +191,21 @@ export function StoreCartPageClient() {
               </p>
             </div>
 
-            {error && <p className="text-sm text-red-300">{error}</p>}
+              {error && <p className="text-sm text-red-300">{error}</p>}
 
-            <button
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={emailListOptIn}
+                  onChange={(e) => setEmailListOptIn(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-white/20 bg-ni-bg text-cyan-500"
+                />
+                <span className="text-ni-muted">
+                  Email me Smart Store deals and weekly promos from Northside Intelligence
+                </span>
+              </label>
+
+              <button
               type="button"
               onClick={handleCheckout}
               disabled={!checkoutEnabled || loading}
