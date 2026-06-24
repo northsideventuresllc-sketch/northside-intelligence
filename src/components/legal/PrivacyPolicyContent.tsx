@@ -1,13 +1,5 @@
-import { LEGAL_CONTACT_EMAIL } from "@/lib/legal/constants";
+import { LegalEmail } from "@/components/legal/LegalEmail";
 import { getSiteUpdatedDate } from "@/lib/legal/site-updated";
-
-function LegalEmail() {
-  return (
-    <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="text-cyan-400 hover:text-cyan-300">
-      {LEGAL_CONTACT_EMAIL}
-    </a>
-  );
-}
 
 export function PrivacyPolicyContent() {
   const updatedDate = getSiteUpdatedDate();
