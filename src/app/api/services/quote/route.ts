@@ -14,6 +14,7 @@ interface QuoteRequestBody {
   timeline: string;
   budgetRange: string;
   customBudget?: string;
+  requestedLowerPrice?: string;
   teamSize: string;
   additionalContext?: string;
   contactName?: string;
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
     timeline: body.timeline.trim(),
     budgetRange: body.budgetRange.trim(),
     customBudget: body.customBudget?.trim() ?? null,
+    requestedLowerPrice: body.requestedLowerPrice?.trim() ?? null,
     teamSize: body.teamSize.trim(),
     additionalContext: body.additionalContext?.trim() ?? "",
   };

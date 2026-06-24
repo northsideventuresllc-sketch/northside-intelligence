@@ -172,9 +172,9 @@ export function ServiceQuotePanel({
           <button
             type="button"
             onClick={() => setNegotiateOpen(true)}
-            className="text-sm text-ni-muted underline-offset-2 transition hover:text-cyan-300 hover:underline"
+            className="text-sm font-medium text-cyan-300 underline-offset-2 transition hover:underline"
           >
-            Negotiate
+            Request a Lower Price
           </button>
         </p>
       </div>

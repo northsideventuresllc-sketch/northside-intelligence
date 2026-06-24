@@ -14,6 +14,8 @@ import {
   resolveToolCheckoutFromPriceId,
 } from "@/lib/billing/stripe";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
+import { getServiceBySlug } from "@/lib/services/offerings";
+import { sendServiceInvoiceEmail } from "@/lib/resend";
 import { createServiceClient } from "@/lib/supabase/server";
 
 async function loadAllToolPricing() {
@@ -103,14 +105,59 @@ export async function POST(req: NextRequest) {
         if (session.metadata?.serviceCheckout === "true" && session.metadata?.quoteId) {
           const supabase = createServiceClient();
           const now = new Date().toISOString();
+          const quoteId = session.metadata.quoteId;
+
           await supabase
             .from("ni_service_quotes")
             .update({ status: "paid", updated_at: now })
-            .eq("id", session.metadata.quoteId);
+            .eq("id", quoteId);
           await supabase
             .from("ni_service_requests")
             .update({ status: "accepted", updated_at: now })
             .eq("stripe_session_id", session.id);
+
+          const { data: quote } = await supabase
+            .from("ni_service_quotes")
+            .select("*")
+            .eq("id", quoteId)
+            .maybeSingle();
+
+          const customerEmail =
+            session.customer_details?.email ?? session.customer_email ?? null;
+
+          if (quote && customerEmail) {
+            const service = getServiceBySlug(quote.service_slug);
+            const intake = (quote.intake_payload ?? {}) as {
+              contactName?: string;
+              email?: string;
+            };
+            const lineItems = Array.isArray(quote.line_items)
+              ? (quote.line_items as { label: string; amountCents: number }[])
+              : [];
+
+            const totalPriceCents = parseInt(
+              session.metadata.totalPriceCents ?? String(quote.current_price_cents),
+              10
+            );
+            const amountPaidCents = session.amount_total ?? totalPriceCents;
+            const paymentType = session.metadata.paymentType ?? "full";
+            const planMonths = parseInt(session.metadata.planMonths ?? "1", 10);
+
+            const invoiceNumber = `NI-${quoteId.slice(0, 8).toUpperCase()}`;
+
+            await sendServiceInvoiceEmail({
+              to: customerEmail,
+              customerName: intake.contactName?.trim() || "Valued Client",
+              serviceName: service?.name ?? quote.service_slug,
+              invoiceNumber,
+              amountPaidCents,
+              totalPriceCents,
+              paymentType,
+              planMonths,
+              lineItems,
+              paidAt: now,
+            });
+          }
         }
         break;
       }

@@ -2,7 +2,11 @@ import { generateText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
-import { formatCents, getNegotiationPrice } from "@/lib/services/pricing-engine";
+import type { AccountType } from "@/lib/services/offerings";
+import {
+  evaluatePriceReduction,
+  formatCents,
+} from "@/lib/services/pricing-engine";
 
 const NEGOTIATION_MODEL = "anthropic/claude-haiku-4.5";
 
@@ -12,10 +16,52 @@ interface NegotiationMessage {
   timestamp: string;
 }
 
+interface IntakePayload {
+  industry?: string;
+  teamSize?: string;
+  timeline?: string;
+  budgetRange?: string;
+  requestedLowerPrice?: string | null;
+}
+
 interface NegotiateBody {
   quoteId: string;
   message: string;
   action?: "continue" | "accept";
+}
+
+function parseRequestedPriceCents(value?: string | null): number | null {
+  if (!value?.trim()) return null;
+  const cleaned = value.replace(/[^0-9.]/g, "");
+  const dollars = parseFloat(cleaned);
+  if (!Number.isFinite(dollars) || dollars <= 0) return null;
+  return Math.round(dollars * 100);
+}
+
+function buildReductionContext(
+  quote: {
+    top_price_cents: number;
+    floor_price_cents: number;
+    current_price_cents: number;
+    negotiation_level: number | null;
+    account_type: string;
+    intake_payload: IntakePayload | null;
+  },
+  negotiationLevel: number
+) {
+  const intake = quote.intake_payload ?? {};
+  return {
+    topPriceCents: quote.top_price_cents,
+    floorPriceCents: quote.floor_price_cents,
+    currentPriceCents: quote.current_price_cents,
+    negotiationLevel,
+    accountType: quote.account_type as AccountType,
+    teamSize: intake.teamSize ?? "Just me",
+    timeline: intake.timeline ?? "Flexible / not sure yet",
+    industry: intake.industry ?? "",
+    budgetRange: intake.budgetRange ?? "Prefer to discuss",
+    requestedPriceCents: parseRequestedPriceCents(intake.requestedLowerPrice),
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -92,36 +138,31 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.action === "continue") {
-    const nextLevel = Math.min(negotiationLevel + 1, 3);
-    const offeredPrice = getNegotiationPrice(
-      {
-        topPriceCents: quote.top_price_cents,
-        floorPriceCents: quote.floor_price_cents,
-        negotiationLevels: [],
-      },
-      nextLevel
+    const decision = evaluatePriceReduction(
+      buildReductionContext(quote, negotiationLevel)
     );
-
-    const computedPrice =
-      nextLevel === 3
-        ? quote.floor_price_cents
-        : Math.round((quote.top_price_cents * [1, 0.88, 0.78, 0.58][nextLevel]) / 100) * 100;
-
+    const nextLevel = Math.min(negotiationLevel + 1, 3);
     negotiationLevel = nextLevel;
 
-    await admin
-      .from("ni_service_quotes")
-      .update({
-        negotiation_level: nextLevel,
-        current_price_cents: computedPrice,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", body.quoteId);
+    const offeredPrice = decision.approved
+      ? decision.offeredPriceCents
+      : quote.current_price_cents;
 
-    const isFinal = nextLevel >= 3;
-    const assistantMessage = isFinal
-      ? `This is our absolute lowest offer: ${formatCents(computedPrice)}. If this still doesn't work for your budget, please contact our support team for a custom override code. We'd love to find a way to help you.`
-      : `Based on your situation, I can offer ${formatCents(computedPrice)} — a meaningful reduction from your initial quote. You can accept this price or continue negotiating for our final offer.`;
+    if (decision.approved) {
+      await admin
+        .from("ni_service_quotes")
+        .update({
+          negotiation_level: nextLevel,
+          current_price_cents: offeredPrice,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", body.quoteId);
+    }
+
+    const factorSummary = decision.factors.slice(0, 2).join(" ");
+    const assistantMessage = decision.approved
+      ? `${decision.summary} ${factorSummary}`
+      : decision.summary;
 
     const updatedMessages: NegotiationMessage[] = [
       ...messages,
@@ -138,7 +179,7 @@ export async function POST(request: NextRequest) {
         .update({
           messages: updatedMessages,
           negotiation_level: nextLevel,
-          offered_price_cents: computedPrice,
+          offered_price_cents: offeredPrice,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id);
@@ -148,7 +189,7 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         messages: updatedMessages,
         negotiation_level: nextLevel,
-        offered_price_cents: computedPrice,
+        offered_price_cents: offeredPrice,
         status: "open",
       });
     }
@@ -156,10 +197,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       assistantMessage,
       negotiationLevel: nextLevel,
-      offeredPriceCents: computedPrice,
-      formattedPrice: formatCents(computedPrice),
-      isFinalOffer: isFinal,
-      canContinue: !isFinal,
+      offeredPriceCents: decision.approved ? offeredPrice : undefined,
+      formattedPrice: decision.approved ? formatCents(offeredPrice) : undefined,
+      isFinalOffer: decision.isFinalOffer,
+      canContinue: decision.canContinue,
+      approved: decision.approved,
+      factors: decision.factors,
     });
   }
 
@@ -174,19 +217,25 @@ export async function POST(request: NextRequest) {
   };
   messages.push(userMessage);
 
-  const nextLevel = Math.min(negotiationLevel + 1, 2);
-  const offeredPrice =
-    nextLevel === 1
-      ? Math.round((quote.top_price_cents * 0.88) / 100) * 100
-      : Math.round((quote.top_price_cents * 0.78) / 100) * 100;
+  const decision = evaluatePriceReduction(
+    buildReductionContext(quote, negotiationLevel)
+  );
+  const nextLevel = Math.min(negotiationLevel + 1, 3);
+  const offeredPrice = decision.approved ? decision.offeredPriceCents : quote.current_price_cents;
 
-  const systemPrompt = `You are a compassionate pricing specialist at Northside Intelligence. A client is negotiating the price of "${quote.service_slug}" service.
+  const factorsBlock = decision.factors.map((f) => `• ${f}`).join("\n");
 
-Current initial quote: ${formatCents(quote.top_price_cents)}
-Your negotiated offer: ${formatCents(offeredPrice)}
+  const systemPrompt = `You are a pricing specialist at Northside Intelligence. A client is negotiating the price of "${quote.service_slug}" service.
+
+Current quote: ${formatCents(quote.current_price_cents)}
+Decision: ${decision.approved ? "APPROVED reduction" : "Cannot approve further reduction at this time"}
+${decision.approved ? `New offered price: ${formatCents(offeredPrice)}` : ""}
 Floor price (never mention unless asked): ${formatCents(quote.floor_price_cents)}
 
-Respond in 2-3 sentences. Acknowledge their situation with genuine empathy. Explain that you understand budget constraints happen and that Northside wants to make intelligence accessible. Present the negotiated price of ${formatCents(offeredPrice)} as a thoughtful adjustment — not the final lowest price yet. Be warm, professional, and human. Do not use bullet points.`;
+Business factors evaluated:
+${factorsBlock}
+
+Respond in 2-3 sentences. If approved, present ${formatCents(offeredPrice)} warmly and briefly reference that the decision reflects profitability, project worth, and demand. If denied, explain empathetically why we cannot go lower right now, referencing the business factors without listing them as bullets. Be warm and professional.`;
 
   let assistantText: string;
   try {
@@ -198,7 +247,9 @@ Respond in 2-3 sentences. Acknowledge their situation with genuine empathy. Expl
     });
     assistantText = text.trim();
   } catch {
-    assistantText = `Thank you for sharing that with us — we genuinely understand that budget matters. Given your situation, we'd like to offer ${formatCents(offeredPrice)}, which reflects a meaningful adjustment from your initial quote. You can accept this offer or continue the conversation if you'd like to explore further options.`;
+    assistantText = decision.approved
+      ? `${decision.summary} You can accept this offer or continue negotiating.`
+      : decision.summary;
   }
 
   const assistantMessage: NegotiationMessage = {
@@ -210,14 +261,16 @@ Respond in 2-3 sentences. Acknowledge their situation with genuine empathy. Expl
 
   negotiationLevel = nextLevel;
 
-  await admin
-    .from("ni_service_quotes")
-    .update({
-      negotiation_level: nextLevel,
-      current_price_cents: offeredPrice,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", body.quoteId);
+  if (decision.approved) {
+    await admin
+      .from("ni_service_quotes")
+      .update({
+        negotiation_level: nextLevel,
+        current_price_cents: offeredPrice,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", body.quoteId);
+  }
 
   if (existing) {
     await admin
@@ -225,7 +278,7 @@ Respond in 2-3 sentences. Acknowledge their situation with genuine empathy. Expl
       .update({
         messages,
         negotiation_level: nextLevel,
-        offered_price_cents: offeredPrice,
+        offered_price_cents: decision.approved ? offeredPrice : existing.offered_price_cents,
         updated_at: new Date().toISOString(),
       })
       .eq("id", existing.id);
@@ -235,7 +288,7 @@ Respond in 2-3 sentences. Acknowledge their situation with genuine empathy. Expl
       user_id: user.id,
       messages,
       negotiation_level: nextLevel,
-      offered_price_cents: offeredPrice,
+      offered_price_cents: decision.approved ? offeredPrice : null,
       status: "open",
     });
   }
@@ -243,10 +296,12 @@ Respond in 2-3 sentences. Acknowledge their situation with genuine empathy. Expl
   return NextResponse.json({
     assistantMessage: assistantText,
     negotiationLevel: nextLevel,
-    offeredPriceCents: offeredPrice,
-    formattedPrice: formatCents(offeredPrice),
-    isFinalOffer: false,
-    canContinue: true,
+    offeredPriceCents: decision.approved ? offeredPrice : undefined,
+    formattedPrice: decision.approved ? formatCents(offeredPrice) : undefined,
+    isFinalOffer: decision.isFinalOffer,
+    canContinue: decision.canContinue,
+    approved: decision.approved,
+    factors: decision.factors,
     messages,
   });
 }
