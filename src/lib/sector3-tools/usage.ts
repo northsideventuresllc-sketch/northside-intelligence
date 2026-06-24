@@ -1,5 +1,7 @@
 import { getSector3ToolAccess } from "./access";
 import { ensureSector3ToolProfile } from "./profile";
+import { createNotification } from "@/lib/notifications/service";
+import { createServiceClient } from "@/lib/supabase/server";
 import { createSector3ServiceClient } from "./service-client";
 import type { Sector3ToolRuntimeConfig } from "./types";
 import type { Sector3ToolAccess } from "./access";
@@ -58,6 +60,26 @@ export async function checkSector3Usage(
   }
 
   if (!access.hasUnlimitedAccess && usageCount >= access.usageLimit) {
+    // Notify once per billing period when limit is first reached
+    if (usageCount === access.usageLimit) {
+      const admin = createServiceClient();
+      const { data: profile } = await admin
+        .from("ni_portal_profiles")
+        .select("email")
+        .eq("id", userId)
+        .maybeSingle();
+
+      await createNotification({
+        userId,
+        category: "usage_limit",
+        title: `${config.displayName} Limit Reached`,
+        body: `You've used all ${access.usageLimit} ${config.usageUnit} on your ${access.planLabel} plan this month.`,
+        link: `/tools/${config.slug}`,
+        userEmail: profile?.email ?? email ?? null,
+        metadata: { toolSlug: config.slug, usageCount, usageLimit: access.usageLimit },
+      });
+    }
+
     return {
       ok: false,
       status: 429,

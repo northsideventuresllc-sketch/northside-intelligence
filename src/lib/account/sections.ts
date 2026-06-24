@@ -36,6 +36,12 @@ export const ACCOUNT_SECTIONS: AccountSection[] = [
     href: "/account/billing",
     description: "Plans, upgrades, and subscriptions",
   },
+  {
+    id: "notifications",
+    label: "Notifications",
+    href: "/account/notifications",
+    description: "In-app and email notification preferences",
+  },
 ];
 
 export function getAccountSection(id: string): AccountSection | undefined {
