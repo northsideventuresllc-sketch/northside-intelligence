@@ -6,7 +6,10 @@ import { GrantBotBackground } from "@/components/grantbot/GrantBotBackground";
 import { GrantBotNav } from "@/components/grantbot/GrantBotNav";
 import { GrantListingBubble } from "@/components/grantbot/GrantListingBubble";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
+import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
+import { getToolBrand } from "@/lib/constants";
+import { getSector3ToolHelpContent } from "@/lib/sector3-tools/help-content";
 import { grantbotPath } from "@/lib/grantbot/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
@@ -307,6 +310,9 @@ export default function DashboardClient({
     searchLoading ||
     Object.values(drafts).some((draft) => draft.loading);
 
+  const grantbotHelp = getSector3ToolHelpContent("grantbot")!;
+  const grantbotBrand = getToolBrand("grantbot");
+
   return (
     <div className="relative min-h-screen">
       <GrantBotBackground />
@@ -552,6 +558,14 @@ export default function DashboardClient({
                 </ul>
               </div>
             )}
+
+            <Sector3ToolDashboardFooter
+              summary={grantbotHelp.summary}
+              slug="grantbot"
+              displayName="GrantBot"
+              brandColor={grantbotBrand.brandColor}
+              faqs={grantbotHelp.faqs}
+            />
           </>
         )}
       </main>

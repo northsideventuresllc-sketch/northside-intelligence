@@ -1,3 +1,8 @@
+export interface Sector3ToolHelpFaq {
+  question: string;
+  answer: string;
+}
+
 export interface Sector3ToolRuntimeConfig {
   slug: string;
   displayName: string;
@@ -8,6 +13,9 @@ export interface Sector3ToolRuntimeConfig {
   resetColumn: string;
   usageUnit: string;
   freeTierCap: number;
+  /** Short dashboard footer copy — what this tool is for. */
+  summary: string;
+  faqs: Sector3ToolHelpFaq[];
 }
 
 export interface Sector3SessionRow {

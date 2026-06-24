@@ -73,6 +73,30 @@ Be direct and practical.`;
   }
 }
 
+export async function answerSector3ToolHelpQuestion(
+  toolName: string,
+  toolSummary: string,
+  question: string
+): Promise<string> {
+  const systemPrompt = `You are the in-app help assistant for ${toolName}, a Northside Intelligence tool.
+
+Tool purpose: ${toolSummary}
+
+Answer the user's question clearly and concisely (2-4 short paragraphs max). Use plain English. If the question is outside the tool's scope, say so politely and suggest what they can do in ${toolName} instead. Do not invent features that do not exist.`;
+
+  try {
+    const { text } = await generateText({
+      model: MODEL,
+      system: systemPrompt,
+      prompt: question,
+      maxOutputTokens: 600,
+    });
+    return text.trim();
+  } catch (err) {
+    handleAiError(err);
+  }
+}
+
 export async function generateBridgeAIPlan(
   sourceSystem: string,
   targetSystem: string,

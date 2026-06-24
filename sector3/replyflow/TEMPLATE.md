@@ -85,6 +85,25 @@ When forking this template, update the `plans` array in `src/app/page.tsx` with 
 - **Loading bar**: Mount `Sector3LoadingBar` on every tool dashboard. Pass `loading={true}` while any generation request is in flight (search, draft, reply, etc.). Use `variant="replyflow"` or your tool’s theme key.
 - **Result bubbles**: Generated output panels use `animate-bubble-in` (one-shot diagonal entrance, then static). Do **not** use `animate-float-bubble` on results — that class is for decorative background skeletons only.
 
+## Portal-hosted tool UI (Signal Desk, GapScan, BridgeAI, future ITs)
+
+When launching a tool inside `northside-intelligence` (not a standalone fork), use the shared factories in `src/lib/sector3-tools/`:
+
+| Surface | Factory / component | Requirements |
+|---------|---------------------|--------------|
+| Logged-out landing | `createSector3LandingPage` | Title Case headlines (`"Signal Intelligence"` not `"Signal intelligence"`). Centered hero, brand gradient, animated badge, glass preview card. |
+| Logged-in dashboard | `createSector3DashboardPage` + `Sector3ToolDashboard` | Centered `max-w-3xl` layout (match ReplyFlow / GrantBot). Glass panels, chip selectors for enum fields (`chipOptions`), usage bar, recent sessions below results. |
+| Help | `Sector3ToolDashboardFooter` + `help-content.ts` | Footer summary of what the tool does; `?` button opens FAQ modal with **Other** → `/api/sector3/[slug]/help` AI answers. |
+| Config | `configs.ts` + `help-content.ts` | Register in `SECTOR3_TOOL_CONFIGS`; add FAQs and summary before shipping. |
+
+**Do not** pass functions from Server Components into client dashboards. The generate API receives field `values` JSON directly.
+
+Example dashboard field with chips:
+
+```ts
+{ id: "scanType", label: "Scan Type", chipOptions: ["Workflow", "Product", "Market"] }
+```
+
 ## Deploy
 
 Merge to `main` → GitHub Actions runs `npm run build` and `vercel --prod` with `VERCEL_TOKEN`.

@@ -8,19 +8,19 @@ export default createSector3DashboardPage(BRIDGEAI_CONFIG, {
   fields: [
     {
       id: "sourceSystem",
-      label: "Source system",
+      label: "Source System",
       placeholder: "e.g. HubSpot, Gmail, Airtable",
       required: true,
     },
     {
       id: "targetSystem",
-      label: "Target system",
+      label: "Target System",
       placeholder: "e.g. Stripe, Slack, Supabase",
       required: true,
     },
     {
       id: "goal",
-      label: "Integration goal",
+      label: "Integration Goal",
       placeholder: "What should happen when data moves between these systems?",
       multiline: true,
     },

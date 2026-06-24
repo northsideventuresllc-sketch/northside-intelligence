@@ -35,9 +35,9 @@ export default async function ReplyFlowHome() {
           </div>
 
           <h1 className="max-w-3xl text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
-            <span className="rf-gradient-text">Customer replies</span>
+            <span className="rf-gradient-text">Customer Replies</span>
             <br />
-            <span className="text-white">that sound human, ship fast</span>
+            <span className="text-white">That Sound Human, Ship Fast</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-rf-muted">
             Paste any message. Pick a tone. ReplyFlow crafts on-brand responses in seconds — one NI

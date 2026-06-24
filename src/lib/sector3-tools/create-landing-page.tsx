@@ -37,8 +37,24 @@ export function createSector3LandingPage(
           <section className="mx-auto flex max-w-5xl flex-col items-center px-6 pb-20 pt-24 text-center">
             <div
               className="mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm"
-              style={{ borderColor: `${brand.brandColor}44`, color: brand.brandColor }}
+              style={{
+                borderColor: `${brand.brandColor}44`,
+                backgroundColor: `${brand.brandColor}14`,
+                color: brand.brandColor,
+              }}
             >
+              <span className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="inline-block h-1.5 w-1.5 rounded-full animate-wave"
+                    style={{
+                      backgroundColor: brand.brandColor,
+                      animationDelay: `${i * 0.15}s`,
+                    }}
+                  />
+                ))}
+              </span>
               Powered by Claude · Part of Northside Intelligence
             </div>
 
@@ -69,7 +85,10 @@ export function createSector3LandingPage(
               </Link>
             </div>
 
-            <div className="mt-16 w-full max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6 text-left backdrop-blur-xl">
+            <div
+              className="mt-16 w-full max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6 text-left backdrop-blur-xl"
+              style={{ boxShadow: `0 0 40px ${brand.brandColor}22` }}
+            >
               <p className="mb-3 text-xs font-medium uppercase tracking-widest text-white/50">
                 {content.previewLabel}
               </p>

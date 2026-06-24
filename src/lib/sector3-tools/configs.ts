@@ -1,11 +1,19 @@
 import { getSector3ToolProfile } from "@/lib/billing/sector3-tool-pricing";
+import { getSector3ToolHelpContent } from "@/lib/sector3-tools/help-content";
 import type { Sector3ToolRuntimeConfig } from "./types";
 
 function capFor(slug: string, fallback: number): number {
   return getSector3ToolProfile(slug)?.freeTierMonthlyCap ?? fallback;
 }
 
-export const SIGNALDESK_CONFIG: Sector3ToolRuntimeConfig = {
+function withHelp(
+  config: Omit<Sector3ToolRuntimeConfig, "summary" | "faqs">
+): Sector3ToolRuntimeConfig {
+  const help = getSector3ToolHelpContent(config.slug)!;
+  return { ...config, summary: help.summary, faqs: help.faqs };
+}
+
+export const SIGNALDESK_CONFIG: Sector3ToolRuntimeConfig = withHelp({
   slug: "signaldesk",
   displayName: "Signal Desk",
   basePath: "/signaldesk",
@@ -15,9 +23,9 @@ export const SIGNALDESK_CONFIG: Sector3ToolRuntimeConfig = {
   resetColumn: "signals_reset_at",
   usageUnit: "signals",
   freeTierCap: capFor("signaldesk", 10),
-};
+});
 
-export const GAPSCAN_CONFIG: Sector3ToolRuntimeConfig = {
+export const GAPSCAN_CONFIG: Sector3ToolRuntimeConfig = withHelp({
   slug: "gapscan",
   displayName: "GapScan",
   basePath: "/gapscan",
@@ -27,9 +35,9 @@ export const GAPSCAN_CONFIG: Sector3ToolRuntimeConfig = {
   resetColumn: "scans_reset_at",
   usageUnit: "scans",
   freeTierCap: capFor("gapscan", 10),
-};
+});
 
-export const BRIDGEAI_CONFIG: Sector3ToolRuntimeConfig = {
+export const BRIDGEAI_CONFIG: Sector3ToolRuntimeConfig = withHelp({
   slug: "bridgeai",
   displayName: "BridgeAI",
   basePath: "/bridgeai",
@@ -39,7 +47,7 @@ export const BRIDGEAI_CONFIG: Sector3ToolRuntimeConfig = {
   resetColumn: "workflows_reset_at",
   usageUnit: "workflows",
   freeTierCap: capFor("bridgeai", 10),
-};
+});
 
 export const SECTOR3_TOOL_CONFIGS = [
   SIGNALDESK_CONFIG,

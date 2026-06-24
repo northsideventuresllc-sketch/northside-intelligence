@@ -35,9 +35,9 @@ export default async function GrantBotHome() {
           </div>
 
           <h1 className="max-w-3xl text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
-            <span className="gb-gradient-text">Grant discovery</span>
+            <span className="gb-gradient-text">Grant Discovery</span>
             <br />
-            <span className="text-white">and drafting that saves hours</span>
+            <span className="text-white">And Drafting That Saves Hours</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-gb-muted">
             Describe your organization, find relevant funding opportunities, and draft compelling
