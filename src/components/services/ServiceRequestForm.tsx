@@ -38,6 +38,7 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
   const [timeline, setTimeline] = useState("");
   const [budgetRange, setBudgetRange] = useState("");
   const [customBudget, setCustomBudget] = useState("");
+  const [requestedLowerPrice, setRequestedLowerPrice] = useState("");
   const [teamSize, setTeamSize] = useState("");
   const [additionalContext, setAdditionalContext] = useState("");
   const [referralSource, setReferralSource] = useState("");
@@ -71,6 +72,7 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
             timeline,
             budgetRange,
             customBudget: customBudget || undefined,
+            requestedLowerPrice: requestedLowerPrice || undefined,
             teamSize,
             additionalContext,
             referralSource: referralSource || undefined,
@@ -318,6 +320,24 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
             />
             <p className="mt-1 text-xs text-ni-muted">
               Providing your exact budget helps us tailor a quote within your range.
+            </p>
+          </div>
+          <div>
+            <label htmlFor="requestedLowerPrice" className="mb-1 block text-sm text-ni-muted">
+              Request a Lower Price (Optional)
+            </label>
+            <input
+              id="requestedLowerPrice"
+              type="text"
+              value={requestedLowerPrice}
+              onChange={(e) => setRequestedLowerPrice(e.target.value)}
+              placeholder="e.g. $1,200 — the price you'd like us to consider"
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-ni-muted">
+              {accountType === "business"
+                ? "Business and enterprise clients can request a lower rate. We'll evaluate based on scope, demand, and project value."
+                : "Individual clients can request a lower rate. We'll evaluate based on your budget, timeline, and project scope."}
             </p>
           </div>
           <div>

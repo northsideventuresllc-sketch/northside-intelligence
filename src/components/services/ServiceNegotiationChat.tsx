@@ -194,7 +194,8 @@ export function ServiceNegotiationChat({
             <div className="mb-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
               <p className="text-sm text-ni-muted">
                 Your current quote is <span className="font-medium text-white">{formatCents(initialPriceCents)}</span>.
-                Tell us about your situation and why this price is challenging — we&apos;ll work with you.
+                Tell us why you need a lower price — we evaluate every request based on profitability,
+                project worth, demand, and your budget alignment.
               </p>
             </div>
           )}
@@ -233,37 +234,52 @@ export function ServiceNegotiationChat({
           </p>
         )}
 
-        {hasSubmitted && offeredPriceCents && (
+        {hasSubmitted && (
           <div className="border-t border-white/10 px-5 py-3">
-            <p className="mb-3 text-center text-lg font-semibold text-cyan-300">
-              Offered: {formatCents(offeredPriceCents)}
-            </p>
-            <div className="flex gap-2">
-              {canContinue && !isFinalOffer && (
+            {offeredPriceCents ? (
+              <>
+                <p className="mb-3 text-center text-lg font-semibold text-cyan-300">
+                  Offered: {formatCents(offeredPriceCents)}
+                </p>
+                <div className="flex gap-2">
+                  {canContinue && !isFinalOffer && (
+                    <button
+                      type="button"
+                      onClick={handleContinue}
+                      disabled={loading}
+                      className="flex-1 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+                    >
+                      Continue Negotiation
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleAccept}
+                    className="flex-1 rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/25"
+                  >
+                    Accept
+                  </button>
+                </div>
+              </>
+            ) : (
+              canContinue &&
+              !isFinalOffer && (
                 <button
                   type="button"
                   onClick={handleContinue}
                   disabled={loading}
-                  className="flex-1 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10 disabled:opacity-50"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/10 disabled:opacity-50"
                 >
                   Continue Negotiation
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={handleAccept}
-                className="flex-1 rounded-xl border border-cyan-500/40 bg-cyan-500/15 py-2.5 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/25"
-              >
-                Accept
-              </button>
-            </div>
+              )
+            )}
             {isFinalOffer && (
               <p className="mt-2 text-center text-xs text-ni-muted">
-                This is our lowest offer. Need more help?{" "}
+                This is our final offer. Need more help?{" "}
                 <a href="mailto:support@northsideintelligence.com" className="text-cyan-300 hover:underline">
                   Contact Support
-                </a>{" "}
-                for an override code.
+                </a>
               </p>
             )}
           </div>
