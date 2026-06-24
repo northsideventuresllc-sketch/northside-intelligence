@@ -7,6 +7,7 @@ import { Sector3ToolBackground } from "@/components/sector3/Sector3ToolBackgroun
 import { Sector3ToolNav } from "@/components/sector3/Sector3ToolNav";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
+import { Sector3ToolResult } from "@/components/sector3/results/Sector3ToolResult";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
@@ -75,6 +76,7 @@ export function Sector3ToolDashboard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
+  const [lastContext, setLastContext] = useState<Record<string, string>>({});
   const [used, setUsed] = useState(usageCount);
   const [history, setHistory] = useState(initialHistory);
   const router = useRouter();
@@ -135,6 +137,7 @@ export function Sector3ToolDashboard({
     }
 
     setResult(data.result ?? "");
+    setLastContext({ ...values });
     if (typeof data.usageCount === "number") setUsed(data.usageCount);
 
     const summary =
@@ -312,17 +315,13 @@ export function Sector3ToolDashboard({
             </div>
 
             {result && (
-              <div
-                className="animate-bubble-in rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
-                style={glassStyle}
-              >
-                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/50">
-                  Result
-                </p>
-                <div className="whitespace-pre-wrap text-sm leading-relaxed text-white/90">
-                  {result}
-                </div>
-              </div>
+              <Sector3ToolResult
+                slug={config.slug}
+                result={result}
+                brandColor={brand.brandColor}
+                sourceSystem={lastContext.sourceSystem}
+                targetSystem={lastContext.targetSystem}
+              />
             )}
 
             {history.length > 0 && (

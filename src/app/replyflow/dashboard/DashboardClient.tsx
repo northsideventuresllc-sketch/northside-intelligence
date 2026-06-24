@@ -6,6 +6,7 @@ import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground"
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
+import { ReplyFlowResult } from "@/components/sector3/results/ReplyFlowResult";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { getToolBrand } from "@/lib/constants";
 import { getSector3ToolHelpContent } from "@/lib/sector3-tools/help-content";
@@ -72,7 +73,6 @@ export default function DashboardClient({
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
   const [used, setUsed] = useState(repliesUsed);
   const [history, setHistory] = useState(initialHistory);
   const router = useRouter();
@@ -119,12 +119,6 @@ export default function DashboardClient({
     setScenario(entry.scenario);
     setReply(entry.generatedReply);
     setError("");
-  }
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(reply);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   }
 
   async function handleSignOut() {
@@ -272,18 +266,7 @@ export default function DashboardClient({
         </div>
 
         {reply && (
-          <div className="rf-glass animate-bubble-in rounded-3xl p-6">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-medium text-rf-violet">Generated reply</span>
-              <button
-                onClick={handleCopy}
-                className="text-sm font-medium text-rf-rose transition hover:text-rf-coral"
-              >
-                {copied ? "✓ Copied!" : "Copy"}
-              </button>
-            </div>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/90">{reply}</p>
-          </div>
+          <ReplyFlowResult reply={reply} tone={tone} scenario={scenario} />
         )}
 
         {history.length > 0 && (

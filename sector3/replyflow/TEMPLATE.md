@@ -93,10 +93,13 @@ When launching a tool inside `northside-intelligence` (not a standalone fork), u
 |---------|---------------------|--------------|
 | Logged-out landing | `createSector3LandingPage` | Title Case headlines (`"Signal Intelligence"` not `"Signal intelligence"`). Centered hero, brand gradient, animated badge, glass preview card. |
 | Logged-in dashboard | `createSector3DashboardPage` + `Sector3ToolDashboard` | Centered `max-w-3xl` layout (match ReplyFlow / GrantBot). Glass panels, chip selectors for enum fields (`chipOptions`), usage bar, recent sessions below results. |
+| **Generation results** | `Sector3ToolResult` + tool-specific panel in `src/components/sector3/results/` | **Never** show raw markdown (`##`, `**`) to users. Parse AI output into branded UI: urgency badges (Signal Desk), severity cards (GapScan), step timeline (BridgeAI), message bubble (ReplyFlow). GrantBot uses structured JSON + `GrantListingBubble` — keep that pattern. |
 | Help | `Sector3ToolDashboardFooter` + `help-content.ts` | Footer summary of what the tool does; `?` button opens FAQ modal with **Other** → `/api/sector3/[slug]/help` AI answers. |
 | Config | `configs.ts` + `help-content.ts` | Register in `SECTOR3_TOOL_CONFIGS`; add FAQs and summary before shipping. |
 
 **Do not** pass functions from Server Components into client dashboards. The generate API receives field `values` JSON directly.
+
+When adding a new tool, create a dedicated result component (e.g. `MyToolResult.tsx`) and register it in `Sector3ToolResult.tsx`. Use `parseMarkdownSections` from `src/lib/sector3-tools/parse-result.ts` to turn structured AI output into cards, badges, and timelines — not plain text boxes.
 
 Example dashboard field with chips:
 
