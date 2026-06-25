@@ -52,17 +52,17 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
   return (
     <main className="min-h-screen bg-ni-bg">
       <NavServer />
-      <section className="relative px-6 pb-28 pt-24">
+      <section className="relative px-6 pb-36 pt-24">
         <div className="mx-auto max-w-4xl">
           <div className="mb-6 flex items-center justify-between gap-4">
-            <Link href="/store" className="text-sm text-cyan-300 hover:underline">
+            <Link href="/store" className="shrink-0 text-sm text-cyan-300 hover:underline">
               ← Back to {SMART_STORE_NAME}
             </Link>
             <StoreCartHeader />
           </div>
-          <div className="glass-panel">
+          <div className="glass-panel overflow-hidden">
               <div className="flex flex-col lg:flex-row">
-                <div className="flex h-80 items-center justify-center border-b border-white/5 bg-gradient-to-br from-cyan-500/10 to-transparent p-8 lg:h-auto lg:w-2/5 lg:border-b-0 lg:border-r">
+                <div className="flex h-80 shrink-0 items-center justify-center border-b border-white/10 bg-gradient-to-br from-cyan-500/10 to-transparent p-8 lg:h-auto lg:min-h-[28rem] lg:w-2/5 lg:border-b-0 lg:border-r">
                   {product.imageUrl ? (
                     <StoreProductImage
                       src={product.imageUrl}
@@ -75,7 +75,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                     <span className="sr-only">No product image</span>
                   )}
                 </div>
-                <div className="flex flex-1 flex-col p-6 md:p-8">
+                <div className="flex min-w-0 flex-1 flex-col p-6 md:p-8">
                   <p className="text-xs font-semibold uppercase tracking-wider text-ni-cyan/60">
                     {product.category.replace(/-/g, " ")}
                   </p>
@@ -101,7 +101,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                   ) : (
                     <p className="mt-2 text-sm text-ni-muted">New listing — reviews coming soon</p>
                   )}
-                  <dl className="mt-6 space-y-2 text-sm">
+                  <dl className="mt-6 space-y-2 border-t border-white/10 pt-6 text-sm">
                     <div className="flex justify-between gap-4">
                       <dt className="text-ni-muted">Fulfillment</dt>
                       <dd className="text-white">

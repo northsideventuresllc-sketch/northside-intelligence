@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
 import type { CatalogVariantView } from "@/lib/store/catalog/types";
@@ -21,56 +21,97 @@ interface PopupPosition {
   left: number;
 }
 
-const POPUP_WIDTH = 300;
 const POPUP_GAP = 10;
+const VIEWPORT_PAD = 12;
 
 export function VariantTooltip({
   variant,
   productDescription,
   productName,
 }: VariantTooltipProps) {
-  const [open, setOpen] = useState(false);
+  const popupId = useId();
+  const [hoverOpen, setHoverOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [position, setPosition] = useState<PopupPosition | null>(null);
+  const [positioned, setPositioned] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const anchorRef = useRef<HTMLSpanElement>(null);
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  const open = hoverOpen || pinned;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const storedParts = variant.description
+    ? {
+        overview: formatUserFriendlyDescription(variant.description, productName),
+        variation: "",
+      }
+    : buildVariantDescriptionParts(productDescription, variant.name, productName);
+
+  const overviewParagraphs = descriptionToParagraphs(storedParts.overview);
+  const variationText =
+    storedParts.variation ||
+    (variant.name.toLowerCase() !== "default"
+      ? `This option is the ${variant.name} variation.`
+      : "");
+
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
-    if (!anchor) return;
+    const popup = popupRef.current;
+    if (!anchor || !popup) return;
 
     const rect = anchor.getBoundingClientRect();
+    const popupW = popup.offsetWidth;
+    const popupH = popup.offsetHeight;
     const viewportW = window.innerWidth;
     const viewportH = window.innerHeight;
-    const estimatedHeight = 220;
 
     let left = rect.right + POPUP_GAP;
-    if (left + POPUP_WIDTH > viewportW - 12) {
-      left = Math.max(12, rect.left - POPUP_WIDTH - POPUP_GAP);
+    if (left + popupW > viewportW - VIEWPORT_PAD) {
+      left = rect.left - popupW - POPUP_GAP;
     }
-    if (left < 12) {
-      left = Math.min(12, rect.left);
+    if (left < VIEWPORT_PAD) {
+      left = Math.max(VIEWPORT_PAD, Math.min(rect.left, viewportW - popupW - VIEWPORT_PAD));
     }
 
-    let top = rect.top;
-    if (top + estimatedHeight > viewportH - 12) {
-      top = Math.max(12, viewportH - estimatedHeight - 12);
+    let top = rect.top + rect.height / 2 - popupH / 2;
+    if (top < VIEWPORT_PAD) top = VIEWPORT_PAD;
+    if (top + popupH > viewportH - VIEWPORT_PAD) {
+      top = Math.max(VIEWPORT_PAD, viewportH - popupH - VIEWPORT_PAD);
     }
 
     setPosition({ top, left });
+    setPositioned(true);
   }, []);
 
-  const show = useCallback(() => {
+  const openPopup = useCallback(
+    (pin: boolean) => {
+      setPositioned(false);
+      setPosition(null);
+      if (pin) {
+        setPinned(true);
+        setHoverOpen(false);
+      } else {
+        setHoverOpen(true);
+      }
+    },
+    []
+  );
+
+  const closePopup = useCallback(() => {
+    setPinned(false);
+    setHoverOpen(false);
+    setPositioned(false);
+    setPosition(null);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
     updatePosition();
-    setOpen(true);
-  }, [updatePosition]);
-
-  const hide = useCallback(() => {
-    setOpen(false);
-  }, []);
+  }, [open, updatePosition, overviewParagraphs.length, variationText, variant.imageUrl]);
 
   useEffect(() => {
     if (!open) return;
@@ -89,42 +130,52 @@ export function VariantTooltip({
 
   useEffect(() => {
     if (!open) return;
+
     function onPointerDown(e: PointerEvent) {
       const target = e.target as Node;
       if (anchorRef.current?.contains(target)) return;
-      const popup = document.getElementById(`variant-popup-${variant.id}`);
-      if (popup?.contains(target)) return;
-      hide();
+      if (popupRef.current?.contains(target)) return;
+      closePopup();
     }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closePopup();
+    }
+
     window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, [open, hide, variant.id]);
-
-  const storedParts = variant.description
-    ? {
-        overview: formatUserFriendlyDescription(variant.description, productName),
-        variation: "",
-      }
-    : buildVariantDescriptionParts(productDescription, variant.name, productName);
-
-  const overviewParagraphs = descriptionToParagraphs(storedParts.overview);
-  const variationText = storedParts.variation || (
-    variant.name.toLowerCase() !== "default"
-      ? `This option is the ${variant.name} variation.`
-      : ""
-  );
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, closePopup]);
 
   const popup =
-    open && position && mounted ? (
+    open && mounted ? (
       <div
-        id={`variant-popup-${variant.id}`}
-        role="tooltip"
-        className="fixed z-[200] w-[min(300px,calc(100vw-24px))] rounded-2xl border border-cyan-400/20 bg-[#0c0e14] p-4 shadow-2xl shadow-black/50"
-        style={{ top: position.top, left: position.left }}
-        onMouseEnter={show}
-        onMouseLeave={hide}
+        ref={popupRef}
+        id={popupId}
+        role="dialog"
+        aria-labelledby={`${popupId}-title`}
+        className={`fixed z-[250] w-[min(340px,calc(100vw-24px))] rounded-2xl border border-cyan-400/25 bg-[#0c0e14] p-4 shadow-2xl shadow-black/60 transition-opacity duration-100 ${
+          positioned ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        style={
+          position
+            ? { top: position.top, left: position.left }
+            : { top: -9999, left: -9999, visibility: "hidden" as const }
+        }
+        onMouseEnter={() => {
+          if (!pinned) setHoverOpen(true);
+        }}
+        onMouseLeave={() => {
+          if (!pinned) setHoverOpen(false);
+        }}
       >
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300/80">
+        <p
+          id={`${popupId}-title`}
+          className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300/80"
+        >
           {variant.name}
         </p>
 
@@ -140,9 +191,9 @@ export function VariantTooltip({
           </div>
         )}
 
-        <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+        <div className="space-y-2">
           {overviewParagraphs.map((para, i) => (
-            <p key={`overview-${i}`} className="text-xs leading-relaxed text-white/80">
+            <p key={`overview-${i}`} className="text-xs leading-relaxed text-white/85">
               {para}
             </p>
           ))}
@@ -152,33 +203,43 @@ export function VariantTooltip({
             </p>
           )}
         </div>
+
+        {pinned && (
+          <p className="mt-3 text-[10px] text-ni-muted">
+            Click outside or press Esc to close.
+          </p>
+        )}
       </div>
     ) : null;
 
   return (
     <>
-      <span
+      <button
         ref={anchorRef}
-        className="inline-flex shrink-0"
-        onMouseEnter={show}
-        onMouseLeave={hide}
-        onFocus={show}
-        onBlur={hide}
+        type="button"
+        className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-semibold transition ${
+          pinned
+            ? "border-cyan-300/60 bg-cyan-500/25 text-cyan-100"
+            : "border-cyan-400/30 bg-cyan-500/10 text-cyan-200 hover:border-cyan-300/50 hover:bg-cyan-500/20"
+        }`}
+        aria-label={`View details for ${variant.name}`}
+        aria-expanded={open}
+        aria-controls={open ? popupId : undefined}
+        onMouseEnter={() => {
+          if (!pinned) openPopup(false);
+        }}
+        onMouseLeave={() => {
+          if (!pinned) setHoverOpen(false);
+        }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (pinned) closePopup();
+          else openPopup(true);
+        }}
       >
-        <button
-          type="button"
-          className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-500/10 text-[10px] font-semibold text-cyan-200 transition hover:border-cyan-300/50 hover:bg-cyan-500/20"
-          aria-label={`View details for ${variant.name}`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (open) hide();
-            else show();
-          }}
-        >
-          i
-        </button>
-      </span>
+        i
+      </button>
       {mounted && popup ? createPortal(popup, document.body) : null}
     </>
   );

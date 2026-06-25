@@ -166,30 +166,34 @@ export function ProductPurchasePanel({
   }
 
   return (
-    <div className="mt-8 space-y-4">
+    <div className="relative z-0 mt-8 space-y-5">
       {product.variants && product.variants.length > 1 && (
-        <div>
+        <div className="relative z-10">
           <p className="mb-2 text-sm font-semibold text-white">Options</p>
-          <ul className="max-h-56 space-y-2 overflow-y-auto overflow-x-visible rounded-xl border border-white/10 bg-white/5 p-3">
+          <ul
+            className={`space-y-1.5 rounded-xl border border-white/10 bg-white/[0.04] p-2 ${
+              product.variants.length > 6 ? "max-h-64 overflow-y-auto pr-1" : ""
+            }`}
+          >
             {product.variants.map((variant) => (
-              <li key={variant.id} className="relative overflow-visible">
-                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-1 py-1 text-sm transition hover:bg-white/5">
+              <li key={variant.id}>
+                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-transparent px-2 py-2 text-sm transition hover:border-white/10 hover:bg-white/[0.04] has-[:checked]:border-cyan-500/25 has-[:checked]:bg-cyan-500/[0.08]">
                   <span className="flex min-w-0 flex-1 items-center gap-2">
                     <input
                       type="radio"
                       name="product-variant"
                       checked={selectedVariantId === variant.id}
                       onChange={() => setSelectedVariantId(variant.id)}
-                      className="shrink-0"
+                      className="shrink-0 accent-cyan-400"
                     />
-                    <span className="truncate text-white">{variant.name}</span>
+                    <span className="min-w-0 flex-1 text-white">{variant.name}</span>
                     <VariantTooltip
                       variant={variant}
                       productDescription={product.description}
                       productName={product.name}
                     />
                   </span>
-                  <span className="shrink-0 font-semibold text-cyan-200">
+                  <span className="shrink-0 pl-2 font-semibold text-cyan-200">
                     {formatRetailPriceRange(variant.retailPriceCents, null, null, product.currency)}
                   </span>
                 </label>
@@ -201,31 +205,31 @@ export function ProductPurchasePanel({
 
       {product.imageIsStockPhoto && <StockImageDisclaimer />}
 
-      <fieldset>
+      <fieldset className="relative z-0 min-w-0">
         <legend className="mb-2 text-sm font-semibold text-white">Shipping Speed</legend>
         <div className="space-y-2">
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 transition hover:border-white/15 has-[:checked]:border-cyan-500/30 has-[:checked]:bg-cyan-500/[0.06]">
             <input
               type="radio"
               name="shipping-tier"
               checked={shippingTier === "standard"}
               onChange={() => setShippingTier("standard")}
-              className="mt-1"
+              className="mt-1 shrink-0 accent-cyan-400"
             />
-            <span>
+            <span className="min-w-0">
               <span className="block text-sm font-medium text-white">Standard</span>
               <span className="text-xs text-ni-muted">~{standardDays} business days</span>
             </span>
           </label>
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 transition hover:border-white/15 has-[:checked]:border-cyan-500/30 has-[:checked]:bg-cyan-500/[0.06]">
             <input
               type="radio"
               name="shipping-tier"
               checked={shippingTier === "expedited"}
               onChange={() => setShippingTier("expedited")}
-              className="mt-1"
+              className="mt-1 shrink-0 accent-cyan-400"
             />
-            <span>
+            <span className="min-w-0">
               <span className="block text-sm font-medium text-white">Expedited</span>
               <span className="text-xs text-ni-muted">
                 ~{expressDays} business days · premium at checkout
@@ -235,7 +239,7 @@ export function ProductPurchasePanel({
         </div>
       </fieldset>
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="relative z-0 grid gap-2 sm:grid-cols-2">
         <button
           type="button"
           onClick={handleWishlist}
@@ -254,7 +258,7 @@ export function ProductPurchasePanel({
 
       {actionMsg && <p className="text-center text-xs text-cyan-200">{actionMsg}</p>}
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="relative z-0 grid gap-2 sm:grid-cols-2">
         <button
           type="button"
           onClick={handleAddToCart}
@@ -265,20 +269,22 @@ export function ProductPurchasePanel({
         <button
           type="button"
           onClick={handleViewCart}
-          className="w-full rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10"
+          className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10"
         >
           View Cart
         </button>
       </div>
 
-      <button
-        type="button"
-        onClick={handleCheckoutNow}
-        disabled={!checkoutEnabled || checkoutLoading}
-        className="w-full rounded-xl bg-ni-cyan py-3 text-sm font-semibold uppercase tracking-wider text-ni-bg transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {checkoutLoading ? "Redirecting…" : "Checkout Now"}
-      </button>
+      <div className="relative z-0">
+        <button
+          type="button"
+          onClick={handleCheckoutNow}
+          disabled={!checkoutEnabled || checkoutLoading}
+          className="w-full rounded-xl bg-ni-cyan py-3 text-sm font-semibold uppercase tracking-wider text-ni-bg transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {checkoutLoading ? "Redirecting…" : "Checkout Now"}
+        </button>
+      </div>
 
       {!checkoutEnabled && (
         <p className="text-center text-xs text-amber-200/90">
