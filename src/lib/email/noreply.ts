@@ -1,6 +1,7 @@
 import "server-only";
 
 import { Resend } from "resend";
+import { niEmailCta, wrapNiEmailHtml } from "@/lib/email/layout";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -54,17 +55,16 @@ export function buildNiEmailHtml({
   ctaHref?: string;
 }): string {
   const ctaBlock =
-    ctaLabel && ctaHref
-      ? `<p style="margin: 24px 0;"><a href="${ctaHref}" style="display: inline-block; background: #00d4ff; color: #07080c; font-weight: 600; padding: 12px 24px; border-radius: 8px; text-decoration: none;">${ctaLabel}</a></p>`
-      : "";
+    ctaLabel && ctaHref ? niEmailCta(ctaLabel, ctaHref) : "";
 
-  return `
-    <div style="font-family: system-ui, sans-serif; background: #07080c; color: #e8eaef; padding: 32px; max-width: 560px;">
-      <p style="color: #8b95a8; font-size: 14px; margin: 0 0 16px;">Northside Intelligence</p>
-      <h1 style="font-size: 22px; margin: 0 0 12px; color: #00d4ff;">${title}</h1>
-      <p style="color: #8b95a8; line-height: 1.6;">${body}</p>
-      ${ctaBlock}
-      <p style="color: #8b95a8; font-size: 12px; margin-top: 32px;">Manage notification preferences in your account settings.</p>
-    </div>
-  `;
+  const content = `
+    <p style="margin: 0 0 8px; color: #c5cdd9;">${body}</p>
+    ${ctaBlock}`;
+
+  return wrapNiEmailHtml({
+    preheader: body,
+    headline: title,
+    content,
+    showPreferencesLink: true,
+  });
 }
