@@ -15,10 +15,14 @@ import {
   resolveStoreShippingDetails,
   type StoreCheckoutSkipReason,
 } from "@/lib/store/checkout-session";
-import { sendStoreOrderConfirmationEmail } from "@/lib/store/order-confirmation-email";
+import {
+  sendStoreOrderAdminNotificationEmail,
+  sendStoreOrderConfirmationEmail,
+} from "@/lib/store/order-emails";
 import { sendMakeStoreWebhook } from "@/lib/store/make-webhook";
 import { isStoreCheckoutLive } from "@/lib/store/gate";
-import { markOrderFulfillmentSent } from "@/lib/store/orders";
+import { getStoreOrderById, markOrderFulfillmentSent } from "@/lib/store/orders";
+import { buildStoreOrderTrackUrl } from "@/lib/store/tracking";
 import { createNotification } from "@/lib/notifications/service";
 import { recordPromoConversion } from "@/lib/promos/email-campaigns";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -29,6 +33,14 @@ export interface ProcessStoreCheckoutResult {
   skipReason?: StoreCheckoutSkipReason;
   fulfillmentSent?: boolean;
   confirmationEmailSent?: boolean;
+  adminNotificationSent?: boolean;
+}
+
+export interface ProcessStoreCheckoutOptions {
+  sendConfirmationEmail?: boolean;
+  sendAdminNotification?: boolean;
+  refireMakeWebhook?: boolean;
+  resendEmails?: boolean;
 }
 
 async function buildCatalogLines(
@@ -61,17 +73,152 @@ async function buildCatalogLines(
   return lines;
 }
 
+function resolveCustomerName(
+  shipping: Record<string, unknown> | null
+): string | null {
+  if (!shipping || typeof shipping !== "object") return null;
+  return typeof shipping.name === "string" ? shipping.name : null;
+}
+
+async function sendOrderEmails(
+  orderId: string,
+  input: {
+    customerEmail: string | null;
+    customerName: string | null;
+    guestCheckout: boolean;
+    totalCents: number;
+    currency: string;
+    shipping: Record<string, unknown> | null;
+    lines: CatalogCheckoutLine[];
+  },
+  options: ProcessStoreCheckoutOptions
+): Promise<{ confirmationEmailSent: boolean; adminNotificationSent: boolean }> {
+  const linePayload = input.lines.map((line) => ({
+    productName: line.catalog.name,
+    quantity: line.quantity,
+    unitPriceCents: line.unitPriceCents,
+    shippingTier: line.shippingTier,
+  }));
+
+  let confirmationEmailSent = false;
+  let adminNotificationSent = false;
+
+  if (options.sendConfirmationEmail !== false && input.customerEmail) {
+    const emailResult = await sendStoreOrderConfirmationEmail({
+      to: input.customerEmail,
+      orderId,
+      totalCents: input.totalCents,
+      currency: input.currency,
+      lines: linePayload,
+      shipping: input.shipping,
+      trackPageUrl: buildStoreOrderTrackUrl(orderId, input.customerEmail),
+      resend: options.resendEmails,
+    });
+    confirmationEmailSent = emailResult.sent;
+    if (emailResult.error) {
+      console.error("[store/checkout] confirmation email failed", emailResult.error);
+    }
+  }
+
+  if (options.sendAdminNotification !== false) {
+    const adminResult = await sendStoreOrderAdminNotificationEmail({
+      orderId,
+      customerEmail: input.customerEmail,
+      customerName: input.customerName,
+      guestCheckout: input.guestCheckout,
+      totalCents: input.totalCents,
+      currency: input.currency,
+      lines: linePayload.map((line) => ({
+        productName: line.productName,
+        quantity: line.quantity,
+      })),
+      shipping: input.shipping,
+      resend: options.resendEmails,
+    });
+    adminNotificationSent = adminResult.sent;
+    if (adminResult.error) {
+      console.error("[store/checkout] admin notification failed", adminResult.error);
+    }
+  }
+
+  return { confirmationEmailSent, adminNotificationSent };
+}
+
 export async function processStoreCheckoutSession(
   session: Stripe.Checkout.Session,
-  options?: { sendConfirmationEmail?: boolean }
+  options: ProcessStoreCheckoutOptions = {}
 ): Promise<ProcessStoreCheckoutResult> {
   const parsed = parseStoreCheckoutMetadata(session);
   if (!parsed.ok) {
     return { status: "skipped", skipReason: parsed.reason };
   }
 
+  const guestCheckout = session.metadata?.guestCheckout === "true" || !parsed.userId;
+  const customerEmail = resolveStoreCustomerEmail(session);
+  const shipping = resolveStoreShippingDetails(session);
+  const customerName = resolveCustomerName(shipping);
+
   const existingOrderId = await findOrderByCheckoutSessionId(session.id);
   if (existingOrderId) {
+    if (options.refireMakeWebhook || options.resendEmails) {
+      const existing = await getStoreOrderById(existingOrderId);
+      if (!existing) {
+        return { status: "existing", orderId: existingOrderId };
+      }
+
+      let fulfillmentSent = existing.status === "fulfillment_sent" || existing.status === "shipped" || existing.status === "delivered";
+
+      if (options.refireMakeWebhook && isStoreCheckoutLive()) {
+        const sent = await sendMakeStoreWebhook({
+          orderId: existingOrderId,
+          stripeCheckoutSessionId: session.id,
+          stripePaymentIntentId:
+            typeof session.payment_intent === "string" ? session.payment_intent : null,
+          customerEmail,
+          shipping,
+          totalCents: existing.totalCents,
+          currency: existing.currency,
+          items: existing.items.map((item) => ({
+            productSlug: item.productSlug ?? "",
+            productName: item.productName,
+            sourcePlatform: "cj",
+            sourceProductId: null,
+            cjProductId: null,
+            variantId: null,
+            quantity: item.quantity,
+            unitPriceCents: item.unitPriceCents,
+            shippingTier: item.shippingTier,
+          })),
+        });
+        if (sent) {
+          await markOrderFulfillmentSent(existingOrderId);
+          fulfillmentSent = true;
+        }
+      }
+
+      const lines = await buildCatalogLines(parsed.items);
+      const emails = await sendOrderEmails(
+        existingOrderId,
+        {
+          customerEmail,
+          customerName,
+          guestCheckout,
+          totalCents: existing.totalCents,
+          currency: existing.currency,
+          shipping,
+          lines,
+        },
+        options
+      );
+
+      return {
+        status: "existing",
+        orderId: existingOrderId,
+        fulfillmentSent,
+        ...emails,
+      };
+    }
+
     return { status: "existing", orderId: existingOrderId };
   }
 
@@ -81,11 +228,10 @@ export async function processStoreCheckoutSession(
     0
   );
   const totalCents = session.amount_total ?? subtotalCents + parsed.shippingChargedCents;
-  const customerEmail = resolveStoreCustomerEmail(session);
-  const shipping = resolveStoreShippingDetails(session);
 
   const orderId = await createPaidCatalogOrder({
     userId: parsed.userId,
+    guestCheckout,
     stripeCheckoutSessionId: session.id,
     stripePaymentIntentId:
       typeof session.payment_intent === "string" ? session.payment_intent : null,
@@ -129,27 +275,19 @@ export async function processStoreCheckoutSession(
     }
   }
 
-  const shouldSendEmail = options?.sendConfirmationEmail !== false;
-  let confirmationEmailSent = false;
-  if (shouldSendEmail && customerEmail) {
-    const emailResult = await sendStoreOrderConfirmationEmail({
-      to: customerEmail,
-      orderId,
+  const emails = await sendOrderEmails(
+    orderId,
+    {
+      customerEmail,
+      customerName,
+      guestCheckout,
       totalCents,
       currency: session.currency ?? "usd",
-      lines: lines.map((line) => ({
-        productName: line.catalog.name,
-        quantity: line.quantity,
-        unitPriceCents: line.unitPriceCents,
-        shippingTier: line.shippingTier,
-      })),
       shipping,
-    });
-    confirmationEmailSent = emailResult.sent;
-    if (emailResult.error) {
-      console.error("[store/checkout] confirmation email failed", emailResult.error);
-    }
-  }
+      lines,
+    },
+    options
+  );
 
   if (parsed.userId) {
     await recordPromoConversion(parsed.userId, totalCents, { orderId, source: "store" });
@@ -166,7 +304,7 @@ export async function processStoreCheckoutSession(
       category: "store_order",
       title: "Smart Store Order Confirmed",
       body: `Your order #${orderId.slice(0, 8).toUpperCase()} has been received and is being processed.`,
-      link: "/store",
+      link: customerEmail ? buildStoreOrderTrackUrl(orderId, customerEmail) : "/store/track",
       userEmail: profile?.email ?? customerEmail,
       metadata: { orderId },
       sendEmail: false,
@@ -177,6 +315,6 @@ export async function processStoreCheckoutSession(
     status: "created",
     orderId,
     fulfillmentSent,
-    confirmationEmailSent,
+    ...emails,
   };
 }

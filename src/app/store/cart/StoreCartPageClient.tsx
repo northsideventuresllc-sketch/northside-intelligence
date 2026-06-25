@@ -38,6 +38,24 @@ export function StoreCartPageClient() {
   const { checkout, loading, error, setError } = useStoreCheckout();
   const [checkoutNotices, setCheckoutNotices] = useState<PriceChangeNoticeView[]>([]);
   const [emailListOptIn, setEmailListOptIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((json: { user?: { email?: string } | null }) => {
+        if (cancelled) return;
+        const loggedIn = Boolean(json.user);
+        setIsLoggedIn(loggedIn);
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoggedIn(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (ordered) clearCart();
@@ -85,9 +103,16 @@ export function StoreCartPageClient() {
         </p>
 
         {ordered && (
-          <p className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            Order received — fulfillment will begin shortly.
-          </p>
+          <div className="mt-4 space-y-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            <p>Order received — fulfillment will begin shortly. A confirmation email is on its way.</p>
+            <p className="text-emerald-100/90">
+              Track your package anytime from the link in your email or on our{" "}
+              <Link href="/store/track" className="font-semibold text-cyan-200 hover:underline">
+                Track Order
+              </Link>{" "}
+              page.
+            </p>
+          </div>
         )}
 
         {verifying && items.length > 0 && (
@@ -205,14 +230,42 @@ export function StoreCartPageClient() {
                 </span>
               </label>
 
+              {isLoggedIn === false && (
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-ni-muted">
+                  <p className="font-medium text-white">Checkout as Guest</p>
+                  <p className="mt-1">
+                    No account required. Stripe will collect your email and shipping address at checkout.
+                  </p>
+                  <p className="mt-2">
+                    Already have an account?{" "}
+                    <Link
+                      href="/auth/signin?returnTo=/store/cart"
+                      className="font-semibold text-cyan-300 hover:underline"
+                    >
+                      Sign In
+                    </Link>
+                  </p>
+                </div>
+              )}
+
               <button
               type="button"
               onClick={handleCheckout}
               disabled={!checkoutEnabled || loading}
               className="w-full rounded-xl bg-ni-cyan py-3 text-sm font-semibold uppercase tracking-wider text-ni-bg transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Redirecting…" : "Checkout Now"}
+              {loading
+                ? "Redirecting…"
+                : isLoggedIn === false
+                  ? "Checkout as Guest"
+                  : "Checkout Now"}
             </button>
+
+            <p className="text-center text-xs text-ni-muted">
+              <Link href="/store/track" className="text-cyan-300 hover:underline">
+                Track an existing order
+              </Link>
+            </p>
           </div>
         )}
       </div>

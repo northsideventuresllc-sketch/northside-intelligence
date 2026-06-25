@@ -14,6 +14,7 @@ export interface CatalogCheckoutLine {
 
 export interface CreateCatalogOrderInput {
   userId: string | null;
+  guestCheckout?: boolean;
   stripeCheckoutSessionId: string;
   stripePaymentIntentId: string | null;
   customerEmail: string | null;
@@ -47,6 +48,7 @@ export async function createPaidCatalogOrder(input: CreateCatalogOrderInput): Pr
     .from("ni_store_orders")
     .insert({
       user_id: input.userId,
+      guest_checkout: input.guestCheckout ?? !input.userId,
       stripe_checkout_session_id: input.stripeCheckoutSessionId,
       stripe_payment_intent_id: input.stripePaymentIntentId,
       status: "paid",
