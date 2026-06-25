@@ -1,3 +1,9 @@
+import {
+  NI_EMAIL_COLORS,
+  niEmailCta,
+  niEmailTextLink,
+  wrapNiEmailHtml,
+} from "@/lib/email/layout";
 import { formatOrderReference } from "@/lib/store/checkout-session";
 import type { StoreOrderConfirmationInput } from "@/lib/store/order-confirmation-email-html";
 import { buildStoreOrderConfirmationEmailHtml } from "@/lib/store/order-confirmation-email-html";
@@ -41,73 +47,105 @@ export function buildStoreOrderAdminNotificationHtml(
   const itemsHtml = input.lines
     .map(
       (line) =>
-        `<li style="margin: 0 0 6px; color: #e8eaef;">${line.productName} × ${line.quantity}</li>`
+        `<li style="margin: 0 0 8px; color: ${NI_EMAIL_COLORS.text}; font-size: 14px;">${line.productName} &times; ${line.quantity}</li>`
     )
     .join("");
 
-  return `
-    <div style="font-family: system-ui, sans-serif; background: #07080c; color: #e8eaef; padding: 32px; max-width: 560px;">
-      <p style="color: #8b95a8; font-size: 14px; margin: 0 0 8px;">Northside Intelligence — Smart Store</p>
-      <h1 style="font-size: 22px; margin: 0 0 4px; color: #00d4ff;">New Order Placed</h1>
-      <p style="color: #8b95a8; font-size: 13px; margin: 0 0 24px;">Order #${orderRef}</p>
+  const content = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+      <tr>
+        <td style="padding: 16px 20px; background-color: ${NI_EMAIL_COLORS.bg}; border: 1px solid ${NI_EMAIL_COLORS.cardBorder}; border-radius: 10px;">
+          <p style="margin: 0 0 8px; color: ${NI_EMAIL_COLORS.text}; font-size: 14px;">
+            <strong style="color: ${NI_EMAIL_COLORS.white};">Customer:</strong>
+            ${input.customerName ?? "Guest"}${input.guestCheckout ? " (guest checkout)" : ""}
+          </p>
+          <p style="margin: 0; color: ${NI_EMAIL_COLORS.text}; font-size: 14px;">
+            <strong style="color: ${NI_EMAIL_COLORS.white};">Email:</strong>
+            ${input.customerEmail ?? "unknown"}
+          </p>
+        </td>
+      </tr>
+    </table>
 
-      <p style="color: #e8eaef; margin: 0 0 8px;">
-        <strong>Customer:</strong> ${input.customerName ?? "Guest"}${input.guestCheckout ? " (guest checkout)" : ""}
-      </p>
-      <p style="color: #e8eaef; margin: 0 0 16px;">
-        <strong>Email:</strong> ${input.customerEmail ?? "unknown"}
-      </p>
+    <p style="margin: 0 0 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: ${NI_EMAIL_COLORS.muted};">Items</p>
+    <ul style="margin: 0 0 24px; padding-left: 20px;">${itemsHtml}</ul>
 
-      <h2 style="font-size: 15px; color: #ffffff; margin: 0 0 8px;">Items</h2>
-      <ul style="margin: 0 0 16px; padding-left: 18px;">${itemsHtml}</ul>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+      <tr>
+        <td style="padding: 16px 20px; background-color: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 10px;">
+          <span style="font-size: 18px; font-weight: 700; color: ${NI_EMAIL_COLORS.cyan};">
+            Total: ${formatUsd(input.totalCents, input.currency)}
+          </span>
+        </td>
+      </tr>
+    </table>
 
-      <p style="color: #00d4ff; font-size: 16px; font-weight: 600; margin: 0 0 24px;">
-        Total: ${formatUsd(input.totalCents, input.currency)}
-      </p>
+    <p style="margin: 0; font-size: 13px; color: ${NI_EMAIL_COLORS.muted};">
+      Fulfillment was triggered via Make.com when this order was processed.
+    </p>`;
 
-      <p style="color: #8b95a8; font-size: 13px; margin: 0;">
-        Fulfillment was triggered via Make.com when this order was processed.
-      </p>
-    </div>
-  `;
+  return wrapNiEmailHtml({
+    preheader: `New order #${orderRef} from ${input.customerName ?? "Guest"} — ${formatUsd(input.totalCents, input.currency)}`,
+    eyebrow: "Smart Store",
+    headline: "New Order Placed",
+    subheadline: `Order #${orderRef}`,
+    content,
+  });
 }
 
 export function buildStoreShippingUpdateEmailHtml(input: StoreShippingUpdateInput): string {
   const orderRef = formatOrderReference(input.orderId);
   const statusLabel = formatStoreOrderStatusLabel(input.status);
   const itemsHtml = input.lines
-    .map((line) => `<li style="margin: 0 0 6px; color: #e8eaef;">${line.productName} × ${line.quantity}</li>`)
+    .map(
+      (line) =>
+        `<li style="margin: 0 0 8px; color: ${NI_EMAIL_COLORS.text}; font-size: 14px;">${line.productName} &times; ${line.quantity}</li>`
+    )
     .join("");
 
   const trackingBlock =
     input.trackingNumber && input.trackingUrl
-      ? `<p style="margin: 16px 0;">
-          <a href="${input.trackingUrl}" style="display: inline-block; background: #00d4ff; color: #07080c; font-weight: 600; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Track Package</a>
-        </p>
-        <p style="color: #8b95a8; font-size: 13px; margin: 0;">
-          Carrier: ${input.trackingCarrier ?? "Carrier"}<br />
-          Tracking: ${input.trackingNumber}
-        </p>`
-      : `<p style="color: #8b95a8; font-size: 14px; margin: 16px 0 0;">
+      ? `${niEmailCta("Track Package", input.trackingUrl)}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 24px;">
+          <tr>
+            <td style="padding: 16px 20px; background-color: ${NI_EMAIL_COLORS.bg}; border: 1px solid ${NI_EMAIL_COLORS.cardBorder}; border-radius: 10px;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: ${NI_EMAIL_COLORS.muted};">
+                <strong style="color: ${NI_EMAIL_COLORS.text};">Carrier:</strong> ${input.trackingCarrier ?? "Carrier"}
+              </p>
+              <p style="margin: 0; font-size: 13px; color: ${NI_EMAIL_COLORS.muted};">
+                <strong style="color: ${NI_EMAIL_COLORS.text};">Tracking:</strong> ${input.trackingNumber}
+              </p>
+            </td>
+          </tr>
+        </table>`
+      : `<p style="margin: 16px 0 24px; font-size: 14px; color: ${NI_EMAIL_COLORS.muted};">
           Tracking details will appear here once your carrier scan is available.
         </p>`;
 
-  return `
-    <div style="font-family: system-ui, sans-serif; background: #07080c; color: #e8eaef; padding: 32px; max-width: 560px;">
-      <p style="color: #8b95a8; font-size: 14px; margin: 0 0 8px;">Northside Intelligence</p>
-      <h1 style="font-size: 22px; margin: 0 0 4px; color: #00d4ff;">Order Update</h1>
-      <p style="color: #8b95a8; font-size: 13px; margin: 0 0 8px;">Order #${orderRef}</p>
-      <p style="color: #00d4ff; font-size: 15px; font-weight: 600; margin: 0 0 24px;">${statusLabel}</p>
+  const content = `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+      <tr>
+        <td align="center" style="padding: 12px 20px; background-color: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.25); border-radius: 10px;">
+          <span style="font-size: 15px; font-weight: 600; color: ${NI_EMAIL_COLORS.cyan};">${statusLabel}</span>
+        </td>
+      </tr>
+    </table>
 
-      <ul style="margin: 0 0 16px; padding-left: 18px;">${itemsHtml}</ul>
+    <ul style="margin: 0 0 8px; padding-left: 20px;">${itemsHtml}</ul>
 
-      ${trackingBlock}
+    ${trackingBlock}
 
-      <p style="margin: 24px 0;">
-        <a href="${input.trackPageUrl}" style="color: #00d4ff;">View full order status</a>
-      </p>
-    </div>
-  `;
+    <p style="margin: 0; font-size: 14px;">
+      ${niEmailTextLink("View Full Order Status", input.trackPageUrl)}
+    </p>`;
+
+  return wrapNiEmailHtml({
+    preheader: `Your order #${orderRef} status: ${statusLabel}`,
+    eyebrow: "Smart Store",
+    headline: "Order Update",
+    subheadline: `Order #${orderRef}`,
+    content,
+  });
 }
 
 export function buildStoreOrderConfirmationEmailHtmlWithTracking(
@@ -116,13 +154,10 @@ export function buildStoreOrderConfirmationEmailHtmlWithTracking(
   const base = buildStoreOrderConfirmationEmailHtml(input);
   if (!input.trackPageUrl) return base;
 
-  const trackBlock = `
-      <p style="margin: 24px 0;">
-        <a href="${input.trackPageUrl}" style="display: inline-block; background: #00d4ff; color: #07080c; font-weight: 600; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Track Your Order</a>
-      </p>`;
+  const trackCta = niEmailCta("Track Your Order", input.trackPageUrl);
 
   return base.replace(
-    "<p style=\"color: #8b95a8; font-size: 13px; line-height: 1.6; margin: 0;\">",
-    `${trackBlock}<p style="color: #8b95a8; font-size: 13px; line-height: 1.6; margin: 0;">`
+    `<p style="margin: 0; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.muted};">`,
+    `${trackCta}<p style="margin: 0; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.muted};">`
   );
 }

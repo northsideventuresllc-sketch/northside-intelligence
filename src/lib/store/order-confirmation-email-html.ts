@@ -1,4 +1,9 @@
 import { formatOrderReference } from "@/lib/store/checkout-session";
+import {
+  NI_EMAIL_COLORS,
+  niEmailTextLink,
+  wrapNiEmailHtml,
+} from "@/lib/email/layout";
 
 export interface StoreOrderConfirmationLine {
   productName: string;
@@ -55,11 +60,11 @@ export function buildStoreOrderConfirmationEmailHtml(
     .map(
       (line) => `
         <tr>
-          <td style="padding: 8px 0; color: #e8eaef; font-size: 14px;">
+          <td style="padding: 12px 0; color: ${NI_EMAIL_COLORS.text}; font-size: 14px; border-bottom: 1px solid ${NI_EMAIL_COLORS.divider};">
             ${line.productName}
-            <span style="color: #8b95a8;"> × ${line.quantity}</span>
+            <span style="color: ${NI_EMAIL_COLORS.muted};"> &times; ${line.quantity}</span>
           </td>
-          <td style="padding: 8px 0; text-align: right; color: #ffffff; font-size: 14px;">
+          <td style="padding: 12px 0; text-align: right; color: ${NI_EMAIL_COLORS.white}; font-size: 14px; font-weight: 500; border-bottom: 1px solid ${NI_EMAIL_COLORS.divider};">
             ${formatUsd(line.unitPriceCents * line.quantity, input.currency)}
           </td>
         </tr>`
@@ -68,40 +73,61 @@ export function buildStoreOrderConfirmationEmailHtml(
 
   const shippingHtml = formatShippingAddress(input.shipping);
 
-  return `
-    <div style="font-family: system-ui, sans-serif; background: #07080c; color: #e8eaef; padding: 32px; max-width: 560px;">
-      <p style="color: #8b95a8; font-size: 14px; margin: 0 0 8px;">Northside Intelligence</p>
-      <h1 style="font-size: 22px; margin: 0 0 4px; color: #00d4ff;">Order Confirmed</h1>
-      <p style="color: #8b95a8; font-size: 13px; margin: 0 0 24px;">Order #${orderRef}</p>
+  const content = `
+    <p style="margin: 0 0 24px; color: #c5cdd9;">
+      Thank you for your Smart Store order. We received your payment and are preparing it for fulfillment.
+    </p>
 
-      <p style="color: #e8eaef; line-height: 1.6; margin: 0 0 24px;">
-        Thank you for your Smart Store order. We received your payment and are preparing it for fulfillment.
-      </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 8px;">
+      <tr>
+        <td style="padding-bottom: 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: ${NI_EMAIL_COLORS.muted};">
+          Order Summary
+        </td>
+      </tr>
+    </table>
 
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-        ${lineItemsHtml}
-      </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;">
+      ${lineItemsHtml}
+    </table>
 
-      <div style="border-top: 1px solid #1e2430; padding-top: 16px; margin-bottom: 24px;">
-        <p style="margin: 0; color: #00d4ff; font-size: 16px; font-weight: 600;">
-          Total paid:
-          <span style="float: right;">${formatUsd(input.totalCents, input.currency)}</span>
-        </p>
-      </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 28px;">
+      <tr>
+        <td style="padding: 16px 0 0; border-top: 2px solid ${NI_EMAIL_COLORS.divider};">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td style="font-size: 16px; font-weight: 600; color: ${NI_EMAIL_COLORS.cyan};">Total Paid</td>
+              <td style="text-align: right; font-size: 18px; font-weight: 700; color: ${NI_EMAIL_COLORS.white};">
+                ${formatUsd(input.totalCents, input.currency)}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
 
-      ${
-        shippingHtml
-          ? `<div style="margin-bottom: 24px;">
-              <h2 style="font-size: 15px; color: #ffffff; margin: 0 0 8px;">Shipping to</h2>
-              <p style="color: #8b95a8; font-size: 14px; line-height: 1.6; margin: 0;">${shippingHtml}</p>
-            </div>`
-          : ""
-      }
+    ${
+      shippingHtml
+        ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 28px;">
+            <tr>
+              <td style="padding: 20px; background-color: ${NI_EMAIL_COLORS.bg}; border: 1px solid ${NI_EMAIL_COLORS.cardBorder}; border-radius: 10px;">
+                <p style="margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: ${NI_EMAIL_COLORS.muted};">Shipping To</p>
+                <p style="margin: 0; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.text};">${shippingHtml}</p>
+              </td>
+            </tr>
+          </table>`
+        : ""
+    }
 
-      <p style="color: #8b95a8; font-size: 13px; line-height: 1.6; margin: 0;">
-        Questions about your order? Reply to this email or contact
-        <a href="mailto:support@northsideintelligence.com" style="color: #00d4ff;">support@northsideintelligence.com</a>.
-      </p>
-    </div>
-  `;
+    <p style="margin: 0; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.muted};">
+      Questions about your order? Reply to this email or contact
+      ${niEmailTextLink("support@northsideintelligence.com", "mailto:support@northsideintelligence.com")}.
+    </p>`;
+
+  return wrapNiEmailHtml({
+    preheader: `Your order #${orderRef} is confirmed. Total: ${formatUsd(input.totalCents, input.currency)}`,
+    eyebrow: "Smart Store",
+    headline: "Order Confirmed",
+    subheadline: `Order #${orderRef}`,
+    content,
+  });
 }

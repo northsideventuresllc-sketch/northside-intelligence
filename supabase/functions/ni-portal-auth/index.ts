@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { buildOtpEmailHtml } from "../_shared/ni-email-layout.ts";
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
@@ -56,8 +57,6 @@ async function sendOtpEmail({
   code: string;
   purpose: OtpPurpose;
 }) {
-  const action =
-    purpose === "signup" ? "complete your signup" : "sign in securely";
   const idempotencyKey = `otp/${purpose}/${to.toLowerCase()}/${Math.floor(Date.now() / 60000)}`;
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -71,15 +70,7 @@ async function sendOtpEmail({
       from,
       to: [to],
       subject: `${code} is your Northside Intelligence verification code`,
-      html: `
-        <div style="font-family: system-ui, sans-serif; background: #07080c; color: #e8eaef; padding: 32px;">
-          <p style="color: #8b95a8; font-size: 14px; margin: 0 0 16px;">Northside Intelligence</p>
-          <h1 style="font-size: 22px; margin: 0 0 12px; color: #00d4ff;">Verify your email</h1>
-          <p style="color: #8b95a8; line-height: 1.6;">Use this code to ${action}:</p>
-          <p style="font-size: 32px; letter-spacing: 0.3em; font-weight: 700; color: #ffffff; margin: 24px 0;">${code}</p>
-          <p style="color: #8b95a8; font-size: 13px;">This code expires in 10 minutes. If you didn't request this, you can ignore this email.</p>
-        </div>
-      `,
+      html: buildOtpEmailHtml(code, purpose),
     }),
   });
 
