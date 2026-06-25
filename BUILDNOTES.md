@@ -88,15 +88,21 @@ Search returns exact CJ listing titles and live NI retail prices (CJ listing + 1
 
 Retail = CJ listing price (or selected variation price) + 10%. SerpAPI is used only when CJ has no reachable product image; those cards show a stock-photo disclaimer.
 
-### Fulfillment (Make.com)
+### Fulfillment (CJ direct + optional Make)
 
-Stripe webhook payload includes per line item:
+On paid checkout, NI creates the CJ order directly via `createOrderV3` (`src/lib/store/sources/cj-orders.ts`), confirms it, and pays from the CJ wallet when balance is available.
+
+- Manual replay: `npm run fulfill:store-order -- <order_id>`
+- Internal API: `POST /api/store/orders/fulfill` (Bearer `CRON_SECRET`)
+- Tracking callback (Make or CJ webhook): `POST /api/store/orders/fulfillment`
+- CJ wallet must be funded (~product + shipping per order). Set `CJ_STORE_SANDBOX=1` only for sandbox test orders.
+- Make (`MAKE_STORE_WEBHOOK_URL`) is optional — used for tracking notifications if configured.
+
+Per line item fields sent to Make when enabled:
 
 - `sourcePlatform` — `cj`
 - `sourceProductId` — CJ product id
 - `variantId` — CJ variation when selected
-
-Route in Make: `cj` → CJDropshipping module.
 
 ### Catalog bulk sync
 

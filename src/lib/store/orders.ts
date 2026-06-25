@@ -13,6 +13,9 @@ import { sendStoreShippingUpdateEmail } from "@/lib/store/order-emails";
 export interface StoreOrderItemRow {
   productName: string;
   productSlug: string | null;
+  sourcePlatform: string;
+  sourceProductId: string | null;
+  variantId: string | null;
   quantity: number;
   unitPriceCents: number;
   shippingTier: string;
@@ -32,6 +35,9 @@ export interface StoreOrderRecord {
   trackingUrl: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  cjOrderId: string | null;
+  cjOrderStatus: string | null;
+  cjPayUrl: string | null;
   createdAt: string;
   items: StoreOrderItemRow[];
 }
@@ -93,6 +99,26 @@ export async function markOrderFulfillmentSent(orderId: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export async function markOrderCjSubmitted(input: {
+  orderId: string;
+  cjOrderId: string;
+  cjOrderStatus: string | null;
+  cjPayUrl: string | null;
+}): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("ni_store_orders")
+    .update({
+      cj_order_id: input.cjOrderId,
+      cj_order_status: input.cjOrderStatus,
+      cj_pay_url: input.cjPayUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.orderId);
+
+  if (error) throw new Error(error.message);
+}
+
 function mapOrderRow(
   row: Record<string, unknown>,
   items: StoreOrderItemRow[]
@@ -111,6 +137,9 @@ function mapOrderRow(
     trackingUrl: row.tracking_url ? String(row.tracking_url) : null,
     shippedAt: row.shipped_at ? String(row.shipped_at) : null,
     deliveredAt: row.delivered_at ? String(row.delivered_at) : null,
+    cjOrderId: row.cj_order_id ? String(row.cj_order_id) : null,
+    cjOrderStatus: row.cj_order_status ? String(row.cj_order_status) : null,
+    cjPayUrl: row.cj_pay_url ? String(row.cj_pay_url) : null,
     createdAt: String(row.created_at),
     items,
   };
@@ -120,6 +149,9 @@ function mapItemRow(row: Record<string, unknown>): StoreOrderItemRow {
   return {
     productName: String(row.product_name ?? "Item"),
     productSlug: row.product_slug ? String(row.product_slug) : null,
+    sourcePlatform: String(row.source_platform ?? "cj"),
+    sourceProductId: row.source_product_id ? String(row.source_product_id) : null,
+    variantId: row.variant_id ? String(row.variant_id) : null,
     quantity: Number(row.quantity ?? 1),
     unitPriceCents: Number(row.unit_price_cents ?? 0),
     shippingTier: String(row.shipping_tier ?? "standard"),
