@@ -1,7 +1,8 @@
 import "server-only";
 
 import {
-  buildVariantDescription,
+  buildVariantDescriptionParts,
+  formatUserFriendlyDescription,
   sanitizeCjDescription,
 } from "@/lib/store/catalog/description";
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
@@ -90,13 +91,17 @@ function buildVariants(
     const usd = variantUsd(v.variantSellPrice);
     if (!id || !name || usd == null) continue;
     const supplierCostCents = supplierCostCentsFromUsd(usd);
+    const parts = buildVariantDescriptionParts(productDescription, name, productName);
+    const variantDescription = parts.variation
+      ? `${parts.overview} ${parts.variation}`
+      : parts.overview;
     variants.push({
       id: String(id),
       name,
       supplierCostCents,
       retailPriceCents: calculateRetailPriceCents(supplierCostCents),
       imageUrl: v.variantImage?.startsWith("http") ? v.variantImage : null,
-      description: buildVariantDescription(productDescription, name, productName),
+      description: variantDescription,
     });
   }
   return variants.sort((a, b) => a.retailPriceCents - b.retailPriceCents);
@@ -162,7 +167,10 @@ export async function enrichCjProductDetail(input: {
   const detail = await fetchCjQuery(input.sourceProductId, token);
   const exactName =
     detail?.productNameEn?.trim() || detail?.nameEn?.trim() || input.name.trim();
-  const productDescription = sanitizeCjDescription(detail?.description) || exactName;
+  const productDescription = formatUserFriendlyDescription(
+    sanitizeCjDescription(detail?.description),
+    exactName
+  );
   const variants = buildVariants(detail, productDescription, exactName);
   const variantRange = rangeFromVariants(variants);
 

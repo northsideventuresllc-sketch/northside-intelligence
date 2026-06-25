@@ -2,7 +2,7 @@ import "server-only";
 
 import type { CatalogVariantView } from "@/lib/store/sources/types";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
-import { sanitizeCjDescription } from "@/lib/store/catalog/description";
+import { formatUserFriendlyDescription, sanitizeCjDescription } from "@/lib/store/catalog/description";
 
 export interface CatalogProductRow {
   id: string;
@@ -60,7 +60,10 @@ export function mapRow(row: Record<string, unknown>): CatalogProductRow {
     id: String(row.id),
     slug: String(row.slug),
     name: String(row.name),
-    description: sanitizeCjDescription(String(row.description ?? "")),
+    description: formatUserFriendlyDescription(
+      sanitizeCjDescription(String(row.description ?? "")),
+      String(row.name ?? "")
+    ),
     imageUrl: (row.image_url as string) ?? null,
     imageSource,
     category: String(row.category ?? "general"),
