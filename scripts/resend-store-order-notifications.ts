@@ -25,6 +25,7 @@ async function main() {
 
   await hydrateScriptEnv([
     "SUPABASE_SERVICE_ROLE_KEY",
+    "CRON_SECRET",
     "MAKE_STORE_WEBHOOK_URL",
     "CJ_DROPSHIPPING_API_KEY",
     "NI_STORE_LIVE",
@@ -57,58 +58,40 @@ async function main() {
 
   const lineItems = (items ?? []).map((item) => ({
     productName: String(item.product_name ?? "Item"),
+    productSlug: item.product_slug ? String(item.product_slug) : null,
+    sourcePlatform: "cj",
+    sourceProductId: item.source_product_id ? String(item.source_product_id) : null,
+    variantId: item.variant_id ? String(item.variant_id) : null,
     quantity: Number(item.quantity ?? 1),
     unitPriceCents: Number(item.unit_price_cents ?? 0),
     shippingTier: String(item.shipping_tier ?? "standard"),
   }));
 
   let fulfillmentSent = false;
-  const makeUrl = process.env.MAKE_STORE_WEBHOOK_URL?.trim();
-  const storeLive =
-    refireMake &&
-    Boolean(process.env.CJ_DROPSHIPPING_API_KEY?.trim()) &&
-    Boolean(makeUrl) &&
-    !makeUrl.includes("placeholder") &&
-    ["true", "1"].includes((process.env.NI_STORE_LIVE ?? "").trim().toLowerCase());
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.northsideintelligence.com";
 
-  if (storeLive && makeUrl) {
-    const res = await fetch(makeUrl, {
+  if (refireMake && cronSecret) {
+    const res = await fetch(`${appUrl}/api/store/orders/fulfill`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${cronSecret}`,
+      },
       body: JSON.stringify({
         orderId,
         stripeCheckoutSessionId: order.stripe_checkout_session_id,
         stripePaymentIntentId: order.stripe_payment_intent_id,
-        customerEmail,
-        shipping: order.shipping,
-        totalCents: order.total_cents,
-        currency: order.currency,
-        items: lineItems.map((item) => ({
-          productSlug: "",
-          productName: item.productName,
-          sourcePlatform: "cj",
-          sourceProductId: null,
-          cjProductId: null,
-          variantId: null,
-          quantity: item.quantity,
-          unitPriceCents: item.unitPriceCents,
-          shippingTier: item.shippingTier,
-        })),
+        skipIfCjExists: false,
+        notifyMake: true,
       }),
     });
 
     if (res.ok) {
-      await supabase
-        .from("ni_store_orders")
-        .update({
-          status: "fulfillment_sent",
-          make_webhook_sent_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", orderId);
-      fulfillmentSent = true;
+      const payload = (await res.json()) as { cjSubmitted?: boolean; makeNotified?: boolean };
+      fulfillmentSent = Boolean(payload.cjSubmitted || payload.makeNotified);
     } else {
-      console.error("[resend] Make webhook failed", res.status, await res.text().catch(() => ""));
+      console.error("[resend] fulfill API failed", res.status, await res.text().catch(() => ""));
     }
   }
 

@@ -10,6 +10,7 @@ import {
   isStoreCheckoutSession,
   parseStoreCheckoutMetadata,
 } from "../src/lib/store/checkout-session";
+import { parseCjShippingAddress } from "../src/lib/store/sources/cj-shipping";
 import { buildStoreOrderAdminNotificationHtml, buildStoreOrderConfirmationEmailHtmlWithTracking } from "../src/lib/store/order-emails-html";
 import {
   buildCarrierTrackingUrl,
@@ -156,5 +157,21 @@ assert(adminHtml.includes("guest checkout"), "admin email notes guest checkout")
 assert(html.includes("Order Confirmed"), "confirmation email has title");
 assert(html.includes("Abby Friedman"), "confirmation email has shipping name");
 assert(html.includes("$11.50"), "confirmation email has total");
+
+const parsedShipping = parseCjShippingAddress(
+  {
+    name: "Abby Friedman",
+    address: {
+      line1: "3777 Montford Dr",
+      city: "Atlanta",
+      state: "GA",
+      postal_code: "30341",
+      country: "US",
+    },
+  },
+  "abby.pfriedman@gmail.com"
+);
+assert(parsedShipping?.countryCode === "US", "CJ shipping parser country");
+assert(parsedShipping?.customerName === "Abby Friedman", "CJ shipping parser name");
 
 console.log("OK: Smart Store webhook metadata + confirmation email verified.");

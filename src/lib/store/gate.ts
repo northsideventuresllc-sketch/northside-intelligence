@@ -28,24 +28,22 @@ export function isStoreLaunchFlagSet(): boolean {
   return flag === "true" || flag === "1";
 }
 
-/** Store checkout is live only when CJ, Make, and launch flag are all set. */
+/** Store checkout is live when CJ and launch flag are set. Make is optional (tracking notifications). */
 export function isStoreCheckoutLive(): boolean {
-  return isCjDropshippingWired() && isMakeStoreWebhookConfigured() && isStoreLaunchFlagSet();
+  return isCjDropshippingWired() && isStoreLaunchFlagSet();
 }
 
 export function getStoreGateStatus(): StoreGateStatus {
   const cjWired = isCjDropshippingWired();
   const makeConfigured = isMakeStoreWebhookConfigured();
   const launchFlag = isStoreLaunchFlagSet();
-  const live = cjWired && makeConfigured && launchFlag;
+  const live = cjWired && launchFlag;
 
   let message = `${SMART_STORE_NAME} is coming soon. Preview products are shown — checkout opens after fulfillment is wired.`;
   if (live) {
     message = `${SMART_STORE_NAME} checkout is live.`;
   } else if (!cjWired) {
     message = `Coming soon — CJDropshipping is not configured yet. Preview products only; ${SMART_STORE_NAME} checkout is disabled.`;
-  } else if (!makeConfigured) {
-    message = `Coming soon — order fulfillment automation (Make.com) is not configured yet. ${SMART_STORE_NAME} checkout is disabled.`;
   } else if (!launchFlag) {
     message = `Coming soon — launch flag is off. Preview products only; ${SMART_STORE_NAME} checkout is disabled.`;
   }

@@ -19,9 +19,9 @@ import {
   sendStoreOrderAdminNotificationEmail,
   sendStoreOrderConfirmationEmail,
 } from "@/lib/store/order-emails";
-import { sendMakeStoreWebhook } from "@/lib/store/make-webhook";
+import { fulfillStoreOrder } from "@/lib/store/fulfill-order";
 import { isStoreCheckoutLive } from "@/lib/store/gate";
-import { getStoreOrderById, markOrderFulfillmentSent } from "@/lib/store/orders";
+import { getStoreOrderById } from "@/lib/store/orders";
 import { buildStoreOrderTrackUrl } from "@/lib/store/tracking";
 import { createNotification } from "@/lib/notifications/service";
 import { recordPromoConversion } from "@/lib/promos/email-campaigns";
@@ -166,33 +166,28 @@ export async function processStoreCheckoutSession(
         return { status: "existing", orderId: existingOrderId };
       }
 
-      let fulfillmentSent = existing.status === "fulfillment_sent" || existing.status === "shipped" || existing.status === "delivered";
+      let fulfillmentSent =
+        existing.status === "fulfillment_sent" ||
+        existing.status === "shipped" ||
+        existing.status === "delivered" ||
+        Boolean(existing.cjOrderId);
 
       if (options.refireMakeWebhook && isStoreCheckoutLive()) {
-        const sent = await sendMakeStoreWebhook({
+        const fulfillment = await fulfillStoreOrder({
           orderId: existingOrderId,
           stripeCheckoutSessionId: session.id,
           stripePaymentIntentId:
             typeof session.payment_intent === "string" ? session.payment_intent : null,
-          customerEmail,
-          shipping,
-          totalCents: existing.totalCents,
-          currency: existing.currency,
-          items: existing.items.map((item) => ({
-            productSlug: item.productSlug ?? "",
-            productName: item.productName,
-            sourcePlatform: "cj",
-            sourceProductId: null,
-            cjProductId: null,
-            variantId: null,
-            quantity: item.quantity,
-            unitPriceCents: item.unitPriceCents,
-            shippingTier: item.shippingTier,
-          })),
+          skipIfCjExists: true,
         });
-        if (sent) {
-          await markOrderFulfillmentSent(existingOrderId);
+        if (fulfillment.cjSubmitted || fulfillment.makeNotified) {
           fulfillmentSent = true;
+        }
+        if (fulfillment.error) {
+          console.error("[store/checkout] CJ fulfillment refire failed", fulfillment.error);
+        }
+        if (fulfillment.cjPaymentError) {
+          console.warn("[store/checkout] CJ payment pending", fulfillment.cjPaymentError);
         }
       }
 
@@ -247,31 +242,18 @@ export async function processStoreCheckoutSession(
 
   let fulfillmentSent = false;
   if (isStoreCheckoutLive()) {
-    const sent = await sendMakeStoreWebhook({
+    const fulfillment = await fulfillStoreOrder({
       orderId,
       stripeCheckoutSessionId: session.id,
       stripePaymentIntentId:
         typeof session.payment_intent === "string" ? session.payment_intent : null,
-      customerEmail,
-      shipping,
-      totalCents,
-      currency: session.currency ?? "usd",
-      items: lines.map((line) => ({
-        productSlug: line.catalog.slug,
-        productName: line.catalog.name,
-        sourcePlatform: line.catalog.sourcePlatform,
-        sourceProductId: line.catalog.sourceProductId,
-        cjProductId: line.catalog.sourcePlatform === "cj" ? line.catalog.sourceProductId : null,
-        variantId: line.variantId,
-        quantity: line.quantity,
-        unitPriceCents: line.unitPriceCents,
-        shippingTier: line.shippingTier,
-      })),
     });
-
-    if (sent) {
-      await markOrderFulfillmentSent(orderId);
-      fulfillmentSent = true;
+    fulfillmentSent = fulfillment.cjSubmitted;
+    if (fulfillment.error) {
+      console.error("[store/checkout] CJ fulfillment failed", fulfillment.error);
+    }
+    if (fulfillment.cjPaymentError) {
+      console.warn("[store/checkout] CJ payment pending", fulfillment.cjPaymentError);
     }
   }
 
