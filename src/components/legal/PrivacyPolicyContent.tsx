@@ -75,6 +75,10 @@ export function PrivacyPolicyContent() {
         <ul className="mb-4 list-disc space-y-2 pl-5">
           <li>Shipping name and address</li>
           <li>Order details and purchase history</li>
+          <li>
+            Payment card token and customer reference from Stripe (for checkout, post-fulfillment shipping
+            adjustments, and refunds)
+          </li>
         </ul>
 
         <p className="mb-2 font-medium text-white/80">Intelligence Services:</p>
@@ -623,9 +627,35 @@ export function PrivacyPolicyContent() {
           history within the platform to surface relevant products. This processing is based on your consent and
           can be disabled at any time in your account settings.
         </p>
-        <p>
+        <p className="mb-3">
           We do not share your Smart Store browsing data with third-party advertisers. Product recommendations are
           generated internally.
+        </p>
+        <h3 className="mb-2 text-base font-medium text-white/90">11.1 Shipping Stipend and Post-Fulfillment Adjustments</h3>
+        <p className="mb-3">
+          Smart Store checkout collects a shipping &amp; handling stipend sized above expected carrier costs. After
+          your order ships, we compare actual postage and handling (including payment processing costs) against the
+          stipend collected at checkout.
+        </p>
+        <ul className="mb-3 list-disc space-y-2 pl-5">
+          <li>
+            If the stipend exceeds actual costs, we refund the unused amount to your original payment method.
+          </li>
+          <li>
+            If actual costs exceed the stipend, we may charge the payment card on file for the difference and
+            email you with the amount charged.
+          </li>
+          <li>
+            If a required payment cannot be completed, we email you with instructions. Orders that are not resolved
+            within 72 hours may be cancelled.
+          </li>
+        </ul>
+        <p>
+          By placing a Smart Store order, you consent to these post-fulfillment adjustments. See our{" "}
+          <a href="/terms" className="text-cyan-400 hover:text-cyan-300">
+            Terms of Service
+          </a>{" "}
+          Section 7 for full details.
         </p>
       </section>
 

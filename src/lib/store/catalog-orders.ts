@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { resolveCatalogLineSupplierCents } from "@/lib/store/catalog/line-price";
 import type { CatalogProductRow } from "@/lib/store/catalog/products";
 import type { ShippingTier } from "@/lib/store/cart/types";
 
@@ -22,6 +23,8 @@ export interface CreateCatalogOrderInput {
   subtotalCents: number;
   shippingCents: number;
   shippingEstimateCents: number;
+  shippingStipendCents?: number;
+  supplierCostCents?: number;
   totalCents: number;
   currency: string;
   lines: CatalogCheckoutLine[];
@@ -44,6 +47,14 @@ export async function findOrderByCheckoutSessionId(
 export async function createPaidCatalogOrder(input: CreateCatalogOrderInput): Promise<string> {
   const supabase = createServiceClient();
 
+  const supplierCostCents =
+    input.supplierCostCents ??
+    input.lines.reduce(
+      (sum, line) =>
+        sum + resolveCatalogLineSupplierCents(line.catalog, line.variantId) * line.quantity,
+      0
+    );
+
   const { data: order, error: orderError } = await supabase
     .from("ni_store_orders")
     .insert({
@@ -54,8 +65,13 @@ export async function createPaidCatalogOrder(input: CreateCatalogOrderInput): Pr
       status: "paid",
       customer_email: input.customerEmail,
       shipping: input.shipping,
+      subtotal_cents: input.subtotalCents,
+      shipping_charged_cents: input.shippingCents,
+      shipping_stipend_cents: input.shippingStipendCents ?? input.shippingCents,
+      supplier_cost_cents: supplierCostCents,
       total_cents: input.totalCents,
       currency: input.currency,
+      reconciliation_status: "pending",
     })
     .select("id")
     .single();
@@ -71,6 +87,7 @@ export async function createPaidCatalogOrder(input: CreateCatalogOrderInput): Pr
     variant_id: line.variantId,
     quantity: line.quantity,
     unit_price_cents: line.unitPriceCents,
+    supplier_cost_cents: resolveCatalogLineSupplierCents(line.catalog, line.variantId),
     shipping_tier: line.shippingTier,
   }));
 

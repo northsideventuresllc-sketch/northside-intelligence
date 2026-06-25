@@ -211,8 +211,8 @@ export function StoreCartPageClient() {
                 <span>{formatStorePrice(totals.totalCents)}</span>
               </div>
               <p className="text-[11px] text-ni-muted">
-                Prices are verified against CJ at checkout. NI retail = CJ listing price + 10%.
-                Shipping is estimated at checkout. Any unused amount is refunded after fulfillment.
+                Prices are verified at checkout before you pay. Shipping &amp; handling is collected as a
+                stipend; any unused amount is refunded after your order ships.
               </p>
             </div>
 

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { calculateCartTotals } from "@/lib/store/cart/pricing";
 import type { CartLineItem, ShippingTier } from "@/lib/store/cart/types";
-import { resolveCatalogLineRetailCents } from "@/lib/store/catalog/line-price";
+import { resolveCatalogLineRetailCents, resolveCatalogLineSupplierCents } from "@/lib/store/catalog/line-price";
 import { refreshCatalogFromCj } from "@/lib/store/catalog/live-cj";
 import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
 import { ensureStoreEnv } from "@/lib/store/env";
 import { getStoreGateStatus } from "@/lib/store/gate";
+import { quoteCartShipping } from "@/lib/store/shipping-quote";
 import { ensureStoreStripeEnv, getStoreStripe, storeAppUrl } from "@/lib/store/stripe";
 import type { PriceChangeNotice } from "@/lib/store/sources/types";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
@@ -74,8 +74,7 @@ export async function POST(req: NextRequest) {
         name: catalog.name,
         previousRetailCents: clientRetailCents,
         currentRetailCents,
-        reason:
-          "CJ supplier pricing changed since your last view. NI retail is always supplier listing price + 10%.",
+        reason: "Product pricing changed since your last view. Review the updated total before checkout.",
       });
     }
 
@@ -123,7 +122,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No valid cart items" }, { status: 400 });
   }
 
-  const totals = calculateCartTotals(cartLines);
+  // Build quote lines with full catalog rows for accurate supplier + freight data.
+  const fullQuoteLines = [];
+  for (const item of cartLines) {
+    const catalog = await getCatalogProductBySlug(item.slug);
+    if (!catalog) continue;
+    fullQuoteLines.push({
+      catalog,
+      quantity: item.quantity,
+      shippingTier: item.shippingTier,
+      variantId: item.variantId,
+      unitRetailCents: item.retailPriceCents,
+    });
+  }
+
+  const shippingQuote = await quoteCartShipping(fullQuoteLines);
+  const subtotalCents = cartLines.reduce(
+    (sum, item) => sum + item.retailPriceCents * item.quantity,
+    0
+  );
+  const supplierCostCents = fullQuoteLines.reduce(
+    (sum, line) =>
+      sum + resolveCatalogLineSupplierCents(line.catalog, line.variantId) * line.quantity,
+    0
+  );
+  const shippingCents = shippingQuote.shippingStipendCents;
+  const totals = {
+    subtotalCents,
+    shippingCents,
+    shippingEstimateCents: shippingQuote.shippingEstimateCents,
+    totalCents: subtotalCents + shippingCents,
+    hasExpedited: shippingQuote.hasExpedited,
+  };
   const supabase = await createServerAuthClient();
   const {
     data: { user },
@@ -154,10 +184,10 @@ export async function POST(req: NextRequest) {
         unit_amount: totals.shippingCents,
         product_data: {
           name: totals.hasExpedited
-            ? "Estimated Shipping & Handling (Expedited)"
-            : "Estimated Shipping & Handling",
+            ? "Shipping & Handling (Expedited)"
+            : "Shipping & Handling",
           description:
-            "NI estimates shipping at checkout. Unused shipping is refunded after fulfillment.",
+            "Includes carrier postage and handling. Any unused amount is refunded after your order ships.",
         },
       },
       quantity: 1,
@@ -171,6 +201,10 @@ export async function POST(req: NextRequest) {
       success_url: `${base}/store/cart?ordered=1`,
       cancel_url: `${base}/store/cart`,
       customer_email: user?.email ?? undefined,
+      customer_creation: "always",
+      payment_intent_data: {
+        setup_future_usage: "off_session",
+      },
       shipping_address_collection: { allowed_countries: ["US"] },
       metadata: {
         storeCheckout: "true",
@@ -179,6 +213,8 @@ export async function POST(req: NextRequest) {
         userId: user?.id ?? "",
         shippingEstimateCents: String(totals.shippingEstimateCents),
         shippingChargedCents: String(totals.shippingCents),
+        shippingStipendCents: String(totals.shippingCents),
+        supplierCostCents: String(supplierCostCents),
         itemsJson: JSON.stringify(
           cartLines.map((item) => ({
             slug: item.slug,

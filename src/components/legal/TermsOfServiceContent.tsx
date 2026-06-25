@@ -284,24 +284,49 @@ export function TermsOfServiceContent() {
 
         <h3 className="mb-2 text-base font-medium text-white/90">7.2 Pricing</h3>
         <p className="mb-4">
-          All displayed prices include a <strong className="text-white/90">flat 10% service fee</strong> applied to the
-          supplier&apos;s listing price. Prices are verified at checkout; the price confirmed at checkout is the final
-          price.
+          Displayed product prices are verified against supplier listings at checkout. The price confirmed
+          at checkout is the product price you authorize us to charge.
         </p>
 
-        <h3 className="mb-2 text-base font-medium text-white/90">7.3 Order Processing</h3>
+        <h3 className="mb-2 text-base font-medium text-white/90">7.3 Shipping &amp; Handling Stipend</h3>
+        <p className="mb-4">
+          At checkout, a <strong className="text-white/90">shipping &amp; handling stipend</strong> is added
+          to cover carrier postage, handling, and payment processing. The stipend is sized above expected
+          carrier costs. After your order ships, we reconcile actual postage and handling against the
+          stipend collected.
+        </p>
+
+        <h3 className="mb-2 text-base font-medium text-white/90">7.4 Post-Fulfillment Adjustments</h3>
+        <p className="mb-4">
+          If actual shipping and handling costs are <strong className="text-white/90">less</strong> than the
+          stipend collected, we refund the unused amount to your original payment method. If actual costs are{" "}
+          <strong className="text-white/90">more</strong> than the stipend, we may charge the payment card
+          on file for the difference and will email you with the amount charged. By placing an order, you
+          authorize these post-fulfillment adjustments and agree to keep a valid payment method on file
+          through order completion.
+        </p>
+
+        <h3 className="mb-2 text-base font-medium text-white/90">7.5 Failed Payments and Order Cancellation</h3>
+        <p className="mb-4">
+          If a required post-fulfillment charge or manual payment step cannot be completed, we will email
+          you with instructions to resolve the issue. You have{" "}
+          <strong className="text-white/90">72 hours</strong> to complete the required action. If payment
+          is not resolved within that window, your order may be cancelled automatically.
+        </p>
+
+        <h3 className="mb-2 text-base font-medium text-white/90">7.6 Order Processing</h3>
         <p className="mb-4">
           By placing an order, you authorize us to process payment and transmit your order to the supplier for
           fulfillment. Order confirmation does not guarantee product availability.
         </p>
 
-        <h3 className="mb-2 text-base font-medium text-white/90">7.4 Shipping and Delivery</h3>
+        <h3 className="mb-2 text-base font-medium text-white/90">7.7 Shipping and Delivery</h3>
         <p className="mb-4">
           Estimated delivery times are provided by suppliers and are not guaranteed. NI is not responsible for carrier
           delays, customs delays, or lost shipments once an order has been handed to the carrier.
         </p>
 
-        <h3 className="mb-2 text-base font-medium text-white/90">7.5 Returns and Refunds</h3>
+        <h3 className="mb-2 text-base font-medium text-white/90">7.8 Returns and Refunds</h3>
         <p className="mb-4">
           Return and refund eligibility is determined on a per-product basis and communicated at the time of purchase.
           To initiate a return, contact <LegalEmail /> within <strong className="text-white/90">14 days</strong> of
@@ -309,11 +334,11 @@ export function TermsOfServiceContent() {
           <strong className="text-white/90">10 business days</strong> of return approval.
         </p>
 
-        <h3 className="mb-2 text-base font-medium text-white/90">7.6 Third-Party Suppliers</h3>
+        <h3 className="mb-2 text-base font-medium text-white/90">7.9 Third-Party Suppliers</h3>
         <p>
           NI is not responsible for supplier conduct, product defects beyond reasonable quality standards, or
           misrepresentations made by suppliers. Your sole remedy for defective products is a return/refund as
-          described in Section 7.5.
+          described in Section 7.8.
         </p>
       </section>
 

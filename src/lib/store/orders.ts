@@ -38,6 +38,21 @@ export interface StoreOrderRecord {
   cjOrderId: string | null;
   cjOrderStatus: string | null;
   cjPayUrl: string | null;
+  subtotalCents: number | null;
+  shippingChargedCents: number | null;
+  shippingStipendCents: number | null;
+  supplierCostCents: number | null;
+  cjProductCostCents: number | null;
+  cjPostageCents: number | null;
+  stripeFeeCents: number | null;
+  targetProfitCents: number | null;
+  actualProfitCents: number | null;
+  reconciliationStatus: string | null;
+  reconciliationAdjustmentCents: number | null;
+  stripeCustomerId: string | null;
+  stripePaymentMethodId: string | null;
+  stripePaymentIntentId: string | null;
+  fulfillmentDeadlineAt: string | null;
   createdAt: string;
   items: StoreOrderItemRow[];
 }
@@ -104,17 +119,20 @@ export async function markOrderCjSubmitted(input: {
   cjOrderId: string;
   cjOrderStatus: string | null;
   cjPayUrl: string | null;
+  cjProductCostCents?: number | null;
+  cjPostageCents?: number | null;
 }): Promise<void> {
   const supabase = createServiceClient();
-  const { error } = await supabase
-    .from("ni_store_orders")
-    .update({
-      cj_order_id: input.cjOrderId,
-      cj_order_status: input.cjOrderStatus,
-      cj_pay_url: input.cjPayUrl,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", input.orderId);
+  const patch: Record<string, unknown> = {
+    cj_order_id: input.cjOrderId,
+    cj_order_status: input.cjOrderStatus,
+    cj_pay_url: input.cjPayUrl,
+    updated_at: new Date().toISOString(),
+  };
+  if (input.cjProductCostCents != null) patch.cj_product_cost_cents = input.cjProductCostCents;
+  if (input.cjPostageCents != null) patch.cj_postage_cents = input.cjPostageCents;
+
+  const { error } = await supabase.from("ni_store_orders").update(patch).eq("id", input.orderId);
 
   if (error) throw new Error(error.message);
 }
@@ -140,6 +158,34 @@ function mapOrderRow(
     cjOrderId: row.cj_order_id ? String(row.cj_order_id) : null,
     cjOrderStatus: row.cj_order_status ? String(row.cj_order_status) : null,
     cjPayUrl: row.cj_pay_url ? String(row.cj_pay_url) : null,
+    subtotalCents: row.subtotal_cents != null ? Number(row.subtotal_cents) : null,
+    shippingChargedCents:
+      row.shipping_charged_cents != null ? Number(row.shipping_charged_cents) : null,
+    shippingStipendCents:
+      row.shipping_stipend_cents != null ? Number(row.shipping_stipend_cents) : null,
+    supplierCostCents: row.supplier_cost_cents != null ? Number(row.supplier_cost_cents) : null,
+    cjProductCostCents:
+      row.cj_product_cost_cents != null ? Number(row.cj_product_cost_cents) : null,
+    cjPostageCents: row.cj_postage_cents != null ? Number(row.cj_postage_cents) : null,
+    stripeFeeCents: row.stripe_fee_cents != null ? Number(row.stripe_fee_cents) : null,
+    targetProfitCents:
+      row.target_profit_cents != null ? Number(row.target_profit_cents) : null,
+    actualProfitCents: row.actual_profit_cents != null ? Number(row.actual_profit_cents) : null,
+    reconciliationStatus: row.reconciliation_status ? String(row.reconciliation_status) : null,
+    reconciliationAdjustmentCents:
+      row.reconciliation_adjustment_cents != null
+        ? Number(row.reconciliation_adjustment_cents)
+        : null,
+    stripeCustomerId: row.stripe_customer_id ? String(row.stripe_customer_id) : null,
+    stripePaymentMethodId: row.stripe_payment_method_id
+      ? String(row.stripe_payment_method_id)
+      : null,
+    stripePaymentIntentId: row.stripe_payment_intent_id
+      ? String(row.stripe_payment_intent_id)
+      : null,
+    fulfillmentDeadlineAt: row.fulfillment_deadline_at
+      ? String(row.fulfillment_deadline_at)
+      : null,
     createdAt: String(row.created_at),
     items,
   };
