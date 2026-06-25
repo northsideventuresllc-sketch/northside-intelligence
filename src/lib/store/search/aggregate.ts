@@ -34,10 +34,15 @@ export interface StoreSearchResult {
   source: "local" | "cj-live" | "surprise";
 }
 
-function shuffleArray<T>(items: T[]): T[] {
+function seededShuffle<T>(items: T[], seed: string): T[] {
   const copy = [...items];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
   for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    hash = (hash * 1664525 + 1013904223) >>> 0;
+    const j = hash % (i + 1);
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
@@ -51,16 +56,26 @@ async function searchSurpriseProducts(
     minRetailCents: filters.minRetailCents,
     maxRetailCents: filters.maxRetailCents,
     page: 1,
-    limit: 120,
+    limit: 200,
   });
 
-  const shuffled = shuffleArray(pool.rows);
+  const seed = filters.surpriseSeed ?? `${Date.now()}`;
+  const shuffled = seededShuffle(pool.rows, seed);
+
+  // Rotate starting offset based on seed for different page-1 results each click
+  let offsetHash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    offsetHash = (offsetHash * 17 + seed.charCodeAt(i)) >>> 0;
+  }
+  const rotateBy = pool.rows.length > 0 ? offsetHash % pool.rows.length : 0;
+  const rotated = [...shuffled.slice(rotateBy), ...shuffled.slice(0, rotateBy)];
+
   const offset = (filters.page - 1) * filters.limit;
-  const pageRows = shuffled.slice(offset, offset + filters.limit);
+  const pageRows = rotated.slice(offset, offset + filters.limit);
 
   return {
     results: pageRows.map((row) => toCatalogProductView(row)),
-    total: shuffled.length,
+    total: rotated.length,
     page: filters.page,
     limit: filters.limit,
     query: "",

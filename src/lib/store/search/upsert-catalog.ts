@@ -11,6 +11,7 @@ function variantsForDb(draft: SourceProductDraft) {
     name: v.name,
     retail_price_cents: v.retailPriceCents,
     image_url: v.imageUrl,
+    description: v.description ?? null,
   }));
 }
 

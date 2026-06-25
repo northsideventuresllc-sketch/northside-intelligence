@@ -8,6 +8,7 @@ import { StoreSearchSidebar } from "@/components/store/StoreSearchSidebar";
 import { StoreSearchResults } from "@/components/store/StoreSearchResults";
 import { WebTrackingOptIn } from "@/components/store/WebTrackingOptIn";
 import { StoreCartHeader } from "@/components/store/StoreCartHeader";
+import { StoreUserFeaturesPanel } from "@/components/store/StoreUserFeaturesPanel";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
 
 export interface StoreSearchFilters {
@@ -26,9 +27,11 @@ export function StorePageClient() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q")?.trim() ?? "";
   const initialSurprise = searchParams.get("surprise") === "1";
+  const initialSeed = searchParams.get("seed") ?? "";
 
   const [searchActive, setSearchActive] = useState(Boolean(initialQuery) || initialSurprise);
   const [surpriseMode, setSurpriseMode] = useState(initialSurprise);
+  const [surpriseSeed, setSurpriseSeed] = useState(initialSeed);
   const [submittedQuery, setSubmittedQuery] = useState(initialQuery);
   const [draftQuery, setDraftQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<StoreSearchFilters>(DEFAULT_FILTERS);
@@ -47,6 +50,8 @@ export function StorePageClient() {
   }, []);
 
   const handleSurprise = useCallback(() => {
+    const seed = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    setSurpriseSeed(seed);
     setSurpriseMode(true);
     setSubmittedQuery("");
     setDraftQuery("");
@@ -54,6 +59,7 @@ export function StorePageClient() {
     const url = new URL(window.location.href);
     url.searchParams.delete("q");
     url.searchParams.set("surprise", "1");
+    url.searchParams.set("seed", seed);
     window.history.replaceState({}, "", url.toString());
   }, []);
 
@@ -75,6 +81,7 @@ export function StorePageClient() {
         draftQuery={draftQuery}
         filters={filters}
         surpriseMode={surpriseMode}
+        surpriseSeed={surpriseSeed}
         onFiltersChange={setFilters}
         onQueryChange={setDraftQuery}
         onSearch={handleSearch}
@@ -106,7 +113,7 @@ export function StorePageClient() {
           <WebTrackingOptIn />
         </div>
 
-        <aside className="lg:sticky lg:top-28">
+        <aside className="space-y-4 lg:sticky lg:top-28">
           <StoreSearchSidebar
             query={draftQuery}
             filters={filters}
@@ -115,6 +122,7 @@ export function StorePageClient() {
             onSearch={handleSearch}
             onSurprise={handleSurprise}
           />
+          <StoreUserFeaturesPanel />
         </aside>
       </div>
 

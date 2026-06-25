@@ -8,6 +8,13 @@ import {
   incrementSector3Usage,
 } from "@/lib/sector3-tools/usage";
 import type { Sector3ToolRuntimeConfig } from "@/lib/sector3-tools/types";
+import {
+  buildEnrichedInputs,
+  serializeClarifyingAnswers,
+  type Sector3ClarifyingQuestion,
+} from "@/lib/sector3-tools/clarification";
+import { updateUserContext } from "@/lib/sector3-tools/conversations";
+import type { Sector3ToolSlug } from "@/lib/sector3-registry";
 
 type GenerateFn = (body: Record<string, unknown>) => Promise<{
   result: string;
@@ -38,6 +45,22 @@ export function createSector3GenerateRoute(
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const clarifyingQuestions = (body.clarifyingQuestions ?? []) as Sector3ClarifyingQuestion[];
+    const clarifyingAnswers = (body.clarifyingAnswers ?? {}) as Record<string, string[]>;
+
+    const baseValues = Object.fromEntries(
+      Object.entries(body).filter(
+        ([key]) =>
+          !["clarifyingQuestions", "clarifyingAnswers", "skipClarification"].includes(key)
+      )
+    ) as Record<string, string>;
+
+    const enrichedValues = buildEnrichedInputs(
+      baseValues,
+      clarifyingQuestions,
+      clarifyingAnswers
+    );
+
     const usage = await checkSector3Usage(user.id, user.email, config);
 
     if (!usage.ok) {
@@ -49,7 +72,7 @@ export function createSector3GenerateRoute(
 
     let output: Awaited<ReturnType<GenerateFn>>;
     try {
-      output = await generate(body);
+      output = await generate(enrichedValues);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Generation failed";
       return NextResponse.json({ error: message }, { status: 500 });
@@ -69,7 +92,22 @@ export function createSector3GenerateRoute(
       ...output.sessionMeta,
     };
 
+    if (Object.keys(clarifyingAnswers).length > 0) {
+      sessionPayload.prompt_questions = serializeClarifyingAnswers(clarifyingAnswers);
+    }
+
     await admin.from(config.sessionsTable).insert(sessionPayload);
+
+    const topicSummary = output.inputSummary.slice(0, 80);
+    await updateUserContext(user.id, config.slug as Sector3ToolSlug, {
+      recentTopics: [topicSummary],
+      fieldUsage: Object.fromEntries(
+        Object.keys(baseValues)
+          .filter((k) => baseValues[k]?.trim())
+          .map((k) => [k, 1])
+      ),
+      lastGeneratedAt: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       result: output.result,

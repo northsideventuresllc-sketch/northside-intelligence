@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const query = searchParams.get("q") ?? "";
     const surprise = searchParams.get("surprise") === "1";
+    const surpriseSeed = searchParams.get("seed") ?? undefined;
     const category = searchParams.get("category")?.trim() || undefined;
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
@@ -40,6 +41,7 @@ export async function GET(req: NextRequest) {
       page,
       limit,
       surprise,
+      surpriseSeed,
     });
 
     return NextResponse.json({

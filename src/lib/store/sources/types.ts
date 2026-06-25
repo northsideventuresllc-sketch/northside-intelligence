@@ -7,6 +7,7 @@ export interface CatalogVariantView {
   name: string;
   retailPriceCents: number;
   imageUrl: string | null;
+  description?: string;
 }
 
 export interface SourceProductDraft {
@@ -36,6 +37,7 @@ export interface StoreSearchFilters {
   page: number;
   limit: number;
   surprise?: boolean;
+  surpriseSeed?: string;
 }
 
 export interface PriceChangeNotice {

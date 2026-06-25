@@ -3,6 +3,10 @@ import type { Sector3ToolSlug } from "@/lib/sector3-registry";
 import { runSector3ToolChat, type Sector3ChatMessage } from "@/lib/sector3-tools/chat";
 import { isSector3ChatEnabled } from "@/lib/sector3-tools/chat-content";
 import { isValidSector3HelpSlug } from "@/lib/sector3-tools/help-content";
+import {
+  appendChatMessage,
+  updateUserContext,
+} from "@/lib/sector3-tools/conversations";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 export async function POST(
@@ -34,6 +38,7 @@ export async function POST(
       result?: string;
       extra?: Record<string, unknown>;
     };
+    conversationId?: string;
   };
 
   const messages = body.messages ?? [];
@@ -56,6 +61,17 @@ export async function POST(
       messages,
       body.context ?? {}
     );
+
+    if (body.conversationId) {
+      await appendChatMessage(body.conversationId, "user", last.content);
+      await appendChatMessage(body.conversationId, "assistant", reply);
+    }
+
+    await updateUserContext(user.id, slug as Sector3ToolSlug, {
+      recentChatTopics: [last.content.slice(0, 80)],
+      lastChatAt: new Date().toISOString(),
+    });
+
     return NextResponse.json({ message: reply });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Chat failed";

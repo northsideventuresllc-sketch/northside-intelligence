@@ -4,6 +4,7 @@ export interface CatalogVariantView {
   name: string;
   retailPriceCents: number;
   imageUrl: string | null;
+  description?: string;
 }
 
 export interface PriceChangeNoticeView {

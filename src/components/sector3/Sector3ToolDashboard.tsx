@@ -21,7 +21,11 @@ import {
   type Sector3PresentationMode,
 } from "@/lib/sector3-tools/presentation-mode";
 import type { Sector3ToolRuntimeConfig, Sector3SessionRow } from "@/lib/sector3-tools/types";
+import { Sector3ClarificationPanel } from "@/components/sector3/Sector3ClarificationPanel";
+import type { Sector3ClarifyingQuestion } from "@/lib/sector3-tools/clarification";
 import { createBrowserClient } from "@supabase/ssr";
+
+type FlowStep = "input" | "clarify";
 
 export interface DashboardField {
   id: string;
@@ -93,6 +97,10 @@ export function Sector3ToolDashboard({
   const [presentationMode, setPresentationMode] =
     useState<Sector3PresentationMode>("simple");
   const [chatOpen, setChatOpen] = useState(false);
+  const [flowStep, setFlowStep] = useState<FlowStep>("input");
+  const [clarifyingQuestions, setClarifyingQuestions] = useState<Sector3ClarifyingQuestion[]>([]);
+  const [clarifyingAnswers, setClarifyingAnswers] = useState<Record<string, string[]>>({});
+  const [newChatTrigger, setNewChatTrigger] = useState(0);
   const router = useRouter();
   const supabase = createClient();
   const chatConfig = getSector3ToolChatConfig(config.slug);
@@ -129,15 +137,10 @@ export function Sector3ToolDashboard({
     router.refresh();
   }
 
-  async function handleGenerate() {
-    for (const field of fields) {
-      if (field.required !== false && !values[field.id]?.trim()) {
-        setError(`Please fill in ${field.label}.`);
-        return;
-      }
-    }
-    if (atLimit) return;
-
+  async function runGeneration(
+    answers: Record<string, string[]> = clarifyingAnswers,
+    questions: Sector3ClarifyingQuestion[] = clarifyingQuestions
+  ) {
     setLoading(true);
     setError("");
     setResult("");
@@ -145,7 +148,11 @@ export function Sector3ToolDashboard({
     const res = await fetch(apiPath, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify({
+        ...values,
+        clarifyingQuestions: questions,
+        clarifyingAnswers: answers,
+      }),
     });
 
     const data = (await res.json().catch(() => ({}))) as {
@@ -164,6 +171,7 @@ export function Sector3ToolDashboard({
     setResult(data.result ?? "");
     setLastContext({ ...values });
     setViewMode("results");
+    setFlowStep("input");
     if (typeof data.usageCount === "number") setUsed(data.usageCount);
 
     const summary =
@@ -186,9 +194,77 @@ export function Sector3ToolDashboard({
     );
   }
 
+  async function handleGenerate() {
+    for (const field of fields) {
+      if (field.required !== false && !values[field.id]?.trim()) {
+        setError(`Please fill in ${field.label}.`);
+        return;
+      }
+    }
+    if (atLimit) return;
+
+    setLoading(true);
+    setError("");
+
+    const assessRes = await fetch(`/api/sector3/${config.slug}/clarify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "assess", values, fields }),
+    });
+    const assessData = (await assessRes.json().catch(() => ({}))) as {
+      needsClarification?: boolean;
+      error?: string;
+    };
+    setLoading(false);
+
+    if (!assessRes.ok) {
+      setError(assessData.error ?? "Assessment failed");
+      return;
+    }
+
+    if (!assessData.needsClarification) {
+      setClarifyingQuestions([]);
+      setClarifyingAnswers({});
+      await runGeneration({}, []);
+      return;
+    }
+
+    setLoading(true);
+    const questionsRes = await fetch(`/api/sector3/${config.slug}/clarify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "questions", values, fields }),
+    });
+    const questionsData = (await questionsRes.json().catch(() => ({}))) as {
+      questions?: Sector3ClarifyingQuestion[];
+      error?: string;
+    };
+    setLoading(false);
+
+    if (!questionsRes.ok) {
+      setError(questionsData.error ?? "Could not load questions");
+      return;
+    }
+
+    const questions = questionsData.questions ?? [];
+    setClarifyingQuestions(questions);
+    setClarifyingAnswers(Object.fromEntries(questions.map((q) => [q.id, []])));
+    setFlowStep("clarify");
+  }
+
+  async function handleClarificationContinue() {
+    await runGeneration();
+  }
+
   function handleEditPrompt() {
     setViewMode("input");
+    setFlowStep("input");
     setError("");
+  }
+
+  function handleOpenNewChat() {
+    setNewChatTrigger((n) => n + 1);
+    setChatOpen(true);
   }
 
   function loadHistoryResult(item: Sector3SessionRow) {
@@ -257,6 +333,18 @@ export function Sector3ToolDashboard({
               )}
             </div>
 
+            {chatConfig?.enabled && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleOpenNewChat}
+                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+                >
+                  New Chat
+                </button>
+              </div>
+            )}
+
             {showResults && (
               <>
                 <Sector3DashboardToolbar
@@ -281,7 +369,24 @@ export function Sector3ToolDashboard({
               </>
             )}
 
-            {!showResults && (
+            {!showResults && flowStep === "clarify" && (
+              <div
+                className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+                style={glassStyle}
+              >
+                <Sector3ClarificationPanel
+                  questions={clarifyingQuestions}
+                  answers={clarifyingAnswers}
+                  onAnswersChange={setClarifyingAnswers}
+                  onContinue={handleClarificationContinue}
+                  onBack={() => setFlowStep("input")}
+                  loading={loading}
+                  brandColor={brand.brandColor}
+                />
+              </div>
+            )}
+
+            {!showResults && flowStep === "input" && (
             <div
               className="space-y-5 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
               style={glassStyle}
@@ -431,6 +536,7 @@ export function Sector3ToolDashboard({
               brandColor={brand.brandColor}
               open={chatOpen}
               onClose={() => setChatOpen(false)}
+              newChatTrigger={newChatTrigger}
               context={{
                 inputs: lastContext,
                 result,

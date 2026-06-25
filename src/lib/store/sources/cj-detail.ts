@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  buildVariantDescription,
+  sanitizeCjDescription,
+} from "@/lib/store/catalog/description";
 import { calculateRetailPriceCents } from "@/lib/store/pricing";
 import { pickFirstReachableImage, parseCjImageList } from "@/lib/store/images/validate";
 import { searchWebProductImage } from "@/lib/store/images/web-search";
@@ -16,6 +20,7 @@ export interface CjVariantDetail {
   supplierCostCents: number;
   retailPriceCents: number;
   imageUrl: string | null;
+  description: string;
 }
 
 export interface CjProductDetail {
@@ -71,7 +76,11 @@ function variantUsd(raw: number | string | undefined): number | null {
   return n;
 }
 
-function buildVariants(detail: CjQueryResponse | null): CjVariantDetail[] {
+function buildVariants(
+  detail: CjQueryResponse | null,
+  productDescription: string,
+  productName: string
+): CjVariantDetail[] {
   if (!detail?.variants?.length) return [];
 
   const variants: CjVariantDetail[] = [];
@@ -87,6 +96,7 @@ function buildVariants(detail: CjQueryResponse | null): CjVariantDetail[] {
       supplierCostCents,
       retailPriceCents: calculateRetailPriceCents(supplierCostCents),
       imageUrl: v.variantImage?.startsWith("http") ? v.variantImage : null,
+      description: buildVariantDescription(productDescription, name, productName),
     });
   }
   return variants.sort((a, b) => a.retailPriceCents - b.retailPriceCents);
@@ -150,16 +160,16 @@ export async function enrichCjProductDetail(input: {
   if (!token) return null;
 
   const detail = await fetchCjQuery(input.sourceProductId, token);
-  const variants = buildVariants(detail);
+  const exactName =
+    detail?.productNameEn?.trim() || detail?.nameEn?.trim() || input.name.trim();
+  const productDescription = sanitizeCjDescription(detail?.description) || exactName;
+  const variants = buildVariants(detail, productDescription, exactName);
   const variantRange = rangeFromVariants(variants);
 
   const supplierUsd = detail
     ? supplierUsdFromDetail(detail, variants, input.listSellPrice)
     : parseCjListingPriceUsd(input.listSellPrice);
   if (supplierUsd == null || supplierUsd <= 0) return null;
-
-  const exactName =
-    detail?.productNameEn?.trim() || detail?.nameEn?.trim() || input.name.trim();
 
   const imageCandidates = [
     input.listImageUrl ?? "",
@@ -198,7 +208,7 @@ export async function enrichCjProductDetail(input: {
     retailPriceMaxCents: variants.length ? variantRange.retailMax : retailPriceCents,
     imageUrl,
     imageSource,
-    description: detail?.description?.trim() || exactName,
+    description: productDescription,
     variants,
   };
 }

@@ -71,7 +71,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                       className="max-h-64 object-contain"
                     />
                   ) : (
-                    <span className="text-ni-muted">No Image</span>
+                    <span className="sr-only">No product image</span>
                   )}
                 </div>
                 <div className="flex flex-1 flex-col p-6 md:p-8">
@@ -79,6 +79,11 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                     {product.category.replace(/-/g, " ")}
                   </p>
                   <h1 className="mt-2 text-2xl font-semibold text-white">{product.name}</h1>
+                  {product.description && (
+                    <p className="mt-4 text-sm leading-relaxed text-ni-muted">
+                      {product.description}
+                    </p>
+                  )}
                   <p className="mt-4 text-3xl font-bold text-white">{priceLabel}</p>
                   {product.priceChangeNotice && (
                     <PriceChangeNotices

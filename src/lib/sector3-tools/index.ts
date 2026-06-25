@@ -13,6 +13,8 @@
  * 10. Results UI: add tool-specific panel in `src/components/sector3/results/` and register in `Sector3ToolResult` — no raw markdown in the UI
  * 11. Results view: hide input form when results show; add `Sector3DashboardToolbar` with Edit Prompt + per-tool chat in `chat-content.ts`
  * 12. Presentation: default Simple View for everyone; split AI output with `---TECHNICAL---` in prompts; gate Technical View to paid plans via `canAccessTechnicalView`
+ * 13. Clarification: vague prompts trigger AI follow-up questions with multi-select options via `/api/sector3/[slug]/clarify` + `Sector3ClarificationPanel`
+ * 14. Chat: persistent conversations via `sector3_conversations` + `sector3_chat_messages`; archive auto-deletes in 7 days; user context in `sector3_user_context`
  */
 
 import { SECTOR3_TOOL_CONFIGS } from "./configs";
