@@ -175,6 +175,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         storeCheckout: "true",
         catalogCheckout: "true",
+        guestCheckout: user ? "false" : "true",
         userId: user?.id ?? "",
         shippingEstimateCents: String(totals.shippingEstimateCents),
         shippingChargedCents: String(totals.shippingCents),

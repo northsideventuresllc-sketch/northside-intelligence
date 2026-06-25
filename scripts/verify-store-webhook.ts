@@ -10,7 +10,12 @@ import {
   isStoreCheckoutSession,
   parseStoreCheckoutMetadata,
 } from "../src/lib/store/checkout-session";
-import { buildStoreOrderConfirmationEmailHtml } from "../src/lib/store/order-confirmation-email-html";
+import { buildStoreOrderAdminNotificationHtml, buildStoreOrderConfirmationEmailHtmlWithTracking } from "../src/lib/store/order-emails-html";
+import {
+  buildCarrierTrackingUrl,
+  buildStoreOrderTrackUrl,
+  formatStoreOrderStatusLabel,
+} from "../src/lib/store/tracking";
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -89,7 +94,32 @@ assert(!badJson.ok && badJson.reason === "invalid_cart_metadata", "invalid JSON 
 
 assert(formatOrderReference("abcdef12-3456-7890-abcd-ef1234567890") === "ABCDEF12", "order ref");
 
-const html = buildStoreOrderConfirmationEmailHtml({
+const guest = makeSession({
+  storeCheckout: "true",
+  catalogCheckout: "true",
+  guestCheckout: "true",
+  userId: "",
+  shippingChargedCents: "350",
+  shippingEstimateCents: "350",
+  itemsJson: JSON.stringify([
+    { slug: "test-product", quantity: 1, shippingTier: "standard", variantId: null },
+  ]),
+});
+const guestParsed = parseStoreCheckoutMetadata(guest);
+assert(guestParsed.ok && guestParsed.userId === null, "guest checkout metadata parses");
+
+assert(formatStoreOrderStatusLabel("shipped") === "Shipped", "shipped label");
+assert(
+  buildCarrierTrackingUrl("USPS", "9400111899223344556677")?.includes("usps.com") === true,
+  "USPS tracking URL"
+);
+const trackUrl = buildStoreOrderTrackUrl(
+  "abcdef12-3456-7890-abcd-ef1234567890",
+  "abby.pfriedman@gmail.com"
+);
+assert(trackUrl.includes("/store/track"), "track page url");
+
+const html = buildStoreOrderConfirmationEmailHtmlWithTracking({
   to: "abby.pfriedman@gmail.com",
   orderId: "abcdef12-3456-7890-abcd-ef1234567890",
   totalCents: 1150,
@@ -105,7 +135,23 @@ const html = buildStoreOrderConfirmationEmailHtml({
       country: "US",
     },
   },
+  trackPageUrl: trackUrl,
 });
+
+const adminHtml = buildStoreOrderAdminNotificationHtml({
+  orderId: "abcdef12-3456-7890-abcd-ef1234567890",
+  customerEmail: "abby.pfriedman@gmail.com",
+  customerName: "Abby Friedman",
+  guestCheckout: true,
+  totalCents: 1150,
+  currency: "usd",
+  lines: [{ productName: "Test Product", quantity: 1 }],
+  shipping: null,
+});
+
+assert(html.includes("Track Your Order"), "confirmation email has track CTA");
+assert(adminHtml.includes("New Order Placed"), "admin email has title");
+assert(adminHtml.includes("guest checkout"), "admin email notes guest checkout");
 
 assert(html.includes("Order Confirmed"), "confirmation email has title");
 assert(html.includes("Abby Friedman"), "confirmation email has shipping name");
