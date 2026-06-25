@@ -26,6 +26,20 @@ export interface CreateCatalogOrderInput {
   lines: CatalogCheckoutLine[];
 }
 
+export async function findOrderByCheckoutSessionId(
+  stripeCheckoutSessionId: string
+): Promise<string | null> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("ni_store_orders")
+    .select("id")
+    .eq("stripe_checkout_session_id", stripeCheckoutSessionId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data?.id ? String(data.id) : null;
+}
+
 export async function createPaidCatalogOrder(input: CreateCatalogOrderInput): Promise<string> {
   const supabase = createServiceClient();
 

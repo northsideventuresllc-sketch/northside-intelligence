@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "verify:cj-pricing": "npx tsx scripts/verify-cj-pricing.ts",
+    "verify:store-webhook": "npx tsx scripts/verify-store-webhook.ts",
     "sync:cj-catalog": "npx tsx scripts/run-cj-catalog-sync.ts"
   },
   "dependencies": {

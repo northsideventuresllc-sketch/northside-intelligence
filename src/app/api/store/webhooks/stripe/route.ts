@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
-import type { ShippingTier } from "@/lib/store/cart/types";
-import { getCatalogProductBySlug } from "@/lib/store/catalog/products";
-import { resolveCatalogLineRetailCents } from "@/lib/store/catalog/line-price";
-import { createPaidCatalogOrder, type CatalogCheckoutLine } from "@/lib/store/catalog-orders";
-import { sendMakeStoreWebhook } from "@/lib/store/make-webhook";
-import { isStoreCheckoutLive } from "@/lib/store/gate";
+import type Stripe from "stripe";
 import { ensureStoreEnv } from "@/lib/store/env";
-import { createNotification } from "@/lib/notifications/service";
-import { recordPromoConversion } from "@/lib/promos/email-campaigns";
-import { createServiceClient } from "@/lib/supabase/server";
+import { processStoreCheckoutSession } from "@/lib/store/process-checkout-session";
 import {
   ensureStoreStripeEnv,
   getStoreStripe,
@@ -41,133 +33,21 @@ export async function POST(req: NextRequest) {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
-  if (session.metadata?.storeCheckout !== "true") {
-    return NextResponse.json({ received: true, skipped: "not_store_checkout" });
-  }
-
-  if (session.metadata.catalogCheckout !== "true") {
-    return NextResponse.json({ received: true, skipped: "legacy_checkout_disabled" });
-  }
-
-  const userId = session.metadata.userId || null;
-  const itemsJson = session.metadata.itemsJson;
-
-  if (!itemsJson) {
-    return NextResponse.json({ error: "Missing cart metadata" }, { status: 400 });
-  }
-
-  let parsedItems: Array<{
-    slug: string;
-    quantity: number;
-    shippingTier: ShippingTier;
-    variantId?: string | null;
-  }>;
-  try {
-    parsedItems = JSON.parse(itemsJson) as Array<{
-      slug: string;
-      quantity: number;
-      shippingTier: ShippingTier;
-      variantId?: string | null;
-    }>;
-  } catch {
-    return NextResponse.json({ error: "Invalid cart metadata" }, { status: 400 });
-  }
 
   try {
-    const lines: CatalogCheckoutLine[] = [];
-    for (const item of parsedItems) {
-      const catalog = await getCatalogProductBySlug(item.slug);
-      if (!catalog) {
-        return NextResponse.json({ error: `Product not found: ${item.slug}` }, { status: 404 });
-      }
-      const variantId = item.variantId?.trim() || null;
-      const unitPriceCents = resolveCatalogLineRetailCents(catalog, variantId);
-      lines.push({
-        catalog,
-        quantity: Math.max(1, Math.min(10, Number(item.quantity) || 1)),
-        shippingTier: item.shippingTier === "expedited" ? "expedited" : "standard",
-        variantId,
-        unitPriceCents,
-      });
+    const result = await processStoreCheckoutSession(session);
+
+    if (result.status === "skipped") {
+      return NextResponse.json({ received: true, skipped: result.skipReason });
     }
 
-    const subtotalCents = lines.reduce(
-      (sum, line) => sum + line.unitPriceCents * line.quantity,
-      0
-    );
-    const shippingChargedCents = Number(session.metadata.shippingChargedCents) || 0;
-    const shippingEstimateCents =
-      Number(session.metadata.shippingEstimateCents) || shippingChargedCents;
-
-    const orderId = await createPaidCatalogOrder({
-      userId: userId || null,
-      stripeCheckoutSessionId: session.id,
-      stripePaymentIntentId:
-        typeof session.payment_intent === "string" ? session.payment_intent : null,
-      customerEmail: session.customer_details?.email ?? session.customer_email ?? null,
-      shipping: (session as Stripe.Checkout.Session & { shipping_details?: unknown })
-        .shipping_details as Record<string, unknown> | null,
-      subtotalCents,
-      shippingCents: shippingChargedCents,
-      shippingEstimateCents,
-      totalCents: session.amount_total ?? subtotalCents + shippingChargedCents,
-      currency: session.currency ?? "usd",
-      lines,
+    return NextResponse.json({
+      received: true,
+      orderId: result.orderId,
+      existing: result.status === "existing",
+      fulfillmentSent: result.fulfillmentSent ?? false,
+      confirmationEmailSent: result.confirmationEmailSent ?? false,
     });
-
-    if (isStoreCheckoutLive()) {
-      const sent = await sendMakeStoreWebhook({
-        orderId,
-        stripeCheckoutSessionId: session.id,
-        stripePaymentIntentId:
-          typeof session.payment_intent === "string" ? session.payment_intent : null,
-        customerEmail: session.customer_details?.email ?? session.customer_email ?? null,
-        shipping: (session as Stripe.Checkout.Session & { shipping_details?: unknown })
-          .shipping_details as Record<string, unknown> | null,
-        totalCents: session.amount_total ?? subtotalCents + shippingChargedCents,
-        currency: session.currency ?? "usd",
-        items: lines.map((line) => ({
-          productSlug: line.catalog.slug,
-          productName: line.catalog.name,
-          sourcePlatform: line.catalog.sourcePlatform,
-          sourceProductId: line.catalog.sourceProductId,
-          cjProductId:
-            line.catalog.sourcePlatform === "cj" ? line.catalog.sourceProductId : null,
-          variantId: line.variantId,
-          quantity: line.quantity,
-          unitPriceCents: line.unitPriceCents,
-          shippingTier: line.shippingTier,
-        })),
-      });
-      if (sent) {
-        const { markOrderFulfillmentSent } = await import("@/lib/store/orders");
-        await markOrderFulfillmentSent(orderId);
-      }
-    }
-
-    if (userId) {
-      const totalCents = session.amount_total ?? 0;
-      await recordPromoConversion(userId, totalCents, { orderId, source: "store" });
-
-      const admin = createServiceClient();
-      const { data: profile } = await admin
-        .from("ni_portal_profiles")
-        .select("email")
-        .eq("id", userId)
-        .maybeSingle();
-
-      await createNotification({
-        userId,
-        category: "store_order",
-        title: "Smart Store Order Confirmed",
-        body: `Your order #${orderId.slice(0, 8).toUpperCase()} has been received and is being processed.`,
-        link: "/store",
-        userEmail: profile?.email ?? session.customer_details?.email ?? null,
-        metadata: { orderId },
-      });
-    }
-
-    return NextResponse.json({ received: true, orderId });
   } catch (err) {
     console.error("[store/webhook]", err);
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
