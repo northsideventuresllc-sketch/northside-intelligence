@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { subscribeUserToEmailList } from "@/lib/email/subscribe-list";
+import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 export async function POST(req: NextRequest) {
+  await hydratePlatformEnvFromDatabase();
   const supabase = await createServerAuthClient();
   const {
     data: { user },
