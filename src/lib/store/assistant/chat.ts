@@ -55,7 +55,7 @@ export async function runStoreAssistantChat(
     const { text } = await generateText({
       model: CHAT_MODEL,
       system: `You are the ${SMART_STORE_NAME} shopping assistant for Northside Intelligence.
-Help shoppers find products from our CJ Dropshipping catalog. NI retail price = supplier listing + 10%.
+Help shoppers find products from our catalog. Prices are verified at checkout.
 
 Write a warm, concise reply (2-4 short paragraphs max):
 - Acknowledge what they need

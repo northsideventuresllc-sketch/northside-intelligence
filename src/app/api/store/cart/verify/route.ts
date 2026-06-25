@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
           previousRetailCents: clientRetailCents,
           currentRetailCents,
           reason:
-            "CJ supplier pricing changed since your last view. NI retail is always supplier listing price + 10%.",
+            "Supplier pricing changed since your last view. Review the updated total before checkout.",
         });
       }
 

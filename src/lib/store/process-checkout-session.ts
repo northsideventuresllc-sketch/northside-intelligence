@@ -22,6 +22,13 @@ import {
 import { fulfillStoreOrder } from "@/lib/store/fulfill-order";
 import { isStoreCheckoutLive } from "@/lib/store/gate";
 import { getStoreOrderById } from "@/lib/store/orders";
+import {
+  markFulfillmentActionRequired,
+  persistCheckoutPaymentDetails,
+  preflightOrderCosts,
+  reconcileStoreOrder,
+} from "@/lib/store/reconcile-order";
+import { resolveCatalogLineSupplierCents } from "@/lib/store/catalog/line-price";
 import { buildStoreOrderTrackUrl } from "@/lib/store/tracking";
 import { createNotification } from "@/lib/notifications/service";
 import { recordPromoConversion } from "@/lib/promos/email-campaigns";
@@ -235,13 +242,32 @@ export async function processStoreCheckoutSession(
     subtotalCents,
     shippingCents: parsed.shippingChargedCents,
     shippingEstimateCents: parsed.shippingEstimateCents,
+    shippingStipendCents: parsed.shippingChargedCents,
+    supplierCostCents: lines.reduce(
+      (sum, line) =>
+        sum + resolveCatalogLineSupplierCents(line.catalog, line.variantId) * line.quantity,
+      0
+    ),
     totalCents,
     currency: session.currency ?? "usd",
     lines,
   });
 
+  await persistCheckoutPaymentDetails(orderId, session);
+
   let fulfillmentSent = false;
   if (isStoreCheckoutLive()) {
+    const preflight = await preflightOrderCosts(orderId);
+    if (preflight) {
+      console.info("[store/checkout] preflight costs", {
+        orderId,
+        cjProductCostCents: preflight.cjProductCostCents,
+        cjPostageCents: preflight.cjPostageCents,
+        projectedSurplusCents: preflight.projectedSurplusCents,
+        projectedChargeCents: preflight.projectedChargeCents,
+      });
+    }
+
     const fulfillment = await fulfillStoreOrder({
       orderId,
       stripeCheckoutSessionId: session.id,
@@ -249,11 +275,24 @@ export async function processStoreCheckoutSession(
         typeof session.payment_intent === "string" ? session.payment_intent : null,
     });
     fulfillmentSent = fulfillment.cjSubmitted;
+
     if (fulfillment.error) {
       console.error("[store/checkout] CJ fulfillment failed", fulfillment.error);
-    }
-    if (fulfillment.cjPaymentError) {
-      console.warn("[store/checkout] CJ payment pending", fulfillment.cjPaymentError);
+      await markFulfillmentActionRequired(
+        orderId,
+        customerEmail,
+        "We could not complete supplier fulfillment automatically. Please complete your order within 72 hours or it will be cancelled."
+      );
+    } else if (fulfillment.cjSubmitted) {
+      const cjProductCents = fulfillment.cjProductAmountCents ?? undefined;
+      const cjPostageCents = fulfillment.cjPostageAmountCents ?? undefined;
+      await reconcileStoreOrder(orderId, {
+        cjProductCostCents: cjProductCents,
+        cjPostageCents: cjPostageCents,
+      });
+      if (fulfillment.cjPaymentError) {
+        console.warn("[store/checkout] CJ wallet payment pending", fulfillment.cjPaymentError);
+      }
     }
   }
 

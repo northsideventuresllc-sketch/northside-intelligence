@@ -99,7 +99,7 @@ export function StoreSearchSidebar({
       </div>
 
       <p className="mt-3 text-[10px] leading-relaxed text-ni-muted">
-        Press Enter to search. NI price = supplier listing price + 10%.
+        Press Enter to search. Prices are verified at checkout.
       </p>
       {filters.category && (
         <p className="mt-2 text-[10px] text-ni-muted">

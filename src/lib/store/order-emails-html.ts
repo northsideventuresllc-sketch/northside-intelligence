@@ -148,6 +148,121 @@ export function buildStoreShippingUpdateEmailHtml(input: StoreShippingUpdateInpu
   });
 }
 
+export interface StoreShippingAdjustmentEmailInput {
+  to: string;
+  orderId: string;
+  amountCents: number;
+  currency: string;
+}
+
+export interface StoreFulfillmentActionEmailInput {
+  to: string;
+  orderId: string;
+  reason: string;
+  trackPageUrl?: string | null;
+}
+
+export function buildStoreShippingAdjustmentChargeEmailHtml(
+  input: StoreShippingAdjustmentEmailInput
+): string {
+  const orderRef = formatOrderReference(input.orderId);
+  const amount = formatUsd(input.amountCents, input.currency);
+
+  const content = `
+    <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.text};">
+      After your order shipped, we reconciled actual carrier postage and handling against the
+      shipping stipend collected at checkout. Actual costs were higher than estimated, so we charged
+      your card on file an additional <strong style="color: ${NI_EMAIL_COLORS.white};">${amount}</strong>
+      to cover shipping and handling.
+    </p>
+    <p style="margin: 0; font-size: 13px; line-height: 1.7; color: ${NI_EMAIL_COLORS.muted};">
+      If you have questions about this adjustment, reply to this email or contact support.
+    </p>`;
+
+  return wrapNiEmailHtml({
+    preheader: `Order #${orderRef}: additional shipping charge of ${amount}`,
+    eyebrow: "Smart Store",
+    headline: "Shipping Adjustment",
+    subheadline: `Order #${orderRef}`,
+    content,
+  });
+}
+
+export function buildStoreShippingAdjustmentRefundEmailHtml(
+  input: StoreShippingAdjustmentEmailInput
+): string {
+  const orderRef = formatOrderReference(input.orderId);
+  const amount = formatUsd(input.amountCents, input.currency);
+
+  const content = `
+    <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.text};">
+      Good news — after your order shipped, we reconciled actual carrier postage and handling.
+      Your shipping stipend exceeded what was needed, so we refunded
+      <strong style="color: ${NI_EMAIL_COLORS.white};">${amount}</strong> to your original payment method.
+    </p>
+    <p style="margin: 0; font-size: 13px; line-height: 1.7; color: ${NI_EMAIL_COLORS.muted};">
+      Refunds typically appear on your statement within 5–10 business days.
+    </p>`;
+
+  return wrapNiEmailHtml({
+    preheader: `Order #${orderRef}: ${amount} shipping refund`,
+    eyebrow: "Smart Store",
+    headline: "Shipping Refund",
+    subheadline: `Order #${orderRef}`,
+    content,
+  });
+}
+
+export function buildStoreFulfillmentActionEmailHtml(
+  input: StoreFulfillmentActionEmailInput
+): string {
+  const orderRef = formatOrderReference(input.orderId);
+  const trackBlock = input.trackPageUrl
+    ? niEmailCta("Complete Your Order", input.trackPageUrl)
+    : "";
+
+  const content = `
+    <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.text};">
+      ${input.reason}
+    </p>
+    <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.text};">
+      Please complete the required action within <strong style="color: ${NI_EMAIL_COLORS.white};">72 hours</strong>.
+      If we do not hear from you, your order will be cancelled automatically.
+    </p>
+    ${trackBlock}`;
+
+  return wrapNiEmailHtml({
+    preheader: `Action required for order #${orderRef}`,
+    eyebrow: "Smart Store",
+    headline: "Action Required",
+    subheadline: `Order #${orderRef}`,
+    content,
+  });
+}
+
+export function buildStoreOrderCancelledEmailHtml(input: {
+  orderId: string;
+  reason: string;
+}): string {
+  const orderRef = formatOrderReference(input.orderId);
+
+  const content = `
+    <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.text};">
+      Your Smart Store order #${orderRef} has been cancelled.
+    </p>
+    <p style="margin: 0; font-size: 14px; line-height: 1.7; color: ${NI_EMAIL_COLORS.muted};">
+      ${input.reason}
+    </p>`;
+
+  return wrapNiEmailHtml({
+    preheader: `Order #${orderRef} cancelled`,
+    eyebrow: "Smart Store",
+    headline: "Order Cancelled",
+    subheadline: `Order #${orderRef}`,
+    content,
+  });
+}
+
 export function buildStoreOrderConfirmationEmailHtmlWithTracking(
   input: StoreOrderConfirmationInput & { trackPageUrl?: string | null }
 ): string {

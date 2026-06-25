@@ -287,7 +287,7 @@ export function ProductPurchasePanel({
       {checkoutError && <p className="text-center text-sm text-red-300">{checkoutError}</p>}
 
       <p className="text-center text-[11px] text-ni-muted">
-        Prices are verified against CJ at checkout. NI retail = CJ listing price + 10%.
+        Prices are verified at checkout before you pay.
       </p>
     </div>
   );

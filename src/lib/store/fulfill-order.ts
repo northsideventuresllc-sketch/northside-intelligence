@@ -17,6 +17,8 @@ export interface FulfillStoreOrderResult {
   cjPaid: boolean;
   cjOrderId: string | null;
   cjOrderStatus: string | null;
+  cjProductAmountCents: number | null;
+  cjPostageAmountCents: number | null;
   cjPaymentError: string | null;
   makeNotified: boolean;
   error: string | null;
@@ -68,6 +70,8 @@ export async function fulfillStoreOrder(input: {
       cjPaid: false,
       cjOrderId: null,
       cjOrderStatus: null,
+      cjProductAmountCents: null,
+      cjPostageAmountCents: null,
       cjPaymentError: null,
       makeNotified: false,
       error: "Order not found",
@@ -81,6 +85,8 @@ export async function fulfillStoreOrder(input: {
       cjPaid: order.cjOrderStatus === "UNSHIPPED" || order.cjOrderStatus === "SHIPPED",
       cjOrderId: order.cjOrderId,
       cjOrderStatus: order.cjOrderStatus,
+      cjProductAmountCents: order.cjProductCostCents,
+      cjPostageAmountCents: order.cjPostageCents,
       cjPaymentError: null,
       makeNotified: false,
       error: null,
@@ -102,6 +108,8 @@ export async function fulfillStoreOrder(input: {
       cjPaid: false,
       cjOrderId: null,
       cjOrderStatus: null,
+      cjProductAmountCents: null,
+      cjPostageAmountCents: null,
       cjPaymentError: null,
       makeNotified: false,
       error: "Order has no CJ line items with variant IDs",
@@ -124,6 +132,8 @@ export async function fulfillStoreOrder(input: {
       cjPaid: false,
       cjOrderId: null,
       cjOrderStatus: null,
+      cjProductAmountCents: null,
+      cjPostageAmountCents: null,
       cjPaymentError: null,
       makeNotified: false,
       error: cjResult.message,
@@ -135,6 +145,10 @@ export async function fulfillStoreOrder(input: {
     cjOrderId: cjResult.cjOrderId,
     cjOrderStatus: cjResult.cjOrderStatus,
     cjPayUrl: cjResult.cjPayUrl,
+    cjProductCostCents:
+      cjResult.productAmount != null ? Math.round(cjResult.productAmount * 100) : null,
+    cjPostageCents:
+      cjResult.postageAmount != null ? Math.round(cjResult.postageAmount * 100) : null,
   });
   await markOrderFulfillmentSent(order.id);
 
@@ -155,6 +169,10 @@ export async function fulfillStoreOrder(input: {
     cjPaid: cjResult.paid,
     cjOrderId: cjResult.cjOrderId,
     cjOrderStatus: cjResult.cjOrderStatus,
+    cjProductAmountCents:
+      cjResult.productAmount != null ? Math.round(cjResult.productAmount * 100) : null,
+    cjPostageAmountCents:
+      cjResult.postageAmount != null ? Math.round(cjResult.postageAmount * 100) : null,
     cjPaymentError: cjResult.paymentError,
     makeNotified,
     error: null,

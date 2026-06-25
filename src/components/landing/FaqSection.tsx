@@ -238,13 +238,11 @@ function buildFaqItems(): FaqItem[] {
       answer: (
         <>
           <p>
-            Every product price you see is the supplier&apos;s listing price plus a flat 10% service
-            fee. We never show supplier costs — you only see the final price you pay.
+            Every product price you see is the final price you pay. We never show supplier costs.
           </p>
           <p className="mt-3">
-            Prices are verified again at checkout, so what you see is what you get. There is no
-            subscription required to shop — anyone can browse, and signing in lets you save preferences
-            and track orders through your account.
+            Prices are verified again at checkout, so what you confirm is what you pay. Shipping &amp;
+            handling is collected as a stipend; any unused amount is refunded after your order ships.
           </p>
         </>
       ),

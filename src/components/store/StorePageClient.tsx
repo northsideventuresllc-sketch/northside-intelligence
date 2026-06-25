@@ -129,7 +129,7 @@ export function StorePageClient() {
       <PopularItemsMarquee />
 
       <p className="mx-auto mt-8 max-w-xl text-center text-sm text-ni-muted">
-        NI price = supplier listing price + 10%. Supplier costs are never shown.
+        Prices are verified at checkout. Supplier costs are never shown.
       </p>
     </>
   );
