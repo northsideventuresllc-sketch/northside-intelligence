@@ -41,6 +41,7 @@ interface StoreSearchResultsProps {
   draftQuery: string;
   filters: StoreSearchFilters;
   surpriseMode?: boolean;
+  surpriseSeed?: string;
   onQueryChange: (query: string) => void;
   onFiltersChange: (filters: StoreSearchFilters) => void;
   onSearch: (query: string) => void;
@@ -53,6 +54,7 @@ export function StoreSearchResults({
   draftQuery,
   filters,
   surpriseMode = false,
+  surpriseSeed = "",
   onQueryChange,
   onFiltersChange,
   onSearch,
@@ -75,7 +77,10 @@ export function StoreSearchResults({
     try {
       const params = new URLSearchParams();
       if (query.trim()) params.set("q", query.trim());
-      if (surpriseMode) params.set("surprise", "1");
+      if (surpriseMode) {
+        params.set("surprise", "1");
+        if (surpriseSeed) params.set("seed", surpriseSeed);
+      }
       if (filters.category) params.set("category", filters.category);
       if (filters.minPrice) params.set("minPrice", filters.minPrice);
       if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
@@ -92,7 +97,7 @@ export function StoreSearchResults({
     } finally {
       setLoading(false);
     }
-  }, [query, filters, page, surpriseMode]);
+  }, [query, filters, page, surpriseMode, surpriseSeed]);
 
   useEffect(() => {
     setPage(1);

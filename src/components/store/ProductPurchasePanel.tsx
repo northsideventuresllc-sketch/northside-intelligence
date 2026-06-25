@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
+import { VariantTooltip } from "@/components/store/VariantTooltip";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
 import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
 import { expeditedDeliveryDays } from "@/lib/store/cart/types";
@@ -11,6 +12,21 @@ import { useStoreCart } from "@/components/store/StoreCartProvider";
 import { useStoreGate } from "@/components/store/StoreGateProvider";
 import { useStoreCheckout } from "@/hooks/useStoreCheckout";
 import type { ShippingTier } from "@/lib/store/cart/types";
+
+function recordProductView(product: CatalogProductView) {
+  void fetch("/api/store/user-features", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "history",
+      catalogId: product.id,
+      productSlug: product.slug,
+      productName: product.name,
+      imageUrl: product.imageUrl,
+      retailPriceCents: product.retailPriceCents,
+    }),
+  }).catch(() => {});
+}
 
 interface ProductPurchasePanelProps {
   product: CatalogProductView;
@@ -27,9 +43,16 @@ export function ProductPurchasePanel({
   const { checkout, loading: checkoutLoading, error: checkoutError, setError } = useStoreCheckout();
   const [shippingTier, setShippingTier] = useState<ShippingTier>("standard");
   const [added, setAdded] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
+  const [watching, setWatching] = useState(false);
+  const [actionMsg, setActionMsg] = useState("");
   const [selectedVariantId, setSelectedVariantId] = useState(
     product.variants?.[0]?.id ?? null
   );
+
+  useEffect(() => {
+    recordProductView(product);
+  }, [product]);
 
   const checkoutEnabled = gate.live;
 
@@ -97,6 +120,51 @@ export function ProductPurchasePanel({
     await checkout(checkoutLines);
   }
 
+  async function handleWishlist() {
+    const res = await fetch("/api/store/user-features", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "wishlist",
+        catalogId: product.id,
+        productSlug: product.slug,
+        productName: product.name,
+        imageUrl: selectedVariant?.imageUrl ?? product.imageUrl,
+        retailPriceCents: displayRetailCents,
+        variantId: selectedVariant?.id ?? null,
+      }),
+    });
+    if (res.status === 401) {
+      setActionMsg("Sign in to save to wishlist.");
+      return;
+    }
+    setWishlisted(true);
+    setActionMsg("Saved to wishlist.");
+    window.setTimeout(() => setActionMsg(""), 2500);
+  }
+
+  async function handlePriceWatch() {
+    const res = await fetch("/api/store/user-features", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "price-watch",
+        catalogId: product.id,
+        productSlug: product.slug,
+        productName: product.name,
+        retailPriceCents: displayRetailCents,
+        variantId: selectedVariant?.id ?? null,
+      }),
+    });
+    if (res.status === 401) {
+      setActionMsg("Sign in to track prices.");
+      return;
+    }
+    setWatching(true);
+    setActionMsg("Price watch added. You'll get portal and email alerts.");
+    window.setTimeout(() => setActionMsg(""), 3000);
+  }
+
   return (
     <div className="mt-8 space-y-4">
       {product.variants && product.variants.length > 1 && (
@@ -114,6 +182,10 @@ export function ProductPurchasePanel({
                       onChange={() => setSelectedVariantId(variant.id)}
                     />
                     <span className="text-white">{variant.name}</span>
+                    <VariantTooltip
+                      variant={variant}
+                      productDescription={product.description}
+                    />
                   </span>
                   <span className="shrink-0 font-semibold text-cyan-200">
                     {formatRetailPriceRange(variant.retailPriceCents, null, null, product.currency)}
@@ -160,6 +232,25 @@ export function ProductPurchasePanel({
           </label>
         </div>
       </fieldset>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={handleWishlist}
+          className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/10"
+        >
+          {wishlisted ? "On Wishlist" : "Add to Wishlist"}
+        </button>
+        <button
+          type="button"
+          onClick={handlePriceWatch}
+          className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 py-2.5 text-sm font-semibold text-amber-100 transition hover:border-amber-400/50"
+        >
+          {watching ? "Watching Price" : "Track Price"}
+        </button>
+      </div>
+
+      {actionMsg && <p className="text-center text-xs text-cyan-200">{actionMsg}</p>}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <button

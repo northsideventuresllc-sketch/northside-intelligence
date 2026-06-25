@@ -5,6 +5,7 @@ export const NOTIFICATION_CATEGORIES = [
   "announcement",
   "billing",
   "general",
+  "price_alert",
 ] as const;
 
 export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
@@ -35,4 +36,5 @@ export const NOTIFICATION_CATEGORY_LABELS: Record<NotificationCategory, string> 
   announcement: "Announcements",
   billing: "Billing",
   general: "General",
+  price_alert: "Price Alerts",
 };

@@ -2,6 +2,7 @@ import "server-only";
 
 import type { CatalogVariantView } from "@/lib/store/sources/types";
 import type { CatalogProductView } from "@/lib/store/catalog/types";
+import { sanitizeCjDescription } from "@/lib/store/catalog/description";
 
 export interface CatalogProductRow {
   id: string;
@@ -38,14 +39,16 @@ function parseVariants(raw: unknown): CatalogVariantView[] {
       const retailPriceCents = Number(v.retail_price_cents ?? v.retailPriceCents);
       if (!id || !name || !Number.isFinite(retailPriceCents)) return null;
       const imageUrl = v.image_url ?? v.imageUrl;
+      const descriptionRaw = v.description ?? v.variant_description;
       return {
         id,
         name,
         retailPriceCents,
         imageUrl: typeof imageUrl === "string" ? imageUrl : null,
+        description: typeof descriptionRaw === "string" ? descriptionRaw : undefined,
       };
     })
-    .filter((v): v is CatalogVariantView => Boolean(v));
+    .filter((v): v is NonNullable<typeof v> => v !== null);
 }
 
 export function mapRow(row: Record<string, unknown>): CatalogProductRow {
@@ -57,7 +60,7 @@ export function mapRow(row: Record<string, unknown>): CatalogProductRow {
     id: String(row.id),
     slug: String(row.slug),
     name: String(row.name),
-    description: String(row.description ?? ""),
+    description: sanitizeCjDescription(String(row.description ?? "")),
     imageUrl: (row.image_url as string) ?? null,
     imageSource,
     category: String(row.category ?? "general"),

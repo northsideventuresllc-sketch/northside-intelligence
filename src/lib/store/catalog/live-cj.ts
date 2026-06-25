@@ -13,13 +13,20 @@ export interface LiveCjRefreshResult {
 }
 
 function variantsForDb(
-  variants: Array<{ id: string; name: string; retailPriceCents: number; imageUrl: string | null }>
+  variants: Array<{
+    id: string;
+    name: string;
+    retailPriceCents: number;
+    imageUrl: string | null;
+    description?: string;
+  }>
 ) {
   return variants.map((v) => ({
     id: v.id,
     name: v.name,
     retail_price_cents: v.retailPriceCents,
     image_url: v.imageUrl,
+    description: v.description ?? null,
   }));
 }
 
