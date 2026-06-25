@@ -2,6 +2,7 @@ import "server-only";
 
 import type Stripe from "stripe";
 import { computeOrderEconomics, estimateStripeFeeCents } from "@/lib/store/economics";
+import { ensureStoreEnv } from "@/lib/store/env";
 import {
   sendStoreFulfillmentActionEmail,
   sendStoreShippingAdjustmentChargeEmail,
@@ -37,6 +38,8 @@ export interface ReconcileOrderResult {
   refundCents: number;
   chargeCents: number;
   error: string | null;
+  notificationEmailSent?: boolean;
+  notificationEmailError?: string | null;
 }
 
 function parseCountryCode(shipping: Record<string, unknown> | null): string {
@@ -128,15 +131,49 @@ export async function reconcileStoreOrder(
     cjPostageCents?: number;
     chargeFailureEmailOverride?: string;
     skipEmails?: boolean;
+    resendNotification?: boolean;
   }
 ): Promise<ReconcileOrderResult> {
+  await ensureStoreEnv();
+
   const order = await getStoreOrderById(orderId);
   if (!order) {
     return { orderId, status: "skipped", refundCents: 0, chargeCents: 0, error: "Order not found" };
   }
 
-  if (order.reconciliationStatus === "balanced" || order.reconciliationStatus === "refunded" || order.reconciliationStatus === "charged") {
+  if (
+    !options?.resendNotification &&
+    (order.reconciliationStatus === "balanced" ||
+      order.reconciliationStatus === "refunded" ||
+      order.reconciliationStatus === "charged")
+  ) {
     return { orderId, status: "skipped", refundCents: 0, chargeCents: 0, error: null };
+  }
+
+  if (
+    options?.resendNotification &&
+    order.reconciliationStatus === "failed_charge" &&
+    (order.reconciliationAdjustmentCents ?? 0) > 0
+  ) {
+    const notifyEmail = options.chargeFailureEmailOverride ?? order.customerEmail;
+    const chargeCents = order.reconciliationAdjustmentCents ?? 0;
+    if (notifyEmail) {
+      const emailResult = await sendStoreFulfillmentActionEmail({
+        to: notifyEmail,
+        orderId,
+        reason: `Additional shipping and handling of $${(chargeCents / 100).toFixed(2)} is required. Please complete payment within 72 hours.`,
+        resend: true,
+      });
+      return {
+        orderId,
+        status: "failed_charge",
+        refundCents: 0,
+        chargeCents,
+        error: emailResult.sent ? null : emailResult.error ?? "Notification email failed",
+        notificationEmailSent: emailResult.sent,
+        notificationEmailError: emailResult.error ?? null,
+      };
+    }
   }
 
   const preflight = await preflightOrderCosts(orderId, {
@@ -161,6 +198,8 @@ export async function reconcileStoreOrder(
   const now = new Date().toISOString();
   let status: ReconcileOrderResult["status"] = "balanced";
   let error: string | null = null;
+  let notificationEmailSent: boolean | undefined;
+  let notificationEmailError: string | null = null;
 
   await supabase
     .from("ni_store_orders")
@@ -219,12 +258,15 @@ export async function reconcileStoreOrder(
         error = charge.error ?? "Charge failed";
         const failureNotifyEmail =
           options?.chargeFailureEmailOverride ?? order.customerEmail;
-        if (failureNotifyEmail) {
-          await sendStoreFulfillmentActionEmail({
+        if (!options?.skipEmails && failureNotifyEmail) {
+          const emailResult = await sendStoreFulfillmentActionEmail({
             to: failureNotifyEmail,
             orderId,
             reason: `We could not process an additional shipping and handling charge of $${(economics.chargeCents / 100).toFixed(2)}. Please complete payment within 72 hours.`,
+            resend: options?.resendNotification,
           });
+          notificationEmailSent = emailResult.sent;
+          notificationEmailError = emailResult.error ?? null;
         }
         await supabase
           .from("ni_store_orders")
@@ -241,12 +283,15 @@ export async function reconcileStoreOrder(
       status = "failed_charge";
       error = "No saved payment method for shortfall charge";
       const failureNotifyEmail = options?.chargeFailureEmailOverride ?? order.customerEmail;
-      if (failureNotifyEmail) {
-        await sendStoreFulfillmentActionEmail({
+      if (!options?.skipEmails && failureNotifyEmail) {
+        const emailResult = await sendStoreFulfillmentActionEmail({
           to: failureNotifyEmail,
           orderId,
           reason: `Additional shipping and handling of $${(economics.chargeCents / 100).toFixed(2)} is required. Please complete payment within 72 hours.`,
+          resend: options?.resendNotification,
         });
+        notificationEmailSent = emailResult.sent;
+        notificationEmailError = emailResult.error ?? null;
       }
       await supabase
         .from("ni_store_orders")
@@ -278,6 +323,8 @@ export async function reconcileStoreOrder(
     refundCents: economics.refundCents,
     chargeCents: economics.chargeCents,
     error,
+    notificationEmailSent,
+    notificationEmailError,
   };
 }
 

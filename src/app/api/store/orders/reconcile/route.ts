@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     cjProductCostCents?: number;
     cjPostageCents?: number;
     resetReconciliation?: boolean;
+    resendNotification?: boolean;
   };
 
   try {
@@ -116,6 +117,19 @@ export async function POST(req: NextRequest) {
 
     if (body.dryRun) {
       return NextResponse.json({ ok: true, dryRun: true, preflight });
+    }
+
+    if (body.resendNotification) {
+      const result = await reconcileStoreOrder(orderId, {
+        chargeFailureEmailOverride: body.chargeFailureEmailOverride?.trim() || undefined,
+        resendNotification: true,
+        skipEmails: false,
+      });
+      return NextResponse.json({
+        ok: Boolean(result.notificationEmailSent),
+        preflight,
+        ...result,
+      });
     }
 
     const result = await reconcileStoreOrder(orderId, {
