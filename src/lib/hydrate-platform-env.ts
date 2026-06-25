@@ -132,6 +132,13 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
     );
     if (kitFormId) process.env.KIT_FORM_ID = kitFormId;
 
+    const kitApiSecret = await resolvePlatformSecret(
+      "KIT_API_SECRET",
+      process.env.KIT_API_SECRET,
+      (value) => !value?.trim()
+    );
+    if (kitApiSecret) process.env.KIT_API_SECRET = kitApiSecret;
+
     const serviceRole = await resolvePlatformSecret(
       "SUPABASE_SERVICE_ROLE_KEY",
       process.env.SUPABASE_SERVICE_ROLE_KEY,

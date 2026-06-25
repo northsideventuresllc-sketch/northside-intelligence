@@ -1,6 +1,7 @@
 import "server-only";
 
-const KIT_API_BASE = "https://api.kit.com/v4";
+const KIT_V3_API_BASE = "https://api.convertkit.com/v3";
+const KIT_V4_API_BASE = "https://api.kit.com/v4";
 
 export interface KitSubscriber {
   id: number;
@@ -9,22 +10,42 @@ export interface KitSubscriber {
   state: string;
 }
 
-function getKitConfig(): { apiKey: string; formId: string } | null {
+interface KitV3Config {
+  apiKey: string;
+  apiSecret: string;
+  formId: string;
+}
+
+interface KitV4Config {
+  apiKey: string;
+  formId: string;
+}
+
+function getKitV3Config(): KitV3Config | null {
+  const apiKey = process.env.KIT_API_KEY?.trim();
+  const apiSecret = process.env.KIT_API_SECRET?.trim();
+  const formId = process.env.KIT_FORM_ID?.trim();
+  if (!apiKey || !apiSecret || !formId) return null;
+  return { apiKey, apiSecret, formId };
+}
+
+function getKitV4Config(): KitV4Config | null {
   const apiKey = process.env.KIT_API_KEY?.trim();
   const formId = process.env.KIT_FORM_ID?.trim();
   if (!apiKey || !formId) return null;
+  if (process.env.KIT_API_SECRET?.trim()) return null;
   return { apiKey, formId };
 }
 
 export function isKitConfigured(): boolean {
-  return getKitConfig() !== null;
+  return getKitV3Config() !== null || getKitV4Config() !== null;
 }
 
-async function kitFetch<T>(
+async function kitV4Fetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<{ data?: T; error?: string }> {
-  const config = getKitConfig();
+  const config = getKitV4Config();
   if (!config) {
     if (process.env.NODE_ENV === "development") {
       console.info(`[dev] Kit API skipped: ${path}`);
@@ -33,7 +54,7 @@ async function kitFetch<T>(
     return { error: "Kit email list is not configured (KIT_API_KEY, KIT_FORM_ID)" };
   }
 
-  const res = await fetch(`${KIT_API_BASE}${path}`, {
+  const res = await fetch(`${KIT_V4_API_BASE}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -52,15 +73,51 @@ async function kitFetch<T>(
   return { data };
 }
 
-/** Create or update a Kit subscriber and add them to the configured form. */
-export async function subscribeToKit({
+async function subscribeToKitV3({
   email,
   firstName,
 }: {
   email: string;
   firstName?: string | null;
 }): Promise<{ subscriberId?: string; error?: string }> {
-  const config = getKitConfig();
+  const config = getKitV3Config();
+  if (!config) return { error: "Kit email list is not configured" };
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const res = await fetch(`${KIT_V3_API_BASE}/forms/${config.formId}/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: config.apiKey,
+      email: normalizedEmail,
+      first_name: firstName?.trim() || undefined,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    return { error: `Kit API error (${res.status}): ${body}` };
+  }
+
+  const data = (await res.json()) as {
+    subscription?: { subscriber?: { id?: number } };
+  };
+  const subscriberId = data.subscription?.subscriber?.id;
+  if (!subscriberId) {
+    return { error: "Kit did not return a subscriber ID" };
+  }
+
+  return { subscriberId: String(subscriberId) };
+}
+
+async function subscribeToKitV4({
+  email,
+  firstName,
+}: {
+  email: string;
+  firstName?: string | null;
+}): Promise<{ subscriberId?: string; error?: string }> {
+  const config = getKitV4Config();
   if (!config) {
     if (process.env.NODE_ENV === "development") {
       console.info(`[dev] Kit subscribe: ${email}`);
@@ -71,7 +128,7 @@ export async function subscribeToKit({
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  const createResult = await kitFetch<{ subscriber: KitSubscriber }>("/subscribers", {
+  const createResult = await kitV4Fetch<{ subscriber: KitSubscriber }>("/subscribers", {
     method: "POST",
     body: JSON.stringify({
       email_address: normalizedEmail,
@@ -87,7 +144,7 @@ export async function subscribeToKit({
     return { error: "Kit did not return a subscriber ID" };
   }
 
-  const addResult = await kitFetch<{ subscriber: KitSubscriber }>(
+  const addResult = await kitV4Fetch<{ subscriber: KitSubscriber }>(
     `/forms/${config.formId}/subscribers/${subscriber.id}`,
     { method: "POST" }
   );
@@ -97,9 +154,50 @@ export async function subscribeToKit({
   return { subscriberId: String(subscriber.id) };
 }
 
-/** Unsubscribe a subscriber from Kit (set inactive). */
-export async function unsubscribeFromKit(subscriberId: string): Promise<{ error?: string }> {
-  const result = await kitFetch(`/subscribers/${subscriberId}`, {
+/** Create or update a Kit subscriber and add them to the configured form. */
+export async function subscribeToKit({
+  email,
+  firstName,
+}: {
+  email: string;
+  firstName?: string | null;
+}): Promise<{ subscriberId?: string; error?: string }> {
+  if (getKitV3Config()) {
+    return subscribeToKitV3({ email, firstName });
+  }
+  return subscribeToKitV4({ email, firstName });
+}
+
+/** Unsubscribe a subscriber from Kit. */
+export async function unsubscribeFromKit(
+  subscriberId: string,
+  email?: string | null
+): Promise<{ error?: string }> {
+  const v3 = getKitV3Config();
+  if (v3) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return { error: "Email is required to unsubscribe via Kit v3" };
+    }
+
+    const res = await fetch(`${KIT_V3_API_BASE}/unsubscribe`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_secret: v3.apiSecret,
+        email: normalizedEmail,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      return { error: `Kit API error (${res.status}): ${body}` };
+    }
+
+    return {};
+  }
+
+  const result = await kitV4Fetch(`/subscribers/${subscriberId}`, {
     method: "PUT",
     body: JSON.stringify({ state: "cancelled" }),
   });
