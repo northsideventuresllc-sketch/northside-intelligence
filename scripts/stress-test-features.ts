@@ -4,7 +4,7 @@
  */
 
 import { buildEnrichedInputs, parseSector3ClarifyingQuestions, promptLikelyNeedsClarification } from "../src/lib/sector3-tools/clarification";
-import { sanitizeCjDescription, buildVariantDescription } from "../src/lib/store/catalog/description";
+import { sanitizeCjDescription, buildVariantDescription, formatUserFriendlyDescription } from "../src/lib/store/catalog/description";
 
 let passed = 0;
 let failed = 0;
@@ -29,7 +29,10 @@ assert("keeps readable text", clean.toLowerCase().includes("wireless earbuds"));
 
 // 2. Variant description
 const variantDesc = buildVariantDescription("Great earbuds for travel.", "Black", "Earbuds");
-assert("variant description has two paragraphs", variantDesc.includes("This variation: Black"));
+assert("variant description has variation detail", variantDesc.toLowerCase().includes("black"));
+
+const friendly = formatUserFriendlyDescription("wireless earbuds, noise cancelling, 30hr battery", "Pro Buds");
+assert("formats specs into sentences", friendly.includes(".") && /[A-Z]/.test(friendly));
 
 // 3. Clarification parsing
 const questionsJson = JSON.stringify({

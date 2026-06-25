@@ -170,21 +170,23 @@ export function ProductPurchasePanel({
       {product.variants && product.variants.length > 1 && (
         <div>
           <p className="mb-2 text-sm font-semibold text-white">Options</p>
-          <ul className="max-h-48 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-white/5 p-3">
+          <ul className="max-h-56 space-y-2 overflow-y-auto overflow-x-visible rounded-xl border border-white/10 bg-white/5 p-3">
             {product.variants.map((variant) => (
-              <li key={variant.id}>
-                <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-                  <span className="flex items-center gap-2">
+              <li key={variant.id} className="relative overflow-visible">
+                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-1 py-1 text-sm transition hover:bg-white/5">
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
                     <input
                       type="radio"
                       name="product-variant"
                       checked={selectedVariantId === variant.id}
                       onChange={() => setSelectedVariantId(variant.id)}
+                      className="shrink-0"
                     />
-                    <span className="text-white">{variant.name}</span>
+                    <span className="truncate text-white">{variant.name}</span>
                     <VariantTooltip
                       variant={variant}
                       productDescription={product.description}
+                      productName={product.name}
                     />
                   </span>
                   <span className="shrink-0 font-semibold text-cyan-200">

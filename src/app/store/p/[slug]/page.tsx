@@ -5,6 +5,7 @@ import { Footer } from "@/components/landing/Footer";
 import { NavServer } from "@/components/landing/NavServer";
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { ProductPurchasePanel } from "@/components/store/ProductPurchasePanel";
+import { StoreProductDescription } from "@/components/store/StoreProductDescription";
 import { StoreCartHeader } from "@/components/store/StoreCartHeader";
 import { StockImageDisclaimer } from "@/components/store/StockImageDisclaimer";
 import { StoreProductImage } from "@/components/store/StoreProductImage";
@@ -59,7 +60,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
             </Link>
             <StoreCartHeader />
           </div>
-          <div className="glass-panel overflow-hidden">
+          <div className="glass-panel">
               <div className="flex flex-col lg:flex-row">
                 <div className="flex h-80 items-center justify-center border-b border-white/5 bg-gradient-to-br from-cyan-500/10 to-transparent p-8 lg:h-auto lg:w-2/5 lg:border-b-0 lg:border-r">
                   {product.imageUrl ? (
@@ -79,11 +80,11 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                     {product.category.replace(/-/g, " ")}
                   </p>
                   <h1 className="mt-2 text-2xl font-semibold text-white">{product.name}</h1>
-                  {product.description && (
-                    <p className="mt-4 text-sm leading-relaxed text-ni-muted">
-                      {product.description}
-                    </p>
-                  )}
+                  <StoreProductDescription
+                    description={product.description}
+                    productName={product.name}
+                    className="mt-4"
+                  />
                   <p className="mt-4 text-3xl font-bold text-white">{priceLabel}</p>
                   {product.priceChangeNotice && (
                     <PriceChangeNotices
