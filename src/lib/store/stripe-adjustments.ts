@@ -33,6 +33,48 @@ export async function retrieveCheckoutPaymentDetails(
   return { customerId, paymentMethodId, paymentIntentId };
 }
 
+/**
+ * Legacy guest checkouts may have a payment method but no Stripe Customer.
+ * Create a customer and attach the PM so off-session charges can run.
+ */
+export async function ensureStripeCustomerForOffSession(input: {
+  customerId: string | null;
+  paymentMethodId: string | null;
+  email: string | null;
+  orderId: string;
+}): Promise<{ customerId: string; paymentMethodId: string }> {
+  if (input.customerId && input.paymentMethodId) {
+    return { customerId: input.customerId, paymentMethodId: input.paymentMethodId };
+  }
+  if (!input.paymentMethodId) {
+    throw new Error("No payment method available for off-session charge");
+  }
+
+  const stripe = getStoreStripe();
+  let customerId = input.customerId;
+
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: input.email ?? undefined,
+      metadata: { orderId: input.orderId, source: "store_reconcile_backfill" },
+    });
+    customerId = customer.id;
+  }
+
+  try {
+    await stripe.paymentMethods.attach(input.paymentMethodId, { customer: customerId });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "attach failed";
+    if (!message.includes("already been attached")) throw err;
+  }
+
+  await stripe.customers.update(customerId, {
+    invoice_settings: { default_payment_method: input.paymentMethodId },
+  });
+
+  return { customerId, paymentMethodId: input.paymentMethodId };
+}
+
 export async function refundStoreOrderSurplus(input: {
   paymentIntentId: string;
   amountCents: number;

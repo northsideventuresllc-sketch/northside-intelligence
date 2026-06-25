@@ -5,9 +5,8 @@ import { getStoreOrderById } from "@/lib/store/orders";
 import {
   preflightOrderCosts,
   reconcileStoreOrder,
-  persistCheckoutPaymentDetails,
 } from "@/lib/store/reconcile-order";
-import { retrieveCheckoutPaymentDetails } from "@/lib/store/stripe-adjustments";
+import { retrieveCheckoutPaymentDetails, ensureStripeCustomerForOffSession } from "@/lib/store/stripe-adjustments";
 import { getStoreStripe } from "@/lib/store/stripe";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -39,12 +38,23 @@ async function backfillStripePaymentDetails(orderId: string): Promise<void> {
 
   const stripe = getStoreStripe();
   const session = await stripe.checkout.sessions.retrieve(sessionId);
-  await persistCheckoutPaymentDetails(orderId, session);
-
   const details = await retrieveCheckoutPaymentDetails(session);
-  if (!details.customerId || !details.paymentMethodId) {
-    throw new Error("Could not retrieve Stripe customer or payment method from checkout session");
-  }
+  const ensured = await ensureStripeCustomerForOffSession({
+    customerId: details.customerId,
+    paymentMethodId: details.paymentMethodId,
+    email: order.customerEmail,
+    orderId,
+  });
+
+  await supabase
+    .from("ni_store_orders")
+    .update({
+      stripe_customer_id: ensured.customerId,
+      stripe_payment_method_id: ensured.paymentMethodId,
+      stripe_payment_intent_id: details.paymentIntentId ?? order.stripePaymentIntentId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orderId);
 }
 
 export async function POST(req: NextRequest) {
