@@ -11,6 +11,7 @@
  */
 
 import Stripe from "stripe";
+import { STORE_STRIPE_WEBHOOK_URLS } from "../src/lib/store/checkout-session";
 
 const TOOLS = [
   { slug: "replyflow", name: "ReplyFlow", monthly: 22, annual: 220, lifetime: 531 },
@@ -32,11 +33,15 @@ const BILLING_WEBHOOK_URL =
 const REPLYFLOW_WEBHOOK_URL =
   "https://www.northsideintelligence.com/api/replyflow/webhooks/stripe";
 
+const STORE_WEBHOOK_URL = STORE_STRIPE_WEBHOOK_URLS[0];
+
 const WEBHOOK_EVENTS = [
   "checkout.session.completed",
   "customer.subscription.updated",
   "customer.subscription.deleted",
 ] as const;
+
+const STORE_WEBHOOK_EVENTS = ["checkout.session.completed"] as const;
 
 const LEGACY_REPLYFLOW_PRICES = {
   STRIPE_SOLO_PRICE_ID: "price_1Te0s8QXb5thRQWgqVQdW8Rl",
@@ -202,9 +207,11 @@ async function ensureToolPlans(stripe: Stripe): Promise<ToolPriceIds[]> {
 
 async function ensureWebhook(
   stripe: Stripe,
-  url: string
+  url: string,
+  events: readonly string[],
+  description: string
 ): Promise<{ id: string; created: boolean }> {
-  const existing = await stripe.webhookEndpoints.list({ limit: 20 });
+  const existing = await stripe.webhookEndpoints.list({ limit: 100 });
   const match = existing.data.find((w) => w.url === url);
   if (match) {
     console.log(`Webhook exists: ${url} (${match.id})`);
@@ -213,8 +220,8 @@ async function ensureWebhook(
 
   const endpoint = await stripe.webhookEndpoints.create({
     url,
-    enabled_events: [...WEBHOOK_EVENTS],
-    description: "Northside Intelligence billing",
+    enabled_events: [...events],
+    description,
   });
   console.log(`Created webhook: ${url} (${endpoint.id})`);
   console.log(`New webhook signing secret: ${endpoint.secret}`);
@@ -234,8 +241,19 @@ async function main() {
   const toolPrices = await ensureToolPlans(stripe);
 
   console.log("\n=== Webhooks ===\n");
-  await ensureWebhook(stripe, BILLING_WEBHOOK_URL);
-  await ensureWebhook(stripe, REPLYFLOW_WEBHOOK_URL);
+  await ensureWebhook(stripe, BILLING_WEBHOOK_URL, WEBHOOK_EVENTS, "Northside Intelligence billing");
+  await ensureWebhook(
+    stripe,
+    REPLYFLOW_WEBHOOK_URL,
+    WEBHOOK_EVENTS,
+    "Northside Intelligence ReplyFlow billing"
+  );
+  await ensureWebhook(
+    stripe,
+    STORE_WEBHOOK_URL,
+    STORE_WEBHOOK_EVENTS,
+    "Northside Intelligence Smart Store checkout"
+  );
 
   console.log("\n=== Supabase SQL (ni_plan_pricing) ===\n");
   for (const line of niEnvLines) {
@@ -263,6 +281,7 @@ async function main() {
   console.log(`STRIPE_SECRET_KEY=${stripeKey}`);
   console.log("STRIPE_WEBHOOK_SECRET=<billing webhook signing secret from Stripe Dashboard>");
   console.log("STRIPE_REPLYFLOW_WEBHOOK_SECRET=<replyflow webhook signing secret>");
+  console.log("STRIPE_WEBHOOK_SECRET_STORE=<store webhook signing secret>");
   console.log(`NEXT_PUBLIC_APP_URL=https://www.northsideintelligence.com`);
   for (const line of niEnvLines) console.log(line);
   for (const [k, v] of Object.entries(LEGACY_REPLYFLOW_PRICES)) {
