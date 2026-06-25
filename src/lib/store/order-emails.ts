@@ -124,12 +124,15 @@ export async function sendStoreShippingAdjustmentRefundEmail(
 }
 
 export async function sendStoreFulfillmentActionEmail(
-  input: StoreFulfillmentActionEmailInput
+  input: StoreFulfillmentActionEmailInput & { resend?: boolean }
 ): Promise<{ sent: boolean; error?: string }> {
   const to = input.to.trim().toLowerCase();
   if (!to) return { sent: false, error: "Missing customer email" };
 
   const orderRef = formatOrderReference(input.orderId);
+  const idempotencyKey = input.resend
+    ? `store-order-action/${input.orderId}/resend-${Date.now()}`
+    : `store-order-action/${input.orderId}`;
   const result = await sendNoreplyEmail({
     to,
     subject: `Action Required — Order #${orderRef} | Northside Intelligence`,
@@ -139,10 +142,17 @@ export async function sendStoreFulfillmentActionEmail(
         input.trackPageUrl ??
         (input.to ? buildStoreOrderTrackUrl(input.orderId, input.to) : null),
     }),
-    idempotencyKey: `store-order-action/${input.orderId}`,
+    idempotencyKey,
   });
 
-  if (result.error) return { sent: false, error: result.error };
+  if (result.error) {
+    console.error("[store/order-emails] fulfillment action email failed", {
+      orderId: input.orderId,
+      to,
+      error: result.error,
+    });
+    return { sent: false, error: result.error };
+  }
   return { sent: true };
 }
 

@@ -3,13 +3,14 @@ import "server-only";
 import { Resend } from "resend";
 import { niEmailCta, wrapNiEmailHtml } from "@/lib/email/layout";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
-
 const NOREPLY_FROM =
   process.env.NI_NOREPLY_FROM_EMAIL ??
   "Northside Intelligence <noreply@northsideintelligence.com>";
+
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  return apiKey ? new Resend(apiKey) : null;
+}
 
 export interface TransactionalEmailInput {
   to: string;
@@ -21,6 +22,7 @@ export interface TransactionalEmailInput {
 export async function sendNoreplyEmail(
   input: TransactionalEmailInput
 ): Promise<{ error?: string }> {
+  const resend = getResendClient();
   if (!resend) {
     if (process.env.NODE_ENV === "development") {
       console.info(`[dev] noreply email to ${input.to}: ${input.subject}`);

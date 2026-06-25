@@ -160,6 +160,7 @@ export interface StoreFulfillmentActionEmailInput {
   orderId: string;
   reason: string;
   trackPageUrl?: string | null;
+  resend?: boolean;
 }
 
 export function buildStoreShippingAdjustmentChargeEmailHtml(
