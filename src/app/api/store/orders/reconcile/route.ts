@@ -99,7 +99,12 @@ export async function POST(req: NextRequest) {
         .eq("id", orderId);
     }
 
-    await backfillStripePaymentDetails(orderId);
+    try {
+      await backfillStripePaymentDetails(orderId);
+    } catch (backfillErr) {
+      console.warn("[store/orders/reconcile] Stripe backfill failed", backfillErr);
+    }
+
     const preflight = await preflightOrderCosts(orderId, {
       cjProductCostCents: body.cjProductCostCents,
       cjPostageCents: body.cjPostageCents,

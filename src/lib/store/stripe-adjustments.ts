@@ -65,7 +65,18 @@ export async function ensureStripeCustomerForOffSession(input: {
     await stripe.paymentMethods.attach(input.paymentMethodId, { customer: customerId });
   } catch (err) {
     const message = err instanceof Error ? err.message : "attach failed";
-    if (!message.includes("already been attached")) throw err;
+    if (message.includes("already been attached")) {
+      // ok
+    } else if (
+      message.includes("may not be used again") ||
+      message.includes("previously used without being attached")
+    ) {
+      throw new Error(
+        "Payment method cannot be saved for off-session use (guest Link or one-time checkout). Manual payment required."
+      );
+    } else {
+      throw err;
+    }
   }
 
   await stripe.customers.update(customerId, {
