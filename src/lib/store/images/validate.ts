@@ -30,10 +30,17 @@ export async function isImageUrlReachable(url: string): Promise<boolean> {
   }
 }
 
-export async function pickFirstReachableImage(candidates: string[]): Promise<string | null> {
+export async function pickFirstReachableImage(
+  candidates: string[],
+  options?: { maxChecks?: number }
+): Promise<string | null> {
   const unique = Array.from(new Set(candidates.map((c) => c.trim()).filter(Boolean)));
-  for (const url of unique) {
+  if (!unique.length) return null;
+
+  const maxChecks = Math.max(1, options?.maxChecks ?? 6);
+  for (const url of unique.slice(0, maxChecks)) {
     if (await isImageUrlReachable(url)) return url;
   }
+
   return unique[0] ?? null;
 }
