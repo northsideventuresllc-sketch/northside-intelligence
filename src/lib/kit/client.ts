@@ -79,7 +79,7 @@ async function subscribeToKitV3({
 }: {
   email: string;
   firstName?: string | null;
-}): Promise<{ subscriberId?: string; error?: string }> {
+}): Promise<{ subscriberId?: string; subscriptionState?: string; error?: string }> {
   const config = getKitV3Config();
   if (!config) return { error: "Kit email list is not configured" };
 
@@ -100,14 +100,17 @@ async function subscribeToKitV3({
   }
 
   const data = (await res.json()) as {
-    subscription?: { subscriber?: { id?: number } };
+    subscription?: { state?: string; subscriber?: { id?: number } };
   };
   const subscriberId = data.subscription?.subscriber?.id;
   if (!subscriberId) {
     return { error: "Kit did not return a subscriber ID" };
   }
 
-  return { subscriberId: String(subscriberId) };
+  return {
+    subscriberId: String(subscriberId),
+    subscriptionState: data.subscription?.state,
+  };
 }
 
 async function subscribeToKitV4({
@@ -161,7 +164,7 @@ export async function subscribeToKit({
 }: {
   email: string;
   firstName?: string | null;
-}): Promise<{ subscriberId?: string; error?: string }> {
+}): Promise<{ subscriberId?: string; subscriptionState?: string; error?: string }> {
   if (getKitV3Config()) {
     return subscribeToKitV3({ email, firstName });
   }

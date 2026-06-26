@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     subscribed: result.subscribed,
     kitSubscriberId: result.kitSubscriberId,
+    confirmationRequired: result.confirmationRequired ?? false,
   });
 }
 

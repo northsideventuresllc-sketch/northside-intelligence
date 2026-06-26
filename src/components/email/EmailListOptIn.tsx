@@ -24,19 +24,28 @@ export function EmailListOptIn({
   const [checked, setChecked] = useState(defaultChecked);
   const [loading, setLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
+  const [confirmationRequired, setConfirmationRequired] = useState(false);
   const [error, setError] = useState("");
 
   async function subscribe() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/email-list/subscribe", { method: "POST" });
-      const data = (await res.json()) as { error?: string; subscribed?: boolean };
+      const res = await fetch("/api/email-list/subscribe", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        subscribed?: boolean;
+        confirmationRequired?: boolean;
+      };
       if (!res.ok) {
         setError(data.error ?? "Could not subscribe");
         return false;
       }
       setSubscribed(true);
+      setConfirmationRequired(data.confirmationRequired === true);
       onSubscribed?.();
       return true;
     } catch {
@@ -55,9 +64,14 @@ export function EmailListOptIn({
   if (standalone) {
     if (subscribed) {
       return (
-        <p className={`text-sm text-emerald-400 ${className}`}>
-          You are subscribed to NI updates.
-        </p>
+        <div className={className}>
+          <p className="text-sm text-emerald-400">You are subscribed to NI updates.</p>
+          {confirmationRequired && (
+            <p className="mt-2 text-xs text-ni-muted">
+              Check your inbox for a confirmation email from Kit to finish joining the list.
+            </p>
+          )}
+        </div>
       );
     }
 
@@ -103,7 +117,19 @@ export function useEmailListOptInRef() {
 }
 
 /** Subscribe if opted in — call from parent after auth success. */
-export async function subscribeIfOptedIn(optedIn: boolean): Promise<void> {
-  if (!optedIn) return;
-  await fetch("/api/email-list/subscribe", { method: "POST" });
+export async function subscribeIfOptedIn(
+  optedIn: boolean
+): Promise<{ ok: boolean; error?: string }> {
+  if (!optedIn) return { ok: true };
+  try {
+    const res = await fetch("/api/email-list/subscribe", {
+      method: "POST",
+      credentials: "same-origin",
+    });
+    const data = (await res.json()) as { error?: string };
+    if (!res.ok) return { ok: false, error: data.error ?? "Could not subscribe" };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Network error" };
+  }
 }
