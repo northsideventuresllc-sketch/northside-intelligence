@@ -187,11 +187,19 @@ export async function enrichCjProductDetail(input: {
     ...(variants.map((v) => v.imageUrl ?? "")),
   ];
 
-  let imageUrl = (await pickFirstReachableImage(imageCandidates)) ?? "";
+  let imageUrl = input.listImageUrl?.startsWith("http") ? input.listImageUrl : "";
   let imageSource: "cj" | "serpapi" = "cj";
+
+  if (!imageUrl) {
+    const picked = await pickFirstReachableImage(imageCandidates, { maxChecks: 6 });
+    imageUrl = picked ?? "";
+  }
+
   if (!imageUrl) {
     imageUrl = (await searchWebProductImage(exactName)) ?? "";
     if (imageUrl) imageSource = "serpapi";
+  } else if (!input.listImageUrl?.startsWith("http")) {
+    imageSource = "cj";
   }
 
   const supplierCostCents = variants.length

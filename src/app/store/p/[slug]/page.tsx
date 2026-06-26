@@ -37,9 +37,10 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
   if (!row) notFound();
 
   const refreshed = await refreshCatalogFromCj(row);
-  if (refreshed.unavailable || !refreshed.row) notFound();
+  const catalogRow = refreshed.row ?? row;
+  if (!catalogRow) notFound();
 
-  const product = toCatalogProductView(refreshed.row, {
+  const product = toCatalogProductView(catalogRow, {
     priceChangeNotice: refreshed.notice ?? undefined,
   });
   const priceLabel = formatRetailPriceRange(
@@ -92,6 +93,15 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
                       className="mt-4"
                     />
                   )}
+                  {refreshed.refreshFailed && (
+                    <p
+                      className="mt-4 rounded-xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-xs leading-relaxed text-amber-100/90"
+                      role="status"
+                    >
+                      Live supplier pricing is temporarily unavailable. Showing the last saved
+                      listing — your total is verified again at checkout.
+                    </p>
+                  )}
                   {product.imageIsStockPhoto && <StockImageDisclaimer className="mt-4" />}
                   {product.reviewRating != null && product.reviewCount > 0 ? (
                     <p className="mt-2 text-sm text-ni-muted">
@@ -117,7 +127,7 @@ export default async function CatalogProductPage({ params }: { params: { slug: s
 
                   <ProductPurchasePanel
                     product={product}
-                    sourceProductId={refreshed.row.sourceProductId}
+                    sourceProductId={catalogRow.sourceProductId}
                   />
                 </div>
               </div>

@@ -10,6 +10,8 @@ export interface LiveCjRefreshResult {
   unavailable: boolean;
   priceChanged: boolean;
   notice: PriceChangeNotice | null;
+  /** CJ live refresh failed; row is cached catalog data. */
+  refreshFailed?: boolean;
 }
 
 function variantsForDb(
@@ -30,23 +32,47 @@ function variantsForDb(
   }));
 }
 
+function cachedResult(
+  row: CatalogProductRow,
+  previousRetailCents?: number
+): LiveCjRefreshResult {
+  return {
+    row,
+    unavailable: false,
+    priceChanged: false,
+    notice: null,
+    refreshFailed: true,
+  };
+}
+
 /** Re-fetch CJ listing price, title, images, and variants; persist to catalog. */
 export async function refreshCatalogFromCj(
   row: CatalogProductRow,
   previousRetailCents?: number
 ): Promise<LiveCjRefreshResult> {
   if (row.sourcePlatform !== "cj" || !row.sourceProductId) {
-    return { row: null, unavailable: true, priceChanged: false, notice: null };
+    return cachedResult(row, previousRetailCents);
   }
 
-  const enriched = await enrichCjProductDetail({
-    sourceProductId: row.sourceProductId,
-    name: row.name,
-    listImageUrl: row.imageUrl ?? undefined,
-  });
+  const listSellPriceUsd =
+    row.supplierCostCents > 0 ? (row.supplierCostCents / 100).toFixed(2) : undefined;
+
+  let enriched;
+  try {
+    enriched = await enrichCjProductDetail({
+      sourceProductId: row.sourceProductId,
+      name: row.name,
+      listImageUrl: row.imageUrl ?? undefined,
+      listSellPrice: listSellPriceUsd,
+    });
+  } catch (err) {
+    console.warn("[store/live-cj] enrich failed", row.slug, err);
+    return cachedResult(row, previousRetailCents);
+  }
 
   if (!enriched) {
-    return { row: null, unavailable: true, priceChanged: false, notice: null };
+    console.warn("[store/live-cj] enrich returned null", row.slug);
+    return cachedResult(row, previousRetailCents);
   }
 
   const { createServiceClient } = await import("@/lib/supabase/server");
@@ -72,7 +98,8 @@ export async function refreshCatalogFromCj(
     .single();
 
   if (error || !data) {
-    return { row: null, unavailable: true, priceChanged: false, notice: null };
+    console.warn("[store/live-cj] catalog update failed", row.slug, error?.message);
+    return cachedResult(row, previousRetailCents);
   }
 
   const updated = mapRow(data as Record<string, unknown>);
