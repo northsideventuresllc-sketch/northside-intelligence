@@ -6,6 +6,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 export interface SubscribeEmailListResult {
   subscribed: boolean;
   kitSubscriberId?: string;
+  confirmationRequired?: boolean;
   error?: string;
 }
 
@@ -48,7 +49,11 @@ export async function subscribeUserToEmailList(
     return { subscribed: false, error: updateError.message };
   }
 
-  return { subscribed: true, kitSubscriberId: kitResult.subscriberId };
+  return {
+    subscribed: true,
+    kitSubscriberId: kitResult.subscriberId,
+    confirmationRequired: kitResult.subscriptionState === "inactive",
+  };
 }
 
 export async function isUserOnEmailList(userId: string): Promise<boolean> {
