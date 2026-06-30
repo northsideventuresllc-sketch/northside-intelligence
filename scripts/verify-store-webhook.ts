@@ -46,10 +46,15 @@ function makeSession(metadata: Record<string, string>): Stripe.Checkout.Session 
 }
 
 assert(
+  STORE_STRIPE_WEBHOOK_URLS[0] ===
+    "https://www.northsideintelligence.com/api/store/webhook",
+  "primary store webhook URL must be /api/store/webhook on www"
+);
+assert(
   STORE_STRIPE_WEBHOOK_URLS.includes(
     "https://www.northsideintelligence.com/api/store/webhooks/stripe"
   ),
-  "primary store webhook URL must use www"
+  "legacy store webhook URL kept for backward compatibility"
 );
 
 const valid = makeSession({

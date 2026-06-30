@@ -1,6 +1,5 @@
 import { handleStoreStripeWebhook } from "@/lib/store/stripe-webhook";
 
-/** @deprecated Use /api/store/webhook — kept for existing Stripe endpoint registrations. */
 export async function POST(req: Parameters<typeof handleStoreStripeWebhook>[0]) {
   return handleStoreStripeWebhook(req);
 }
