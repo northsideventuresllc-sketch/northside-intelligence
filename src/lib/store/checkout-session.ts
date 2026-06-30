@@ -1,9 +1,12 @@
 import type Stripe from "stripe";
 import type { ShippingTier } from "@/lib/store/cart/types";
 
-export const STORE_STRIPE_WEBHOOK_PATH = "/api/store/webhooks/stripe";
+export const STORE_STRIPE_WEBHOOK_PATH = "/api/store/webhook";
 
 export const STORE_STRIPE_WEBHOOK_URLS = [
+  "https://www.northsideintelligence.com/api/store/webhook",
+  "https://northsideintelligence.com/api/store/webhook",
+  // Legacy registrations — still served by /api/store/webhooks/stripe
   "https://www.northsideintelligence.com/api/store/webhooks/stripe",
   "https://northsideintelligence.com/api/store/webhooks/stripe",
 ] as const;
