@@ -12,6 +12,7 @@ const PORTAL_PATH_PREFIXES = [
   "/toolkit",
   "/account",
   "/admin",
+  "/axon",
   "/auth",
   "/tools",
   "/store",
@@ -214,6 +215,7 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
   const needsSessionRefresh =
     pathname.startsWith("/account") ||
+    pathname.startsWith("/axon") ||
     pathname.startsWith("/toolkit") ||
     pathname.startsWith("/store") ||
     pathname.startsWith("/services") ||
