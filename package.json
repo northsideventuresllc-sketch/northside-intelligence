@@ -10,6 +10,7 @@
     "verify:cj-pricing": "npx tsx scripts/verify-cj-pricing.ts",
     "verify:store-webhook": "npx tsx scripts/verify-store-webhook.ts",
     "infra:health-check": "npx tsx scripts/infra-health-check.ts",
+    "audit:vercel-env": "npx tsx scripts/audit-vercel-env.ts",
     "fulfill:store-order": "npx tsx scripts/fulfill-store-order.ts",
     "sync:cj-catalog": "npx tsx scripts/run-cj-catalog-sync.ts"
   },

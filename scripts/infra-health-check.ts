@@ -13,6 +13,7 @@ import {
   INFRA_HEALTH_GITHUB_SECRETS,
   SUPABASE_SERVICE_KEY_ALIASES,
 } from "../src/lib/infra/health-endpoints";
+import { runVercelEnvAudit, vercelEnvAuditToHealthResults } from "./audit-vercel-env";
 
 const SESSION_LOG_PATH = join(process.cwd(), "docs", "session-log.md");
 const URGENT_MARKER = "<!-- URGENT:infra-health-check -->";
@@ -152,6 +153,18 @@ export async function runInfraHealthCheck(): Promise<HealthCheckResult[]> {
     await pingWebhook(INFRA_HEALTH_ENDPOINTS.niStoreWebhook, "ni_store_webhook"),
     await pingWebhook(INFRA_HEALTH_ENDPOINTS.matchFitWebhook, "match_fit_webhook")
   );
+
+  try {
+    const vercelAudit = await runVercelEnvAudit();
+    results.push(...vercelEnvAuditToHealthResults(vercelAudit));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    results.push({
+      name: "vercel_env_audit",
+      ok: false,
+      detail: `audit failed: ${message}`,
+    });
+  }
 
   return results;
 }

@@ -22,3 +22,17 @@ Failures prepend **🚨 URGENT** to `docs/session-log.md`. The GitHub Actions wo
 - `VERCEL_TOKEN`
 - `ANTHROPIC_API_KEY`
 - `SUPABASE_URL` — arm3 table queries
+
+## Vercel env audit
+
+```bash
+npm run audit:vercel-env
+```
+
+Compares production env on the `northside-intelligence` Vercel project against `vercel.json` and `ni_platform_secrets`. Fails when:
+
+- `CRON_SECRET` is vault-only (Vercel Cron needs it on the project)
+- `NI_ADMIN_SECRET` is missing everywhere
+- Any key in `NI_PORTAL_REQUIRED_KEYS` is missing from all three sources
+
+`VERCEL_TOKEN` is read from env or `ni_platform_secrets` when running locally.
