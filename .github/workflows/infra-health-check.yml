@@ -1,0 +1,54 @@
+name: Infra Health Check
+
+on:
+  schedule:
+    # Every Monday 9am ET (13:00 UTC)
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+
+jobs:
+  infra-health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run infra health check
+        id: health
+        continue-on-error: true
+        run: npx tsx scripts/infra-health-check.ts --write-session-log
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit urgent session log on failure
+        if: steps.health.outcome == 'failure'
+        run: |
+          set -euo pipefail
+          if git diff --quiet docs/session-log.md; then
+            echo "No session log changes to commit."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/session-log.md
+          git commit -m "🚨 URGENT: infra-health-check failures $(date -u +%Y-%m-%d)"
+          git push "https://x-access-token:${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+      - name: Fail workflow if health check failed
+        if: steps.health.outcome == 'failure'
+        run: exit 1

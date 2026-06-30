@@ -61,7 +61,7 @@ Search returns exact CJ listing titles and live NI retail prices (CJ listing + 1
 | Cart | `/store/cart` | Persistent saved cart (`localStorage`), live CJ verify on load |
 | Cart verify | `POST /api/store/cart/verify` | Re-price saved cart lines from CJ |
 | Checkout API | `POST /api/store/checkout` | Stripe Checkout; 409 + disclaimer if CJ prices changed |
-| Webhook | `/api/store/webhook` | Catalog orders + Make fulfillment (legacy alias `/api/store/webhooks/stripe`) |
+| Webhook | `/api/store/webhook` | Catalog orders + Make fulfillment (legacy alias `/api/store/webhooks/stripe`). GET returns 200 for infra-health-check ping. |
 | Gate API | `GET /api/store/gate` | Checkout live status for UI |
 
 ## Legacy merch tables

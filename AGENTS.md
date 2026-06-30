@@ -50,3 +50,21 @@ git log -1 --oneline
 ```
 
 Expected: clean working tree on `main`, build passes.
+
+### Weekly task: `infra-health-check` (every Monday)
+
+Automated via `.github/workflows/infra-health-check.yml` (Mon 9am ET). Manual run:
+
+```bash
+npm run infra:health-check
+```
+
+Verifies:
+
+| Check | What |
+|-------|------|
+| GitHub Actions secrets | `GH_PAT`, `SUPABASE_SERVICE_KEY` (or `SUPABASE_SERVICE_ROLE_KEY`), `VERCEL_TOKEN`, `ANTHROPIC_API_KEY` |
+| ARM3 pipeline data | `arm3_weekly_logs` and `arm3_opportunities` each have rows in the last 7 days |
+| Stripe webhook ping | GET `https://www.northsideintelligence.com/api/store/webhook` and GET `https://match-fit.net/api/webhooks/stripe` return **200** |
+
+**On failure:** `docs/session-log.md` gets a **🚨 URGENT** block at the top (auto-committed by the workflow). Cloud agents must read that file at session start and act on URGENT items first — do not bury them in Carry-over.
