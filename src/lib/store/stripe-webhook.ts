@@ -10,6 +10,11 @@ import {
   getStoreWebhookSecret,
 } from "@/lib/store/stripe";
 
+/** Lightweight uptime ping for infra-health-check (GET → 200). */
+export function pingStoreStripeWebhook(): NextResponse {
+  return NextResponse.json({ ok: true, service: "ni-store-webhook" });
+}
+
 export async function handleStoreStripeWebhook(req: NextRequest): Promise<NextResponse> {
   await ensureStoreEnv();
   await ensureStoreStripeEnv();
