@@ -24,7 +24,7 @@ Generate an admin secret:
 openssl rand -hex 20
 ```
 
-Add your Supabase anon key, service role key, and `NI_ADMIN_SECRET` to `.env.local`.
+Add your Supabase anon key, service role key, `NI_ADMIN_SECRET`, and `OPS_SESSION_SECRET` to `.env.local`.
 
 ```bash
 npm run dev
@@ -41,12 +41,13 @@ npm run dev
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only service role |
-| `NI_ADMIN_SECRET` | Ops password; must match cookie value |
+| `NI_ADMIN_SECRET` | Ops login password (never stored in cookies) |
+| `OPS_SESSION_SECRET` | HMAC key for signed `ni_ops_token` session cookies |
 | `NEXT_PUBLIC_APP_URL` | Canonical app URL |
 
 ## Ops auth
 
-Middleware checks the `ni_ops_token` httpOnly cookie against `NI_ADMIN_SECRET`. Login posts to `/api/ops/auth`.
+Login posts to `/api/ops/auth`. On success, middleware verifies a signed, expiring `ni_ops_token` httpOnly cookie (HMAC via `OPS_SESSION_SECRET`) — the cookie value is never the admin password. Logout: `DELETE /api/ops/auth`.
 
 ## Revenue tracker
 
