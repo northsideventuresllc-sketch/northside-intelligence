@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isCronAuthorized } from "@/lib/infra/cron-auth";
 import {
   CJ_PAGES_PER_DAILY_RUN,
   syncCjCatalogBatch,
@@ -12,10 +13,7 @@ export const maxDuration = 300;
 export async function GET(req: NextRequest) {
   await ensureStoreEnv();
 
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET?.trim();
-
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
