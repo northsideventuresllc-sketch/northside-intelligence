@@ -1,10 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { OPS_COOKIE, verifyOpsSessionToken } from "@/lib/ops/session";
 import { portalSignInUrl } from "@/lib/replyflow/auth";
 import { updateSession } from "@/lib/supabase/middleware";
 import { supabaseCookieOptions } from "@/lib/supabase/cookie-domain";
-
-const OPS_COOKIE = "ni_ops_token";
 const PUBLIC_OPS_PATHS = ["/ops/login", "/api/ops/auth"];
 
 /** Portal routes that must not be rewritten on tool subdomains. */
@@ -200,10 +199,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    const adminSecret = process.env.NI_ADMIN_SECRET;
     const token = request.cookies.get(OPS_COOKIE)?.value;
+    const sessionValid = await verifyOpsSessionToken(token);
 
-    if (!adminSecret || token !== adminSecret) {
+    if (!sessionValid) {
       const loginUrl = new URL("/ops/login", request.url);
       loginUrl.searchParams.set("from", pathname);
       return NextResponse.redirect(loginUrl);

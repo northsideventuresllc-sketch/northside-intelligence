@@ -32,7 +32,7 @@ export const NI_PORTAL_REQUIRED_KEYS = [
 ] as const;
 
 /** Required for /ops — not hydrated from vault today. */
-export const NI_PORTAL_VERCEL_ONLY_KEYS = ["NI_ADMIN_SECRET"] as const;
+export const NI_PORTAL_VERCEL_ONLY_KEYS = ["NI_ADMIN_SECRET", "OPS_SESSION_SECRET"] as const;
 
 /** Vault key that satisfies a required env name when names differ. */
 export const VAULT_KEY_ALIASES: Record<string, string[]> = {
@@ -122,7 +122,7 @@ export function auditVercelEnvCoverage(input: {
       gaps.push({
         key,
         severity: "error",
-        detail: "missing from Vercel — /ops login and auth encryption require NI_ADMIN_SECRET on the project",
+        detail: "missing from Vercel — /ops login requires NI_ADMIN_SECRET and OPS_SESSION_SECRET on the project",
       });
     }
   }

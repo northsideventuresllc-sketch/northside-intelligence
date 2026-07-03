@@ -32,7 +32,7 @@ npm run audit:vercel-env
 Compares production env on the `northside-intelligence` Vercel project against `vercel.json` and `ni_platform_secrets`. Fails when:
 
 - `CRON_SECRET` is vault-only (Vercel Cron needs it on the project)
-- `NI_ADMIN_SECRET` is missing everywhere
+- `NI_ADMIN_SECRET` or `OPS_SESSION_SECRET` is missing everywhere
 - Any key in `NI_PORTAL_REQUIRED_KEYS` is missing from all three sources
 
 `VERCEL_TOKEN` is read from env or `ni_platform_secrets` when running locally.
