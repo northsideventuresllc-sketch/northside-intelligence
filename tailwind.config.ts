@@ -4,7 +4,7 @@ const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/axon-ui/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -25,6 +25,20 @@ const config: Config = {
           violet: "#a78bfa",
           mint: "#5eead4",
           muted: "#9d8bb8",
+        },
+        axon: {
+          bg: "#050b16",
+          surface: "#0a1424",
+          elevated: "#101e33",
+          border: "#1e3a5f",
+          muted: "#7a8fa8",
+          text: "#e8f0fa",
+          gold: "#c9a962",
+          "blue-glow": "#60a5fa",
+          blue: "#2563eb",
+          cyan: "#22d3ee",
+          danger: "#f07178",
+          success: "#34d399",
         },
       },
       fontFamily: {

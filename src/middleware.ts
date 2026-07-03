@@ -12,6 +12,7 @@ const PORTAL_PATH_PREFIXES = [
   "/toolkit",
   "/account",
   "/admin",
+  "/axon",
   "/auth",
   "/tools",
   "/store",
@@ -136,6 +137,15 @@ async function guardReplyFlowDashboard(request: NextRequest): Promise<NextRespon
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  const axonPublicMatch = pathname.match(/^\/axon-([a-z0-9_]+)(\/.*)?$/i);
+  if (axonPublicMatch && !pathname.includes("/api/")) {
+    const username = axonPublicMatch[1]!.toLowerCase();
+    const rest = axonPublicMatch[2] ?? "";
+    const url = request.nextUrl.clone();
+    url.pathname = `/axon/u/${username}${rest}`;
+    return NextResponse.rewrite(url);
+  }
 
   const faviconRewrite = rewriteReplyFlowFavicon(request);
   if (faviconRewrite) return faviconRewrite;

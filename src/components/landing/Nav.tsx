@@ -4,21 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
+import { axonPublicPath } from "@/lib/axon/paths";
 
 export function Nav() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMasterAccount, setIsMasterAccount] = useState(false);
+  const [portalUsername, setPortalUsername] = useState<string | null>(null);
 
   const refreshAuth = useCallback(() => {
     let cancelled = false;
     fetch("/api/auth/me")
       .then((res) => res.json())
-      .then((data: { user?: unknown; isMasterAccount?: boolean }) => {
+      .then((data: { user?: { username?: string | null }; isMasterAccount?: boolean }) => {
         if (!cancelled) {
           setIsLoggedIn(!!data.user);
           setIsMasterAccount(data.isMasterAccount === true);
+          setPortalUsername(data.user?.username?.trim().toLowerCase() ?? null);
         }
       })
       .catch(() => {
@@ -73,13 +75,21 @@ export function Nav() {
               >
                 Services
               </Link>
-              {isMasterAccount && (
-                <Link
-                  href="/admin"
-                  className="text-sm text-ni-muted transition hover:text-cyan-300"
-                >
-                  Admin Dashboard
-                </Link>
+              {isMasterAccount && portalUsername && (
+                <>
+                  <Link
+                    href={axonPublicPath(portalUsername)}
+                    className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+                  >
+                    AXON
+                  </Link>
+                  <Link
+                    href="/admin"
+                    className="text-sm text-ni-muted transition hover:text-cyan-300"
+                  >
+                    Admin Dashboard
+                  </Link>
+                </>
               )}
               <AccountMenuDropdown />
             </>
