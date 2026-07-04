@@ -109,6 +109,23 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
       (value) => !value?.trim()
     );
     if (serpApi) process.env.SERPAPI_API_KEY = serpApi;
+
+    const turnstileSiteKey = "NEXT_PUBLIC_TURNSTILE_SITE_KEY" as const;
+    const turnstileSite = await resolvePlatformSecret(
+      turnstileSiteKey,
+      process.env[turnstileSiteKey],
+      (value) => !value?.trim()
+    );
+    if (turnstileSite) {
+      process.env[turnstileSiteKey] = turnstileSite;
+    }
+
+    const turnstileSecret = await resolvePlatformSecret(
+      "TURNSTILE_SECRET_KEY",
+      process.env.TURNSTILE_SECRET_KEY,
+      (value) => !value?.trim()
+    );
+    if (turnstileSecret) process.env.TURNSTILE_SECRET_KEY = turnstileSecret;
   })();
 
   return hydratePromise;
