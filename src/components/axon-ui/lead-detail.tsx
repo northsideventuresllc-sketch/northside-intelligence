@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import type { LeadWithMeta } from '@/lib/types';
+import type { LeadWithMeta } from '@/lib/axon/types';
 import { StatusBadge } from './status-badge';
 
 async function postAction(url: string) {

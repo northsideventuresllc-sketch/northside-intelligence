@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getUserBillingState, userHasToolAccess } from "@/lib/billing/entitlements";
+import { getUserBillingState, userCanUseTool } from "@/lib/billing/entitlements";
 import {
   generateAxonAccessCode,
   hashAxonAccessCode,
@@ -33,7 +33,7 @@ function mapRow(row: Record<string, unknown>): AxonAccessRow {
 export async function canAccessAxon(userId: string): Promise<boolean> {
   const state = await getUserBillingState(userId);
   if (state.isMasterAccount) return true;
-  if (await userHasToolAccess(userId, AXON_TOOL_SLUG)) return true;
+  if (userCanUseTool(state, AXON_TOOL_SLUG)) return true;
   return false;
 }
 

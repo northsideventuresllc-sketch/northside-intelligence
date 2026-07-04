@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { LeadWithMeta } from '@/lib/types';
+import type { LeadWithMeta } from '@/lib/axon/types';
 import { StatusBadge } from './status-badge';
 
 export function LeadCard({ lead }: { lead: LeadWithMeta }) {

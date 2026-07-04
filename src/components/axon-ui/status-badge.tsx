@@ -1,5 +1,5 @@
-import type { LeadStatus } from '@/lib/types';
-import { STATUS_LABELS } from '@/lib/types';
+import type { LeadStatus } from '@/lib/axon/types';
+import { STATUS_LABELS } from '@/lib/axon/types';
 
 const STYLES: Record<string, string> = {
   pending_approval: 'bg-axon-gold/15 text-axon-gold border-axon-gold/30',

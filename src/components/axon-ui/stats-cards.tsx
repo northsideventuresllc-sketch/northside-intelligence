@@ -1,4 +1,4 @@
-import type { PipelineStats } from '@/lib/types';
+import type { PipelineStats } from '@/lib/axon/types';
 
 export function StatsCards({ stats }: { stats: PipelineStats }) {
   const cards = [
