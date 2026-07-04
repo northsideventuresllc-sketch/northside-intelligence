@@ -44,6 +44,8 @@ function buildMakePayload(
       sourceProductId: item.sourceProductId,
       cjProductId: item.sourcePlatform === "cj" ? item.sourceProductId : null,
       variantId: item.variantId,
+      cjVariantId: item.variantId,
+      cj_variant_id: item.variantId,
       quantity: item.quantity,
       unitPriceCents: item.unitPriceCents,
       shippingTier: item.shippingTier,

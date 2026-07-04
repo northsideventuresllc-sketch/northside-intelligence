@@ -18,6 +18,8 @@ export interface MakeStoreOrderPayload {
     quantity: number;
     unitPriceCents: number;
     variantId: string | null;
+    cjVariantId?: string | null;
+    cj_variant_id?: string | null;
     shippingTier?: string;
   }>;
 }

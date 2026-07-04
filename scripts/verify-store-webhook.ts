@@ -77,6 +77,22 @@ if (parsed.ok) {
   assert(parsed.userId === null, "empty userId becomes null");
   assert(parsed.items.length === 1, "one cart line");
   assert(parsed.shippingChargedCents === 350, "shipping charged parsed");
+  assert(parsed.items[0]?.quantity === 1, "quantity preserved");
+}
+
+const snakeCaseVariant = parseStoreCheckoutMetadata(
+  makeSession({
+    storeCheckout: "true",
+    catalogCheckout: "true",
+    itemsJson: JSON.stringify([
+      { slug: "test-product", quantity: 2, shippingTier: "standard", cj_variant_id: "cj-variant-1" },
+    ]),
+  })
+);
+assert(snakeCaseVariant.ok, "snake_case CJ variant metadata parses");
+if (snakeCaseVariant.ok) {
+  assert(snakeCaseVariant.items[0]?.variantId === "cj-variant-1", "snake_case CJ variant normalized");
+  assert(snakeCaseVariant.items[0]?.quantity === 2, "snake_case item quantity preserved");
 }
 
 const skipped = parseStoreCheckoutMetadata(
