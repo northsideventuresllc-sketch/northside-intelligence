@@ -4,14 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 import { NotificationsDropdown } from "@/components/notifications/NotificationsDropdown";
+import { axonPublicPath } from "@/lib/axon/paths";
 
 interface NavProps {
   isLoggedIn: boolean;
   isMasterAccount: boolean;
   unreadNotificationCount?: number;
+  portalUsername?: string | null;
 }
 
-export function Nav({ isLoggedIn, isMasterAccount, unreadNotificationCount = 0 }: NavProps) {
+export function Nav({
+  isLoggedIn,
+  isMasterAccount,
+  unreadNotificationCount = 0,
+  portalUsername = null,
+}: NavProps) {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-cyan-500/10 bg-ni-bg/70 shadow-[0_4px_30px_rgba(0,0,0,0.3),inset_0_-1px_0_rgba(0,212,255,0.1)] backdrop-blur-xl">
       <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
@@ -51,13 +58,21 @@ export function Nav({ isLoggedIn, isMasterAccount, unreadNotificationCount = 0 }
               >
                 Services
               </Link>
-              {isMasterAccount && (
-                <Link
-                  href="/admin"
-                  className="text-sm text-ni-muted transition hover:text-cyan-300"
-                >
-                  Admin Dashboard
-                </Link>
+              {isMasterAccount && portalUsername && (
+                <>
+                  <Link
+                    href={axonPublicPath(portalUsername)}
+                    className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+                  >
+                    AXON
+                  </Link>
+                  <Link
+                    href="/admin"
+                    className="text-sm text-ni-muted transition hover:text-cyan-300"
+                  >
+                    Admin Dashboard
+                  </Link>
+                </>
               )}
               <Link
                 href="/promos"

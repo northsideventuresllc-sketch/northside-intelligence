@@ -14,11 +14,21 @@ import {
   resolveToolCheckoutFromPriceId,
 } from "@/lib/billing/stripe";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
+import { AXON_TOOL_SLUG, provisionAxonAccessOnPurchase } from "@/lib/axon/access";
 import { createNotification } from "@/lib/notifications/service";
 import { recordPromoConversion } from "@/lib/promos/email-campaigns";
 import { sendServiceInvoiceEmail } from "@/lib/resend";
 import { getServiceBySlug } from "@/lib/services/offerings";
 import { createServiceClient } from "@/lib/supabase/server";
+
+async function maybeProvisionAxonAccess(
+  userId: string,
+  toolSlug: string,
+  customerEmail: string | null
+): Promise<void> {
+  if (toolSlug !== AXON_TOOL_SLUG || !customerEmail) return;
+  await provisionAxonAccessOnPurchase(userId, customerEmail);
+}
 
 async function loadAllToolPricing() {
   const supabase = createServiceClient();
@@ -86,6 +96,11 @@ export async function POST(req: NextRequest) {
             toolSlug: session.metadata.toolSlug,
             accessType: "lifetime",
           });
+          await maybeProvisionAxonAccess(
+            userId,
+            session.metadata.toolSlug,
+            session.customer_details?.email ?? session.customer_email
+          );
           break;
         }
 
@@ -115,6 +130,11 @@ export async function POST(req: NextRequest) {
             expiresAt: periodEndIso(sub),
             stripeSubscriptionId: session.subscription as string,
           });
+          await maybeProvisionAxonAccess(
+            userId,
+            session.metadata.toolSlug,
+            session.customer_details?.email ?? session.customer_email
+          );
           break;
         }
 

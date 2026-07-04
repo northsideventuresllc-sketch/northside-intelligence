@@ -1,0 +1,39 @@
+.axon-grid-bg {
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.axon-glow {
+  box-shadow:
+    0 0 40px rgba(37, 99, 235, 0.14),
+    0 8px 32px rgba(99, 102, 241, 0.18);
+}
+
+.axon-glass {
+  background: linear-gradient(
+    145deg,
+    rgba(16, 30, 51, 0.88) 0%,
+    rgba(10, 20, 36, 0.78) 55%,
+    rgba(67, 56, 202, 0.08) 100%
+  );
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(96, 165, 250, 0.14);
+}
+
+.axon-card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+}
+
+.axon-gradient-text {
+  background: linear-gradient(135deg, #e8f0fa 0%, #60a5fa 45%, #818cf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.axon-gradient-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%);
+}
