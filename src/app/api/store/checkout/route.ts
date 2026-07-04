@@ -221,6 +221,8 @@ export async function POST(req: NextRequest) {
             quantity: item.quantity,
             shippingTier: item.shippingTier,
             variantId: item.variantId,
+            cjVariantId: item.variantId,
+            cj_variant_id: item.variantId,
           }))
         ),
       },

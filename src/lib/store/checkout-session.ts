@@ -16,6 +16,8 @@ export interface StoreCheckoutCartItem {
   quantity: number;
   shippingTier: ShippingTier;
   variantId?: string | null;
+  cjVariantId?: string | null;
+  cj_variant_id?: string | null;
 }
 
 export type StoreCheckoutSkipReason =
@@ -36,6 +38,10 @@ export function isCatalogCheckoutSession(session: Stripe.Checkout.Session): bool
   return session.metadata?.catalogCheckout === "true";
 }
 
+function resolveStoreCheckoutVariantId(item: StoreCheckoutCartItem): string | null {
+  return item.variantId?.trim() || item.cjVariantId?.trim() || item.cj_variant_id?.trim() || null;
+}
+
 export function parseStoreCheckoutMetadata(
   session: Stripe.Checkout.Session
 ): StoreCheckoutParseResult {
@@ -54,8 +60,24 @@ export function parseStoreCheckoutMetadata(
 
   let parsedItems: StoreCheckoutCartItem[];
   try {
-    parsedItems = JSON.parse(itemsJson) as StoreCheckoutCartItem[];
-    if (!Array.isArray(parsedItems) || parsedItems.length === 0) {
+    const rawItems = JSON.parse(itemsJson) as StoreCheckoutCartItem[];
+    if (!Array.isArray(rawItems) || rawItems.length === 0) {
+      return { ok: false, reason: "invalid_cart_metadata" };
+    }
+    parsedItems = rawItems
+      .map<StoreCheckoutCartItem | null>((item) => {
+        if (!item || typeof item !== "object" || typeof item.slug !== "string") return null;
+        const slug = item.slug.trim();
+        if (!slug) return null;
+        return {
+          slug,
+          quantity: Math.max(1, Math.min(10, Number(item.quantity) || 1)),
+          shippingTier: item.shippingTier === "expedited" ? "expedited" : "standard",
+          variantId: resolveStoreCheckoutVariantId(item),
+        };
+      })
+      .filter((item): item is StoreCheckoutCartItem => item !== null);
+    if (parsedItems.length === 0) {
       return { ok: false, reason: "invalid_cart_metadata" };
     }
   } catch {
