@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Footer } from "@/components/landing/Footer";
-import { NavServer } from "@/components/landing/NavServer";
-import { AxonGateClient } from "@/components/axon/AxonGateClient";
-import { canAccessAxon } from "@/lib/axon/access";
+import { canEnterAxonPortal } from "@/lib/axon/access";
+import { axonPublicPath } from "@/lib/axon/paths";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 export const metadata: Metadata = {
@@ -24,32 +22,21 @@ export default async function AxonUserEntryPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect(`/auth/signin?next=/axon-${username}`);
+  if (!user) redirect("/axon");
 
   const { data: profile } = await supabase
     .from("ni_portal_profiles")
-    .select("username, is_master_account")
+    .select("username")
     .eq("id", user.id)
     .maybeSingle();
 
   const portalUsername = profile?.username?.trim().toLowerCase() ?? "";
   if (portalUsername !== username) {
-    redirect("/toolkit");
+    redirect("/axon");
   }
 
-  const allowed = await canAccessAxon(user.id);
-  if (!allowed) redirect("/toolkit");
+  const allowed = await canEnterAxonPortal(user.id);
+  if (!allowed) redirect("/axon");
 
-  return (
-    <main className="min-h-screen bg-ni-bg">
-      <NavServer />
-      <section className="relative px-6 pb-20 pt-24">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,212,255,0.08),transparent_55%)]" />
-        <div className="relative mx-auto max-w-4xl">
-          <AxonGateClient username={username} />
-        </div>
-      </section>
-      <Footer />
-    </main>
-  );
+  redirect(`/api/axon/bootstrap?username=${encodeURIComponent(username)}`);
 }

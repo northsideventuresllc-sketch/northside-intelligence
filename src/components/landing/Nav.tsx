@@ -61,7 +61,7 @@ export function Nav({
               {isMasterAccount && portalUsername && (
                 <>
                   <Link
-                    href={axonPublicPath(portalUsername)}
+                    href={axonPublicPath(portalUsername, "/dashboard")}
                     className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
                   >
                     AXON

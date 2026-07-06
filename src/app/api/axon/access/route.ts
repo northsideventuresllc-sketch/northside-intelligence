@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { canAccessAxon, ensureMasterAxonAccess } from "@/lib/axon/access";
+import { canEnterAxonPortal, ensureMasterAxonAccess } from "@/lib/axon/access";
 import { readAxonSessionFromRequest } from "@/lib/axon/session";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
 
-  const allowed = await canAccessAxon(user.id);
+  const allowed = await canEnterAxonPortal(user.id);
   if (!allowed) {
     return NextResponse.json({ error: "AXON is not available for this account." }, { status: 403 });
   }
