@@ -21,7 +21,7 @@ Failures prepend **🚨 URGENT** to `docs/session-log.md`. The GitHub Actions wo
 - `SUPABASE_SERVICE_KEY` (or `SUPABASE_SERVICE_ROLE_KEY`)
 - `VERCEL_TOKEN`
 - `ANTHROPIC_API_KEY`
-- `SUPABASE_URL` — arm3 table queries
+- `SUPABASE_URL` — optional for arm3 cron (hardcoded in `arm3-pipeline.yml`); still used by infra-health-check
 
 ## Vercel env audit
 
