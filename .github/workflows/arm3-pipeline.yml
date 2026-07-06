@@ -6,10 +6,26 @@ on:
     - cron: "0 14 * * 1,3,5"
   workflow_dispatch:
 
+env:
+  # Public NI-Brain project URL (also in vercel.json / src/lib/axon/constants.mjs)
+  SUPABASE_URL: https://kxijunwgbrlfzvgkhklo.supabase.co
+  # infra-health-check accepts either name; coalesce here for arm3 cron.
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_KEY }}
+
 jobs:
   generate-tool:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate required secrets
+        run: |
+          set -euo pipefail
+          if [[ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+            echo "::error::GitHub secret SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) is not set."
+            echo "Fix: on Mac, run scripts/set-sector3-secrets.sh (pulls from ni_platform_secrets)."
+            echo "See docs/infra-health-check.md — Required GitHub Actions secrets."
+            exit 1
+          fi
+
       - name: Trigger Supabase Edge Function — generate-tool
         id: generate
         run: |
@@ -28,9 +44,6 @@ jobs:
           if [[ "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
             exit 1
           fi
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Log pipeline result to arm3_weekly_logs
         if: success()
@@ -50,6 +63,3 @@ jobs:
                 summary: "ARM3 pipeline cron completed",
                 detail: { status: "cron_success", run_date: $run_date, source: "github_actions" }
               }')"
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
