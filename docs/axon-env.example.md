@@ -25,10 +25,11 @@ Set on Vercel project `northside-intelligence` (Production + Preview).
 
 ## URLs
 
-- Public entry: `https://northsideintelligence.com/axon-{username}`
-- Example: `https://northsideintelligence.com/axon-jonnybooth22`
+- Waitlist (pre-launch): `https://northsideintelligence.com/axon`
+- Master portal entry: `https://northsideintelligence.com/axon-{username}/dashboard`
+- Example: `https://northsideintelligence.com/axon-jonnybooth22/dashboard`
 
-Username comes from `ni_portal_profiles.username`.
+Non-master users and anonymous visitors are routed to the waitlist until launch.
 
 ## Database
 

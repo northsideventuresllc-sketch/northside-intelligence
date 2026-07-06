@@ -7,7 +7,7 @@ import { AxonAmbientBg } from "@/components/axon-ui/axon-ambient-bg";
 import { AxonInterface } from "@/components/axon-ui/axon-interface";
 import { Sidebar } from "@/components/axon-ui/sidebar";
 import { ToolPanel } from "@/components/axon-ui/tool-panel";
-import { canAccessAxon } from "@/lib/axon/access";
+import { canEnterAxonPortal } from "@/lib/axon/access";
 import { fetchChatHistory, getOperatorProfile } from "@/lib/axon/axon-profile";
 import { AXON_TOOLS } from "@/lib/axon/axon-types";
 import { getWorkspace } from "@/lib/axon/axon-workspace";
@@ -46,14 +46,14 @@ export default async function AxonUserDashboardPage({
     .maybeSingle();
 
   const portalUsername = profile?.username?.trim().toLowerCase() ?? "";
-  if (portalUsername !== username) redirect("/toolkit");
+  if (portalUsername !== username) redirect("/axon");
 
-  const allowed = await canAccessAxon(user.id);
-  if (!allowed) redirect("/toolkit");
+  const allowed = await canEnterAxonPortal(user.id);
+  if (!allowed) redirect("/axon");
 
   const sessionToken = cookies().get(AXON_SESSION_COOKIE)?.value;
   if (!readAxonSessionFromCookieValue(sessionToken, user.id)) {
-    redirect(axonPublicPath(username));
+    redirect(`/api/axon/bootstrap?username=${encodeURIComponent(username)}`);
   }
 
   const operatorId = username;

@@ -37,6 +37,12 @@ export async function canAccessAxon(userId: string): Promise<boolean> {
   return false;
 }
 
+/** Pre-launch portal entry — master account only; everyone else uses the waitlist. */
+export async function canEnterAxonPortal(userId: string): Promise<boolean> {
+  const state = await getUserBillingState(userId);
+  return state.isMasterAccount;
+}
+
 export async function getAxonAccessRow(userId: string): Promise<AxonAccessRow | null> {
   const supabase = createServiceClient();
   const { data, error } = await supabase

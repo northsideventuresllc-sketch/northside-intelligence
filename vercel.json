@@ -36,15 +36,5 @@
     "NEXT_PUBLIC_REPLYFLOW_URL": "https://northsideintelligence.com/replyflow",
     "NEXT_PUBLIC_AUTH_COOKIE_DOMAIN": ".northsideintelligence.com",
     "NI_AUTH_GATEWAY_SECRET": "5d5661891e77f9e5b1e9f4c7d1b864e63bca8c91"
-  },
-  "rewrites": [
-    {
-      "source": "/axon",
-      "destination": "https://workspace-git-main-northsideventuresllc-sketchs-projects.vercel.app/axon"
-    },
-    {
-      "source": "/axon/:path*",
-      "destination": "https://workspace-git-main-northsideventuresllc-sketchs-projects.vercel.app/axon/:path*"
-    }
-  ]
+  }
 }
