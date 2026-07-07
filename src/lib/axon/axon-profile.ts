@@ -10,12 +10,7 @@ import {
 } from './axon-types';
 
 function getSupabaseKey() {
-  return (
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NI_BRAIN_SERVICE_ROLE_KEY ||
-    ""
-  );
+  return process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 }
 
 function client() {
@@ -31,23 +26,11 @@ export async function getOperatorProfile(operatorId = OPERATOR_ID): Promise<Oper
 
   if (rows?.[0]) return rows[0];
 
-  try {
-    const created = (await sbInsert('axon_operator_profiles', {
-      operator_id: operatorId,
-      tone_preset: DEFAULT_TONE_PRESET,
-    })) as OperatorProfile;
-    return created;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!message.includes('23505') && !message.includes('409')) throw error;
-
-    const existing = (await sbSelect(
-      'axon_operator_profiles',
-      `operator_id=eq.${operatorId}&select=*&limit=1`
-    )) as OperatorProfile[];
-    if (existing?.[0]) return existing[0];
-    throw error;
-  }
+  const created = (await sbInsert('axon_operator_profiles', {
+    operator_id: operatorId,
+    tone_preset: DEFAULT_TONE_PRESET,
+  })) as OperatorProfile;
+  return created;
 }
 
 export async function updateOperatorProfile(

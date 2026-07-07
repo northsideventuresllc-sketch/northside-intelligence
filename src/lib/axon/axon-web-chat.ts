@@ -49,17 +49,18 @@ function extractJson(text: string) {
 export async function generateAxonReply(
   userMessage: string,
   channel: 'chat' | 'voice',
-  history: ChatMessage[]
+  history: ChatMessage[],
+  operatorId = 'default'
 ) {
   const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const { sbSelect } = createSupabaseClient(key);
   const cfg = await loadConfig(sbSelect);
 
   const [profile, signals, memories, workspace] = await Promise.all([
-    getOperatorProfile(),
-    fetchTopSignals(),
-    fetchMemories(undefined, 15),
-    getWorkspace(),
+    getOperatorProfile(operatorId),
+    fetchTopSignals(operatorId),
+    fetchMemories(operatorId, 15),
+    getWorkspace(operatorId),
   ]);
 
   const toneBlock = buildToneInstructions(profile.tone_preset, signals);
@@ -93,12 +94,14 @@ Brand: Northside Intelligence / NORTHSiDE (exact casing when using the brand nam
   ]);
 
   const userMsg = await insertChatMessage({
+    operator_id: operatorId,
     role: 'user',
     content: userMessage,
     channel,
   });
 
   const assistantMsg = await insertChatMessage({
+    operator_id: operatorId,
     role: 'assistant',
     content: reply,
     channel,
@@ -114,7 +117,8 @@ Brand: Northside Intelligence / NORTHSiDE (exact casing when using the brand nam
         userMessage,
         reply,
         profile.tone_preset,
-        workspace
+        workspace,
+        operatorId
       )) ?? workspace;
   } catch (err) {
     console.error(err);
@@ -128,7 +132,8 @@ async function analyzeAndLearn(
   userMessage: string,
   assistantReply: string,
   currentPreset: TonePreset,
-  currentWorkspace: Awaited<ReturnType<typeof getWorkspace>>
+  currentWorkspace: Awaited<ReturnType<typeof getWorkspace>>,
+  operatorId = 'default'
 ) {
   const system = `You analyze operator↔AXON conversations to extract communication learnings and workspace updates. Return JSON only.
 
@@ -182,6 +187,7 @@ Return JSON:
   for (const sig of parsed.signals || []) {
     if (!sig.signal_key || !sig.signal_value) continue;
     await upsertSignal({
+      operator_id: operatorId,
       signal_type: sig.signal_type,
       signal_key: sig.signal_key,
       signal_value: sig.signal_value,
@@ -192,6 +198,7 @@ Return JSON:
   for (const mem of parsed.memories || []) {
     if (!mem.content) continue;
     await insertMemory({
+      operator_id: operatorId,
       content: mem.content,
       memory_type: mem.memory_type,
       confidence: mem.confidence,
@@ -201,19 +208,22 @@ Return JSON:
   let workspace = currentWorkspace;
 
   if (parsed.briefing_updates?.length) {
-    workspace = await applyBriefingUpdates(parsed.briefing_updates);
+    workspace = await applyBriefingUpdates(parsed.briefing_updates, operatorId);
   }
 
   if (parsed.todo_updates?.length) {
-    workspace = await applyTodoUpdates(parsed.todo_updates);
+    workspace = await applyTodoUpdates(parsed.todo_updates, operatorId);
   }
 
   const flags = parsed.workspace_flags;
   if (flags && (flags.briefing_autonomous !== undefined || flags.todos_autonomous !== undefined)) {
-    workspace = await setWorkspaceFlags({
-      briefing_autonomous: flags.briefing_autonomous,
-      todos_autonomous: flags.todos_autonomous,
-    });
+    workspace = await setWorkspaceFlags(
+      {
+        briefing_autonomous: flags.briefing_autonomous,
+        todos_autonomous: flags.todos_autonomous,
+      },
+      operatorId
+    );
   }
 
   const adj = parsed.tone_adjustments;
@@ -240,7 +250,7 @@ Return JSON:
       next.avoid_phrases = [...next.avoid_phrases!.slice(-9), adj.avoid_phrase];
     }
 
-    await updateOperatorProfile('default', { tone_preset: next });
+    await updateOperatorProfile(operatorId, { tone_preset: next });
   }
 
   return workspace;

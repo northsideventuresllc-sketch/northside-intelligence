@@ -7,6 +7,9 @@ interface BriefingPanelProps {
   items: BriefingItem[];
   autonomous: boolean;
   onRefresh: () => void;
+  onTitleClick?: () => void;
+  compact?: boolean;
+  className?: string;
 }
 
 const PRIORITY_STYLES = {
@@ -15,7 +18,7 @@ const PRIORITY_STYLES = {
   low: 'border border-axon-border bg-axon-elevated/60 text-axon-muted',
 };
 
-export function BriefingPanel({ items, autonomous, onRefresh }: BriefingPanelProps) {
+export function BriefingPanel({ items, autonomous, onRefresh, onTitleClick, compact, className = '' }: BriefingPanelProps) {
   async function dismiss(id: string) {
     await fetch(apiUrl('/api/axon/workspace'), {
       method: 'PATCH',
@@ -26,10 +29,16 @@ export function BriefingPanel({ items, autonomous, onRefresh }: BriefingPanelPro
   }
 
   return (
-    <section className="axon-card-3d axon-glass flex flex-col rounded-2xl overflow-hidden">
-      <header className="border-b border-axon-border/60 px-4 py-3">
+    <section className={`axon-card-3d axon-glass flex flex-col rounded-2xl overflow-hidden h-full ${className}`}>
+      <header className="border-b border-axon-border/60 px-5 py-4">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-axon-blue-glow">Briefing</h2>
+          <button
+            type="button"
+            onClick={onTitleClick}
+            className={`text-left text-xs uppercase tracking-[0.2em] text-axon-blue-glow transition hover:text-axon-cyan ${onTitleClick ? 'cursor-pointer hover:underline' : ''}`}
+          >
+            Briefing
+          </button>
           {autonomous && (
             <span className="rounded-full bg-axon-blue/20 px-2 py-0.5 text-[10px] text-axon-cyan animate-pulse-glow">
               Autonomous
@@ -41,7 +50,7 @@ export function BriefingPanel({ items, autonomous, onRefresh }: BriefingPanelPro
         </p>
       </header>
 
-      <div className="flex-1 space-y-2 overflow-y-auto p-3 max-h-[280px]">
+      <div className={`flex-1 min-h-0 space-y-3 overflow-y-auto p-4 md:p-5 ${compact ? 'max-h-[280px]' : ''}`}>
         {items.length === 0 ? (
           <EmptyState
             icon="◈"
@@ -51,7 +60,7 @@ export function BriefingPanel({ items, autonomous, onRefresh }: BriefingPanelPro
           items.map((item, i) => (
             <article
               key={item.id}
-              className="group rounded-xl border border-axon-border/50 bg-axon-elevated/40 p-3 transition hover:border-axon-blue/40"
+              className="group rounded-xl border border-axon-border/50 bg-axon-elevated/40 p-4 transition hover:border-axon-blue/40"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div className="flex items-start justify-between gap-2">
