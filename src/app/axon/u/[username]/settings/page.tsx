@@ -1,4 +1,4 @@
-import { AxonChangeCodeForm } from '@/components/axon/AxonChangeCodeForm';
+import { AxonChangeCodeForm } from '@/components/axon-ui/AxonChangeCodeForm';
 import { AxonHomeSettings } from '@/components/axon-ui/axon-home-settings';
 import { AxonNotificationSettings } from '@/components/axon-ui/axon-notification-settings';
 import { AxonResetSettings } from '@/components/axon-ui/axon-reset-settings';
