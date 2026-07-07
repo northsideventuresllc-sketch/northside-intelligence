@@ -174,7 +174,7 @@ export async function generateSlotWithQualityGate(
     if (attempt <= MAX_REGEN_ATTEMPTS) {
       await logSignal({
         brandSlug: input.brandSlug,
-        signalType: "REGEN",
+        signalType: "REGENERATED",
         meta: { failures: gate.failures, attempt, ...input },
       });
     }

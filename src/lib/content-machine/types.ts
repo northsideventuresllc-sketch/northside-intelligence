@@ -13,7 +13,7 @@ export type SignalType =
   | "EDIT"
   | "APPROVE"
   | "REJECT"
-  | "REGEN"
+  | "REGENERATED"
   | "POSTED"
   | "METRICS";
 
