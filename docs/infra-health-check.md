@@ -17,11 +17,12 @@ Failures prepend **🚨 URGENT** to `docs/session-log.md`. The GitHub Actions wo
 
 ## Required GitHub Actions secrets
 
+- `CRON_SECRET` — arm3 cron (Bearer to `/api/cron/generate-tool`; hydrated from `ni_platform_secrets`)
 - `GH_PAT` — push urgent session-log commits
 - `SUPABASE_SERVICE_KEY` (or `SUPABASE_SERVICE_ROLE_KEY`)
 - `VERCEL_TOKEN`
 - `ANTHROPIC_API_KEY`
-- `SUPABASE_URL` — optional for arm3 cron (hardcoded in `arm3-pipeline.yml`); still used by infra-health-check
+- `SUPABASE_URL` — optional for arm3 cron (hardcoded in `arm3-pipeline.yml`); used by infra-health-check
 
 ## Vercel env audit
 

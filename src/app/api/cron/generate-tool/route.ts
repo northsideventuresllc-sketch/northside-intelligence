@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
-import { isCronAuthorized } from "@/lib/infra/cron-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { isCronAuthorizedAsync } from "@/lib/infra/cron-auth";
 import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   await hydratePlatformEnvFromDatabase();
 
-  if (!isCronAuthorized(req)) {
+  if (!(await isCronAuthorizedAsync(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

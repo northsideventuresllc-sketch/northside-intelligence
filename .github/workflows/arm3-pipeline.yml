@@ -9,7 +9,10 @@ on:
 env:
   # Public NI-Brain project URL (also in vercel.json / src/lib/axon/constants.mjs)
   SUPABASE_URL: https://kxijunwgbrlfzvgkhklo.supabase.co
-  # infra-health-check accepts either name; coalesce here for arm3 cron.
+  NI_APP_URL: https://northsideintelligence.com
+  # Route through NI portal cron (isCronAuthorizedAsync) — edge fn compares Bearer to its own env key.
+  CRON_SECRET: ${{ secrets.CRON_SECRET }}
+  # infra-health-check + weekly log step
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_KEY }}
 
 jobs:
@@ -19,24 +22,22 @@ jobs:
       - name: Validate required secrets
         run: |
           set -euo pipefail
-          if [[ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
-            echo "::error::GitHub secret SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) is not set."
-            echo "Fix: on Mac, run scripts/set-sector3-secrets.sh (pulls from ni_platform_secrets)."
+          if [[ -z "${CRON_SECRET}" ]]; then
+            echo "::error::GitHub secret CRON_SECRET is not set."
+            echo "Fix: nv-vault push-ni-arm3-pipeline-fix.yml hydrates from ni_platform_secrets."
             echo "See docs/infra-health-check.md — Required GitHub Actions secrets."
             exit 1
           fi
 
-      - name: Trigger Supabase Edge Function — generate-tool
+      - name: Trigger ARM3 generate-tool via NI portal cron
         id: generate
         run: |
           set -euo pipefail
           response_file="$(mktemp)"
           http_code="$(
-            curl -sS -o "$response_file" -w '%{http_code}' -X POST \
-              "${SUPABASE_URL}/functions/v1/generate-tool" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Content-Type: application/json" \
-              -d '{"source":"github_actions_arm3_pipeline"}'
+            curl -sS -o "$response_file" -w '%{http_code}' -X GET \
+              "${NI_APP_URL}/api/cron/generate-tool" \
+              -H "Authorization: Bearer ${CRON_SECRET}"
           )"
           echo "HTTP ${http_code}"
           cat "$response_file"
