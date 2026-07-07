@@ -8,7 +8,7 @@ export const maxDuration = 300;
 
 /** CM7 D8 — daily 7 AM batch generation for Match Fit */
 export async function GET(req: NextRequest) {
-  if (!isCronAuthorized(req)) {
+  if (!(await isCronAuthorizedAsync(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
