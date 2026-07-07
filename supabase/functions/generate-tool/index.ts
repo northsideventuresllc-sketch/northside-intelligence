@@ -1,8 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
 import { readPlatformSecret } from "../_shared/platform-secrets.ts";
 import { logArm3Weekly } from "../_shared/arm3-weekly-log.ts";
 import { scaffoldSector3Repo } from "../_shared/github-scaffold.ts";
+import {
+  authorizeServiceRoleRequest,
+  createServiceRoleClient,
+} from "../_shared/service-role-auth.ts";
 
 interface Arm3Opportunity {
   id: number;
@@ -25,22 +28,24 @@ function deriveSlug(opportunity: Arm3Opportunity): string {
 
 Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const runDate = new Date().toISOString();
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl) {
     return new Response(
       JSON.stringify({ error: "Missing Supabase configuration" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 
-  const authHeader = req.headers.get("Authorization");
-  if (authHeader !== `Bearer ${serviceRoleKey}`) {
+  const auth = await authorizeServiceRoleRequest(
+    supabaseUrl,
+    req.headers.get("Authorization")
+  );
+  if (!auth.ok) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createServiceRoleClient(supabaseUrl, auth.token);
 
   const { data: opportunity, error: oppError } = await supabase
     .from("arm3_opportunities")

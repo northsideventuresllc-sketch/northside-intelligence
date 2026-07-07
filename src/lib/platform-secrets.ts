@@ -68,3 +68,9 @@ export async function resolvePlatformSecret(
 export function clearPlatformSecretCache(): void {
   cache.clear();
 }
+
+/** Prefer vault canonical key — Vercel env may drift from NI-Brain edge/runtime. */
+export async function resolveServiceRoleKey(): Promise<string | null> {
+  const vault = await readPlatformSecret("SUPABASE_SERVICE_ROLE_KEY");
+  return vault?.trim() || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null;
+}

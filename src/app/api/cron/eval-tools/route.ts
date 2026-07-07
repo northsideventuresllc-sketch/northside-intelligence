@@ -1,18 +1,31 @@
-import { NextResponse } from "next/server";
-import { isCronAuthorized } from "@/lib/infra/cron-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { isCronAuthorizedAsync } from "@/lib/infra/cron-auth";
 import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
+import { resolveServiceRoleKey } from "@/lib/platform-secrets";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
+async function parseEdgeFunctionResponse(res: Response, label: string) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return {
+      error: `Invalid JSON from ${label}`,
+      detail: text.slice(0, 500),
+    };
+  }
+}
+
+export async function GET(req: NextRequest) {
   await hydratePlatformEnvFromDatabase();
 
-  if (!isCronAuthorized(req)) {
+  if (!(await isCronAuthorizedAsync(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = await resolveServiceRoleKey();
 
   if (!supabaseUrl || !serviceRoleKey) {
     return NextResponse.json(
@@ -30,9 +43,7 @@ export async function GET(req: Request) {
     body: JSON.stringify({ source: "vercel_cron" }),
   });
 
-  const data: unknown = await res.json().catch(() => ({
-    error: "Invalid JSON from eval-tools",
-  }));
+  const data = await parseEdgeFunctionResponse(res, "eval-tools");
 
   if (!res.ok) {
     return NextResponse.json(data, { status: res.status });
