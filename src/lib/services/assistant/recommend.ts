@@ -122,6 +122,20 @@ const SERVICE_KEYWORDS: Record<string, string[]> = {
     "employees",
     "cohort",
   ],
+  "custom-web-design-management": [
+    "website",
+    "web design",
+    "web site",
+    "portfolio",
+    "landing page",
+    "cms",
+    "hosting",
+    "maintenance",
+    "redesign",
+    "wordpress",
+    "web presence",
+    "site management",
+  ],
 };
 
 function parsePriceRangeUsd(amount: string): { min: number; max: number } | null {

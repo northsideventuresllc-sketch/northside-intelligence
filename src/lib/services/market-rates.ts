@@ -15,12 +15,14 @@ export const SERVICE_MARKET_RATES_CENTS: Record<string, number> = {
   "workflow-integration": 880000, // ~$8,800
   "ai-governance-compliance": 1250000, // ~$12,500
   "team-intelligence-training": 480000, // ~$4,800
+  "custom-web-design-management": 1200000, // ~$12,000 avg business build
 };
 
 /** Lower market references for personal-scope engagements on dual-audience services. */
 export const SERVICE_INDIVIDUAL_MARKET_RATES_CENTS: Partial<Record<string, number>> = {
   "tailored-intelligence-server": 180000, // ~$1,800 personal build
   "intelligence-audit": 52000, // ~$520 personal audit
+  "custom-web-design-management": 120000, // ~$1,200 personal site build
 };
 
 /** Individual clients receive lower pricing — personal-use scope is narrower. */

@@ -458,6 +458,52 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
       ctaLabel: "Train My Team",
     },
   },
+  {
+    slug: "custom-web-design-management",
+    name: "Custom Web Design and Management",
+    description:
+      "Custom-designed websites with ongoing management — from personal portfolios to business sites with content updates, performance monitoring, and security.",
+    status: "LIVE",
+    audience: "both",
+    highlights: [
+      "Custom design aligned to your brand and goals",
+      "Responsive, performance-optimized builds",
+      "Content updates and ongoing site management",
+      "Hosting, security, and analytics setup",
+    ],
+    pricing: {
+      individual: {
+        model: "range",
+        amount: "$499 – $2,500",
+        note: "Personal sites & portfolios — management from $49/mo",
+      },
+      business: {
+        model: "range",
+        amount: "$2,500 – $50,000+",
+        note: "Small business from $2,500 — enterprise builds priced by scope; management from $149/mo",
+      },
+    },
+    modalCopy: {
+      subtitle: "Your site, designed and maintained.",
+      description:
+        "Whether you need a polished personal portfolio or a full business web presence, Northside Intelligence designs, builds, and manages custom websites — so you stay focused on your work, not WordPress updates.",
+      sections: [
+        {
+          heading: "Discovery & Design",
+          body: "We learn your brand, audience, and goals — then design a custom layout, information architecture, and visual system tailored to how you want to be seen online.",
+        },
+        {
+          heading: "Build & Launch",
+          body: "We develop a fast, responsive site with SEO fundamentals, analytics, and hosting configured — integrated with your CMS, forms, and third-party tools where needed.",
+        },
+        {
+          heading: "Ongoing Management",
+          body: "Content updates, security patches, performance monitoring, and backup management handled for you — with clear SLAs for small businesses and custom support plans for enterprise sites.",
+        },
+      ],
+      ctaLabel: "Start Your Request",
+    },
+  },
 ];
 
 export function getServiceBySlug(slug: string): ServiceOffering | undefined {
