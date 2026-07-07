@@ -9,7 +9,7 @@ on:
 env:
   # Public NI-Brain project URL (also in vercel.json / src/lib/axon/constants.mjs)
   SUPABASE_URL: https://kxijunwgbrlfzvgkhklo.supabase.co
-  NI_APP_URL: https://northsideintelligence.com
+  NI_APP_URL: https://www.northsideintelligence.com
   # Route through NI portal cron (isCronAuthorizedAsync) — edge fn compares Bearer to its own env key.
   CRON_SECRET: ${{ secrets.CRON_SECRET }}
   # infra-health-check + weekly log step
@@ -35,7 +35,7 @@ jobs:
           set -euo pipefail
           response_file="$(mktemp)"
           http_code="$(
-            curl -sS -o "$response_file" -w '%{http_code}' -X GET \
+            curl -sSL -o "$response_file" -w '%{http_code}' -X GET \
               "${NI_APP_URL}/api/cron/generate-tool" \
               -H "Authorization: Bearer ${CRON_SECRET}"
           )"
