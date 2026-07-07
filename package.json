@@ -23,7 +23,8 @@
     "react-dom": "^18.3.1",
     "resend": "^6.12.4",
     "stripe": "^14.25.0",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "jarvis-ai-web-animation": "^0.1.2"
   },
   "devDependencies": {
     "@types/node": "^20.17.24",
