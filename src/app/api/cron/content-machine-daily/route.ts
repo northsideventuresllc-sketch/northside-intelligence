@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isCronAuthorized } from "@/lib/infra/cron-auth";
+import { isCronAuthorizedAsync } from "@/lib/infra/cron-auth";
 import { generateDailyBatch } from "@/lib/content-machine/generator";
 import { DEFAULT_BRAND_SLUG } from "@/lib/content-machine/constants";
 
