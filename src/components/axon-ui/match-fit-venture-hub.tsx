@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { fetchMatchFitHub, MF_ADMIN_LINKS } from '@/lib/match-fit-hub';
+import { fetchMatchFitHub, MF_ADMIN_LINKS } from '@/lib/axon/match-fit-hub';
 
 const ACCENT = '#FF7E00';
 
@@ -64,7 +64,7 @@ export async function MatchFitVentureHub() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium uppercase tracking-wider text-axon-muted">
-            Today's content queue
+            Today&apos;s content queue
           </h2>
           <Link
             href={MF_ADMIN_LINKS.contentCalendar}
