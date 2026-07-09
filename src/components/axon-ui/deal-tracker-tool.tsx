@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { apiUrl } from '@/lib/axon/api-base';
+import { AxonToolFooter } from './axon-tool-footer';
 import { appPath } from '@/lib/axon/app-path';
 
 type DealLead = {
@@ -127,6 +128,7 @@ export function DealTrackerTool({ basePath }: { basePath?: string }) {
           )}
         </div>
       )}
+      <AxonToolFooter toolSlug="deal-tracker" basePath={basePath} />
     </div>
   );
 }
