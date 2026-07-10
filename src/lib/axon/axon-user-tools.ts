@@ -20,13 +20,6 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'custom',
   },
   {
-    slug: 'archived-its',
-    defaultDisplayName: 'Archived ITs',
-    href: '/tools/archived',
-    icon: '🗄',
-    sourceType: 'custom',
-  },
-  {
     slug: 'match-fit-admin',
     defaultDisplayName: 'AXON Management-Match Fit',
     href: '/tools/match-fit-admin',

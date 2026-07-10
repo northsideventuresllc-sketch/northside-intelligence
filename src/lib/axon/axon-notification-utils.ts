@@ -22,9 +22,6 @@ export function normalizeNotification(raw: Partial<AxonNotification> & Pick<Axon
     archived_at: raw.archived_at,
     resolved: raw.resolved ?? false,
     declined: raw.declined ?? false,
-    itType: raw.itType,
-    itPayload: raw.itPayload,
-    isTest: raw.isTest ?? false,
   };
 }
 

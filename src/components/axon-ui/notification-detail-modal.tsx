@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AxonNotification } from '@/lib/axon/axon-types';
 import { apiUrl } from '@/lib/axon/api-base';
-import { ItLaunchNotificationCard } from './it-launch-notification-card';
-import { ItReportNotificationCard } from './it-report-notification-card';
 
 interface NotificationChatMessage {
   role: 'user' | 'assistant';
@@ -203,10 +201,6 @@ export function NotificationDetailModal({
               )}
             </footer>
           </>
-        ) : notification.itType === 'it_launch' ? (
-          <ItLaunchNotificationCard notification={notification} onActionComplete={onClose} />
-        ) : notification.itType === 'it_report' ? (
-          <ItReportNotificationCard notification={notification} onActionComplete={onClose} />
         ) : (
           <>
             <div className="axon-notif-static-body">

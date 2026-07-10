@@ -14,16 +14,6 @@ type TestCategory = {
 
 const CATEGORIES: TestCategory[] = [
   {
-    id: 'it_notifications',
-    label: 'IT Notifications',
-    description: 'ARM3 launch review, 90-day reports, and archive revival alerts.',
-    tests: [
-      { id: 'it_launch', label: 'IT Launch Review', urgent: true, hint: 'Executive summary + Approve/Change/Deny.' },
-      { id: 'it_90_day', label: 'IT 90-Day Report', urgent: false, hint: 'KEEP/TRIAL/REMOVE lifecycle report.' },
-      { id: 'archive_revival', label: 'Archive Revival', urgent: false, hint: 'Monthly vault scan recommendation.' },
-    ],
-  },
-  {
     id: 'notifications',
     label: 'Notifications',
     description: 'Alert delivery, urgency flash, and inbox routing.',
@@ -86,29 +76,6 @@ export function TestModeTool() {
           : test.label;
 
     try {
-      if (cat.id === 'it_notifications') {
-        const fixtureMap: Record<string, import('@/lib/axon/it-notification-fixtures').ItTestFixtureKey> = {
-          it_launch: 'it_launch',
-          it_90_day: 'it_90_day',
-          archive_revival: 'archive_revival',
-        };
-        const fixture = fixtureMap[test.id];
-        if (fixture) {
-          const res = await fetch(apiUrl('/api/axon/notifications/test'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fixture }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error);
-          window.dispatchEvent(
-            new CustomEvent('axon:test-notification', { detail: { notification: data.notification } })
-          );
-          setLastResult(`Fired: ${test.label}`);
-          return;
-        }
-      }
-
       const prefsRes = await fetch(apiUrl('/api/axon/preferences'));
       const prefsData = prefsRes.ok ? await prefsRes.json() : null;
       const settings: NotificationSettings =
