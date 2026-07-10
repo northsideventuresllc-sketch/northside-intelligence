@@ -142,27 +142,129 @@ Deno.serve(async (req) => {
 
   const launchedAt = new Date().toISOString();
   const githubRepo = scaffold.repoFullName;
+  const previewUrl = `https://${slug}-preview.vercel.app`;
+
+  const executiveSummary = {
+    title: opportunity.name,
+    description: opportunity.description ?? "Sector 3 intelligence tool.",
+    targetAudience: "Small business owners and solopreneurs (B2B + B2C)",
+    subscriptionPriceUsd: 15,
+    lifetimeOfferPriceUsd: 120,
+    lifetimeOfferNote: "Limited-time permanent purchase offer at launch",
+    useCases: [
+      opportunity.market_signal ?? "Automate repetitive workflows",
+      "Save hours per week on core business tasks",
+      "Integrate with NI toolkit and AXON memory",
+    ],
+    estimatedRevenueEoyUsd: Math.round((opportunity.estimated_margin_pct ?? 80) * 50),
+    revenueAssumptions: "Conservative 100 paying subs by EOY at listed price",
+    marketingStrategy:
+      "NI content machine + founder LinkedIn + toolkit cross-sell + limited launch promo.",
+    rolloutPlan:
+      "Preview week → JB approval → portal listing → AXON tool skeleton → 90-day performance gate.",
+    competitors: ["Generic AI wrappers", "Vertical SaaS incumbents"],
+    differentiation:
+      "NI-native integration, neurodivergent-friendly UX, and AXON adaptive memory layer.",
+    previewUrl,
+  };
 
   await supabase
     .from("arm3_opportunities")
     .update({
-      launched_at: launchedAt,
       github_repo: githubRepo,
       sector3_slug: slug,
+      review_status: "pending_review",
+      preview_vercel_url: previewUrl,
+      executive_summary: executiveSummary,
     })
     .eq("id", opportunity.id);
 
   await supabase
     .from("arm3_tools")
-    .update({ status: "scaffolded" })
+    .update({ status: "scaffolded", lifecycle_phase: "preview" })
     .eq("slug", slug);
+
+  const { data: launchRow, error: launchError } = await supabase
+    .from("arm3_it_launch_notifications")
+    .insert({
+      opportunity_id: opportunity.id,
+      tool_slug: slug,
+      payload: executiveSummary,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+
+  if (launchError) {
+    console.error("arm3_it_launch_notifications insert failed", launchError);
+  }
+
+  const launchId = launchRow?.id ? String(launchRow.id) : `preview-${slug}`;
+
+  const { data: masterProfile } = await supabase
+    .from("ni_portal_profiles")
+    .select("username")
+    .eq("is_master_account", true)
+    .not("username", "is", null)
+    .limit(1)
+    .maybeSingle();
+
+  const operatorId = masterProfile?.username?.trim().toLowerCase();
+  if (operatorId) {
+    const { data: axonProfile } = await supabase
+      .from("axon_operator_profiles")
+      .select("context_data")
+      .eq("operator_id", operatorId)
+      .maybeSingle();
+
+    const contextData = (axonProfile?.context_data ?? {}) as Record<string, unknown>;
+    const prefs = (contextData.preferences ?? {}) as Record<string, unknown>;
+    const inbox = Array.isArray(prefs.notificationsInbox) ? prefs.notificationsInbox : [];
+    const notifId = `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+    const notification = {
+      id: notifId,
+      source: "ARM3 Pipeline",
+      title: `IT Launch Review: ${opportunity.name}`,
+      body: "New Sector 3 IT is ready for preview review. Approve to go live on NI Portal.",
+      urgent: true,
+      read: false,
+      created_at: launchedAt,
+      itType: "it_launch",
+      itPayload: {
+        launchId,
+        opportunityId: opportunity.id,
+        toolSlug: slug,
+        summary: executiveSummary,
+      },
+      links: [{ label: "Open Preview", url: previewUrl }],
+    };
+
+    const nextPrefs = {
+      ...prefs,
+      notificationsInbox: [notification, ...inbox].slice(0, 100),
+    };
+
+    await supabase.from("axon_operator_profiles").upsert({
+      operator_id: operatorId,
+      context_data: { ...contextData, preferences: nextPrefs },
+      updated_at: launchedAt,
+    });
+
+    if (launchRow?.id) {
+      await supabase
+        .from("arm3_it_launch_notifications")
+        .update({ axon_notification_id: notifId })
+        .eq("id", launchRow.id);
+    }
+  }
 
   await logArm3Weekly(supabase, {
     logType: "pipeline",
     toolSlug: slug,
-    summary: `Tool scaffolded: ${opportunity.name} (${slug})`,
+    summary: `Tool scaffolded (preview): ${opportunity.name} (${slug})`,
     detail: {
-      status: "scaffolded",
+      status: "preview_pending_review",
       run_date: runDate,
       github_repo: githubRepo,
       commit_sha: scaffold.commitSha,
@@ -173,7 +275,7 @@ Deno.serve(async (req) => {
   return new Response(
     JSON.stringify({
       success: true,
-      status: "scaffolded",
+      status: "preview_pending_review",
       tool_slug: slug,
       github_repo: githubRepo,
       run_date: runDate,

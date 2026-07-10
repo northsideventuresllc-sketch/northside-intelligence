@@ -25,6 +25,10 @@ cd /workspace && npm ci
 | Build | `npm run build` |
 | Dev server | `npm run dev` (port 3000) |
 
+### Agent dispatch (ARM3 IT Lifecycle v2)
+
+Repo managers dispatch work via `docs/agent-dispatch/queue.md`. Say `dispatch {ID}` in manager chat (e.g. `dispatch ARM3-1`). Runner → Checker loop required before merge.
+
 ### Deploy workflow (standing user approval)
 
 **The user has given standing approval to merge PRs and deploy without asking each time.**

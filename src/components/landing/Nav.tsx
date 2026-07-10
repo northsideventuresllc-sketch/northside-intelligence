@@ -2,20 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { AxonNavDropdown } from "@/components/landing/AxonNavDropdown";
 import { AccountMenuDropdown } from "@/components/account/AccountMenuDropdown";
 import { NotificationsDropdown } from "@/components/notifications/NotificationsDropdown";
-import { axonPublicPath } from "@/lib/axon/paths";
 
 interface NavProps {
   isLoggedIn: boolean;
-  isMasterAccount: boolean;
+  canEnterAxonDash: boolean;
   unreadNotificationCount?: number;
   portalUsername?: string | null;
 }
 
 export function Nav({
   isLoggedIn,
-  isMasterAccount,
+  canEnterAxonDash,
   unreadNotificationCount = 0,
   portalUsername = null,
 }: NavProps) {
@@ -58,22 +58,10 @@ export function Nav({
               >
                 Services
               </Link>
-              {isMasterAccount && portalUsername && (
-                <>
-                  <Link
-                    href={axonPublicPath(portalUsername, "/dashboard")}
-                    className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
-                  >
-                    AXON
-                  </Link>
-                  <Link
-                    href="/admin"
-                    className="text-sm text-ni-muted transition hover:text-cyan-300"
-                  >
-                    Admin Dashboard
-                  </Link>
-                </>
-              )}
+              <AxonNavDropdown
+                canEnterAxonDash={canEnterAxonDash}
+                portalUsername={portalUsername}
+              />
               <Link
                 href="/promos"
                 className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-sm font-medium text-amber-300 transition hover:border-amber-400/50 hover:bg-amber-500/20"
