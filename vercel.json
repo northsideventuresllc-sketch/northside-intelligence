@@ -29,6 +29,14 @@
       "schedule": "0 * * * *"
     },
     {
+      "path": "/api/cron/arm3-90day-eval",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/arm3-archive-scan",
+      "schedule": "0 13 1 * *"
+    },
+    {
       "path": "/api/cron/content-machine-daily",
       "schedule": "0 12 * * *"
     }

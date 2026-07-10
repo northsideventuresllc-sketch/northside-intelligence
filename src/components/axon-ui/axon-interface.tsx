@@ -7,6 +7,7 @@ import { BriefingPanel } from './briefing-panel';
 import { TodoPanel } from './todo-panel';
 import { AxonLabFloor } from './axon-lab-floor';
 import { NotificationsPanel } from './notifications-panel';
+import { AxonTestNotificationButtons } from './axon-test-notification-buttons';
 import { PanelFocusView, type FocusPanelId } from './panel-focus-view';
 import { PreviousChatsFlip } from './previous-chats-flip';
 import {
@@ -421,7 +422,10 @@ export function AxonInterface({
 
     switch (id) {
       case 'test_buttons':
-        return null;
+        return wrap(
+          <AxonTestNotificationButtons />,
+          zone === 'holo-left' ? 'axon-holo-panel axon-holo-side-panel' : ''
+        );
       case 'briefing':
         return wrap(
           briefingPanel,
