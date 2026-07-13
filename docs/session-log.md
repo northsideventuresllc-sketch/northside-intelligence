@@ -4,6 +4,6 @@ Agent session notes. **Read the 🚨 URGENT block first** — do not bury alerts
 
 ## Carry-over
 
-- **ARM3 pipeline:** Service-role auth fixed (edge v8 + portal cron prefers vault key). Smoke `generate-tool` returns **500 `GITHUB_PAT is not configured`** — auth OK; JB must add `GITHUB_PAT` to `ni_platform_secrets` + GitHub Actions for scaffold step.
-- **ARM3 data:** `arm3_weekly_logs` last row 2026-06-11; no pipeline cron success in GH Actions history yet.
-
+- **ARM3 FIX (NI-ARM3-V) in progress:** Gate IT generation until **2026-09-01** America/New_York. Secrets already hydrated in GH Actions (`CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`). Pre-gate failure was duplicate `outreachhq` insert — not auth. After merge: expect `[SKIPPED] IT pause until 2026-09-01` + green `workflow_dispatch`.
+- **Deploy edge:** `generate-tool` preview-gate from #141 still needs edge redeploy when pause lifts (portal cron gate is defense-in-depth).
+- **ARM3 data:** Pre-fix failures; weekly log write-back after green smoke.
