@@ -1,8 +1,13 @@
 name: ARM3 Sector 3 Pipeline
 
+# IT Build Pause: no new IT generation until 2026-09-01 00:00 America/New_York.
+# Date gate in job steps — lifts automatically on/after that date (no JB re-enable).
+# Vault: 04 Workflows & SOPs/IT Build Pause — Until 2026-09-01.md
+
 on:
   schedule:
-    # 10am ET Mon / Wed / Fri (14:00 UTC)
+    # 10am ET Mon / Wed / Fri (14:00 UTC) — still runs for green health,
+    # but generate-tool is gated until 2026-09-01 (see "IT build pause gate" step).
     - cron: "0 14 * * 1,3,5"
   workflow_dispatch:
 
@@ -12,8 +17,10 @@ env:
   NI_APP_URL: https://www.northsideintelligence.com
   # Route through NI portal cron (isCronAuthorizedAsync) — edge fn compares Bearer to its own env key.
   CRON_SECRET: ${{ secrets.CRON_SECRET }}
-  # infra-health-check + weekly log step
+  # Prefer ROLE_KEY; fall back to SERVICE_KEY (infra-health-check / weekly log step)
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_KEY }}
+  # IT pause end (inclusive resume date) — America/New_York midnight
+  IT_PAUSE_UNTIL: "2026-09-01"
 
 jobs:
   generate-tool:
@@ -24,13 +31,40 @@ jobs:
           set -euo pipefail
           if [[ -z "${CRON_SECRET}" ]]; then
             echo "::error::GitHub secret CRON_SECRET is not set."
-            echo "Fix: nv-vault push-ni-arm3-pipeline-fix.yml hydrates from ni_platform_secrets."
+            echo "Fix: hydrate via scripts/set-sector3-secrets.sh from ni_platform_secrets"
+            echo "(nv-vault push-ni-arm3-pipeline-fix.yml / GH_PAT relay)."
             echo "See docs/infra-health-check.md — Required GitHub Actions secrets."
             exit 1
+          fi
+          if [[ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]]; then
+            echo "::error::GitHub secret SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SERVICE_KEY) is not set."
+            echo "Fix: hydrate from ni_platform_secrets — never paste values into chat."
+            exit 1
+          fi
+          echo "Secrets present: CRON_SECRET, SUPABASE_SERVICE_ROLE_KEY (values not logged)"
+          echo "SUPABASE_URL=${SUPABASE_URL}"
+
+      - name: IT build pause gate
+        id: pause
+        run: |
+          set -euo pipefail
+          # Compare calendar date in America/New_York to IT_PAUSE_UNTIL (YYYY-MM-DD).
+          TZ=America/New_York
+          export TZ
+          today="$(date +%F)"
+          echo "today_et=${today}"
+          echo "pause_until=${IT_PAUSE_UNTIL}"
+          if [[ "${today}" < "${IT_PAUSE_UNTIL}" ]]; then
+            echo "[SKIPPED] IT pause until 2026-09-01"
+            echo "paused=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "IT pause lifted — generate-tool allowed"
+            echo "paused=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Trigger ARM3 generate-tool via NI portal cron
         id: generate
+        if: steps.pause.outputs.paused != 'true'
         run: |
           set -euo pipefail
           response_file="$(mktemp)"
@@ -47,8 +81,19 @@ jobs:
           fi
 
       - name: Log pipeline result to arm3_weekly_logs
-        if: success()
+        if: always() && steps.pause.outcome == 'success'
         run: |
+          set -euo pipefail
+          if [[ "${{ steps.pause.outputs.paused }}" == "true" ]]; then
+            STATUS="paused"
+            SUMMARY="[SKIPPED] IT pause until 2026-09-01"
+          elif [[ "${{ steps.generate.outcome }}" == "success" ]]; then
+            STATUS="cron_success"
+            SUMMARY="ARM3 pipeline cron completed"
+          else
+            STATUS="cron_failed"
+            SUMMARY="ARM3 pipeline cron failed"
+          fi
           curl -sS -X POST \
             "${SUPABASE_URL}/rest/v1/arm3_weekly_logs" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
@@ -58,9 +103,17 @@ jobs:
             -d "$(jq -n \
               --arg week "$(date -u +%F)" \
               --arg run_date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --arg status "$STATUS" \
+              --arg summary "$SUMMARY" \
               '{
                 week_of: $week,
                 log_type: "pipeline_cron",
-                summary: "ARM3 pipeline cron completed",
-                detail: { status: "cron_success", run_date: $run_date, source: "github_actions" }
+                summary: $summary,
+                detail: {
+                  status: $status,
+                  run_date: $run_date,
+                  source: "github_actions",
+                  it_pause_until: "2026-09-01"
+                }
               }')"
+          echo "Logged: ${SUMMARY}"

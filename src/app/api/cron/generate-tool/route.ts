@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isItBuildPaused, IT_PAUSE_UNTIL } from "@/lib/arm3/it-build-pause";
 import { isCronAuthorizedAsync } from "@/lib/infra/cron-auth";
 import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 import { resolveServiceRoleKey } from "@/lib/platform-secrets";
@@ -22,6 +23,16 @@ export async function GET(req: NextRequest) {
 
   if (!(await isCronAuthorizedAsync(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (isItBuildPaused()) {
+    console.log("[SKIPPED] IT pause until 2026-09-01");
+    return NextResponse.json({
+      success: true,
+      status: "paused",
+      message: "[SKIPPED] IT pause until 2026-09-01",
+      resume_on: IT_PAUSE_UNTIL,
+    });
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
