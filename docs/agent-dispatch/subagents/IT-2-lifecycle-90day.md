@@ -52,11 +52,11 @@ Buttons: **KEEP** | **TRIAL** | **REMOVE**
 
 ## Acceptance criteria
 
-- [ ] Day-90 report fires for launched tools
-- [ ] KEEP sets 365-day lock; no REMOVE prompt until lock expires
-- [ ] REMOVE archives + schedules subscriber cutoff
-- [ ] Archived page 403 for non-master
-- [ ] Master can revive archived IT for 30 or 90 days
+- [x] Day-90 report fires for launched tools
+- [x] KEEP sets 365-day lock; no REMOVE prompt until lock expires
+- [x] REMOVE archives + schedules subscriber cutoff
+- [x] Archived page 403 for non-master
+- [x] Master can revive archived IT for 30 or 90 days
 
 ## Stress tests
 

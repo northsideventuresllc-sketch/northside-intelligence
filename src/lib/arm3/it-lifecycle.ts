@@ -3,7 +3,49 @@ import "server-only";
 import type { ItExecutiveSummary } from "@/lib/axon/axon-types";
 import { addNotification } from "@/lib/axon/axon-preferences";
 import { resolveMasterOperatorId } from "@/lib/axon/master-operator";
+import { parseReportToolSlug } from "@/lib/arm3/it-report-id";
+import { scheduleSubscriberCutoff } from "@/lib/arm3/it-removal";
 import { createServiceClient } from "@/lib/supabase/server";
+
+export { parseReportToolSlug } from "@/lib/arm3/it-report-id";
+
+type JbDecision = "keep" | "adjust" | "scrap";
+
+async function recordJbDecision(
+  toolSlug: string,
+  decision: JbDecision,
+  notes: string
+): Promise<void> {
+  const supabase = createServiceClient();
+  const evalWeek = new Date().toISOString().slice(0, 10);
+
+  const { data: existing } = await supabase
+    .from("arm3_tool_evals")
+    .select("id")
+    .eq("tool_slug", toolSlug)
+    .eq("eval_week", evalWeek)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await supabase
+      .from("arm3_tool_evals")
+      .update({
+        jb_decision: decision,
+        verdict: decision === "scrap" ? "scrap" : decision === "keep" ? "keep" : "adjust",
+        notes,
+      })
+      .eq("id", existing.id);
+    return;
+  }
+
+  await supabase.from("arm3_tool_evals").insert({
+    tool_slug: toolSlug,
+    eval_week: evalWeek,
+    jb_decision: decision,
+    verdict: decision === "scrap" ? "scrap" : decision === "keep" ? "keep" : "adjust",
+    notes,
+  });
+}
 
 export function buildExecutiveSummaryFromOpportunity(input: {
   name: string;
@@ -187,51 +229,81 @@ export async function denyItLaunch(launchId: string) {
   return { ok: true };
 }
 
-export async function keepItReport(reportId: string) {
+export async function keepItReport(reportId: string, toolSlug?: string) {
   const supabase = createServiceClient();
-  const slug = reportId.includes("-") ? reportId.split("-").pop()! : reportId;
+  const slug = (toolSlug?.trim() || parseReportToolSlug(reportId)).toLowerCase();
   const lockUntil = new Date();
   lockUntil.setDate(lockUntil.getDate() + 365);
 
+  const { data: tool } = await supabase
+    .from("arm3_tools")
+    .select("slug")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!tool) return { ok: false, error: "not_found" };
+
   await supabase
     .from("arm3_tools")
-    .update({ lifecycle_locked_until: lockUntil.toISOString() })
+    .update({
+      lifecycle_phase: "production",
+      lifecycle_locked_until: lockUntil.toISOString(),
+      trial_extension_until: null,
+      removal_scheduled_at: null,
+      status: "live",
+    })
     .eq("slug", slug);
 
-  return { ok: true, lockedUntil: lockUntil.toISOString() };
+  await recordJbDecision(slug, "keep", "KEEP — locked 365 days");
+
+  return { ok: true, lockedUntil: lockUntil.toISOString(), toolSlug: slug };
 }
 
-export async function trialItReport(reportId: string, days = 30) {
+export async function trialItReport(reportId: string, days = 30, toolSlug?: string) {
   const supabase = createServiceClient();
-  const slug = reportId.includes("-") ? reportId.split("-").pop()! : reportId;
+  const slug = (toolSlug?.trim() || parseReportToolSlug(reportId)).toLowerCase();
   const until = new Date();
   until.setDate(until.getDate() + days);
+
+  const { data: tool } = await supabase
+    .from("arm3_tools")
+    .select("slug")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (!tool) return { ok: false, error: "not_found" };
 
   await supabase
     .from("arm3_tools")
     .update({
       trial_extension_until: until.toISOString(),
       lifecycle_phase: "trial",
+      lifecycle_locked_until: null,
+      status: "live",
     })
     .eq("slug", slug);
 
-  return { ok: true, trialUntil: until.toISOString() };
+  await recordJbDecision(slug, "adjust", `TRIAL extension +${days} days`);
+
+  return { ok: true, trialUntil: until.toISOString(), toolSlug: slug };
 }
 
-export async function removeItReport(reportId: string) {
+export async function removeItReport(reportId: string, toolSlug?: string) {
   const supabase = createServiceClient();
-  const slug = reportId.includes("-") ? reportId.split("-").pop()! : reportId;
+  const slug = (toolSlug?.trim() || parseReportToolSlug(reportId)).toLowerCase();
 
   const { data: tool } = await supabase
     .from("arm3_tools")
-    .select("slug, name, description, status, lifecycle_locked_until")
+    .select("slug, name, description, status, lifecycle_locked_until, price_usd")
     .eq("slug", slug)
     .maybeSingle();
 
   if (!tool) return { ok: false, error: "not_found" };
 
   if (tool.lifecycle_locked_until && new Date(tool.lifecycle_locked_until) > new Date()) {
-    return { ok: false, error: "locked_until_expires", lockedUntil: tool.lifecycle_locked_until };
+    return {
+      ok: false,
+      error: "locked_until_expires",
+      lockedUntil: tool.lifecycle_locked_until,
+    };
   }
 
   const now = new Date().toISOString();
@@ -253,16 +325,35 @@ export async function removeItReport(reportId: string) {
       lifecycle_phase: "archived",
       status: "scrapped",
       removal_scheduled_at: now,
+      lifecycle_locked_until: null,
+      trial_extension_until: null,
     })
     .eq("slug", slug);
 
-  return { ok: true, archived: tool.slug };
+  const cutoff = await scheduleSubscriberCutoff(slug);
+  await recordJbDecision(
+    slug,
+    "scrap",
+    `REMOVE — subscriber cutoff scheduled (${cutoff.scheduled} delayed, ${cutoff.revokedImmediate} immediate)`
+  );
+
+  return { ok: true, archived: tool.slug, cutoff };
 }
 
 export async function reviveArchivedTool(slug: string, trialDays: 30 | 90) {
   const supabase = createServiceClient();
   const until = new Date();
   until.setDate(until.getDate() + trialDays);
+  const now = new Date().toISOString();
+  const normalized = slug.trim().toLowerCase();
+
+  const { data: archived } = await supabase
+    .from("arm3_archived_tools")
+    .select("tool_slug, name")
+    .eq("tool_slug", normalized)
+    .maybeSingle();
+
+  if (!archived) return { ok: false, error: "not_found" };
 
   await supabase
     .from("arm3_tools")
@@ -271,8 +362,30 @@ export async function reviveArchivedTool(slug: string, trialDays: 30 | 90) {
       status: "live",
       trial_extension_until: until.toISOString(),
       removal_scheduled_at: null,
+      lifecycle_locked_until: null,
     })
-    .eq("slug", slug);
+    .eq("slug", normalized);
 
-  return { ok: true, trialUntil: until.toISOString() };
+  await supabase.from("arm3_archived_tools").delete().eq("tool_slug", normalized);
+
+  const { data: masters } = await supabase
+    .from("ni_portal_profiles")
+    .select("id")
+    .eq("is_master_account", true);
+
+  for (const master of masters ?? []) {
+    await supabase.from("ni_toolkit").upsert(
+      {
+        user_id: master.id,
+        tool_slug: normalized,
+        access_type: "lifetime",
+        expires_at: null,
+        purchased_at: now,
+        updated_at: now,
+      },
+      { onConflict: "user_id,tool_slug" }
+    );
+  }
+
+  return { ok: true, trialUntil: until.toISOString(), toolSlug: normalized };
 }

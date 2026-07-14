@@ -38,15 +38,24 @@ export function ItReportNotificationCard({
     try {
       const res = await fetch(apiUrl(`/api/axon/it-report/${reportId}/${action}`), {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toolSlug: metrics.toolSlug }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Action failed');
+      if (!res.ok) {
+        if (data.error === 'locked_until_expires') {
+          throw new Error(
+            `Keep lock active until ${data.lockedUntil ? new Date(data.lockedUntil).toLocaleDateString() : 'lock end'}. Remove is blocked.`
+          );
+        }
+        throw new Error(data.error || 'Action failed');
+      }
       setMessage(
         action === 'keep'
           ? 'Locked for 365 days — next evaluation after lock expires.'
           : action === 'trial'
             ? 'Extended 30 days — new report will follow.'
-            : 'Removed — subscribers lose access after billing cycle ends.'
+            : 'Removed — subscribers keep access until billing cycle ends.'
       );
       onActionComplete?.();
     } catch (e) {

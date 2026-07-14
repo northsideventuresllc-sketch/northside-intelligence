@@ -55,6 +55,13 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'custom',
     action: 'test-mode-panel',
   },
+  {
+    slug: 'archived-its',
+    defaultDisplayName: 'Archived ITs',
+    href: '/tools/archived',
+    icon: '🗄',
+    sourceType: 'custom',
+  },
 ];
 
 export const AXON_TOOL_NAME_STORAGE_KEY = 'axon.toolDisplayNames';
