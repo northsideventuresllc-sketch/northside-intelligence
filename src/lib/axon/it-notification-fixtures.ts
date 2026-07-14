@@ -60,6 +60,7 @@ export function buildItTestNotification(
   import('./axon-types').AxonNotification,
   'id' | 'read' | 'created_at' | 'read_at' | 'archived' | 'archived_at' | 'resolved' | 'declined'
 > {
+  const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const base = {
     source: 'ARM3 Pipeline',
     urgent: false,
@@ -74,7 +75,7 @@ export function buildItTestNotification(
         title: `IT Launch Review: ${SAMPLE_EXECUTIVE_SUMMARY.title}`,
         body: 'New Sector 3 IT ready for preview review. Approve to go live on NI Portal.',
         itPayload: {
-          launchId: 'test-launch-1',
+          launchId: `test-launch-${stamp}`,
           opportunityId: 0,
           toolSlug: 'replyflow',
           summary: SAMPLE_EXECUTIVE_SUMMARY,
@@ -88,7 +89,7 @@ export function buildItTestNotification(
         title: `90-Day IT Report: ${SAMPLE_REPORT_METRICS.toolName}`,
         body: SAMPLE_REPORT_METRICS.rationale,
         itPayload: {
-          reportId: 'test-report-1',
+          reportId: `test-report-${stamp}`,
           metrics: SAMPLE_REPORT_METRICS,
         },
       };
@@ -99,7 +100,7 @@ export function buildItTestNotification(
         title: `Archive Revival Candidate: ${SAMPLE_ARCHIVE_REVIVAL.toolName}`,
         body: SAMPLE_ARCHIVE_REVIVAL.rationale,
         itPayload: {
-          reportId: 'test-revival-1',
+          reportId: `test-revival-${stamp}`,
           metrics: SAMPLE_ARCHIVE_REVIVAL,
         },
       };
