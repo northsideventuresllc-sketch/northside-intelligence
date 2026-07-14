@@ -65,10 +65,7 @@ export function NotificationHoloScroll({
               </span>
               <span className="block truncate text-sm text-axon-text">{n.title}</span>
               <span className="mt-1 flex items-center gap-2 text-[10px] text-axon-muted">
-                {!n.read && !n.isTest && <span className="text-axon-cyan">Unread</span>}
-                {n.isTest && <span className="text-amber-300">Test</span>}
-                {n.itType === 'it_launch' && <span className="text-axon-cyan">IT Launch</span>}
-                {n.itType === 'it_report' && <span className="text-axon-blue-glow">IT Report</span>}
+                {!n.read && <span className="text-axon-cyan">Unread</span>}
                 {n.interactive && <span className="text-axon-blue-glow">Interactive</span>}
                 {n.urgent && <span className="text-red-400">Urgent</span>}
               </span>

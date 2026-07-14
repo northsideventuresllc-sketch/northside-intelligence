@@ -7,11 +7,8 @@ import { BriefingPanel } from './briefing-panel';
 import { TodoPanel } from './todo-panel';
 import { AxonLabFloor } from './axon-lab-floor';
 import { NotificationsPanel } from './notifications-panel';
-import { NotificationDetailModal } from './notification-detail-modal';
-import { AxonTestNotificationButtons } from './axon-test-notification-buttons';
 import { PanelFocusView, type FocusPanelId } from './panel-focus-view';
 import { PreviousChatsFlip } from './previous-chats-flip';
-
 import {
   AXON_VOICES,
   DEFAULT_PREFERENCES,
@@ -78,21 +75,8 @@ export function AxonInterface({
   const [focusPanel, setFocusPanel] = useState<FocusPanelId | null>(null);
   const [urgentChatOverlay, setUrgentChatOverlay] = useState(false);
   const [notifTrigger, setNotifTrigger] = useState<{ notification: AxonNotification; key: number } | null>(null);
-  const [selectedNotification, setSelectedNotification] = useState<AxonNotification | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const voice = useAxonVoice(inputMode, voiceId, readAloud);
-
-  const patchPreferences = useCallback(async (body: Record<string, unknown>) => {
-    const res = await fetch(apiUrl('/api/axon/preferences'), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.preferences) setPreferences(data.preferences);
-  }, []);
-
 
   const toggleVoiceListening = useCallback(() => {
     if (inputMode !== 'voice') return;
@@ -103,7 +87,7 @@ export function AxonInterface({
   const layout = preferences.homeLayout;
   const isVisible = (id: HomeWidgetId) => !layout.hidden.includes(id);
 
-  const sideLeft = layout.left.filter(isVisible);
+  const sideLeft = layout.left.filter((id) => id !== 'test_buttons' && isVisible(id));
   const centerWidgets = layout.center.filter(isVisible);
   const rightWidgets = layout.right.filter(isVisible);
 
@@ -437,14 +421,7 @@ export function AxonInterface({
 
     switch (id) {
       case 'test_buttons':
-        return wrap(
-          <div className="rounded-2xl border border-axon-border/50 bg-axon-surface/60 p-3 axon-glass">
-            <AxonTestNotificationButtons compact />
-          </div>,
-          zone === 'holo-left' || zone === 'holo-left-lower'
-            ? 'axon-holo-panel axon-holo-side-panel min-h-0 overflow-hidden'
-            : 'w-full'
-        );
+        return null;
       case 'briefing':
         return wrap(
           briefingPanel,
@@ -465,12 +442,14 @@ export function AxonInterface({
             trigger={notifTrigger}
             onUrgentStart={() => setUrgentChatOverlay(true)}
             onUrgentEnd={() => setUrgentChatOverlay(false)}
-            onSelectNotification={(n) => setSelectedNotification(n)}
             onOpen={(n) => {
-              setSelectedNotification(n);
-              if (!n.isTest && !n.itType) {
-                void patchPreferences({ markReadId: n.id });
-              }
+              fetch(apiUrl('/api/axon/preferences'), {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ markReadId: n.id }),
+              })
+                .then((r) => r.json())
+                .then((d) => d.preferences && setPreferences(d.preferences));
             }}
           />,
           zone === 'holo-right-lower' ? 'axon-holo-panel w-full' : 'w-full'
@@ -669,30 +648,6 @@ export function AxonInterface({
         }
         chatGhost={chatGhost}
       />
-
-      {selectedNotification && (
-        <NotificationDetailModal
-          notification={selectedNotification}
-          archivedView={Boolean(selectedNotification.archived)}
-          onClose={() => setSelectedNotification(null)}
-          onMarkRead={async (id) => {
-            await patchPreferences({ markReadId: id });
-          }}
-          onResolve={async (id) => {
-            await patchPreferences({ resolveId: id });
-          }}
-          onDecline={async (id) => {
-            await patchPreferences({ declineId: id });
-          }}
-          onDelete={async (id) => {
-            await patchPreferences({ deleteId: id });
-            setSelectedNotification(null);
-          }}
-          onRevive={async (id) => {
-            await patchPreferences({ reviveId: id });
-          }}
-        />
-      )}
     </>
   );
 }

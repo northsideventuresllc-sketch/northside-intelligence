@@ -4,59 +4,16 @@ import { useCallback, useMemo, useState } from 'react';
 import { apiUrl } from '@/lib/axon/api-base';
 import { classifyUrgency } from '@/lib/axon/axon-preferences';
 import type { AxonNotification, NotificationSettings } from '@/lib/axon/axon-types';
-import type { ItTestFixtureKey } from '@/lib/axon/it-notification-fixtures';
 import { formatAxonButton, formatAxonDescription, formatAxonTitle } from '@/lib/axon/axon-copy';
-import { fireItTestNotification } from './fire-it-test-notification';
 
 type TestCategory = {
   id: string;
   label: string;
   description: string;
-  tests: {
-    id: string;
-    label: string;
-    urgent: boolean;
-    hint: string;
-    fixture?: ItTestFixtureKey;
-  }[];
+  tests: { id: string; label: string; urgent: boolean; hint: string }[];
 };
 
 const CATEGORIES: TestCategory[] = [
-  {
-    id: 'it-lifecycle',
-    label: 'IT Lifecycle',
-    description: 'ARM3 IT Launch, 90-day report, archive revival, and outreach draft cards.',
-    tests: [
-      {
-        id: 'it_launch',
-        label: 'IT Launch',
-        urgent: false,
-        hint: 'Executive summary with Approve / Change / Deny.',
-        fixture: 'it_launch',
-      },
-      {
-        id: 'it_90_day',
-        label: 'IT 90-Day Report',
-        urgent: false,
-        hint: 'Metrics + Keep / Trial / Remove.',
-        fixture: 'it_90_day',
-      },
-      {
-        id: 'archive_revival',
-        label: 'Archive Revival',
-        urgent: false,
-        hint: 'Monthly revival recommendation card.',
-        fixture: 'archive_revival',
-      },
-      {
-        id: 'outreach_draft',
-        label: 'Outreach Draft',
-        urgent: false,
-        hint: 'Existing outreach draft-ready flow.',
-        fixture: 'outreach_draft',
-      },
-    ],
-  },
   {
     id: 'notifications',
     label: 'Notifications',
@@ -96,7 +53,7 @@ const CATEGORIES: TestCategory[] = [
 ];
 
 export function TestModeSidebarPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [categoryId, setCategoryId] = useState<string | null>('it-lifecycle');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
 
@@ -105,7 +62,10 @@ export function TestModeSidebarPanel({ open, onClose }: { open: boolean; onClose
     [categoryId],
   );
 
-  const fireLegacyTest = useCallback(async (cat: TestCategory, test: TestCategory['tests'][0]) => {
+  const fireTest = useCallback(async (cat: TestCategory, test: TestCategory['tests'][0]) => {
+    if (busy) return;
+    setBusy(true);
+    setLastResult(null);
     const source =
       cat.id === 'outreach' ? 'NI Outreach' : cat.id === 'dispatch' ? 'Repo Manager Dispatch' : cat.label;
     const title =
@@ -115,71 +75,58 @@ export function TestModeSidebarPanel({ open, onClose }: { open: boolean; onClose
           ? 'New draft ready for review'
           : test.label;
 
-    const prefsRes = await fetch(apiUrl('/api/axon/preferences'));
-    const prefsData = prefsRes.ok ? await prefsRes.json() : null;
-    const settings: NotificationSettings =
-      prefsData?.preferences?.notifications ?? {
-        enabled: true,
-        urgencyEnabled: true,
-        urgencyFlashSeconds: 4,
-        urgencySound: true,
-        urgencyVolume: 0.35,
-        integrations: { outreach: true, telegram: true, pipeline: true, hermes: true },
-        urgencyRules: {
-          pipelineApproval: true,
-          dealWon: true,
-          systemError: true,
-          outreachReply: false,
-        },
-        customNotUrgent: [],
-        readAutoArchiveHours: 24,
+    try {
+      const prefsRes = await fetch(apiUrl('/api/axon/preferences'));
+      const prefsData = prefsRes.ok ? await prefsRes.json() : null;
+      const settings: NotificationSettings =
+        prefsData?.preferences?.notifications ?? {
+          enabled: true,
+          urgencyEnabled: true,
+          urgencyFlashSeconds: 4,
+          urgencySound: true,
+          urgencyVolume: 0.35,
+          integrations: { outreach: true, telegram: true, pipeline: true, hermes: true },
+          urgencyRules: {
+            pipelineApproval: true,
+            dealWon: true,
+            systemError: true,
+            outreachReply: false,
+          },
+          customNotUrgent: [],
+          readAutoArchiveHours: 24,
+        };
+
+      const notification: AxonNotification = {
+        id: `test-${test.id}-${Date.now()}`,
+        source,
+        title,
+        body: test.hint,
+        urgent: test.urgent && settings.urgencyEnabled && classifyUrgency(source, title, settings),
+        read: false,
+        interactive: false,
+        created_at: new Date().toISOString(),
       };
 
-    const notification: AxonNotification = {
-      id: `test-${test.id}-${Date.now()}`,
-      source,
-      title,
-      body: test.hint,
-      urgent: test.urgent && settings.urgencyEnabled && classifyUrgency(source, title, settings),
-      read: false,
-      interactive: false,
-      isTest: true,
-      created_at: new Date().toISOString(),
-    };
+      const res = await fetch(apiUrl('/api/axon/preferences'), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          addNotification: {
+            source: notification.source,
+            title: notification.title,
+            body: notification.body,
+            urgent: notification.urgent,
+            interactive: notification.interactive,
+          },
+        }),
+      });
 
-    const res = await fetch(apiUrl('/api/axon/preferences'), {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        addNotification: {
-          source: notification.source,
-          title: notification.title,
-          body: notification.body,
-          urgent: notification.urgent,
-          interactive: notification.interactive,
-          isTest: true,
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      window.dispatchEvent(new CustomEvent('axon:test-notification', { detail: { notification } }));
-    } else {
-      const data = await res.json();
-      const saved = data.preferences?.notificationsInbox?.[0] ?? notification;
-      window.dispatchEvent(new CustomEvent('axon:test-notification', { detail: { notification: saved } }));
-    }
-  }, []);
-
-  const fireTest = useCallback(async (cat: TestCategory, test: TestCategory['tests'][0]) => {
-    if (busy) return;
-    setBusy(true);
-    setLastResult(null);
-    try {
-      if (test.fixture) {
-        await fireItTestNotification(test.fixture);
+      if (!res.ok) {
+        window.dispatchEvent(new CustomEvent('axon:test-notification', { detail: { notification } }));
       } else {
-        await fireLegacyTest(cat, test);
+        const data = await res.json();
+        const saved = data.preferences?.notificationsInbox?.[0] ?? notification;
+        window.dispatchEvent(new CustomEvent('axon:test-notification', { detail: { notification: saved } }));
       }
       setLastResult(`Fired: ${test.label}`);
     } catch (e) {
@@ -187,7 +134,7 @@ export function TestModeSidebarPanel({ open, onClose }: { open: boolean; onClose
     } finally {
       setBusy(false);
     }
-  }, [busy, fireLegacyTest]);
+  }, [busy]);
 
   if (!open) return null;
 

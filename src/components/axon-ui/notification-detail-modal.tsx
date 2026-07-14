@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AxonNotification } from '@/lib/axon/axon-types';
 import { apiUrl } from '@/lib/axon/api-base';
-import { ItLaunchNotificationCard } from './it-launch-notification-card';
-import { ItReportNotificationCard } from './it-report-notification-card';
 
 interface NotificationChatMessage {
   role: 'user' | 'assistant';
@@ -124,10 +122,7 @@ export function NotificationDetailModal({
       >
         <header className="axon-notif-modal-header">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] uppercase tracking-[0.15em] text-axon-muted">
-              {notification.source}
-              {notification.isTest ? ' · Test' : ''}
-            </p>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-axon-muted">{notification.source}</p>
             <h2 id="notif-detail-title" className="truncate text-sm font-medium text-axon-cyan">
               {notification.title}
             </h2>
@@ -137,48 +132,7 @@ export function NotificationDetailModal({
           </button>
         </header>
 
-        {notification.itType === 'it_launch' ? (
-          <>
-            <div className="axon-notif-static-body">
-              {notification.body && (
-                <p className="mb-4 text-sm leading-relaxed text-axon-muted">{notification.body}</p>
-              )}
-              <ItLaunchNotificationCard
-                notification={notification}
-                onActionComplete={() => {
-                  void onResolve(notification.id);
-                }}
-              />
-            </div>
-            <footer className="axon-notif-modal-footer">
-              <button type="button" onClick={onClose} className="axon-notif-secondary-btn">
-                Close
-              </button>
-              <button type="button" onClick={handleDelete} className="axon-notif-danger-btn">
-                Delete
-              </button>
-            </footer>
-          </>
-        ) : notification.itType === 'it_report' ? (
-          <>
-            <div className="axon-notif-static-body">
-              <ItReportNotificationCard
-                notification={notification}
-                onActionComplete={() => {
-                  void onResolve(notification.id);
-                }}
-              />
-            </div>
-            <footer className="axon-notif-modal-footer">
-              <button type="button" onClick={onClose} className="axon-notif-secondary-btn">
-                Close
-              </button>
-              <button type="button" onClick={handleDelete} className="axon-notif-danger-btn">
-                Delete
-              </button>
-            </footer>
-          </>
-        ) : notification.interactive ? (
+        {notification.interactive ? (
           <>
             {notification.prompt && (
               <div className="axon-notif-prompt-banner">

@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
 import {
   addNotification,
-  declineNotification,
-  deleteNotification,
   getPreferences,
   markNotificationRead,
-  resolveNotification,
-  reviveNotification,
   updateHomeLayout,
   updateNotificationSettings,
 } from "@/lib/axon/axon-preferences";
@@ -46,26 +42,6 @@ export async function PATCH(req: Request) {
 
     if (body.markReadId) {
       const preferences = await markNotificationRead(body.markReadId, operatorId);
-      return NextResponse.json({ preferences });
-    }
-
-    if (body.resolveId) {
-      const preferences = await resolveNotification(body.resolveId, operatorId);
-      return NextResponse.json({ preferences });
-    }
-
-    if (body.declineId) {
-      const preferences = await declineNotification(body.declineId, operatorId);
-      return NextResponse.json({ preferences });
-    }
-
-    if (body.deleteId) {
-      const preferences = await deleteNotification(body.deleteId, operatorId);
-      return NextResponse.json({ preferences });
-    }
-
-    if (body.reviveId) {
-      const preferences = await reviveNotification(body.reviveId, operatorId);
       return NextResponse.json({ preferences });
     }
 

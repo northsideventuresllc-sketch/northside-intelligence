@@ -1,8 +1,8 @@
 /**
  * AXON agent dispatch — NI-Brain queue read + fire via Hermes workflow.
- * Patch: _AI/axon-patches/dispatch-one-click/
  */
 import { createClient } from '@supabase/supabase-js';
+import { GITHUB_PAT_ENV_HINT, resolveGithubPat } from './github-pat.mjs';
 
 const SUPABASE_URL =
   process.env.NI_BRAIN_SUPABASE_URL ||
@@ -57,8 +57,8 @@ export function deriveVenture(row: Pick<DispatchRow, 'repo' | 'workflow_repo' | 
 /** Complexity from risk_tier or priority band. */
 export function deriveComplexity(row: Pick<DispatchRow, 'risk_tier' | 'priority'>): DispatchComplexity {
   const tier = (row.risk_tier || '').toLowerCase();
-  if (['high', 'critical', 'p0', 'p1', 'major'].includes(tier)) return 'high';
-  if (['medium', 'moderate', 'p2', 'minor'].includes(tier)) return 'medium';
+  if (['high', 'critical', 'p0', 'p1'].includes(tier)) return 'high';
+  if (['medium', 'moderate', 'p2'].includes(tier)) return 'medium';
   if (['low', 'p3', 'routine'].includes(tier)) return 'low';
   if (row.priority <= 3) return 'high';
   if (row.priority <= 6) return 'medium';
@@ -150,13 +150,13 @@ export async function updateDispatchTask(code: string, patch: DispatchTaskPatch)
 }
 
 export async function triggerHermesDispatch(code?: string) {
-  const token = process.env.GH_PAT || process.env.GITHUB_PAT || process.env.GITHUB_TOKEN;
-  if (!token) throw new Error('GH_PAT not configured for dispatch fire');
+  const token = await resolveGithubPat();
+  if (!token) throw new Error(`GitHub PAT not configured for dispatch fire — ${GITHUB_PAT_ENV_HINT}`);
   const body: { ref: string; inputs?: Record<string, string> } = { ref: 'main' };
   if (code) {
     body.inputs = { fire_only: 'true', seed_only: 'false', code };
   } else {
-    body.inputs = { fire_only: 'true', seed_only: 'false' };
+    body.inputs = { fire_only: 'false', seed_only: 'false' };
   }
   const r = await fetch(
     'https://api.github.com/repos/northsideventuresllc-sketch/nv-vault/actions/workflows/hermes-agent-dispatch.yml/dispatches',
