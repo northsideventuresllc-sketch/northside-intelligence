@@ -6,7 +6,7 @@
 | ID | Initiative | Repo | Status | Depends | Next action |
 |----|------------|------|--------|---------|-------------|
 | ARM3-1 | M/W/F launch + executive summary + APPROVE/CHANGE/DENY | NI + AXON | **shipped** | — | Deploy edge `generate-tool`; wire Vercel preview API |
-| IT-2 | 90-day eval + KEEP/TRIAL/REMOVE + Archived ITs (master only) | NI + AXON | **in_progress** | ARM3-1 | Stripe cutoff + trial follow-up + metrics hardening |
+| IT-2 | 90-day eval + KEEP/TRIAL/REMOVE + Archived ITs (master only) | NI + AXON | **shipped** | ARM3-1 | — |
 | IT-3 | Monthly archive vault scan + revival IT report | NI | **shipped** | IT-2 | Replace heuristic scorer with research edge |
 | AXON-4 | IT notification type test buttons | NI + AXON | **shipped** (2026-07-14 verify) | ARM3-1 notification types | Live in Settings / Test Mode / home Test Controls |
 | NAV-5 | Remove Admin Dashboard; AXON = admin | NI | **shipped** | — | — |
