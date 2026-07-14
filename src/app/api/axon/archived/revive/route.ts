@@ -15,7 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'slug required' }, { status: 400 });
     }
 
-    return NextResponse.json(await reviveArchivedTool(slug, trialDays));
+    const result = await reviveArchivedTool(slug, trialDays);
+    if (!result.ok) {
+      const status = result.error === 'not_found' ? 404 : 400;
+      return NextResponse.json(result, { status });
+    }
+    return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Revive failed';
     const status = message === 'AXON access denied' ? 403 : 500;

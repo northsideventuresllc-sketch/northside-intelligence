@@ -1,11 +1,19 @@
+import { redirect } from 'next/navigation';
 import { ArchivedItsPanel } from '@/components/axon-ui/archived-its-panel';
 import { requireAxonPortalUser } from '@/lib/axon/portal-guard';
+import { getUserBillingState } from '@/lib/billing/entitlements';
 import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ArchivedItsPage({ params }: { params: { username: string } }) {
-  await requireAxonPortalUser(params.username);
+  const { user } = await requireAxonPortalUser(params.username);
+  const billing = await getUserBillingState(user.id);
+
+  // Defense-in-depth: Archived ITs are master-only even if AXON portal opens to purchasers later.
+  if (!billing.isMasterAccount) {
+    redirect('/axon');
+  }
 
   const supabase = createServiceClient();
   const { data: rows, error } = await supabase
