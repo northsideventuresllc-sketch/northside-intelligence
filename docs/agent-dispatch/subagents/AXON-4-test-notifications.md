@@ -31,12 +31,19 @@ AXON Settings (master only) — **Test IT Notifications** panel with one button 
 
 ## Acceptance criteria
 
-- [ ] Each button renders correct card UI in notifications panel
-- [ ] Test notifications marked `is_test: true` — excluded from metrics
-- [ ] Non-master → 403
-- [ ] Title Case button labels per `.cursorrules`
+- [x] Each button renders correct card UI in notifications panel
+- [x] Test notifications marked `is_test: true` — excluded from metrics
+- [x] Non-master → 403
+- [x] Title Case button labels per `.cursorrules`
 
 ## Stress tests
 
-- Rapid-fire 5 tests → inbox order stable
-- Refresh page → test notifications persist in prefs JSON
+- [x] Rapid-fire 5 tests → inbox order stable (id tie-break sort)
+- [x] Refresh page → test notifications persist in prefs JSON
+
+## Implementation notes (2026-07-14)
+
+- `normalizeNotification` preserves `itType` / `itPayload` / `isTest`
+- Master-only `POST /api/axon/notifications/test`
+- Settings + Test Mode + home `test_buttons` widget all fire fixtures
+- Detail modal renders `ItLaunchNotificationCard` / `ItReportNotificationCard`

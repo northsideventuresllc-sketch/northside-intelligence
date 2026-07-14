@@ -2,6 +2,7 @@ import { AxonChangeCodeForm } from '@/components/axon/AxonChangeCodeForm';
 import { AxonHomeSettings } from '@/components/axon-ui/axon-home-settings';
 import { AxonNotificationSettings } from '@/components/axon-ui/axon-notification-settings';
 import { AxonResetSettings } from '@/components/axon-ui/axon-reset-settings';
+import { AxonTestNotificationButtons } from '@/components/axon-ui/axon-test-notification-buttons';
 import { fetchMemories, fetchTopSignals, getOperatorProfile } from '@/lib/axon/axon-profile';
 import { getOutreachTrainingSummary } from '@/lib/axon/outreach-learn';
 import { getPreferences } from '@/lib/axon/axon-preferences';
@@ -36,6 +37,17 @@ export default async function AxonSettingsPage({ params }: { params: { username:
 
       <AxonHomeSettings initial={preferences.homeLayout} />
       <AxonNotificationSettings initial={preferences.notifications} />
+
+      <section className="rounded-xl border border-axon-border bg-axon-surface p-6 axon-glass">
+        <h2 className="text-sm font-medium">Test IT Notifications</h2>
+        <p className="mt-1 text-xs text-axon-muted">
+          Master-only Test Mode fixtures for every IT report type. Cards land in your notifications inbox with
+          simulated Approve / Keep actions.
+        </p>
+        <div className="mt-4 max-w-md">
+          <AxonTestNotificationButtons />
+        </div>
+      </section>
 
       <AxonChangeCodeForm />
 

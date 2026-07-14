@@ -22,6 +22,9 @@ export function normalizeNotification(raw: Partial<AxonNotification> & Pick<Axon
     archived_at: raw.archived_at,
     resolved: raw.resolved ?? false,
     declined: raw.declined ?? false,
+    itType: raw.itType,
+    itPayload: raw.itPayload,
+    isTest: raw.isTest ?? false,
   };
 }
 
@@ -68,9 +71,12 @@ export function processNotificationMaintenance(
 }
 
 export function sortNotificationsNewestFirst(inbox: AxonNotification[]): AxonNotification[] {
-  return [...inbox].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  return [...inbox].sort((a, b) => {
+    const byTime = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (byTime !== 0) return byTime;
+    // Stable tie-break for rapid-fire inserts sharing the same timestamp.
+    return b.id.localeCompare(a.id);
+  });
 }
 
 export function activeNotifications(inbox: AxonNotification[]): AxonNotification[] {
@@ -81,6 +87,7 @@ export function archivedNotifications(inbox: AxonNotification[]): AxonNotificati
   return sortNotificationsNewestFirst(inbox.filter(isArchivedNotification));
 }
 
+/** Unread count excluding test fixtures — used for badges / metrics. */
 export function unreadCount(inbox: AxonNotification[]): number {
-  return activeNotifications(inbox).filter((n) => !n.read).length;
+  return activeNotifications(inbox).filter((n) => !n.read && !n.isTest).length;
 }
