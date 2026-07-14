@@ -143,12 +143,12 @@ export async function GET(req: NextRequest) {
           : '90-day evaluation notification sent',
     });
 
-    // Clear spent trial window so we don't re-fire the same trial day after day
+    // Clear spent trial window. Stay in trial until JB decides KEEP/TRIAL/REMOVE
+    // so we do not immediately re-enter the 90-day production eval lane.
     if (tool.reportType === 'trial_extension') {
       await supabase
         .from('arm3_tools')
         .update({
-          lifecycle_phase: 'production',
           trial_extension_until: null,
         })
         .eq('slug', tool.slug);

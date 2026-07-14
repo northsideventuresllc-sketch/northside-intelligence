@@ -43,7 +43,7 @@ export async function scheduleSubscriberCutoff(
 
   if (!rows?.length) return result;
 
-  const userIds = [...new Set(rows.map((r) => r.user_id))];
+  const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
   const [{ data: profiles }, { data: subscriptions }] = await Promise.all([
     supabase
       .from("ni_portal_profiles")
@@ -110,7 +110,11 @@ export async function scheduleSubscriberCutoff(
     }
 
     if (accessType === "tool_subscription" || accessType === "ni_plan") {
-      const periodEnd = periodByUser.get(row.user_id) ?? row.expires_at ?? now;
+      // Prefer explicit billing period; never default to "now" (would cut off mid-cycle).
+      const periodEnd =
+        periodByUser.get(row.user_id) ||
+        row.expires_at ||
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       await supabase
         .from("ni_toolkit")
         .update({ expires_at: periodEnd, updated_at: now })
