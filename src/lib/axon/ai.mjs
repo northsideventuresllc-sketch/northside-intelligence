@@ -1,4 +1,12 @@
-import { GEMINI_MODEL, HAIKU_MODEL, ICP, SERVICES_CATALOG } from './constants.mjs';
+import {
+  GEMINI_MODEL,
+  HAIKU_MODEL,
+  ICP,
+  SCORE_RUBRIC,
+  MIN_OUTREACH_SCORE,
+  SERVICES_CATALOG,
+  resolveGeminiModels,
+} from './constants.mjs';
 
 const GEMINI_MAX_RETRIES = 4;
 const GEMINI_RETRY_BASE_MS = 2000;
@@ -8,7 +16,20 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isRateLimitError(err) {
+/** Hard quota / billing — do not retry the same model+key (burns ~14s per prospect). */
+function isHardQuotaError(err) {
+  const msg = String(err?.message || err).toLowerCase();
+  return (
+    msg.includes('exceeded your current quota')
+    || msg.includes('billing details')
+    || msg.includes('quota_exceeded')
+    || msg.includes('resource_exhausted')
+  );
+}
+
+/** Transient rate limit — backoff + retry. Hard quota is NOT transient. */
+function isTransientRateLimit(err) {
+  if (isHardQuotaError(err)) return false;
   const msg = String(err?.message || err);
   return msg.includes('429') || msg.toLowerCase().includes('rate');
 }
@@ -33,8 +54,8 @@ async function callHaiku(apiKey, system, user, maxTokens = 1200) {
   return data.content?.map((c) => c.text || '').join('').trim();
 }
 
-async function callGeminiOnce(apiKey, prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+async function callGeminiOnce(apiKey, prompt, model) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const r = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -53,23 +74,38 @@ async function callGeminiOnce(apiKey, prompt) {
   return text;
 }
 
-async function callGemini(apiKey, prompt, backupKey) {
+/**
+ * Cascade: models × keys, fail-fast on hard quota, retry only transient 429s.
+ * @returns {{ text: string, model: string }}
+ */
+async function callGemini(apiKey, prompt, backupKey, models) {
   const keys = [apiKey, backupKey].filter(Boolean);
   if (!keys.length) throw new Error('Gemini API key missing');
+  const modelList = models?.length ? models : resolveGeminiModels(GEMINI_MODEL);
 
   let lastErr;
-  for (const key of keys) {
-    for (let attempt = 0; attempt < GEMINI_MAX_RETRIES; attempt++) {
-      try {
-        if (attempt > 0) {
-          const waitMs = GEMINI_RETRY_BASE_MS * 2 ** (attempt - 1);
-          console.log(`Gemini retry ${attempt}/${GEMINI_MAX_RETRIES - 1} in ${waitMs}ms`);
-          await sleep(waitMs);
+  for (const model of modelList) {
+    for (let keyIdx = 0; keyIdx < keys.length; keyIdx++) {
+      const key = keys[keyIdx];
+      for (let attempt = 0; attempt < GEMINI_MAX_RETRIES; attempt++) {
+        try {
+          if (attempt > 0) {
+            const waitMs = GEMINI_RETRY_BASE_MS * 2 ** (attempt - 1);
+            console.log(`Gemini ${model} retry ${attempt}/${GEMINI_MAX_RETRIES - 1} in ${waitMs}ms`);
+            await sleep(waitMs);
+          }
+          const text = await callGeminiOnce(key, prompt, model);
+          return { text, model };
+        } catch (err) {
+          lastErr = err;
+          if (isHardQuotaError(err)) {
+            console.warn(
+              `Gemini ${model} hard quota on key ${keyIdx + 1}/${keys.length} — skipping retries`
+            );
+            break;
+          }
+          if (!isTransientRateLimit(err) || attempt >= GEMINI_MAX_RETRIES - 1) break;
         }
-        return await callGeminiOnce(key, prompt);
-      } catch (err) {
-        lastErr = err;
-        if (!isRateLimitError(err) || attempt >= GEMINI_MAX_RETRIES - 1) break;
       }
     }
   }
@@ -100,7 +136,9 @@ Return JSON only:
   "industry": "niche",
   "segment": "smb" or "enterprise",
   "fit_summary": "1-2 sentences why they might need NI services",
-  "likely_pain": "specific ops pain point"
+  "likely_pain": "specific ops pain point",
+  "icp_fit": true or false,
+  "icp_reject_reason": "short reason if icp_fit is false, else null"
 }`;
 
 export function prospectFromSerp(prospect) {
@@ -113,14 +151,22 @@ export function prospectFromSerp(prospect) {
     segment: 'smb',
     fit_summary: prospect.snippet || 'Prospect surfaced via web search; manual review recommended.',
     likely_pain: prospect.snippet || '',
+    icp_fit: null,
+    icp_reject_reason: null,
     _scan_source: 'serp_fallback',
   };
 }
 
 export async function geminiScanProspect(cfg, prospect) {
-  const text = await callGemini(cfg.geminiKey, SCAN_PROMPT(prospect), cfg.geminiBackup);
+  const { text, model } = await callGemini(
+    cfg.geminiKey,
+    SCAN_PROMPT(prospect),
+    cfg.geminiBackup,
+    resolveGeminiModels(cfg.geminiModel || GEMINI_MODEL)
+  );
   const scan = extractJson(text);
   scan._scan_source = 'gemini';
+  scan._gemini_model = model;
   return scan;
 }
 
@@ -154,20 +200,27 @@ export async function scanProspect(cfg, prospect) {
   }
 }
 
-export async function haikuScoreAndDraft(cfg, scan, prospect) {
+export async function haikuScoreAndDraft(cfg, scan, prospect, trainingBlock = '') {
+  const trainingSection = trainingBlock?.trim()
+    ? `\n\n${trainingBlock.trim()}`
+    : '';
+
   const system = `You are AXON, NORTHSiDE Intelligence's B2B outreach engine. Underground-premium voice. Never spammy.
 
 ${SERVICES_CATALOG}
 
 ${ICP}
 
+${SCORE_RUBRIC}
+
 Rules:
 - Pick channel: "email" if a business email can be inferred or generic ops@ pattern is reasonable; else "linkedin"
-- Score 0-100 fit for NI services
+- Score 0-100 fit for NI services using the rubric above
+- If icp_fit would be false, set score below ${MIN_OUTREACH_SCORE}
 - Email: under 150 words, personalized, one clear CTA to northsideintelligence.com/services
 - LinkedIn DM: under 80 words, conversational, no hard sell
 - Never claim you met them or know private facts not in the input
-- Return valid JSON only`;
+- Return valid JSON only${trainingSection}`;
 
   const user = `Prospect scan:
 ${JSON.stringify(scan, null, 2)}
