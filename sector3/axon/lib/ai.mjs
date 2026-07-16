@@ -53,7 +53,12 @@ async function callGeminiOnce(apiKey, prompt, model) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 800, temperature: 0.3 },
+      generationConfig: {
+        maxOutputTokens: 1024,
+        temperature: 0.2,
+        responseMimeType: 'application/json',
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     }),
   });
   if (!r.ok) {
@@ -105,7 +110,11 @@ async function callGemini(apiKey, prompt, backupKey, models) {
 }
 
 function extractJson(text) {
-  const match = text.match(/\{[\s\S]*\}/);
+  const cleaned = String(text || '')
+    .replace(/```(?:json)?\s*/gi, '')
+    .replace(/```/g, '')
+    .trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('No JSON in model response');
   return JSON.parse(match[0]);
 }
