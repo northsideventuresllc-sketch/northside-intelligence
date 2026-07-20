@@ -4,6 +4,7 @@ Agent session notes. **Read the 🚨 URGENT block first** — do not bury alerts
 
 ## Carry-over
 
+- **AX-PORTAL-SYNC-FIX shipped (PR #150):** Restored `fetchCompletedDispatches` after AXON sync dropped it. Prod Vercel READY on SHA `2bfd0f5`. `agent_dispatch` → done.
 - **IT-2 shipped (PR #144):** 90-day + trial-extension reports, KEEP/TRIAL/REMOVE, Stripe period-end cutoff, Archived ITs master revive. `agent_dispatch` IT-2 → done.
 - **ARM3 FIX complete (NI-ARM3-V):** GREEN smoke + IT generation gated until **2026-09-01 00:00 America/New_York**.
   - SHA: `40e6b892dce9ef207f4ddf9720cd67bd608787a5` (PR #142)
