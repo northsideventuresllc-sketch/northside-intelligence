@@ -119,5 +119,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to submit request" }, { status: 500 });
   }
 
+  // Marketing skeleton signal — interested lead (non-blocking).
+  try {
+    const { recordSkeletonSignal } = await import("@/lib/marketing-skeleton/db");
+    await recordSkeletonSignal({
+      productSlug: "ni-services",
+      signalType: "signup",
+      detail: { service_slug: body.serviceSlug.trim(), account_type: body.accountType },
+    });
+  } catch (signalError) {
+    console.error("[marketing-skeleton] service request signal failed:", signalError);
+  }
+
   return NextResponse.json({ success: true });
 }

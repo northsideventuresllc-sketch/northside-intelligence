@@ -88,6 +88,19 @@ export async function POST(req: NextRequest) {
           await recordPromoConversion(userId, session.amount_total);
         }
 
+        // Marketing skeleton revenue signal (non-blocking).
+        try {
+          const { recordSkeletonSignal } = await import("@/lib/marketing-skeleton/db");
+          await recordSkeletonSignal({
+            productSlug: session.metadata?.toolSlug ?? "ni-portal",
+            signalType: "revenue",
+            value: (session.amount_total ?? 0) / 100,
+            detail: { checkout_type: session.metadata?.checkoutType ?? null },
+          });
+        } catch (signalError) {
+          console.error("[marketing-skeleton] revenue signal failed:", signalError);
+        }
+
         const checkoutType = session.metadata?.checkoutType;
 
         if (checkoutType === "tool_lifetime" && session.metadata?.toolSlug) {
