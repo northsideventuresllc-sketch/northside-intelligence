@@ -1,11 +1,11 @@
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 
 const REPLYFLOW_MODEL = "anthropic/claude-haiku-4.5";
 
 export async function generateReply(systemPrompt: string, userMessage: string): Promise<string> {
   try {
-    const { text } = await generateText({
-      model: REPLYFLOW_MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: REPLYFLOW_MODEL,
       system: systemPrompt,
       prompt: userMessage,
       maxOutputTokens: 1024,

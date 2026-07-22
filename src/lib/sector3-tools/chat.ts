@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import type { Sector3ToolSlug } from "@/lib/sector3-registry";
 import { buildSector3ChatSystemPrompt } from "@/lib/sector3-tools/chat-content";
 
@@ -27,8 +27,8 @@ export async function runSector3ToolChat(
     .join("\n\n");
 
   try {
-    const { text } = await generateText({
-      model: MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: MODEL,
       system,
       prompt: conversation,
       maxOutputTokens: 800,

@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import type { DashboardField } from "@/components/sector3/Sector3ToolDashboard";
 import {
   parseSector3ClarifyingQuestions,
@@ -52,8 +52,8 @@ Rules:
 - Be practical: if a skilled analyst could produce useful output from the inputs, return false`;
 
   try {
-    const { text } = await generateText({
-      model: MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: fieldSummary,
       maxOutputTokens: 300,
@@ -115,8 +115,8 @@ Rules:
 - Include placeholder for custom typed answers`;
 
   try {
-    const { text } = await generateText({
-      model: MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: fieldSummary,
       maxOutputTokens: 1800,

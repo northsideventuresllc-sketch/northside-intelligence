@@ -83,6 +83,20 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
     );
     if (anthropic) process.env.ANTHROPIC_API_KEY = anthropic;
 
+    const gemini = await resolvePlatformSecret(
+      "GEMINI_API_KEY",
+      process.env.GEMINI_API_KEY,
+      (value) => !value?.trim()
+    );
+    if (gemini) process.env.GEMINI_API_KEY = gemini;
+
+    const geminiBackup = await resolvePlatformSecret(
+      "GEMINI_API_KEY_BACKUP",
+      process.env.GEMINI_API_KEY_BACKUP,
+      (value) => !value?.trim()
+    );
+    if (geminiBackup) process.env.GEMINI_API_KEY_BACKUP = geminiBackup;
+
     const cjKey = await resolvePlatformSecret(
       "CJ_DROPSHIPPING_API_KEY",
       process.env.CJ_DROPSHIPPING_API_KEY,

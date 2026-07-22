@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 
 const MODEL = "anthropic/claude-haiku-4.5";
 
@@ -51,8 +51,8 @@ Structure EXACTLY with these markdown headings in order:
 After ---TECHNICAL--- you may use analyst terminology, metrics shorthand, and competitive intelligence jargon.`;
 
   try {
-    const { text } = await generateText({
-      model: MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: rawSignals,
       maxOutputTokens: 2400,
@@ -96,8 +96,8 @@ Structure EXACTLY with these markdown headings in order:
 After ---TECHNICAL--- use product, UX, and competitive analysis terminology freely.`;
 
   try {
-    const { text } = await generateText({
-      model: MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: context,
       maxOutputTokens: 2400,
@@ -120,8 +120,8 @@ Tool purpose: ${toolSummary}
 Answer in plain English for a non-technical user (2-4 short paragraphs max). Avoid jargon unless you immediately explain it. If the question is outside the tool's scope, say so politely and suggest what they can do in ${toolName} instead. Do not invent features that do not exist.`;
 
   try {
-    const { text } = await generateText({
-      model: MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: question,
       maxOutputTokens: 600,
@@ -165,8 +165,8 @@ After ---TECHNICAL--- provide implementation detail for developers (APIs, webhoo
   const prompt = `Source system:\n${sourceSystem}\n\nTarget system:\n${targetSystem}\n\nGoal:\n${goal}`;
 
   try {
-    const { text } = await generateText({
-      model: MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: MODEL,
       system: systemPrompt,
       prompt,
       maxOutputTokens: 2600,
