@@ -29,11 +29,18 @@ export type DispatchRow = {
   dispatch_phrase: string | null;
   workflow_file: string | null;
   result_summary: string | null;
+  risk_tier?: string | null;
+  source?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   fired_at: string | null;
+  completed_at?: string | null;
 };
 
 const DISPATCH_COLUMNS =
-  'id,code,title,owner,manager_chat,repo,workflow_repo,status,priority,action_type,dispatch_phrase,workflow_file,result_summary,fired_at';
+  'id,code,title,owner,manager_chat,repo,workflow_repo,status,priority,action_type,dispatch_phrase,workflow_file,result_summary,risk_tier,source,created_at,updated_at,fired_at,completed_at';
+
+const TERMINAL_STATUSES = ['done', 'completed', 'fired'] as const;
 
 export async function fetchDispatchQueue(limit = 50): Promise<DispatchRow[]> {
   const sb = serviceClient();
@@ -45,6 +52,46 @@ export async function fetchDispatchQueue(limit = 50): Promise<DispatchRow[]> {
     .limit(limit);
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as DispatchRow[];
+}
+
+/** Completed / terminal dispatches since a date (default floor: 2025-06-29). */
+export async function fetchCompletedDispatches(
+  limit = 500,
+  since = '2025-06-29',
+): Promise<DispatchRow[]> {
+  const sb = serviceClient();
+  const sinceIso = since.includes('T') ? since : `${since}T00:00:00.000Z`;
+
+  const { data, error } = await sb
+    .from('agent_dispatch')
+    .select(DISPATCH_COLUMNS)
+    .in('status', [...TERMINAL_STATUSES])
+    .or(
+      `fired_at.gte.${sinceIso},completed_at.gte.${sinceIso},updated_at.gte.${sinceIso},created_at.gte.${sinceIso}`,
+    )
+    .order('updated_at', { ascending: false, nullsFirst: false })
+    .limit(limit * 3);
+
+  if (error) throw new Error(error.message);
+
+  const rows = (data ?? []) as unknown as DispatchRow[];
+  const byCode = new Map<string, DispatchRow>();
+  for (const row of rows) {
+    const prev = byCode.get(row.code);
+    const rowTs = row.updated_at ?? row.completed_at ?? row.fired_at ?? row.created_at ?? '';
+    const prevTs = prev
+      ? prev.updated_at ?? prev.completed_at ?? prev.fired_at ?? prev.created_at ?? ''
+      : '';
+    if (!prev || rowTs > prevTs) byCode.set(row.code, row);
+  }
+
+  return Array.from(byCode.values())
+    .sort((a, b) => {
+      const aTs = a.updated_at ?? a.completed_at ?? a.fired_at ?? a.created_at ?? '';
+      const bTs = b.updated_at ?? b.completed_at ?? b.fired_at ?? b.created_at ?? '';
+      return bTs.localeCompare(aTs);
+    })
+    .slice(0, limit);
 }
 
 /** Fetch a single dispatch task by its short code. Returns null when missing. */
