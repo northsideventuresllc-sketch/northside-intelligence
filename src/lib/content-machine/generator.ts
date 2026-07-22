@@ -1,5 +1,5 @@
-import { generateText } from "ai";
 import { randomUUID } from "node:crypto";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
   CONTENT_POST_TYPES,
   DEFAULT_BRAND_SLUG,
@@ -134,8 +134,8 @@ export async function generateSlotDraft(
     "\nGenerate one post. Return JSON only.",
   ].join("");
 
-  const { text } = await generateText({
-    model: MODEL,
+  const { text } = await generateTextGeminiFirst({
+    anthropicModel: MODEL,
     system,
     prompt: userPrompt,
     maxOutputTokens: 1200,

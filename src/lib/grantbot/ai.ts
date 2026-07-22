@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import { parseGrantListings, type GrantListing } from "@/lib/grantbot/listings";
 import { parseClarifyingQuestions, type ClarifyingQuestion } from "@/lib/grantbot/questions";
 
@@ -41,8 +41,8 @@ Rules:
 - Use short snake_case ids (e.g. location, budget, timeline)`;
 
   try {
-    const { text } = await generateText({
-      model: GRANTBOT_MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: GRANTBOT_MODEL,
       system: systemPrompt,
       prompt: orgDescription,
       maxOutputTokens: 1200,
@@ -89,8 +89,8 @@ Rules:
 - platformUrl must be a full URL the applicant can open`;
 
   try {
-    const { text } = await generateText({
-      model: GRANTBOT_MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: GRANTBOT_MODEL,
       system: systemPrompt,
       prompt: orgDescription,
       maxOutputTokens: 2500,
@@ -139,8 +139,8 @@ Write polished draft content with these sections:
 Be specific to the organization but honest — do not fabricate statistics, awards, or partnerships. Use markdown headings.`;
 
   try {
-    const { text } = await generateText({
-      model: GRANTBOT_MODEL,
+    const { text } = await generateTextGeminiFirst({
+      anthropicModel: GRANTBOT_MODEL,
       system: systemPrompt,
       prompt: input.orgDescription,
       maxOutputTokens: 2500,
