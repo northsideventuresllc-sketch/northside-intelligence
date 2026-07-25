@@ -31,10 +31,21 @@ const MF_FEATURES = [
   "premium pro",
 ];
 
+/**
+ * A valid hook is a question, a stat, or a pattern interrupt. The original list
+ * only matched a handful of opening words, so real pattern interrupts ("Tired
+ * of...", "You don't need...", "Nobody tells you...") were rejected and the
+ * daily batch died after 3 regeneration attempts. Widened to the forms that are
+ * actually hooks, still rejecting a flat declarative opener.
+ */
 const HOOK_PATTERNS = [
   /^\?/,
-  /^(?:what|why|how|when|did you|stop|ever|most|only|\d+%|\d+\s)/i,
-  /^(?:here's|here is|the truth|myth|secret|nobody)/i,
+  /\?\s*$/, // whole first line is a question
+  /^(?:what|why|how|when|where|who|which|did you|do you|can you|are you|is it|should you)/i,
+  /^(?:stop|start|ever|most|only|never|forget|imagine|picture|listen|read that again)/i,
+  /^\d+[%x]?\b/, // opens on a number or stat
+  /^(?:here's|here is|the truth|truth is|myth|secret|nobody|no one|everyone|hot take|unpopular)/i,
+  /^(?:you|your|if you|tired of|sick of|stuck|nobody tells you|it's not)/i,
 ];
 
 export function isLazyCaption(caption: string): boolean {
@@ -123,5 +134,6 @@ export function buildRegenFeedback(failures: string[]): string {
     "QUALITY GATE FAILED — regenerate with these fixes:",
     ...failures.map((f) => `- ${f}`),
     "- Use a specific hook, concrete Match Fit feature/promo, and scene-rich visual direction.",
+    "- The FIRST LINE must be one of: a question ending in '?', a number or stat, or a pattern interrupt opening with a word like Stop / Never / Nobody / Tired of / You / Here's / The truth. Do not open with a flat statement.",
   ].join("\n");
 }
