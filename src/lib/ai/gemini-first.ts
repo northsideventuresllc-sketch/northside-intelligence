@@ -1,9 +1,28 @@
 import "server-only";
 
-import { generateText } from "ai";
 import { resolvePlatformSecret } from "@/lib/platform-secrets";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+/**
+ * Free-tier Gemini models, tried in order. gemini-2.0-flash is deliberately
+ * LAST: its free quota is exhausted and it returns 429, which used to push
+ * every generation onto the paid Vercel AI Gateway fallback and fail with
+ * "Free tier users do not have access to this model" — the daily
+ * content-machine failure JB kept getting texted about.
+ *
+ * JB's hard rule: NOTHING here may route to a paid API. If every free model
+ * is out of quota we fail with a plain-English message instead.
+ */
+const FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
+
+async function resolveModels(): Promise<string[]> {
+  const configured = await resolvePlatformSecret(
+    "GEMINI_MODEL",
+    process.env.GEMINI_MODEL,
+    (value) => !value?.trim()
+  );
+  const ordered = configured?.trim() ? [configured.trim(), ...FALLBACK_MODELS] : FALLBACK_MODELS;
+  return ordered.filter((m, i) => ordered.indexOf(m) === i);
+}
 
 /**
  * Resolve GEMINI_API_KEY / GEMINI_API_KEY_BACKUP from env or ni_platform_secrets,
@@ -25,13 +44,14 @@ async function resolveGeminiKeys(): Promise<string[]> {
 
 async function callGeminiOnce(
   apiKey: string,
+  model: string,
   system: string,
   prompt: string,
   maxOutputTokens: number,
   temperature: number
 ): Promise<string | null> {
   const r = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -52,8 +72,8 @@ async function callGeminiOnce(
 }
 
 export type GeminiFirstArgs = {
-  /** Anthropic model string to fall back to, e.g. "anthropic/claude-haiku-4.5" (Vercel AI Gateway format). */
-  anthropicModel: string;
+  /** @deprecated Kept for call-site compatibility. No paid fallback is used. */
+  anthropicModel?: string;
   system: string;
   prompt: string;
   maxOutputTokens: number;
@@ -61,32 +81,33 @@ export type GeminiFirstArgs = {
 };
 
 /**
- * Try the user's free-tier Gemini key(s) first; fall back to the existing
- * Anthropic-via-Vercel-AI-Gateway path only if Gemini is unconfigured or fails.
- * Drop-in replacement for `generateText({ model: anthropicModel, ... })` — same
- * `{ text }` return shape.
+ * Generate text on the free Gemini tier only. Tries the configured model first,
+ * then the other free models, then the backup key — and never falls back to a
+ * paid provider.
  */
 export async function generateTextGeminiFirst(
   args: GeminiFirstArgs
-): Promise<{ text: string; provider: "gemini" | "anthropic" }> {
-  const { anthropicModel, system, prompt, maxOutputTokens, temperature = 0.5 } = args;
+): Promise<{ text: string; provider: "gemini" }> {
+  const { system, prompt, maxOutputTokens, temperature = 0.5 } = args;
 
   const geminiKeys = await resolveGeminiKeys();
+  if (!geminiKeys.length) {
+    throw new Error("Content generation is off: no Google AI key is set up yet.");
+  }
+
+  const models = await resolveModels();
   for (const key of geminiKeys) {
-    try {
-      const text = await callGeminiOnce(key, system, prompt, maxOutputTokens, temperature);
-      if (text) return { text, provider: "gemini" };
-    } catch {
-      // try next key / fall through to Anthropic
+    for (const model of models) {
+      try {
+        const text = await callGeminiOnce(key, model, system, prompt, maxOutputTokens, temperature);
+        if (text) return { text, provider: "gemini" };
+      } catch {
+        // try the next model / key
+      }
     }
   }
 
-  const { text } = await generateText({
-    model: anthropicModel,
-    system,
-    prompt,
-    maxOutputTokens,
-    temperature,
-  });
-  return { text, provider: "anthropic" };
+  throw new Error(
+    "Content generation is out of free Google AI quota for today. It will work again after the daily reset — nothing is broken and nothing needs paying for."
+  );
 }
