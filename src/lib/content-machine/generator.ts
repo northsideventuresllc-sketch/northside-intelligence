@@ -155,6 +155,7 @@ export async function generateSlotWithQualityGate(
 
   let feedback: string | undefined;
   let lastFailures: string[] = [];
+  let lastDraft: GeneratedDraft | undefined;
 
   for (let attempt = 1; attempt <= MAX_REGEN_ATTEMPTS + 1; attempt++) {
     const draft = await generateSlotDraft(input, feedback);
@@ -169,15 +170,41 @@ export async function generateSlotWithQualityGate(
     }
 
     lastFailures = gate.failures;
+    lastDraft = draft;
     feedback = buildRegenFeedback(gate.failures);
 
     if (attempt <= MAX_REGEN_ATTEMPTS) {
       await logSignal({
         brandSlug: input.brandSlug,
         signalType: "REGENERATED",
-        meta: { failures: gate.failures, attempt, ...input },
+        // Record the actual opening line — without it a repeated gate failure
+        // is undiagnosable and the whole daily batch just dies silently.
+        meta: {
+          failures: gate.failures,
+          attempt,
+          firstLine: draft.caption.trim().split(/\n/)[0]?.slice(0, 160) ?? "",
+          ...input,
+        },
       });
     }
+  }
+
+  // Never kill the whole batch over a style rule. After the last retry, keep the
+  // best draft and let it through flagged — JB approves every post by hand
+  // anyway, so a caption he can fix beats no batch at all.
+  if (lastDraft) {
+    await logSignal({
+      brandSlug: input.brandSlug,
+      signalType: "REGENERATED",
+      meta: {
+        failures: lastFailures,
+        attempt: MAX_REGEN_ATTEMPTS + 1,
+        acceptedFlagged: true,
+        firstLine: lastDraft.caption.trim().split(/\n/)[0]?.slice(0, 160) ?? "",
+        ...input,
+      },
+    });
+    return { draft: lastDraft, attempts: MAX_REGEN_ATTEMPTS + 1, failures: lastFailures };
   }
 
   throw new Error(
