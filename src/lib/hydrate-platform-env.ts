@@ -125,12 +125,31 @@ export async function hydratePlatformEnvFromDatabase(): Promise<void> {
     );
     if (serpApi) process.env.SERPAPI_API_KEY = serpApi;
 
+    // NI mail must go out on the Resend account that owns northsideintelligence.com
+    // (RESEND_API_KEY_NI). The plain RESEND_API_KEY belongs to the Match Fit account,
+    // which cannot send from the NI domain — that was the real cause of NI email
+    // never sending, not a missing/unverified domain.
+    const resendNi = await resolvePlatformSecret(
+      "RESEND_API_KEY_NI",
+      process.env.RESEND_API_KEY_NI,
+      (value) => !value?.trim()
+    );
+    if (resendNi) process.env.RESEND_API_KEY_NI = resendNi;
+
     const resend = await resolvePlatformSecret(
       "RESEND_API_KEY",
       process.env.RESEND_API_KEY,
       (value) => !value?.trim()
     );
-    if (resend) process.env.RESEND_API_KEY = resend;
+    if (resendNi) process.env.RESEND_API_KEY = resendNi;
+    else if (resend) process.env.RESEND_API_KEY = resend;
+
+    const resendFrom = await resolvePlatformSecret(
+      "RESEND_FROM_EMAIL",
+      process.env.RESEND_FROM_EMAIL,
+      (value) => !value?.trim()
+    );
+    if (resendFrom) process.env.RESEND_FROM_EMAIL = resendFrom;
 
     const kitApiKey = await resolvePlatformSecret(
       "KIT_API_KEY",
