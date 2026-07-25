@@ -48,6 +48,19 @@ const HOOK_PATTERNS = [
   /^(?:you|your|if you|tired of|sick of|stuck|nobody tells you|it's not)/i,
 ];
 
+/**
+ * Invented people. The first live free-tier batch produced "Meet Sarah, one of
+ * our founding Fitness Pros" — a fabricated testimonial about a customer who
+ * does not exist. That is a trust and advertising problem, not a style nit, so
+ * it is a hard gate failure.
+ */
+const FAKE_PERSON_RE =
+  /\b(?:meet|introducing|say hello to|shoutout to|meet our)\s+[A-Z][a-z]{2,}\b|\b[A-Z][a-z]{2,},?\s+(?:one of our|a founding|our founding)\b/;
+
+export function hasInventedPerson(caption: string): boolean {
+  return FAKE_PERSON_RE.test(caption);
+}
+
 export function isLazyCaption(caption: string): boolean {
   const trimmed = caption.trim();
   if (!trimmed) return true;
@@ -114,6 +127,9 @@ export function runQualityGate(args: {
   }
   if (hasBannedPhrase(draft.caption, bannedPhrases)) {
     failures.push("Contains banned phrase");
+  }
+  if (hasInventedPerson(draft.caption)) {
+    failures.push("No invented people or made-up testimonials — only real, verifiable examples");
   }
   if (!hasValidHook(draft.caption)) {
     failures.push("Hook must be question, stat, or pattern interrupt");
