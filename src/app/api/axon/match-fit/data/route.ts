@@ -59,8 +59,9 @@ type PostRow = {
 
 type OutreachRow = {
   id: string;
-  full_name: string | null;
-  instagram_handle: string | null;
+  handle: string | null;
+  niche: string | null;
+  target_group: string | null;
   status: string;
   created_at: string;
   source: string;
@@ -120,7 +121,7 @@ export async function GET() {
       ) as Promise<PostRow[]>,
       sbSelect(
         'ni_brain_outreach',
-        `source=eq.match_fit&status=not.in.(dead,dead_lead,converted,rejected,purged)&select=id,full_name,instagram_handle,status,created_at,source&order=created_at.desc&limit=20`
+        `source=eq.match_fit&status=not.in.(dead,dead_lead,converted,rejected,purged)&select=id,handle,niche,target_group,status,created_at,source&order=created_at.desc&limit=20`
       ) as Promise<OutreachRow[]>,
       sbSelect(
         'content_machine_posts',
