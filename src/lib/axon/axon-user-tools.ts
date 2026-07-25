@@ -27,6 +27,13 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'custom',
   },
   {
+    slug: 'monday-review',
+    defaultDisplayName: 'Monday Approvals',
+    href: '/tools/monday-review',
+    icon: '✅',
+    sourceType: 'custom',
+  },
+  {
     slug: 'ni-outreach',
     defaultDisplayName: 'NI Outreach HQ',
     href: '/tools/ni-outreach',

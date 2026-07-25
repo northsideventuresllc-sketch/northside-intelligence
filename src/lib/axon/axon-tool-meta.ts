@@ -20,6 +20,12 @@ export const AXON_TOOL_META: Record<string, AxonToolMeta> = {
     builderPrompt:
       'Help JB adjust AXON Management-Match Fit — tabs, stats, deep links, and Match Fit data views.',
   },
+  'monday-review': {
+    setupDescription:
+      'Your Monday approval screen. Tick the outreach drafts you like, hit Approve, and they queue to send. Bad-fit drafts are filtered out before you ever see them. Nothing sends without you.',
+    builderPrompt:
+      'Help JB adjust Monday Approvals — what shows in the list, the junk filter, and the approve/reject flow.',
+  },
   'ni-outreach': {
     setupDescription:
       'Your NI Services outreach pipeline: approval queue, lead pipeline, channel settings (email + social), ICP checklist, and follow-up drafts for sent leads.',
