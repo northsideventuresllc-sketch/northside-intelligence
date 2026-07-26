@@ -48,10 +48,10 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'custom',
   },
   {
-    slug: 'droid-space',
-    defaultDisplayName: 'Droid Space',
-    icon: '🤖',
-    href: '/tools/droid-space',
+    slug: 'command-center',
+    defaultDisplayName: 'Command Center',
+    icon: '🎛',
+    href: '/tools/command-center',
     sourceType: 'custom',
   },
   {

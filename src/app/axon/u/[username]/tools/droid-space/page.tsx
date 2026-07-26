@@ -1,13 +1,15 @@
-import { DroidSpaceTool } from '@/components/axon-ui/droid-space-tool';
+import { redirect } from 'next/navigation';
+import { axonPublicPath } from '@/lib/axon/paths';
 import { requireAxonPortalUser } from '@/lib/axon/portal-guard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AxonDroidSpacePage({
+/** Droid Space merged into Command Center (JB decision 2026-07-26, #335). */
+export default async function AxonDroidSpaceRedirect({
   params,
 }: {
   params: { username: string };
 }) {
-  await requireAxonPortalUser(params.username);
-  return <DroidSpaceTool />;
+  const { username } = await requireAxonPortalUser(params.username);
+  redirect(`${axonPublicPath(username)}/tools/command-center`);
 }

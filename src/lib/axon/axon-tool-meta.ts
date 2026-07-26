@@ -38,6 +38,12 @@ export const AXON_TOOL_META: Record<string, AxonToolMeta> = {
     builderPrompt:
       'Help JB adjust the AXON Brain map — which sources appear, how they cluster, and what shows on hover.',
   },
+  'command-center': {
+    setupDescription:
+      'The one screen. Needs You (approvals), Workers (build jobs — Droid Space lives here now), Schedules (every automation, green or red), Health (verified spend and site status). Everything read live — no summaries.',
+    builderPrompt:
+      'Help JB adjust Command Center — sections, what counts as stuck, and which sources feed each panel.',
+  },
   'droid-space': {
     setupDescription:
       'Every build job in one room: what is waiting, what is running now, what got stuck, and what each one actually produced. Start one job or start them all.',
