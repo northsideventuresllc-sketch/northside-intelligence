@@ -74,6 +74,12 @@ export function AxonInterface({
   const [speaking, setSpeaking] = useState(false);
   const [focusPanel, setFocusPanel] = useState<FocusPanelId | null>(null);
   const [urgentChatOverlay, setUrgentChatOverlay] = useState(false);
+  // NIP-AXON-CHAT-UX: select + delete messages, stop read-aloud mid-sentence,
+  // start a fresh chat, and expand the window.
+  const [chatSelectMode, setChatSelectMode] = useState(false);
+  const [selectedMsgIds, setSelectedMsgIds] = useState<Set<string>>(new Set());
+  const [chatExpanded, setChatExpanded] = useState(false);
+  const [chatBusy, setChatBusy] = useState(false);
   const [notifTrigger, setNotifTrigger] = useState<{ notification: AxonNotification; key: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const voice = useAxonVoice(inputMode, voiceId, readAloud);
@@ -242,6 +248,129 @@ export function AxonInterface({
     }
   }
 
+  const toggleMsgSelected = useCallback((id: string) => {
+    setSelectedMsgIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const deleteSelectedMessages = useCallback(async () => {
+    const ids = Array.from(selectedMsgIds);
+    if (!ids.length) return;
+    setChatBusy(true);
+    try {
+      const res = await fetch(apiUrl('/api/axon/chat/messages'), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      if (res.ok) {
+        setAllMessages((prev) => prev.filter((m) => !selectedMsgIds.has(m.id)));
+        setSelectedMsgIds(new Set());
+        setChatSelectMode(false);
+      }
+    } finally {
+      setChatBusy(false);
+    }
+  }, [selectedMsgIds]);
+
+  const startFreshChat = useCallback(async () => {
+    setChatBusy(true);
+    try {
+      const res = await fetch(apiUrl('/api/axon/chat/messages'), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true }),
+      });
+      if (res.ok) {
+        setAllMessages([]);
+        setSelectedMsgIds(new Set());
+        setChatSelectMode(false);
+      }
+    } finally {
+      setChatBusy(false);
+    }
+  }, []);
+
+  const stopSpeaking = useCallback(() => {
+    voice.stopSpeaking();
+    setSpeaking(false);
+  }, [voice]);
+
+  const chatToolbar = (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        disabled={chatBusy}
+        onClick={() => void startFreshChat()}
+        className="rounded-full border border-axon-border px-3 py-1 text-[11px] font-semibold text-axon-muted transition hover:border-axon-blue-glow/50 hover:text-white disabled:opacity-40"
+      >
+        New Chat
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setChatSelectMode((v) => !v);
+          setSelectedMsgIds(new Set());
+        }}
+        className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+          chatSelectMode
+            ? 'border-axon-blue-glow/60 bg-axon-blue-glow/10 text-axon-blue-glow'
+            : 'border-axon-border text-axon-muted hover:text-white'
+        }`}
+      >
+        {chatSelectMode ? 'Cancel' : 'Select'}
+      </button>
+      {chatSelectMode && (
+        <button
+          type="button"
+          disabled={chatBusy || selectedMsgIds.size === 0}
+          onClick={() => void deleteSelectedMessages()}
+          className="rounded-full border border-red-400/40 px-3 py-1 text-[11px] font-semibold text-red-300 disabled:opacity-40"
+        >
+          Delete {selectedMsgIds.size || ''}
+        </button>
+      )}
+      {speaking && (
+        <button
+          type="button"
+          onClick={stopSpeaking}
+          className="rounded-full border border-axon-gold/50 px-3 py-1 text-[11px] font-semibold text-axon-gold"
+        >
+          Stop Talking
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => setChatExpanded((v) => !v)}
+        className="rounded-full border border-axon-border px-3 py-1 text-[11px] font-semibold text-axon-muted transition hover:text-white"
+      >
+        {chatExpanded ? 'Shrink' : 'Expand'}
+      </button>
+    </div>
+  );
+
+  const renderMessages = () =>
+    messages.map((m) => (
+      <div key={m.id} className="flex items-start gap-2">
+        {chatSelectMode && (
+          <input
+            type="checkbox"
+            checked={selectedMsgIds.has(m.id)}
+            onChange={() => toggleMsgSelected(m.id)}
+            aria-label="Select message"
+            className="mt-2 h-4 w-4 shrink-0 accent-axon-blue-glow"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <MessageBubble role={m.role} content={m.content} channel={m.channel} />
+        </div>
+      </div>
+    ));
+
   const briefingPanel = (
     <BriefingPanel
       items={workspace.briefing}
@@ -277,19 +406,18 @@ export function AxonInterface({
           <p className="text-lg font-bold uppercase tracking-[0.3em] text-red-400">Urgent notification</p>
         </div>
       )}
-      <div className="relative shrink-0 border-b border-axon-border/50 px-4 py-2.5">
+      <div className="relative flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-axon-border/50 px-4 py-2.5">
         <p className="text-[10px] uppercase tracking-[0.25em] text-axon-blue-glow">Command Interface</p>
+        {chatToolbar}
       </div>
-      <div ref={scrollRef} className="axon-holo-messages min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+      <div ref={scrollRef} className={`axon-holo-messages min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5 ${chatExpanded ? "max-h-[80vh]" : ""}`}>
         {messages.length === 0 && !loading && (
           <div className="flex h-full flex-col items-center justify-center text-center text-sm text-axon-muted">
             <p>Good to see you. I&apos;m AXON — your personalized agentic assistant.</p>
             <p className="mt-2 text-xs">Ask about outreach, briefing, or to-dos.</p>
           </div>
         )}
-        {messages.map((m) => (
-          <MessageBubble key={m.id} role={m.role} content={m.content} channel={m.channel} />
-        ))}
+        {renderMessages()}
         {loading && (
           <div className="flex items-center gap-2 text-xs text-axon-muted">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-axon-cyan" />
@@ -342,19 +470,18 @@ export function AxonInterface({
           <p className="text-lg font-bold uppercase tracking-[0.3em] text-red-400">Urgent notification</p>
         </div>
       )}
-      <div className="relative shrink-0 border-b border-axon-border/50 px-4 py-2.5">
+      <div className="relative flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-axon-border/50 px-4 py-2.5">
         <p className="text-[10px] uppercase tracking-[0.25em] text-axon-blue-glow">Command Interface</p>
+        {chatToolbar}
       </div>
-      <div ref={scrollRef} className="axon-holo-messages min-h-[280px] flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+      <div ref={scrollRef} className={`axon-holo-messages flex-1 space-y-3 overflow-y-auto p-4 sm:p-5 ${chatExpanded ? "min-h-[70vh]" : "min-h-[280px]"}`}>
         {messages.length === 0 && !loading && (
           <div className="flex h-full flex-col items-center justify-center text-center text-sm text-axon-muted">
             <p>Good to see you. I&apos;m AXON — your personalized agentic assistant.</p>
             <p className="mt-2 text-xs">Ask about outreach, briefing, or to-dos.</p>
           </div>
         )}
-        {messages.map((m) => (
-          <MessageBubble key={m.id} role={m.role} content={m.content} channel={m.channel} />
-        ))}
+        {renderMessages()}
         {loading && (
           <div className="flex items-center gap-2 text-xs text-axon-muted">
             <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-axon-cyan" />
