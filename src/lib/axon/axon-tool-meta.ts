@@ -32,6 +32,12 @@ export const AXON_TOOL_META: Record<string, AxonToolMeta> = {
     builderPrompt:
       'Help JB adjust NI Outreach HQ — queue flow, channel connections, follow-up engine, and pipeline bulk actions.',
   },
+  'droid-space': {
+    setupDescription:
+      'Every build job in one room: what is waiting, what is running now, what got stuck, and what each one actually produced. Start one job or start them all.',
+    builderPrompt:
+      'Help JB adjust Droid Space — job grouping, what counts as stuck, and the results shown per job.',
+  },
   'ni-content': {
     setupDescription:
       'Posts for NORTHSiDE Intelligence, drafted by the same machine that writes Match Fit content. Read, edit, approve or bin — nothing publishes on its own.',

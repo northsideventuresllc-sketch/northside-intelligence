@@ -41,6 +41,13 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'outreach_engine',
   },
   {
+    slug: 'droid-space',
+    defaultDisplayName: 'Droid Space',
+    icon: '🤖',
+    href: '/tools/droid-space',
+    sourceType: 'custom',
+  },
+  {
     slug: 'ni-content',
     defaultDisplayName: 'NI Content',
     icon: '📰',
