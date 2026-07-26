@@ -14,6 +14,7 @@ import { OutreachChannelSettings } from './outreach-channel-settings';
 import { FollowUpTool } from './follow-up-tool';
 import { Phase1WorkflowPanel } from './phase1-workflow-panel';
 import { STATUS_ORDER, BULK_STATUS_OPTIONS } from '@/lib/axon/types';
+import { plainStatus, statusHelp } from '@/lib/axon/plain-labels';
 import { apiUrl } from '@/lib/axon/api-base';
 import { appPath } from '@/lib/axon/app-path';
 import { consumeToolLaunch } from '@/lib/axon/axon-user-tools';
@@ -25,9 +26,9 @@ export type OutreachHqTab = 'overview' | 'queue' | 'pipeline' | 'follow-up';
 
 const TABS: { id: OutreachHqTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
-  { id: 'queue', label: 'Queue' },
-  { id: 'pipeline', label: 'Pipeline' },
-  { id: 'follow-up', label: 'Follow-Up' },
+  { id: 'queue', label: 'Waiting On You' },
+  { id: 'pipeline', label: 'Outreach Hub' },
+  { id: 'follow-up', label: 'Follow-Ups' },
 ];
 
 interface OutreachHqToolProps {
@@ -264,8 +265,11 @@ export function OutreachHqTool({
             <section className="space-y-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-medium">Pipeline</h2>
-                  <p className="mt-1 text-sm text-axon-muted">All AXON NI Services leads from NI-Brain.</p>
+                  <h2 className="text-xl font-medium">Outreach Hub</h2>
+                  <p className="mt-1 text-sm text-axon-muted">
+                    Everyone we have reached out to, and everyone still waiting. Filter by where
+                    they are.
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -291,7 +295,7 @@ export function OutreachHqTool({
                     onClick={toggleSelectAllVisible}
                     className="text-sm text-axon-teal hover:underline"
                   >
-                    {selectedIds.size === filtered.length ? 'Deselect all' : 'Select all visible'}
+                    {selectedIds.size === filtered.length ? 'Clear All' : 'Select All Showing'}
                   </button>
                   <select
                     value={bulkStatus}
@@ -300,7 +304,7 @@ export function OutreachHqTool({
                   >
                     {BULK_STATUS_OPTIONS.map((s) => (
                       <option key={s} value={s}>
-                        {s.replace(/_/g, ' ')}
+                        {plainStatus(s)}
                       </option>
                     ))}
                   </select>
@@ -310,7 +314,7 @@ export function OutreachHqTool({
                     onClick={() => runBulk('status')}
                     className="rounded-lg border border-axon-border px-3 py-1.5 text-sm hover:bg-axon-elevated disabled:opacity-50"
                   >
-                    Mass change status
+                    Change Status
                   </button>
                   <button
                     type="button"
@@ -318,7 +322,7 @@ export function OutreachHqTool({
                     onClick={() => runBulk('archive')}
                     className="rounded-lg border border-axon-border px-3 py-1.5 text-sm hover:bg-axon-elevated disabled:opacity-50"
                   >
-                    Mass archive
+                    Archive
                   </button>
                   {bulkMessage && <span className="text-sm text-axon-muted">{bulkMessage}</span>}
                 </div>
@@ -328,7 +332,7 @@ export function OutreachHqTool({
                 {icpAutoRejectedCount > 0 && (
                   <FilterPill
                     href={pipelineHref('icp_auto')}
-                    label="ICP auto-rejected"
+                    label={plainStatus('icp_auto')}
                     active={pipelineFilter === 'icp_auto'}
                     count={icpAutoRejectedCount}
                   />
@@ -340,7 +344,8 @@ export function OutreachHqTool({
                     <FilterPill
                       key={status}
                       href={pipelineHref(status)}
-                      label={status.replace(/_/g, ' ')}
+                      label={plainStatus(status)}
+                      title={statusHelp(status)}
                       active={pipelineFilter === status}
                       count={count}
                     />
@@ -393,16 +398,19 @@ function FilterPill({
   label,
   active,
   count,
+  title,
 }: {
   href: string;
   label: string;
   active: boolean;
   count: number;
+  title?: string;
 }) {
   return (
     <Link
       href={href}
-      className={`rounded-full border px-3 py-1 text-xs capitalize transition ${
+      title={title}
+      className={`rounded-full border px-3 py-1 text-xs transition ${
         active
           ? 'border-axon-gold/50 bg-axon-gold/10 text-axon-gold'
           : 'border-axon-border text-axon-muted hover:border-axon-gold/30'
