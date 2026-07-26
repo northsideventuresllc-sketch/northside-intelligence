@@ -32,6 +32,12 @@ export const AXON_TOOL_META: Record<string, AxonToolMeta> = {
     builderPrompt:
       'Help JB adjust NI Outreach HQ — queue flow, channel connections, follow-up engine, and pipeline bulk actions.',
   },
+  brain: {
+    setupDescription:
+      'A map of everything AXON knows — context, decisions, learnings and what it has picked up about you. Hover any dot to read it.',
+    builderPrompt:
+      'Help JB adjust the AXON Brain map — which sources appear, how they cluster, and what shows on hover.',
+  },
   'droid-space': {
     setupDescription:
       'Every build job in one room: what is waiting, what is running now, what got stuck, and what each one actually produced. Start one job or start them all.',

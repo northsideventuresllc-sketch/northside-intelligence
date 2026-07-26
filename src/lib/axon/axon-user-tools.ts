@@ -41,6 +41,13 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'outreach_engine',
   },
   {
+    slug: 'brain',
+    defaultDisplayName: 'AXON Brain',
+    icon: '🌌',
+    href: '/tools/brain',
+    sourceType: 'custom',
+  },
+  {
     slug: 'droid-space',
     defaultDisplayName: 'Droid Space',
     icon: '🤖',
