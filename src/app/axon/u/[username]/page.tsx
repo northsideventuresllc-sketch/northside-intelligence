@@ -38,5 +38,5 @@ export default async function AxonUserEntryPage({
   const allowed = await canEnterAxonPortal(user.id);
   if (!allowed) redirect("/axon");
 
-  redirect(`/api/axon/bootstrap?username=${encodeURIComponent(username)}`);
+  redirect(`/axon/enter?username=${encodeURIComponent(username)}`);
 }

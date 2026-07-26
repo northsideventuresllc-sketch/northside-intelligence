@@ -34,7 +34,10 @@ export async function requireAxonPortalUser(username: string) {
 
   const sessionToken = cookies().get(AXON_SESSION_COOKIE)?.value;
   if (!readAxonSessionFromCookieValue(sessionToken, user.id)) {
-    redirect(`/api/axon/bootstrap?username=${encodeURIComponent(normalized)}`);
+    // Route through the /axon/enter page, never straight to the API route.
+    // A Server Component redirect into an API route returns no RSC payload on a
+    // client-side navigation, which rendered a black screen until JB refreshed.
+    redirect(`/axon/enter?username=${encodeURIComponent(normalized)}`);
   }
 
   return { user, username: normalized, operatorId: normalized };

@@ -45,6 +45,21 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(
     new URL(axonPublicPath(username, "/dashboard"), request.url)
   );
-  setAxonSessionCookie(response, user.id);
+
+  // If the signing secret is missing, minting throws and the browser gets a
+  // 500 with no body — indistinguishable from the black screen this flow used
+  // to produce. Fail loudly and in plain English instead.
+  try {
+    setAxonSessionCookie(response, user.id);
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "AXON cannot start a session because its session secret is not configured on the server.",
+      },
+      { status: 500 }
+    );
+  }
+
   return response;
 }
