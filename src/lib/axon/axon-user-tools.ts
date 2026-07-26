@@ -41,6 +41,13 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'outreach_engine',
   },
   {
+    slug: 'ni-content',
+    defaultDisplayName: 'NI Content',
+    icon: '📰',
+    href: '/tools/ni-content',
+    sourceType: 'custom',
+  },
+  {
     slug: 'hermes-sync',
     defaultDisplayName: 'NI Marketing HQ',
     href: '/tools/hermes',

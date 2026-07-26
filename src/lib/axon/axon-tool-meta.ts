@@ -32,6 +32,12 @@ export const AXON_TOOL_META: Record<string, AxonToolMeta> = {
     builderPrompt:
       'Help JB adjust NI Outreach HQ — queue flow, channel connections, follow-up engine, and pipeline bulk actions.',
   },
+  'ni-content': {
+    setupDescription:
+      'Posts for NORTHSiDE Intelligence, drafted by the same machine that writes Match Fit content. Read, edit, approve or bin — nothing publishes on its own.',
+    builderPrompt:
+      'Help JB adjust NI Content — what gets drafted, the approval flow, and how posts are grouped.',
+  },
   'hermes-sync': {
     setupDescription:
       'Marketing task mirror from the dispatch queue — read-only status of Hermes marketing rows. Fire workflows from Repo Manager Agent Dispatch.',
