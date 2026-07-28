@@ -3,6 +3,21 @@
 import { useState } from 'react';
 import type { ContentPost } from '@/lib/content-machine/types';
 
+/** The date the post is written for, kept alongside the draft. */
+function postDate(p: ContentPost): string {
+  const raw = (p.meta as Record<string, unknown> | null)?.content_date;
+  return typeof raw === 'string' ? raw : '';
+}
+
+/**
+ * JB's rule: a LinkedIn post always has a photo attached, and Instagram cannot
+ * post text alone. A post heading to either without a picture prompt is a gap he
+ * needs to see on the screen, not a silent omission.
+ */
+function needsPicture(p: ContentPost): boolean {
+  return p.platforms?.some((x) => x === 'LinkedIn' || x === 'Instagram') ?? false;
+}
+
 export function NiContentEngineTool({ initialPosts }: { initialPosts: ContentPost[] }) {
   const [posts, setPosts] = useState(initialPosts);
   const [busy, setBusy] = useState(false);
@@ -72,7 +87,9 @@ export function NiContentEngineTool({ initialPosts }: { initialPosts: ContentPos
             <div key={p.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs uppercase tracking-wide text-axon-blue-glow">
-                  {p.post_type} · {p.target_group}
+                  {p.post_type}
+                  {p.platforms?.length ? ` · ${p.platforms.join(', ')}` : ''}
+                  {postDate(p) ? ` · ${postDate(p)}` : ''}
                 </span>
                 <span className="text-[10px] uppercase tracking-wider text-axon-muted">
                   {p.status === 'pending_approval' ? 'Waiting on you' : p.status}
@@ -89,6 +106,36 @@ export function NiContentEngineTool({ initialPosts }: { initialPosts: ContentPos
               ) : (
                 <p className="mt-2 whitespace-pre-wrap text-sm text-white/80">{p.caption}</p>
               )}
+
+              {p.hashtags?.length ? (
+                <p className="mt-2 text-xs text-axon-blue-glow/80">{p.hashtags.join(' ')}</p>
+              ) : null}
+
+              {p.visual_prompt ? (
+                <details className="mt-3 rounded-lg border border-white/10 bg-axon-bg/60 p-3">
+                  <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-axon-muted">
+                    Picture to make — copy this into Gemini
+                  </summary>
+                  <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-white/70">
+                    {p.visual_prompt}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void navigator.clipboard.writeText(p.visual_prompt ?? '')}
+                    className="mt-3 rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-white"
+                  >
+                    Copy Picture Prompt
+                  </button>
+                  <p className="mt-2 text-[11px] text-axon-muted">
+                    The white border is scaffolding — crop it off before this goes anywhere.
+                  </p>
+                </details>
+              ) : needsPicture(p) ? (
+                <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-xs text-amber-200">
+                  This one is going to {p.platforms.join(', ')} with no picture. Every LinkedIn and
+                  Instagram post needs one.
+                </p>
+              ) : null}
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {isEditing ? (
