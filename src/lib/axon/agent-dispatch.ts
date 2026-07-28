@@ -81,17 +81,12 @@ export async function fetchDispatchQueue(limit = 50): Promise<DispatchRow[]> {
   return data ?? [];
 }
 
-export async function fetchCompletedDispatches(
-  limit = 20,
-  since?: string,
-): Promise<DispatchRow[]> {
+export async function fetchCompletedDispatches(limit = 20): Promise<DispatchRow[]> {
   const sb = serviceClient();
-  let q = sb
+  const { data, error } = await sb
     .from('agent_dispatch')
     .select(SELECT_FIELDS)
-    .in('status', ['done', 'skipped', 'failed', 'blocked']);
-  if (since) q = q.gte('fired_at', since);
-  const { data, error } = await q
+    .in('status', ['done', 'skipped', 'failed', 'blocked'])
     .order('fired_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);

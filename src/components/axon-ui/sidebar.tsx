@@ -36,7 +36,7 @@ function SignOutButton({ basePath }: { basePath?: string }) {
       onClick={handleSignOut}
       className="w-full truncate rounded-lg px-3 py-2 text-left text-[11px] uppercase tracking-[0.1em] text-axon-muted transition hover:bg-axon-elevated hover:text-axon-text"
     >
-      SIGN OUT
+      Sign out
     </button>
   );
 }

@@ -23,9 +23,8 @@ type ContentPost = {
 
 type OutreachLead = {
   id: string;
-  handle: string | null;
-  niche: string | null;
-  target_group: string | null;
+  full_name: string | null;
+  instagram_handle: string | null;
   status: string;
   created_at: string;
   source: string;
@@ -259,7 +258,7 @@ function OutreachTab({ leads }: { leads: OutreachLead[] }) {
             <thead className="bg-white/5 text-axon-muted">
               <tr>
                 <th className="px-4 py-2.5">Handle</th>
-                <th className="px-4 py-2.5">Focus</th>
+                <th className="px-4 py-2.5">Name</th>
                 <th className="px-4 py-2.5">Status</th>
                 <th className="px-4 py-2.5">Added</th>
               </tr>
@@ -268,9 +267,9 @@ function OutreachTab({ leads }: { leads: OutreachLead[] }) {
               {leads.map((l) => (
                 <tr key={l.id} className="border-t border-white/5 hover:bg-white/5">
                   <td className="px-4 py-2.5 font-mono text-xs text-axon-cyan">
-                    {l.handle ? `@${l.handle.replace(/^@/, '')}` : '—'}
+                    {l.instagram_handle ? `@${l.instagram_handle}` : '—'}
                   </td>
-                  <td className="px-4 py-2.5 text-white">{l.niche || l.target_group || '—'}</td>
+                  <td className="px-4 py-2.5 text-white">{l.full_name || '—'}</td>
                   <td className="px-4 py-2.5">
                     <StatusBadge status={l.status} />
                   </td>
@@ -604,7 +603,7 @@ export function MatchFitAdminTool() {
           onClick={handleSignOut}
           className="rounded-lg px-3 py-1.5 text-xs text-axon-muted transition hover:bg-axon-elevated hover:text-white"
         >
-          SIGN OUT
+          Sign out
         </button>
       </header>
 

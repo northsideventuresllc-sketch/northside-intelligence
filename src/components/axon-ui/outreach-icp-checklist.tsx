@@ -32,30 +32,30 @@ export function OutreachIcpChecklist({
 
   const items = [
     {
-      label: 'Who we target, and who we skip',
-      detail: 'Small business and enterprise buyers; job boards and recruiters are excluded',
+      label: 'Structured ICP segments & exclusions',
+      detail: 'SMB + enterprise targets; job boards and recruiters excluded',
       done: true,
     },
     {
-      label: "Today's searches",
+      label: "Today's rotating SERP queries",
       detail: todayQueries.map((q) => q.industry).join(' · ') || '—',
       done: todayQueries.length > 0,
     },
     {
-      label: `Only leads scoring ${minScore} or better`,
-      detail: 'Weak leads are dropped before they ever reach you',
+      label: `Score gate ≥ ${minScore}`,
+      detail: 'Low-score prospects dropped before queue',
       done: true,
     },
     {
-      label: 'Filtered-out tracking',
+      label: 'ICP drop telemetry',
       detail:
         training.icpDropCount > 0
-          ? `${training.icpDropCount} lead${training.icpDropCount === 1 ? '' : 's'} filtered out so far`
-          : 'Nothing filtered out yet — run the lead finder to populate this',
+          ? `${training.icpDropCount} drop${training.icpDropCount === 1 ? '' : 's'} logged`
+          : 'No drops yet — run outreach to populate',
       done: training.icpDropCount > 0,
     },
     {
-      label: 'What you have said no to before',
+      label: 'Operator avoid patterns → pre-scan',
       detail:
         operatorPatterns.length > 0
           ? operatorPatterns.map(({ reason }) => reason).join('; ')
@@ -69,9 +69,9 @@ export function OutreachIcpChecklist({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-axon-gold">Track A · 5a</p>
-          <h2 className="mt-1 text-lg font-medium">Who We Are Targeting</h2>
+          <h2 className="mt-1 text-lg font-medium">ICP Operator Checklist</h2>
           <p className="mt-1 max-w-2xl text-sm text-axon-muted">
-            The nightly run is off while this is still learning. Use Generate Leads above to find leads now.
+            Nightly auto-run is off (training mode) — use Generate leads above to run the 8-step ICP pipeline manually.
           </p>
         </div>
         {icpAutoRejectedCount > 0 && (
@@ -126,7 +126,7 @@ export function OutreachIcpChecklist({
       {stageEntries.length > 0 && (
         <div className="mt-5 border-t border-axon-border/60 pt-4">
           <h3 className="text-xs font-medium uppercase tracking-wider text-axon-muted">
-            Where leads got filtered out
+            ICP drops by stage
           </h3>
           <dl className="mt-2 flex flex-wrap gap-4">
             {stageEntries.map(([stage, count]) => (
