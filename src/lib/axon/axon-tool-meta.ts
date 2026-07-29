@@ -20,11 +20,41 @@ export const AXON_TOOL_META: Record<string, AxonToolMeta> = {
     builderPrompt:
       'Help JB adjust AXON Management-Match Fit — tabs, stats, deep links, and Match Fit data views.',
   },
+  'monday-review': {
+    setupDescription:
+      'Your Monday approval screen. Tick the outreach drafts you like, hit Approve, and they queue to send. Bad-fit drafts are filtered out before you ever see them. Nothing sends without you.',
+    builderPrompt:
+      'Help JB adjust Monday Approvals — what shows in the list, the junk filter, and the approve/reject flow.',
+  },
   'ni-outreach': {
     setupDescription:
       'Your NI Services outreach pipeline: approval queue, lead pipeline, channel settings (email + social), ICP checklist, and follow-up drafts for sent leads.',
     builderPrompt:
       'Help JB adjust NI Outreach HQ — queue flow, channel connections, follow-up engine, and pipeline bulk actions.',
+  },
+  brain: {
+    setupDescription:
+      'A map of everything AXON knows — context, decisions, learnings and what it has picked up about you. Hover any dot to read it.',
+    builderPrompt:
+      'Help JB adjust the AXON Brain map — which sources appear, how they cluster, and what shows on hover.',
+  },
+  'command-center': {
+    setupDescription:
+      'The one screen. Needs You (approvals), Workers (build jobs — Droid Space lives here now), Schedules (every automation, green or red), Health (verified spend and site status). Everything read live — no summaries.',
+    builderPrompt:
+      'Help JB adjust Command Center — sections, what counts as stuck, and which sources feed each panel.',
+  },
+  'droid-space': {
+    setupDescription:
+      'Every build job in one room: what is waiting, what is running now, what got stuck, and what each one actually produced. Start one job or start them all.',
+    builderPrompt:
+      'Help JB adjust Droid Space — job grouping, what counts as stuck, and the results shown per job.',
+  },
+  'ni-content': {
+    setupDescription:
+      'Posts for NORTHSiDE Intelligence, drafted by the same machine that writes Match Fit content. Read, edit, approve or bin — nothing publishes on its own.',
+    builderPrompt:
+      'Help JB adjust NI Content — what gets drafted, the approval flow, and how posts are grouped.',
   },
   'hermes-sync': {
     setupDescription:
