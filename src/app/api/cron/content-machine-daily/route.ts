@@ -27,7 +27,18 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error("[cron/content-machine-daily]", err);
-    const message = err instanceof Error ? err.message : "Daily batch failed";
+    // Health Scan 2026-07-30: this route returned the bare string "Daily batch failed"
+    // on 2026-07-28 and 2026-07-29 (nv-vault runs 30361262219, 30453677275), which named
+    // nothing — the real cause was a non-Error throw and got swallowed. Anything thrown is
+    // now described in the response so the failing cron log identifies its own cause.
+    const message =
+      err instanceof Error
+        ? `${err.name}: ${err.message}`
+        : `Daily batch failed (non-Error throw: ${
+            typeof err === "object" && err !== null
+              ? JSON.stringify(err).slice(0, 400)
+              : String(err).slice(0, 400)
+          })`;
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
