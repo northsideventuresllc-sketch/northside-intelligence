@@ -64,7 +64,9 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
   {
     slug: 'content-machine',
     defaultDisplayName: 'NI Content Machine',
-    href: '/tools/content-machine',
+    // Fixed 2026-07-31 (NI-CONTENT-MACHINE-404): href pointed at a route that never existed.
+    // The real page lives at tools/ni-content — this tile 404'd every time JB opened it.
+    href: '/tools/ni-content',
     icon: '📝',
     sourceType: 'custom',
   },
