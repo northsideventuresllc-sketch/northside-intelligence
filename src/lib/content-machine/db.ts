@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { WEEKDAY_THEMES } from "./weekday-themes";
 import type { BrandProfile, ContentPost, FewShot, ToneRule } from "./types";
@@ -102,9 +103,31 @@ export async function insertPost(
     .from("content_machine_posts")
     .insert(post)
     .select("*")
-    .single();
+    .maybeSingle();
 
   if (error) throw error;
+
+  // Health Scan 2026-07-31 — ROOT CAUSE of the daily batch cron failing every
+  // run since 2026-07-28 (nv-vault runs 30361262219, 30453677275, 30542345408).
+  // trg_content_machine_brand_guard is a BEFORE INSERT trigger that, for
+  // brand_slug='match-fit', copies the row into match_fit_content_calendar_posts
+  // and RETURNS NULL — deliberately, because Match Fit content never lives in
+  // the NI Content Machine. A swallowed insert affects 0 rows, so
+  // INSERT ... RETURNING came back empty and .single() raised PGRST116, which
+  // aborted generateDailyBatch's loop after the FIRST post type. DEFAULT_BRAND_SLUG
+  // is "match-fit", so every batch hit it and only ~1 of 4 posts was ever written.
+  // A swallowed row is a successful redirect, not a failure: synthesise the record
+  // so the caller's loop completes all four post types.
+  if (!data) {
+    const now = new Date().toISOString();
+    return {
+      ...post,
+      id: randomUUID(),
+      created_at: now,
+      updated_at: now,
+    } as ContentPost;
+  }
+
   return data as ContentPost;
 }
 
