@@ -8,6 +8,11 @@ export interface AxonUserTool {
   sourceType: AxonUserToolSource;
   /** Sidebar-only action (no route navigation). */
   action?: 'test-mode-panel';
+  /** AX-MKT-OUT-DEMERGE (2026-08-03): groups this tile under a venture
+   *  section in the sidebar ("Match Fit" / "NI") instead of the old flat
+   *  blended "AXON Tools" list. Omit for tools that aren't venture-specific
+   *  (Repo Manager, Financial Tracker, etc.) — those stay in the general group. */
+  venture?: 'match_fit' | 'ni';
 }
 
 /** Built-in AXON tools surfaced under sidebar "AXON Tools". Order = sidebar order. */
@@ -21,21 +26,48 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
   },
   {
     slug: 'match-fit-admin',
-    defaultDisplayName: 'AXON Management-Match Fit',
+    defaultDisplayName: 'Match Fit Marketing',
     href: '/tools/match-fit-admin',
     icon: '🏋',
     sourceType: 'custom',
+    venture: 'match_fit',
+  },
+  {
+    // AX-MKT-OUT-DEMERGE (2026-08-03): Match Fit's own real outreach
+    // queue/approve/pipeline screen — was previously only a 20-row
+    // read-only stub inside Match Fit Admin with no actions wired up.
+    slug: 'mf-outreach',
+    defaultDisplayName: 'Match Fit Outreach',
+    href: '/tools/mf-outreach',
+    icon: '✉',
+    sourceType: 'outreach_engine',
+    venture: 'match_fit',
   },
   {
     slug: 'ni-outreach',
-    defaultDisplayName: 'NI Outreach HQ',
+    defaultDisplayName: 'NI Outreach',
     href: '/tools/ni-outreach',
     icon: '✉',
     sourceType: 'outreach_engine',
+    venture: 'ni',
   },
   {
+    slug: 'content-machine',
+    defaultDisplayName: 'NI Marketing',
+    // Fixed 2026-07-31 (NI-CONTENT-MACHINE-404): href pointed at a route that never existed.
+    // The real page lives at tools/ni-content — this tile 404'd every time JB opened it.
+    href: '/tools/ni-content',
+    icon: '📝',
+    sourceType: 'custom',
+    venture: 'ni',
+  },
+  {
+    // AX-MKT-OUT-DEMERGE (2026-08-03): renamed from "NI Marketing HQ" — this
+    // tile is actually the AXON dispatch/task mirror, not an NI marketing
+    // approval screen (that's "NI Marketing" / content-machine above). The
+    // old name was itself part of the smoosh JB flagged.
     slug: 'hermes-sync',
-    defaultDisplayName: 'NI Marketing HQ',
+    defaultDisplayName: 'AXON Dispatch Mirror',
     href: '/tools/hermes',
     icon: '📣',
     sourceType: 'custom',
@@ -59,15 +91,6 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     defaultDisplayName: 'Usage Tower',
     href: '/tools/usage-tower',
     icon: '🗼',
-    sourceType: 'custom',
-  },
-  {
-    slug: 'content-machine',
-    defaultDisplayName: 'NI Content Machine',
-    // Fixed 2026-07-31 (NI-CONTENT-MACHINE-404): href pointed at a route that never existed.
-    // The real page lives at tools/ni-content — this tile 404'd every time JB opened it.
-    href: '/tools/ni-content',
-    icon: '📝',
     sourceType: 'custom',
   },
   {

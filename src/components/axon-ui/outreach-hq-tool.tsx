@@ -41,6 +41,13 @@ interface OutreachHqToolProps {
   pipelineFilter?: string;
   followUpPending?: LeadWithMeta[];
   followUpDone?: LeadWithMeta[];
+  /** AX-MKT-OUT-DEMERGE (2026-08-03): which venture this queue belongs to.
+   *  Match Fit has its own lead-gen pipeline in the matchfit repo, so its
+   *  Overview tab hides the NI-only prospecting/ICP/training panels below
+   *  and shows only the shared stats + queue/pipeline/follow-up screens. */
+  venture?: 'ni' | 'match_fit';
+  toolSlug?: string;
+  displayNameFallback?: string;
 }
 
 export function OutreachHqTool({
@@ -54,10 +61,13 @@ export function OutreachHqTool({
   pipelineFilter,
   followUpPending = [],
   followUpDone = [],
+  venture = 'ni',
+  toolSlug = 'ni-outreach',
+  displayNameFallback = 'NI Outreach HQ',
 }: OutreachHqToolProps) {
   const { tools, getDisplayName } = useAxonToolDisplayNames();
-  const outreach = tools.find((t) => t.slug === 'ni-outreach');
-  const displayName = outreach ? getDisplayName(outreach) : 'NI Outreach HQ';
+  const outreach = tools.find((t) => t.slug === toolSlug);
+  const displayName = outreach ? getDisplayName(outreach) : displayNameFallback;
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as OutreachHqTab | null;
   const tab = tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : initialTab;
@@ -78,7 +88,8 @@ export function OutreachHqTool({
   const [bulkStatus, setBulkStatus] = useState('approved');
 
   useEffect(() => {
-    if (consumeToolLaunch('ni-outreach')) setShowLaunch(true);
+    if (consumeToolLaunch(toolSlug)) setShowLaunch(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onLaunchComplete = useCallback(() => setShowLaunch(false), []);
@@ -187,20 +198,25 @@ export function OutreachHqTool({
 
           {tab === 'overview' && (
             <>
-              <Phase1WorkflowPanel
-                stats={stats}
-                pendingFollowUp={followUpPending.length}
-                basePath={basePath}
-              />
-              <OutreachGenerateLeads stats={stats} />
-              <OutreachChannelSettings />
-              <OutreachIcpChecklist
-                minScore={minScore}
-                todayQueries={todayQueries}
-                training={training}
-                icpAutoRejectedCount={icpAutoRejectedCount}
-              />
-              <OutreachTrainingPanel summary={training} />
+              {venture === 'ni' && (
+                <>
+                  <Phase1WorkflowPanel
+                    stats={stats}
+                    pendingFollowUp={followUpPending.length}
+                    basePath={basePath}
+                  />
+                  <OutreachGenerateLeads stats={stats} />
+                  <OutreachChannelSettings />
+                  <OutreachIcpChecklist
+                    minScore={minScore}
+                    todayQueries={todayQueries}
+                    training={training}
+                    icpAutoRejectedCount={icpAutoRejectedCount}
+                  />
+                  <OutreachTrainingPanel summary={training} />
+                </>
+              )}
+              {venture === 'match_fit' && <OutreachChannelSettings />}
               <StatsCards stats={stats} />
               <div className="grid gap-6 lg:grid-cols-2">
                 <GoalProgress stats={stats} />

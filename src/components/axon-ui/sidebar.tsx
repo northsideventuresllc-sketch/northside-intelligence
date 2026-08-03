@@ -7,6 +7,7 @@ import {
   markToolLaunch,
   readToolDisplayNames,
   resolveToolDisplayName,
+  type AxonUserTool,
 } from '@/lib/axon/axon-user-tools';
 import { appPath } from '@/lib/axon/app-path';
 import Link from 'next/link';
@@ -59,6 +60,66 @@ function isActive(pathname: string, href: string, basePath?: string): boolean {
 function slugFromItHref(href: string): string | null {
   const m = href.match(/\/tools\/([^/?#]+)/i);
   return m?.[1]?.toLowerCase() ?? null;
+}
+
+// AX-MKT-OUT-DEMERGE (2026-08-03): tools were one flat blended list under a
+// single "AXON Tools" section — JB's own words were that Match Fit and NI
+// marketing/outreach have been "smooshed together". Group by venture instead
+// so Match Fit and NI are visibly separate sidebar sections.
+const MATCH_FIT_TOOLS = AXON_USER_TOOLS.filter((t) => t.venture === 'match_fit');
+const NI_TOOLS = AXON_USER_TOOLS.filter((t) => t.venture === 'ni');
+const GENERAL_TOOLS = AXON_USER_TOOLS.filter((t) => !t.venture);
+
+function renderToolTile(
+  tool: AxonUserTool,
+  opts: {
+    pathname: string;
+    basePath?: string;
+    toolNames: Record<string, string>;
+    testModeOpen: boolean;
+    setTestModeOpen: (open: boolean) => void;
+  }
+) {
+  const { pathname, basePath, toolNames, testModeOpen, setTestModeOpen } = opts;
+  const href = resolveHref(tool.href, basePath);
+  const active = isActive(pathname, tool.href, basePath);
+  const label = resolveToolDisplayName(tool, toolNames);
+
+  if (tool.action === 'test-mode-panel') {
+    return (
+      <button
+        key={tool.slug}
+        type="button"
+        onClick={() => setTestModeOpen(true)}
+        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+          testModeOpen
+            ? 'bg-axon-blue/15 text-axon-cyan'
+            : 'text-axon-muted hover:bg-axon-elevated/50 hover:text-axon-text'
+        }`}
+      >
+        <span className="text-base opacity-70">{tool.icon}</span>
+        <span className="truncate">{label}</span>
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      key={tool.slug}
+      href={href}
+      onClick={() => {
+        if (!active) markToolLaunch(tool.slug);
+      }}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+        active
+          ? 'bg-axon-blue/15 text-axon-cyan'
+          : 'text-axon-muted hover:bg-axon-elevated/50 hover:text-axon-text'
+      }`}
+    >
+      <span className="text-base opacity-70">{tool.icon}</span>
+      <span className="truncate">{label}</span>
+    </Link>
+  );
 }
 
 export function Sidebar({ basePath }: { basePath?: string }) {
@@ -119,48 +180,26 @@ export function Sidebar({ basePath }: { basePath?: string }) {
           })}
         </div>
 
+        {MATCH_FIT_TOOLS.length > 0 && (
+          <AxonCollapsibleSection title="Match Fit" defaultOpen maxHeightClass="max-h-40">
+            {MATCH_FIT_TOOLS.map((tool) =>
+              renderToolTile(tool, { pathname, basePath, toolNames, testModeOpen, setTestModeOpen })
+            )}
+          </AxonCollapsibleSection>
+        )}
+
+        {NI_TOOLS.length > 0 && (
+          <AxonCollapsibleSection title="NI" defaultOpen maxHeightClass="max-h-40">
+            {NI_TOOLS.map((tool) =>
+              renderToolTile(tool, { pathname, basePath, toolNames, testModeOpen, setTestModeOpen })
+            )}
+          </AxonCollapsibleSection>
+        )}
+
         <AxonCollapsibleSection title="AXON Tools" defaultOpen maxHeightClass="max-h-64">
-          {AXON_USER_TOOLS.map((tool) => {
-            const href = resolveHref(tool.href, basePath);
-            const active = isActive(pathname, tool.href, basePath);
-            const label = resolveToolDisplayName(tool, toolNames);
-
-            if (tool.action === 'test-mode-panel') {
-              return (
-                <button
-                  key={tool.slug}
-                  type="button"
-                  onClick={() => setTestModeOpen(true)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                    testModeOpen
-                      ? 'bg-axon-blue/15 text-axon-cyan'
-                      : 'text-axon-muted hover:bg-axon-elevated/50 hover:text-axon-text'
-                  }`}
-                >
-                  <span className="text-base opacity-70">{tool.icon}</span>
-                  <span className="truncate">{label}</span>
-                </button>
-              );
-            }
-
-            return (
-              <Link
-                key={tool.slug}
-                href={href}
-                onClick={() => {
-                  if (!active) markToolLaunch(tool.slug);
-                }}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  active
-                    ? 'bg-axon-blue/15 text-axon-cyan'
-                    : 'text-axon-muted hover:bg-axon-elevated/50 hover:text-axon-text'
-                }`}
-              >
-                <span className="text-base opacity-70">{tool.icon}</span>
-                <span className="truncate">{label}</span>
-              </Link>
-            );
-          })}
+          {GENERAL_TOOLS.map((tool) =>
+            renderToolTile(tool, { pathname, basePath, toolNames, testModeOpen, setTestModeOpen })
+          )}
         </AxonCollapsibleSection>
 
         <AxonCollapsibleSection title="My ITs" defaultOpen maxHeightClass="max-h-52">

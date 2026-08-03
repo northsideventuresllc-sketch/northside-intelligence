@@ -1,5 +1,11 @@
 export const SUPABASE_URL = 'https://kxijunwgbrlfzvgkhklo.supabase.co';
 export const SOURCE = 'axon_ni_services';
+// AX-MKT-OUT-DEMERGE (2026-08-03): ni_brain_outreach already carries both
+// ventures via this column (source=match_fit rows are written by the
+// matchfit repo's own outreach pipeline) — this constant lets the portal
+// query the Match Fit slice with its own real queue instead of the old
+// read-only stub in Match Fit Admin.
+export const MATCH_FIT_SOURCE = 'match_fit';
 export const MAX_DRAFTS_PER_DAY = 15;
 export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 /** Primary scan model — lite avoids 2.5 thinking-token truncation on short maxOutput. */

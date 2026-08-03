@@ -27,7 +27,11 @@ export function enrichLead(lead: Lead): LeadWithMeta {
   };
 }
 
-export async function fetchLeads(limit = 200): Promise<LeadWithMeta[]> {
+// AX-MKT-OUT-DEMERGE (2026-08-03): source is now a parameter (default = NI,
+// unchanged behavior for every existing caller) so the Match Fit Outreach
+// page can request the match_fit slice of the same table instead of a
+// second table or a hardcoded NI-only query.
+export async function fetchLeads(limit = 200, source: string = SOURCE): Promise<LeadWithMeta[]> {
   try {
     await sweepLeadLifecycle();
   } catch {
@@ -36,17 +40,18 @@ export async function fetchLeads(limit = 200): Promise<LeadWithMeta[]> {
   const { sbSelect } = getClient();
   const rows = (await sbSelect(
     'ni_brain_outreach',
-    `source=eq.${SOURCE}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
+    `source=eq.${source}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
   )) as Lead[];
   return filterVisibleLeads((rows || []).map(enrichLead));
 }
 
+// AX-MKT-OUT-DEMERGE (2026-08-03): id is already a globally unique key, so
+// this no longer filters by source — a single lookup now works whether the
+// lead is NI or Match Fit, which is what lets the shared approve/reject/send
+// API routes work unmodified for both ventures.
 export async function fetchLeadById(id: string): Promise<LeadWithMeta | null> {
   const { sbSelect } = getClient();
-  const rows = (await sbSelect(
-    'ni_brain_outreach',
-    `source=eq.${SOURCE}&id=eq.${id}&select=*&limit=1`
-  )) as Lead[];
+  const rows = (await sbSelect('ni_brain_outreach', `id=eq.${id}&select=*&limit=1`)) as Lead[];
   const lead = rows?.[0];
   return lead ? enrichLead(lead) : null;
 }
@@ -56,17 +61,17 @@ export async function findLeadByShortId(sid: string): Promise<LeadWithMeta | nul
   return leads.find((l) => l.shortId === sid || l.id === sid) ?? null;
 }
 
-export async function fetchPipelineStats(): Promise<PipelineStats> {
+export async function fetchPipelineStats(source: string = SOURCE): Promise<PipelineStats> {
   const { sbSelect } = getClient();
   const today = todayUtc();
 
   const [statusRows, todayRows] = await Promise.all([
-    sbSelect('ni_brain_outreach', `source=eq.${SOURCE}&select=status&limit=500`) as Promise<
+    sbSelect('ni_brain_outreach', `source=eq.${source}&select=status&limit=500`) as Promise<
       { status?: string }[]
     >,
     sbSelect(
       'ni_brain_outreach',
-      `source=eq.${SOURCE}&created_at=gte.${today}T00:00:00Z&select=id`
+      `source=eq.${source}&created_at=gte.${today}T00:00:00Z&select=id`
     ) as Promise<{ id: string }[]>,
   ]);
 
@@ -117,7 +122,7 @@ export async function bulkUpdateLeads(
     if (metaPatch) {
       const rows = (await sbSelect(
         'ni_brain_outreach',
-        `source=eq.${SOURCE}&id=eq.${id}&select=notes&limit=1`
+        `id=eq.${id}&select=notes&limit=1`
       )) as { notes: string | null }[];
       const meta = { ...parseNotes(rows?.[0]?.notes), ...metaPatch };
       await sbPatch('ni_brain_outreach', `id=eq.${id}`, {
