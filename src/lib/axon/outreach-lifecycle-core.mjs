@@ -61,5 +61,8 @@ export async function sweepOutreachLeadLifecycle(sb, { now = Date.now() } = {}) 
 }
 
 export function isVisibleLeadStatus(status) {
-  return status !== 'purged';
+  // AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): JB wants zero archived rows
+  // visible anywhere in the portal ("the archived lane"). This was the gap —
+  // archived leads were still counted/listed everywhere except a purged one.
+  return status !== 'purged' && status !== 'archived';
 }

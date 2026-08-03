@@ -20,6 +20,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     const body = await req.json();
     const meta = parseNotes(lead.notes);
+
+    // AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): the deliverable-approval gate
+    // is enforced here, not just in the UI, so it can't be bypassed by
+    // calling this route directly.
+    if (meta.deliverable_url && meta.deliverable_approved !== true) {
+      return NextResponse.json(
+        { error: 'This lead has an attached deliverable that has not been approved yet. Approve the deliverable before sending.' },
+        { status: 409 }
+      );
+    }
+
     const channel = (body.channel || meta.channel || 'email') as 'email' | 'linkedin';
     const settings = await getOutreachSettings();
 

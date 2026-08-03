@@ -7,7 +7,7 @@ import {
   shortId,
   todayUtc,
 } from './constants.mjs';
-import { filterVisibleLeads, sweepLeadLifecycle } from './outreach-lifecycle';
+import { filterVisibleLeads, isVisibleLeadStatus, sweepLeadLifecycle } from './outreach-lifecycle';
 import type { Lead, LeadWithMeta, PipelineStats } from './types';
 import { GOAL_TARGET } from './types';
 
@@ -70,14 +70,20 @@ export async function fetchPipelineStats(): Promise<PipelineStats> {
     ) as Promise<{ id: string }[]>,
   ]);
 
+  // AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): archived/purged rows must not
+  // surface anywhere in the portal, including the pipeline breakdown counts.
+  const visibleStatusRows = (statusRows || []).filter(
+    (row) => isVisibleLeadStatus(row.status || 'unknown')
+  );
+
   const counts: Record<string, number> = {};
-  for (const row of statusRows || []) {
+  for (const row of visibleStatusRows) {
     const s = row.status || 'unknown';
     counts[s] = (counts[s] || 0) + 1;
   }
 
   return {
-    total: statusRows?.length || 0,
+    total: visibleStatusRows.length,
     pending: counts.pending_approval || 0,
     approved: counts.approved || 0,
     sent: counts.sent || 0,

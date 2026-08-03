@@ -40,6 +40,17 @@ export interface LeadMeta {
   follow_up_draft?: string | null;
   follow_up_drafted_at?: string | null;
   follow_up_sent_at?: string | null;
+  // AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): a lead can carry an attached
+  // deliverable (e.g. a roadmap doc) that JB must see and approve as its own
+  // gate, separate from approving the outreach message itself.
+  deliverable_url?: string | null;
+  deliverable_label?: string | null;
+  deliverable_approved?: boolean;
+  deliverable_approved_at?: string | null;
+  // Free-form note JB can leave on a lead that comes back to the agent
+  // (logged the same way as any other draft edit, via axon_tool_edit_signals).
+  operator_message?: string | null;
+  operator_message_at?: string | null;
   raw?: string;
 }
 
@@ -101,11 +112,14 @@ export const STATUS_ORDER = [
   'archived',
 ] as const;
 
+// AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): 'archived' removed as a
+// manually-selectable status — JB doesn't want an archived lane in the UI at
+// all. The dedicated "Mass archive" action (a separate bulk action, not this
+// dropdown) still exists for pruning junk leads.
 export const BULK_STATUS_OPTIONS = [
   'pending_approval',
   'approved',
   'sent',
   'dead',
-  'archived',
   'closed_won',
 ] as const;
