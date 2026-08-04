@@ -7,9 +7,6 @@ export interface OutreachDraftPatch {
   email_subject?: string | null;
   comment_draft?: string | null;
   dm_draft?: string | null;
-  // AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03)
-  deliverable_approved?: boolean;
-  operator_message?: string | null;
 }
 
 interface FieldDiff {
@@ -57,7 +54,6 @@ export async function patchOutreachDraft(
   const meta = { ...lead.meta };
   const rowPatch: Record<string, string | null> = {};
   const diffs: FieldDiff[] = [];
-  let metaChanged = false;
 
   if (patch.email_subject !== undefined) {
     const before = meta.email_subject ?? null;
@@ -65,29 +61,6 @@ export async function patchOutreachDraft(
     if (before !== after) {
       diffs.push({ field_name: 'email_subject', before_value: before, after_value: after });
       meta.email_subject = after;
-      metaChanged = true;
-    }
-  }
-
-  if (patch.deliverable_approved !== undefined) {
-    const before = meta.deliverable_approved ? 'true' : 'false';
-    const after = patch.deliverable_approved ? 'true' : 'false';
-    if (before !== after) {
-      diffs.push({ field_name: 'deliverable_approved', before_value: before, after_value: after });
-      meta.deliverable_approved = patch.deliverable_approved;
-      meta.deliverable_approved_at = patch.deliverable_approved ? new Date().toISOString() : null;
-      metaChanged = true;
-    }
-  }
-
-  if (patch.operator_message !== undefined) {
-    const before = meta.operator_message ?? null;
-    const after = patch.operator_message;
-    if (before !== after) {
-      diffs.push({ field_name: 'operator_message', before_value: before, after_value: after });
-      meta.operator_message = after;
-      meta.operator_message_at = after ? new Date().toISOString() : null;
-      metaChanged = true;
     }
   }
 
@@ -113,7 +86,7 @@ export async function patchOutreachDraft(
     return { lead, changed: false, fields: [] };
   }
 
-  if (metaChanged) {
+  if (patch.email_subject !== undefined) {
     rowPatch.notes = formatNotes(meta);
   }
 

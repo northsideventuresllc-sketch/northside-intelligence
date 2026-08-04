@@ -10,16 +10,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       email_subject?: string | null;
       comment_draft?: string | null;
       dm_draft?: string | null;
-      deliverable_approved?: boolean;
-      operator_message?: string | null;
     };
 
     const hasField =
       body.email_subject !== undefined ||
       body.comment_draft !== undefined ||
-      body.dm_draft !== undefined ||
-      body.deliverable_approved !== undefined ||
-      body.operator_message !== undefined;
+      body.dm_draft !== undefined;
 
     if (!hasField) {
       return NextResponse.json({ error: 'No draft fields to update' }, { status: 400 });
@@ -31,8 +27,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         email_subject: body.email_subject,
         comment_draft: body.comment_draft,
         dm_draft: body.dm_draft,
-        deliverable_approved: body.deliverable_approved,
-        operator_message: body.operator_message,
       },
       operatorId
     );
