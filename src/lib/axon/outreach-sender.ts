@@ -2,7 +2,9 @@ import { getClient } from './leads';
 import { resendSend } from './resend.mjs';
 
 /**
- * OUT-SENDER — picks up outreach_messages that JB approved (Monday screen),
+ * OUT-SENDER — picks up outreach_messages that JB approved in that venture's
+ * own outreach surface (NI Outreach HQ / Match Fit Outreach HQ; the shared
+ * Monday Approvals screen was deleted 2026-08-04, MF-KILL-MONDAY-APPROVALS),
  * sends the ones whose batch is approved and whose venture switch is ON,
  * and writes back a real receipt or a real failure reason.
  *
@@ -10,8 +12,9 @@ import { resendSend } from './resend.mjs';
  * - The venture kill switch (automation_controls: 'match_fit.outreach' / 'ni.outreach')
  *   is checked in THIS code, before any network call to Resend — not just relied on as
  *   a DB write-guard, because by the time the DB would reject the status='sent' write
- *   the email has already gone out. Both switches are OFF this weekend; this function
- *   must send nothing while they are off.
+ *   the email has already gone out. Switch state is read live on every run — as of
+ *   2026-08-04 both match_fit.outreach and ni.outreach are ON, so do not assume a
+ *   run is a no-op.
  * - Success is only recorded with a real provider_id + sent_at (DB constraint
  *   msg_sent_needs_receipt enforces this too).
  * - Failure is only recorded with a real failure_reason of 10+ chars (DB constraint
@@ -82,7 +85,7 @@ function todayStartIso(): string {
   return d.toISOString();
 }
 
-/** Messages approved on the Monday screen, joined to their lead + batch. */
+/** Approved messages, joined to their lead + batch. */
 async function fetchApprovedQueue(): Promise<{ messages: RawMessage[]; leads: Record<string, Lead>; batches: Record<string, Batch> }> {
   const { sbSelect } = getClient();
   const messages = (await sbSelect(
