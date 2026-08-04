@@ -22,13 +22,19 @@ export const PLATFORMS_BY_TYPE: Record<ContentPostType, string[]> = {
   Text: ["Threads", "Facebook", "LinkedIn"],
 };
 
-export const BANNED_HASHTAGS = [
-  "#FitnessMotivation",
-  "#GymLife",
-  "#FitFam",
-  "#NoPainNoGain",
-  "#MotivationMonday",
-];
+/**
+ * RETIRED by JB's locked high-volume hashtag rule (MF-HASHTAG-HIGHVOL, 2026-08-04).
+ *
+ * This list used to ban #FitnessMotivation, #GymLife, #FitFam, #NoPainNoGain and
+ * #MotivationMonday — the highest-volume tags in the niche. Banning them is what
+ * pushed the generator toward invented long-tail tags in the first place. JB's rule
+ * is now the inverse: high-follower, already-popular tags ONLY.
+ *
+ * Allow-listing lives in hashtag-policy.ts. This stays exported (and empty) so the
+ * quality gate keeps a hook for genuinely banned tags without reintroducing the
+ * old inverted behaviour.
+ */
+export const BANNED_HASHTAGS: string[] = [];
 
 export const DEFAULT_BRAND_SLUG = "match-fit";
 
