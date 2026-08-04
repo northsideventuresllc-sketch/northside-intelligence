@@ -1,5 +1,7 @@
+import { isHighVolumeHashtag } from "./hashtag-policy";
 import {
   BANNED_HASHTAGS,
+  DEFAULT_BRAND_SLUG,
   MAX_HASHTAGS,
   MIN_CONCRETE_DETAILS,
   MIN_VISUAL_PROMPT_CHARS,
@@ -101,7 +103,7 @@ export function hasBannedPhrase(caption: string, bannedPhrases: string[]): boole
   return bannedPhrases.some((phrase) => lower.includes(phrase.toLowerCase()));
 }
 
-export function validateHashtags(hashtags: string[]): string[] {
+export function validateHashtags(hashtags: string[], brandSlug = DEFAULT_BRAND_SLUG): string[] {
   const failures: string[] = [];
   if (hashtags.length > MAX_HASHTAGS) {
     failures.push(`Too many hashtags (${hashtags.length} > ${MAX_HASHTAGS})`);
@@ -109,6 +111,11 @@ export function validateHashtags(hashtags: string[]): string[] {
   for (const tag of hashtags) {
     if (BANNED_HASHTAGS.some((b) => b.toLowerCase() === tag.toLowerCase())) {
       failures.push(`Banned hashtag: ${tag}`);
+    }
+    // JB's locked rule: high-follower, already-popular tags only. The generator
+    // coerces before this runs, so a failure here means a path skipped coercion.
+    if (!isHighVolumeHashtag(brandSlug, tag)) {
+      failures.push(`Not a high-volume hashtag (invented/long-tail/branded): ${tag}`);
     }
   }
   return failures;
@@ -118,6 +125,7 @@ export function runQualityGate(args: {
   draft: GeneratedDraft;
   postType: ContentPostType;
   bannedPhrases: string[];
+  brandSlug?: string;
 }): QualityGateResult {
   const failures: string[] = [];
   const { draft, postType, bannedPhrases } = args;
@@ -140,7 +148,7 @@ export function runQualityGate(args: {
   if (postType !== "Text" && isLazyVisual(draft.visualPrompt, postType)) {
     failures.push("Visual prompt too short or lazy (hex-only)");
   }
-  failures.push(...validateHashtags(draft.hashtags));
+  failures.push(...validateHashtags(draft.hashtags, args.brandSlug ?? DEFAULT_BRAND_SLUG));
 
   return { pass: failures.length === 0, failures };
 }

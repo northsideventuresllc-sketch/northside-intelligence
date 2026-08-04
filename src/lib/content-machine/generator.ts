@@ -3,6 +3,7 @@ import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
   CONTENT_POST_TYPES,
   DEFAULT_BRAND_SLUG,
+  MAX_HASHTAGS,
   MAX_REGEN_ATTEMPTS,
   PLATFORMS_BY_TYPE,
 } from "./constants";
@@ -14,6 +15,7 @@ import {
   loadToneRules,
   logSignal,
 } from "./db";
+import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
 import { generatePostImage } from "./image-gen";
 import { buildRegenFeedback, runQualityGate } from "./quality-gate";
 import type { ContentPost, GeneratedDraft, GenerateSlotInput } from "./types";
@@ -46,6 +48,7 @@ function parseJsonResponse(text: string): GeneratedDraft {
 }
 
 function buildSystemPrompt(args: {
+  brandSlug: string;
   brandName: string;
   voiceRules: string[];
   bannedPhrases: string[];
@@ -82,14 +85,14 @@ function buildSystemPrompt(args: {
   lines.push(
     "",
     "Output schema:",
-    '{"caption":"...","visualPrompt":"..." or null for Text,"hashtags":["#tag1","#tag2"]}',
+    `{"caption":"...","visualPrompt":"..." or null for Text,"hashtags":["#Tag1","#Tag2"]} — hashtags MUST come from the approved list below`,
     "",
     "Quality requirements:",
     "- Hook: first line must be a question, stat, or pattern interrupt",
     '- Always say "Fitness Pros" — never trainers or personal trainers',
     "- At least 2 concrete Match Fit features, promos, or outcomes",
     "- Visual prompts: scene, subject, action, mood, on-screen text — NOT hex colors only",
-    "- Max 5 hashtags, no generic spam tags",
+    buildHighVolumeHashtagRule(args.brandSlug, MAX_HASHTAGS),
     "- Brand palette (#07080C dark, #FF7E00 orange) is accent only"
   );
 
@@ -114,6 +117,7 @@ export async function generateSlotDraft(
     : await loadRecentLearnings(2);
 
   const system = buildSystemPrompt({
+    brandSlug: input.brandSlug,
     brandName: profile.name,
     voiceRules: profile.voice_rules,
     bannedPhrases: profile.banned_phrases,
@@ -144,6 +148,10 @@ export async function generateSlotDraft(
 
   const draft = parseJsonResponse(text);
   if (input.postType === "Text") draft.visualPrompt = null;
+  // JB's locked rule, enforced deterministically. The model drifts back to niche
+  // and invented tags no matter how the prompt is worded, so coerce every draft
+  // against the approved high-volume pool before it reaches the quality gate.
+  draft.hashtags = enforceHighVolumeHashtags(input.brandSlug, draft.hashtags, MAX_HASHTAGS);
   return draft;
 }
 
@@ -163,6 +171,7 @@ export async function generateSlotWithQualityGate(
       draft,
       postType: input.postType,
       bannedPhrases: profile.banned_phrases,
+      brandSlug: input.brandSlug,
     });
 
     if (gate.pass) {
