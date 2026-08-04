@@ -6,6 +6,10 @@
  *   - No low-volume long-tail tags.
  *   - No branded tags nobody searches.
  *
+ * NI Social Craft Lock (Learnings 2499, 2026-07-28): ZERO brand tags on NI posts
+ * until NORTHSiDE has actual buzz. JB's own confirmed-working NI set is
+ * #SmallBusiness #Sales #SalesTips #Entrepreneur #B2B — those lead the NI pool.
+ *
  * Content Machine serves two brands, so the approved pool is per-brand:
  * fitness/coaching for match-fit, small-business/sales for ni.
  *
@@ -50,6 +54,7 @@ export const NI_HIGH_VOLUME_HASHTAGS = [
   "#Business",
   "#Marketing",
   "#Sales",
+  "#SalesTips",
   "#SmallBusinessOwner",
   "#BusinessOwner",
   "#Entrepreneurship",
