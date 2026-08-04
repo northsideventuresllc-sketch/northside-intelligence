@@ -7,7 +7,7 @@ import {
   shortId,
   todayUtc,
 } from './constants.mjs';
-import { filterVisibleLeads, isVisibleLeadStatus, sweepLeadLifecycle } from './outreach-lifecycle';
+import { filterVisibleLeads, sweepLeadLifecycle } from './outreach-lifecycle';
 import type { Lead, LeadWithMeta, PipelineStats } from './types';
 import { GOAL_TARGET } from './types';
 
@@ -27,11 +27,7 @@ export function enrichLead(lead: Lead): LeadWithMeta {
   };
 }
 
-// AX-MKT-OUT-DEMERGE (2026-08-03): source is now a parameter (default = NI,
-// unchanged behavior for every existing caller) so the Match Fit Outreach
-// page can request the match_fit slice of the same table instead of a
-// second table or a hardcoded NI-only query.
-export async function fetchLeads(limit = 200, source: string = SOURCE): Promise<LeadWithMeta[]> {
+export async function fetchLeads(limit = 200): Promise<LeadWithMeta[]> {
   try {
     await sweepLeadLifecycle();
   } catch {
@@ -40,18 +36,17 @@ export async function fetchLeads(limit = 200, source: string = SOURCE): Promise<
   const { sbSelect } = getClient();
   const rows = (await sbSelect(
     'ni_brain_outreach',
-    `source=eq.${source}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
+    `source=eq.${SOURCE}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
   )) as Lead[];
   return filterVisibleLeads((rows || []).map(enrichLead));
 }
 
-// AX-MKT-OUT-DEMERGE (2026-08-03): id is already a globally unique key, so
-// this no longer filters by source — a single lookup now works whether the
-// lead is NI or Match Fit, which is what lets the shared approve/reject/send
-// API routes work unmodified for both ventures.
 export async function fetchLeadById(id: string): Promise<LeadWithMeta | null> {
   const { sbSelect } = getClient();
-  const rows = (await sbSelect('ni_brain_outreach', `id=eq.${id}&select=*&limit=1`)) as Lead[];
+  const rows = (await sbSelect(
+    'ni_brain_outreach',
+    `source=eq.${SOURCE}&id=eq.${id}&select=*&limit=1`
+  )) as Lead[];
   const lead = rows?.[0];
   return lead ? enrichLead(lead) : null;
 }
@@ -61,34 +56,28 @@ export async function findLeadByShortId(sid: string): Promise<LeadWithMeta | nul
   return leads.find((l) => l.shortId === sid || l.id === sid) ?? null;
 }
 
-export async function fetchPipelineStats(source: string = SOURCE): Promise<PipelineStats> {
+export async function fetchPipelineStats(): Promise<PipelineStats> {
   const { sbSelect } = getClient();
   const today = todayUtc();
 
   const [statusRows, todayRows] = await Promise.all([
-    sbSelect('ni_brain_outreach', `source=eq.${source}&select=status&limit=500`) as Promise<
+    sbSelect('ni_brain_outreach', `source=eq.${SOURCE}&select=status&limit=500`) as Promise<
       { status?: string }[]
     >,
     sbSelect(
       'ni_brain_outreach',
-      `source=eq.${source}&created_at=gte.${today}T00:00:00Z&select=id`
+      `source=eq.${SOURCE}&created_at=gte.${today}T00:00:00Z&select=id`
     ) as Promise<{ id: string }[]>,
   ]);
 
-  // AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): archived/purged rows must not
-  // surface anywhere in the portal, including the pipeline breakdown counts.
-  const visibleStatusRows = (statusRows || []).filter(
-    (row) => isVisibleLeadStatus(row.status || 'unknown')
-  );
-
   const counts: Record<string, number> = {};
-  for (const row of visibleStatusRows) {
+  for (const row of statusRows || []) {
     const s = row.status || 'unknown';
     counts[s] = (counts[s] || 0) + 1;
   }
 
   return {
-    total: visibleStatusRows.length,
+    total: statusRows?.length || 0,
     pending: counts.pending_approval || 0,
     approved: counts.approved || 0,
     sent: counts.sent || 0,
@@ -122,7 +111,7 @@ export async function bulkUpdateLeads(
     if (metaPatch) {
       const rows = (await sbSelect(
         'ni_brain_outreach',
-        `id=eq.${id}&select=notes&limit=1`
+        `source=eq.${SOURCE}&id=eq.${id}&select=notes&limit=1`
       )) as { notes: string | null }[];
       const meta = { ...parseNotes(rows?.[0]?.notes), ...metaPatch };
       await sbPatch('ni_brain_outreach', `id=eq.${id}`, {

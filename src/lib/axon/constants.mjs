@@ -1,10 +1,13 @@
 export const SUPABASE_URL = 'https://kxijunwgbrlfzvgkhklo.supabase.co';
 export const SOURCE = 'axon_ni_services';
-// AX-MKT-OUT-DEMERGE (2026-08-03): ni_brain_outreach already carries both
-// ventures via this column (source=match_fit rows are written by the
-// matchfit repo's own outreach pipeline) — this constant lets the portal
-// query the Match Fit slice with its own real queue instead of the old
-// read-only stub in Match Fit Admin.
+/**
+ * Portal-side callers depend on this (src/app/axon/u/[username]/tools/mf-outreach/page.tsx
+ * imports it from '@/lib/axon/constants.mjs'). It existed only in the portal copy, so the
+ * next sync-ni-portal run would have overwritten it away and broken the NI-Portal build —
+ * the exact shape of HEALTH-PORTAL-SYNC-DELETES / commit 7d4e12e. Caught by
+ * scripts/lib/portal-delete-guard.mjs on 2026-08-04 before it shipped. Ported here so the
+ * sync is a no-op for this symbol.
+ */
 export const MATCH_FIT_SOURCE = 'match_fit';
 export const MAX_DRAFTS_PER_DAY = 15;
 export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';

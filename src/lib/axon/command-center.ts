@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { fetchDispatchQueue, fetchCompletedDispatches } from './agent-dispatch';
-import { fetchMondayReview } from './monday-review';
+import { fetchPipelineStats } from './leads';
 import { listNiPosts } from '@/lib/content-machine/ni-content';
 import { listCronJobs } from './axon-cron-service';
 import { loadUsageTower, type UsageTowerData } from './usage-tower';
@@ -41,10 +41,18 @@ async function checkSite(name: string, url: string): Promise<SiteCheck> {
  * screen is read live from its source of truth; nothing is an agent-written
  * summary. If a source fails we show that section degraded rather than
  * blanking the whole screen.
+ *
+ * MF-KILL-MONDAY-APPROVALS (2026-08-04): this screen is an NI surface and
+ * shows NI numbers only. It used to read the venture-mixed
+ * outreach_monday_review view through the now-deleted Monday Approvals
+ * screen, which put Match Fit leads in front of JB on an NI page. The
+ * outreach count now comes from fetchPipelineStats(), which is hard-scoped
+ * to the NI source. Match Fit outreach lives in Match Fit Outreach HQ
+ * (/tools/mf-outreach) and must never be surfaced here again.
  */
 export async function loadCommandCenter(): Promise<CommandCenterData> {
-  const [review, posts, active, finished, schedules, usage, sites] = await Promise.all([
-    fetchMondayReview().catch(() => ({ approvable: [], needsCleanup: [] })),
+  const [pipeline, posts, active, finished, schedules, usage, sites] = await Promise.all([
+    fetchPipelineStats().catch(() => null),
     listNiPosts().catch(() => []),
     fetchDispatchQueue().catch(() => []),
     fetchCompletedDispatches(25).catch(() => []),
@@ -65,7 +73,7 @@ export async function loadCommandCenter(): Promise<CommandCenterData> {
 
   return {
     needsYou: {
-      leadsWaiting: review.approvable.length,
+      leadsWaiting: pipeline?.pending ?? 0,
       postsWaiting: posts.filter((p) => p.status === 'pending_approval' || p.status === 'draft')
         .length,
     },

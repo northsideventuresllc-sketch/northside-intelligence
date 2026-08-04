@@ -74,12 +74,15 @@ export function CommandCenterTool({
           🙋 Needs You {needsTotal > 0 ? `(${needsTotal})` : '— nothing right now'}
         </h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {/* MF-KILL-MONDAY-APPROVALS (2026-08-04): was a link to the deleted
+              Monday Approvals screen, which mixed Match Fit leads into this NI
+              page. Now NI Outreach HQ, NI drafts only. */}
           <Link
-            href={`${basePath}/tools/monday-review`}
+            href={`${basePath}/tools/ni-outreach?tab=queue`}
             className="rounded-xl border border-white/10 bg-white/5 p-4 transition hover:border-amber-300/50"
           >
             <div className="text-3xl font-extrabold text-white">{data.needsYou.leadsWaiting}</div>
-            <div className="text-sm text-axon-muted">Outreach drafts to approve</div>
+            <div className="text-sm text-axon-muted">NI outreach drafts to approve</div>
           </Link>
           <Link
             href={`${basePath}/tools/ni-content`}

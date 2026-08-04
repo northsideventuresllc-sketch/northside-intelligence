@@ -77,13 +77,9 @@ export function LeadActions({ lead }: { lead: LeadWithMeta }) {
 
   const canEdit = ['pending_approval', 'approved'].includes(lead.status);
   const canApprove = lead.status === 'pending_approval';
-  const hasDeliverable = Boolean(lead.meta.deliverable_url);
-  const deliverableApproved = lead.meta.deliverable_approved === true;
-  const deliverableGateOpen = !hasDeliverable || deliverableApproved;
   const canSend =
     (lead.status === 'approved' || lead.status === 'pending_approval') &&
-    (channel === 'email' ? true : channel === 'linkedin') &&
-    deliverableGateOpen;
+    (channel === 'email' ? true : channel === 'linkedin');
   const canReject = ['pending_approval', 'approved'].includes(lead.status);
   const canMarkWon = ['sent', 'approved'].includes(lead.status);
 
@@ -127,8 +123,6 @@ export function LeadActions({ lead }: { lead: LeadWithMeta }) {
 
   return (
     <div className="space-y-4">
-      {hasDeliverable && <DeliverablePanel lead={lead} onChanged={() => router.refresh()} />}
-      <OperatorNoteBox lead={lead} onChanged={() => router.refresh()} />
       {canEdit && (
         <div className="space-y-4 rounded-xl border border-axon-border bg-axon-surface p-5">
           <h2 className="text-xs uppercase tracking-wider text-axon-muted">Edit draft</h2>
@@ -186,13 +180,6 @@ export function LeadActions({ lead }: { lead: LeadWithMeta }) {
             />
           </div>
         </div>
-      )}
-
-      {hasDeliverable && !deliverableApproved && (
-        <p className="rounded-lg border border-axon-danger/30 bg-axon-danger/5 px-4 py-3 text-sm text-axon-danger">
-          This lead has an attached deliverable that has not been approved yet. Approve it above
-          before sending.
-        </p>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -311,130 +298,6 @@ function ActionButton({
     >
       {loading ? 'Working…' : label}
     </button>
-  );
-}
-
-// AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): shows a lead's attached
-// deliverable rendered inline (via the server-side proxy route so no GitHub
-// credentials ever reach the browser), with its own approve gate, separate
-// from approving the outreach message itself.
-function DeliverablePanel({
-  lead,
-  onChanged,
-}: {
-  lead: LeadWithMeta;
-  onChanged: () => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const approved = lead.meta.deliverable_approved === true;
-
-  async function toggleApprove() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(apiUrl(`/api/axon/outreach/${lead.id}`), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deliverable_approved: !approved }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Update failed');
-      onChanged();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Update failed');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <section className="space-y-3 rounded-xl border border-axon-border bg-axon-surface p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xs uppercase tracking-wider text-axon-muted">
-          Deliverable{lead.meta.deliverable_label ? ` — ${lead.meta.deliverable_label}` : ''}
-        </h2>
-        <div className="flex items-center gap-2">
-          <a
-            href={apiUrl(`/api/leads/${lead.id}/deliverable`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-axon-teal hover:underline"
-          >
-            Open in new tab
-          </a>
-          <ActionButton
-            label={approved ? 'Approved ✓ (undo)' : 'Approve deliverable'}
-            loading={loading}
-            variant={approved ? 'success' : 'primary'}
-            onClick={toggleApprove}
-          />
-        </div>
-      </div>
-      <iframe
-        src={apiUrl(`/api/leads/${lead.id}/deliverable`)}
-        title="Deliverable preview"
-        className="h-[480px] w-full rounded-lg border border-axon-border bg-white"
-      />
-      {approved && lead.meta.deliverable_approved_at && (
-        <p className="text-xs text-axon-muted">
-          Approved {new Date(lead.meta.deliverable_approved_at).toLocaleString()}
-        </p>
-      )}
-      {error && <p className="text-sm text-axon-danger">{error}</p>}
-    </section>
-  );
-}
-
-// AX-DELIVERABLE-UPLOAD-LIVE (2026-08-03): a free-form note JB can leave on
-// any lead. It saves through the same patch/edit-signal pipeline as draft
-// edits, so it "comes back to the agent" the same way any other edit does.
-function OperatorNoteBox({
-  lead,
-  onChanged,
-}: {
-  lead: LeadWithMeta;
-  onChanged: () => void;
-}) {
-  const [value, setValue] = useState(lead.meta.operator_message ?? '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const saved = lead.meta.operator_message ?? '';
-
-  async function send() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(apiUrl(`/api/axon/outreach/${lead.id}`), {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ operator_message: value.trim() || null }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Save failed');
-      onChanged();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <section className="space-y-2 rounded-xl border border-axon-border bg-axon-surface p-5">
-      <h2 className="text-xs uppercase tracking-wider text-axon-muted">Note to agent</h2>
-      <textarea
-        rows={3}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Leave a note for the agent working this lead — saved edits are logged the same way as draft changes."
-        className="w-full rounded-lg border border-axon-border bg-axon-elevated px-3 py-2 text-sm leading-relaxed text-axon-text outline-none focus:border-axon-gold/50"
-      />
-      <div className="flex items-center gap-2">
-        <ActionButton label="Save note" loading={loading} disabled={value === saved} onClick={send} />
-        {error && <span className="text-sm text-axon-danger">{error}</span>}
-      </div>
-    </section>
   );
 }
 

@@ -5,10 +5,12 @@ import { runOutreachSender } from '@/lib/axon/outreach-sender';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
-// OUT-SENDER. Picks up messages JB approved on the Monday screen and sends
-// the ones whose batch is approved and whose venture switch is ON. Both
-// match_fit.outreach and ni.outreach are OFF as of 2026-07-26 — every run
-// while that holds should report skippedSwitchOff > 0 and sent === 0.
+// OUT-SENDER. Picks up messages JB approved in that venture's own outreach
+// surface (NI Outreach HQ for NI, Match Fit Outreach HQ for Match Fit — the
+// shared Monday Approvals screen was deleted 2026-08-04 by
+// MF-KILL-MONDAY-APPROVALS) and sends the ones whose batch is approved and
+// whose venture switch is ON. The switch state is read live from
+// automation_controls on every run — do not hardcode a belief about it here.
 export async function GET(req: NextRequest) {
   if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
