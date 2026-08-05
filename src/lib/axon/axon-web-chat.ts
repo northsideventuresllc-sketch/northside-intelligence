@@ -19,7 +19,6 @@ import {
 } from './axon-workspace';
 import type { ChatMessage, TonePreset } from './axon-types';
 import { createSupabaseClient } from './supabase.mjs';
-import { callAxonTierChain } from './axon-local-relay';
 
 async function callHaiku(apiKey: string, system: string, messages: { role: string; content: string }[]) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -90,18 +89,10 @@ Brand: Northside Intelligence / NORTHSiDE (exact casing when using the brand nam
     content: m.content,
   }));
 
-  // AXON-EVERYWHERE-PROJECT (2026-08-05): AXON-local first, then Gemini, then paid
-  // Anthropic only as the last resort — per JB directive DW-LOCAL-MODEL-MIGRATION and
-  // the locked tier order (Decision #598 item 11). callHaiku below is unchanged and is
-  // now only reached if AXON-local and both Gemini keys fail — same behavior as before
-  // this change whenever the upstream tiers are unavailable.
-  const chainMessages = [...recent, { role: 'user', content: userMessage }];
-  const { text: reply, provider: replyProvider } = await callAxonTierChain(
-    cfg,
-    system,
-    chainMessages,
-    () => callHaiku(cfg.anthropicKey, system, chainMessages),
-  );
+  const reply = await callHaiku(cfg.anthropicKey, system, [
+    ...recent,
+    { role: 'user', content: userMessage },
+  ]);
 
   const userMsg = await insertChatMessage({
     operator_id: operatorId,
@@ -117,7 +108,7 @@ Brand: Northside Intelligence / NORTHSiDE (exact casing when using the brand nam
     content: reply,
     channel,
     session_id: sessionId,
-    metadata: { signal_count: signals.length, provider: replyProvider },
+    metadata: { signal_count: signals.length },
   });
 
   // Learning + workspace updates — await so UI gets fresh briefing/todos
