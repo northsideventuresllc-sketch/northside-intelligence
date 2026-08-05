@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchDispatchTask, deriveVenture, deriveComplexity } from '@/lib/axon/agent-dispatch';
 import { requireAxonOperatorId } from '@/lib/axon/operator';
 import { HAIKU_MODEL } from '@/lib/axon/constants.mjs';
+import { callAxonLocal } from '@/lib/axon/axon-local-relay';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,12 +54,24 @@ async function callGeminiOnce(apiKey: string, system: string, user: string): Pro
   return text || null;
 }
 
-/** Free-tier Gemini first, paid Haiku only if Gemini is unconfigured or fails. */
+/**
+ * AXON-EVERYWHERE-PROJECT (2026-08-05): tier order per JB is AXON-local (Mac mini) ->
+ * Gemini main -> Gemini backup -> Anthropic (paid, last resort). Decision #598 item 11 / #619.
+ */
 async function callChatModel(
-  keys: { anthropicKey?: string; geminiKey?: string; geminiBackup?: string },
+  keys: { supabaseKey?: string; anthropicKey?: string; geminiKey?: string; geminiBackup?: string },
   system: string,
   user: string
 ): Promise<string> {
+  if (keys.supabaseKey) {
+    try {
+      const local = await callAxonLocal(keys.supabaseKey, system, [{ role: 'user', content: user }]);
+      if (local) return local;
+    } catch {
+      // fall through to Gemini
+    }
+  }
+
   for (const key of [keys.geminiKey, keys.geminiBackup].filter((k): k is string => Boolean(k))) {
     try {
       const text = await callGeminiOnce(key, system, user);
@@ -89,7 +102,8 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
     const geminiBackup = process.env.GEMINI_API_KEY_BACKUP;
-    if (!apiKey && !geminiKey) {
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!apiKey && !geminiKey && !supabaseKey) {
       return NextResponse.json({ ok: false, error: 'No AI provider configured' }, { status: 500 });
     }
 
@@ -114,7 +128,7 @@ Action: ${task.action_type} · Priority: ${task.priority}`;
     const userPrompt = `${taskContext}\n\n${prior ? `Prior chat:\n${prior}\n\n` : ''}Operator: ${message}`;
 
     const reply = await callChatModel(
-      { anthropicKey: apiKey, geminiKey, geminiBackup },
+      { supabaseKey, anthropicKey: apiKey, geminiKey, geminiBackup },
       system,
       userPrompt
     );

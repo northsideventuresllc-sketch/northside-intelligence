@@ -1,6 +1,7 @@
 import "server-only";
 
 import { resolvePlatformSecret } from "@/lib/platform-secrets";
+import { callAxonLocal } from "@/lib/axon/axon-local-relay";
 
 /**
  * Free-tier Gemini models, tried in order. gemini-2.0-flash is deliberately
@@ -11,8 +12,21 @@ import { resolvePlatformSecret } from "@/lib/platform-secrets";
  *
  * JB's hard rule: NOTHING here may route to a paid API. If every free model
  * is out of quota we fail with a plain-English message instead.
+ *
+ * AXON-EVERYWHERE-PROJECT (2026-08-05): AXON-local (Mac mini) is now tried
+ * before any Gemini model — still zero paid API, zero Anthropic. Decision
+ * #598 item 11 / #619.
  */
 const FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
+
+async function resolveSupabaseKey(): Promise<string | null> {
+  const key = await resolvePlatformSecret(
+    "SUPABASE_SERVICE_KEY",
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
+    (value) => !value?.trim()
+  );
+  return key?.trim() || null;
+}
 
 async function resolveModels(): Promise<string[]> {
   const configured = await resolvePlatformSecret(
@@ -81,14 +95,24 @@ export type GeminiFirstArgs = {
 };
 
 /**
- * Generate text on the free Gemini tier only. Tries the configured model first,
- * then the other free models, then the backup key — and never falls back to a
+ * Generate text — AXON-local (Mac mini) first, then the free Gemini tier only
+ * (configured model, other free models, backup key). Never falls back to a
  * paid provider.
  */
 export async function generateTextGeminiFirst(
   args: GeminiFirstArgs
-): Promise<{ text: string; provider: "gemini" }> {
+): Promise<{ text: string; provider: "axon-local" | "gemini" }> {
   const { system, prompt, maxOutputTokens, temperature = 0.5 } = args;
+
+  const supabaseKey = await resolveSupabaseKey();
+  if (supabaseKey) {
+    try {
+      const local = await callAxonLocal(supabaseKey, system, [{ role: "user", content: prompt }]);
+      if (local) return { text: local, provider: "axon-local" };
+    } catch {
+      // fall through to Gemini
+    }
+  }
 
   const geminiKeys = await resolveGeminiKeys();
   if (!geminiKeys.length) {
