@@ -73,3 +73,8 @@ Verifies:
 | Vercel env audit | `npm run audit:vercel-env` — required keys on Vercel dashboard, `vercel.json`, or `ni_platform_secrets` |
 
 **On failure:** `docs/session-log.md` gets a **🚨 URGENT** block at the top (auto-committed by the workflow). Cloud agents must read that file at session start and act on URGENT items first — do not bury them in Carry-over.
+
+## Standing conventions (added 2026-08-11, JB-approved)
+
+- **KNOWN GAP — no test framework configured.** `package.json` has no `test` script and no Vitest/Jest/etc. installed. Do not assume test coverage exists for this repo, and do not write instructions elsewhere assuming a standard `npm test` works here until this is addressed. (Backlog item, not urgent — just don't build false assumptions on top of it.)
+- **Merging to main always requires JB's explicit sign-off.** Never auto-merge a PR, even if build/lint pass. This matches the Hard Stop already locked in `nvg-operator-core`.
