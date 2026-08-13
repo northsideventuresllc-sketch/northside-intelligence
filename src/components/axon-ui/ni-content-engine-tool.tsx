@@ -10,6 +10,25 @@ function postDate(p: ContentPost): string {
 }
 
 /**
+ * Human product name for a brand_slug, so the queue reads clearly now that it
+ * shows every NI product's drafts, not just the "ni" brand row (2026-08-13
+ * multi-brand fix — see content-machine/ni-content.ts).
+ */
+const BRAND_LABELS: Record<string, string> = {
+  bridgeai: 'BridgeAI',
+  gapscan: 'GapScan',
+  grantbot: 'GrantBot',
+  replyflow: 'ReplyFlow',
+  signaldesk: 'Signal Desk',
+  'ni-store': 'Smart Store',
+  'ni-webdesign': 'Web Design',
+};
+
+function brandLabel(slug: string): string {
+  return BRAND_LABELS[slug] ?? slug;
+}
+
+/**
  * JB's rule: a LinkedIn post always has a photo attached, and Instagram cannot
  * post text alone. A post heading to either without a picture prompt is a gap he
  * needs to see on the screen, not a silent omission.
@@ -87,6 +106,7 @@ export function NiContentEngineTool({ initialPosts }: { initialPosts: ContentPos
             <div key={p.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs uppercase tracking-wide text-axon-blue-glow">
+                  {p.brand_slug && p.brand_slug !== 'ni' ? `${brandLabel(p.brand_slug)} · ` : ''}
                   {p.post_type}
                   {p.platforms?.length ? ` · ${p.platforms.join(', ')}` : ''}
                   {postDate(p) ? ` · ${postDate(p)}` : ''}
