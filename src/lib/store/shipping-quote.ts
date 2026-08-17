@@ -27,6 +27,20 @@ export interface ShippingQuoteResult {
   source: "cj" | "fallback";
 }
 
+/**
+ * NI-STORE-SHIP-OVERESTIMATE-0817: the flat-rate fallback below is a
+ * loss-prone placeholder ($5.99/$8.99/$12.99 by subtotal), meant only for the
+ * rare case CJ freight can't be resolved. It fired silently on a real order -
+ * this logs every fallback hit so it shows up in log monitoring instead of
+ * disappearing into a normal-looking order. Logging only - no change to
+ * return shape or checkout behavior.
+ */
+function logShippingFallback(reason: string, productRetailCents: number) {
+  console.error(
+    `[shipping-quote][FALLBACK_ALERT] reason=${reason} productRetailCents=${productRetailCents} - order will ship at flat-rate fallback pricing, not real CJ freight. Verify CJ freight API health and this order's economics reconciliation.`
+  );
+}
+
 function aggregateSupplierAndRetail(lines: ShippingQuoteLine[]): {
   supplierCostCents: number;
   productRetailCents: number;
@@ -57,6 +71,7 @@ export async function quoteCartShipping(
   const { supplierCostCents, productRetailCents } = aggregateSupplierAndRetail(lines);
 
   if (!cjLines.length) {
+    logShippingFallback("no_cj_lines", productRetailCents);
     const fallback = estimateShippingCents(productRetailCents);
     const shippingStipendCents = hasExpedited
       ? fallback + expeditedShippingPremiumCents(fallback)
@@ -87,6 +102,7 @@ export async function quoteCartShipping(
         : null;
 
     if (cjFreightCents == null) {
+      logShippingFallback("cj_freight_empty", productRetailCents);
       const fallback = estimateShippingCents(productRetailCents);
       const shippingStipendCents = hasExpedited
         ? fallback + expeditedShippingPremiumCents(fallback)
@@ -119,6 +135,7 @@ export async function quoteCartShipping(
     };
   } catch (err) {
     console.warn("[store/shipping-quote] CJ freight failed, using fallback", err);
+    logShippingFallback("cj_freight_error", productRetailCents);
     const fallback = estimateShippingCents(productRetailCents);
     const shippingStipendCents = hasExpedited
       ? fallback + expeditedShippingPremiumCents(fallback)
