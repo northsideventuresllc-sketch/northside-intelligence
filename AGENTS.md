@@ -78,3 +78,18 @@ Verifies:
 
 - **KNOWN GAP — no test framework configured.** `package.json` has no `test` script and no Vitest/Jest/etc. installed. Do not assume test coverage exists for this repo, and do not write instructions elsewhere assuming a standard `npm test` works here until this is addressed. (Backlog item, not urgent — just don't build false assumptions on top of it.)
 - **Merging to main always requires JB's explicit sign-off.** Never auto-merge a PR, even if build/lint pass. This matches the Hard Stop already locked in `nvg-operator-core`.
+
+
+## Slack posting rule (added 2026-08-19, JB direct order)
+
+Every agent posts status/updates to Slack through ONE method only — never your own personal/native Slack connection:
+
+```
+POST https://kxijunwgbrlfzvgkhklo.supabase.co/functions/v1/slack-post
+Header: Authorization: Bearer sb_publishable_-JPXXSn9eyX9BxdvIzTulw_QkHPIERR
+Content-Type: application/json
+Body: {"channel":"C0BR6ATGHGR","text":"<your message>"}
+```
+
+C0BR6ATGHGR is the only #agent-ops channel JB watches. Do not post to any other channel ID, and do not use a native/per-session Slack app connection for agent status posts.
+
