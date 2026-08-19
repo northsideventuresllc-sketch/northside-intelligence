@@ -40,6 +40,7 @@ export interface LeadMeta {
   follow_up_draft?: string | null;
   follow_up_drafted_at?: string | null;
   follow_up_sent_at?: string | null;
+  deliverable_url?: string | null;
   raw?: string;
 }
 
