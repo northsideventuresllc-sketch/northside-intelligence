@@ -100,8 +100,8 @@ export function StorePageClient() {
           </p>
           <h1 className="text-3xl font-semibold text-white">{SMART_STORE_NAME}</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-ni-muted sm:mx-0">
-            Ten viral products refreshed every 24 hours — scored from what&apos;s trending online
-            and what shoppers love on Northside Intelligence.
+            Ten viral products refreshed every 24 hours — ranked from real shopper activity on
+            Northside Intelligence and our rotating catalog picks.
           </p>
         </div>
         <StoreCartHeader />

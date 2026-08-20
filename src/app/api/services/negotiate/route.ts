@@ -1,5 +1,5 @@
-import { generateText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import type { AccountType } from "@/lib/services/offerings";
@@ -7,8 +7,6 @@ import {
   evaluatePriceReduction,
   formatCents,
 } from "@/lib/services/pricing-engine";
-
-const NEGOTIATION_MODEL = "anthropic/claude-haiku-4.5";
 
 interface NegotiationMessage {
   role: "user" | "assistant";
@@ -239,8 +237,7 @@ Respond in 2-3 sentences. If approved, present ${formatCents(offeredPrice)} warm
 
   let assistantText: string;
   try {
-    const { text } = await generateText({
-      model: NEGOTIATION_MODEL,
+    const { text } = await generateTextGeminiFirst({
       system: systemPrompt,
       prompt: body.message.trim(),
       maxOutputTokens: 300,

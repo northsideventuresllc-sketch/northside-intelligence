@@ -1,12 +1,10 @@
 import "server-only";
 
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import type {
   ServiceAssistantMessage,
   ServiceAssistantSearchIntent,
 } from "@/lib/services/assistant/types";
-
-const INTENT_MODEL = "anthropic/claude-haiku-4.5";
 
 function parseIntentJson(raw: string): ServiceAssistantSearchIntent | null {
   const trimmed = raw.trim();
@@ -85,8 +83,7 @@ export async function extractServiceSearchIntent(
     .join("\n");
 
   try {
-    const { text } = await generateText({
-      model: INTENT_MODEL,
+    const { text } = await generateTextGeminiFirst({
       system: `You extract Intelligence Services search intent from a conversation on northsideintelligence.com/services.
 Return ONLY valid JSON with this shape:
 {"searchTerms":["primary need","optional alt"],"audience":"individual"|"business"|"any"|null,"maxBudgetUsd":number|null,"minBudgetUsd":number|null,"goals":["short goal phrases"]}

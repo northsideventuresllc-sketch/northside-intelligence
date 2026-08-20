@@ -1,13 +1,11 @@
 import "server-only";
 
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
   STORE_ITEM_CATEGORIES,
   isStoreCategoryId,
   type StoreCategoryId,
 } from "@/lib/store/categories";
-
-const CLASSIFIER_MODEL = "anthropic/claude-haiku-4.5";
 
 const KEYWORD_RULES: Array<{ id: StoreCategoryId; pattern: RegExp }> = [
   {
@@ -60,14 +58,11 @@ function keywordClassify(name: string, description?: string): StoreCategoryId {
   return "general";
 }
 
-async function anthropicClassify(name: string, description?: string): Promise<StoreCategoryId | null> {
-  if (!process.env.ANTHROPIC_API_KEY?.trim()) return null;
-
+async function aiClassify(name: string, description?: string): Promise<StoreCategoryId | null> {
   const options = STORE_ITEM_CATEGORIES.map((c) => `${c.id} (${c.label})`).join(", ");
 
   try {
-    const { text } = await generateText({
-      model: CLASSIFIER_MODEL,
+    const { text } = await generateTextGeminiFirst({
       system: `You assign e-commerce products to exactly one Smart Store category id. Reply with ONLY the id from this list: ${options}. No punctuation or explanation.`,
       prompt: `Product name: ${name}\nDescription: ${description ?? name}`,
       maxOutputTokens: 16,
@@ -76,7 +71,7 @@ async function anthropicClassify(name: string, description?: string): Promise<St
     const raw = text.trim().toLowerCase().replace(/[^a-z-]/g, "");
     if (isStoreCategoryId(raw)) return raw;
   } catch (err) {
-    console.warn("[store/classify-category] anthropic failed:", err);
+    console.warn("[store/classify-category] AI classify failed:", err);
   }
 
   return null;
@@ -98,7 +93,7 @@ export async function classifyStoreCategory(input: {
   const keyword = keywordClassify(input.name, input.description);
   if (keyword !== "general") return keyword;
 
-  const fromAi = await anthropicClassify(input.name, input.description);
+  const fromAi = await aiClassify(input.name, input.description);
   return fromAi ?? keyword;
 }
 

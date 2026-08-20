@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import { formatRetailPriceRange } from "@/lib/store/catalog/format-price";
 import { findAssistantRecommendations } from "@/lib/store/assistant/recommend";
 import { extractSearchIntent } from "@/lib/store/assistant/search-intent";
@@ -9,8 +9,6 @@ import type {
   StoreAssistantResponse,
 } from "@/lib/store/assistant/types";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
-
-const CHAT_MODEL = "anthropic/claude-haiku-4.5";
 
 function formatProductLine(
   index: number,
@@ -52,8 +50,7 @@ export async function runStoreAssistantChat(
       : "No matching products found in catalog right now.";
 
   try {
-    const { text } = await generateText({
-      model: CHAT_MODEL,
+    const { text } = await generateTextGeminiFirst({
       system: `You are the ${SMART_STORE_NAME} shopping assistant for Northside Intelligence.
 Help shoppers find products from our catalog. Prices are verified at checkout.
 

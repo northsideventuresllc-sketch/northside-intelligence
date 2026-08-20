@@ -1,7 +1,7 @@
 import "server-only";
 
 import { resolvePlatformSecret } from "@/lib/platform-secrets";
-import { callAxonLocal } from "@/lib/axon/axon-local-relay";
+import { callAxonLocal, callAxonRunpod } from "@/lib/axon/axon-local-relay";
 
 /**
  * Free-tier Gemini models, tried in order. gemini-2.0-flash is deliberately
@@ -16,6 +16,16 @@ import { callAxonLocal } from "@/lib/axon/axon-local-relay";
  * AXON-EVERYWHERE-PROJECT (2026-08-05): AXON-local (Mac mini) is now tried
  * before any Gemini model — still zero paid API, zero Anthropic. Decision
  * #598 item 11 / #619.
+ *
+ * CANONICAL TIER SYSTEM (2026-08-20, JB direct order): Local -> RunPod AXON
+ * v1 -> Gemini primary -> Gemini backup. RunPod AXON v1 (NVG's own
+ * fine-tuned Qwen3-Coder-30B-A3B-Instruct, NI-Brain Decision #1261) is tried
+ * between AXON-local and Gemini via `callAxonRunpod`. It reads
+ * `RUNPOD_AXON_V1_ENDPOINT` / `RUNPOD_AXON_V1_KEY` from `ni_platform_secrets`
+ * and is a safe no-op (no network call) until those are configured — nothing
+ * is deployed to RunPod yet as of this writing. This chokepoint still has no
+ * Anthropic tier: that step of the org-wide canonical order does not apply
+ * here per the "never pay" rule above.
  */
 const FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
 
@@ -26,6 +36,21 @@ async function resolveSupabaseKey(): Promise<string | null> {
     (value) => !value?.trim()
   );
   return key?.trim() || null;
+}
+
+/** Resolve RUNPOD_AXON_V1_ENDPOINT / RUNPOD_AXON_V1_KEY from env or ni_platform_secrets. */
+async function resolveRunpodConfig(): Promise<{ endpoint: string | null; apiKey: string | null }> {
+  const endpoint = await resolvePlatformSecret(
+    "RUNPOD_AXON_V1_ENDPOINT",
+    process.env.RUNPOD_AXON_V1_ENDPOINT,
+    (value) => !value?.trim()
+  );
+  const apiKey = await resolvePlatformSecret(
+    "RUNPOD_AXON_V1_KEY",
+    process.env.RUNPOD_AXON_V1_KEY,
+    (value) => !value?.trim()
+  );
+  return { endpoint: endpoint?.trim() || null, apiKey: apiKey?.trim() || null };
 }
 
 async function resolveModels(): Promise<string[]> {
@@ -101,7 +126,7 @@ export type GeminiFirstArgs = {
  */
 export async function generateTextGeminiFirst(
   args: GeminiFirstArgs
-): Promise<{ text: string; provider: "axon-local" | "gemini" }> {
+): Promise<{ text: string; provider: "axon-local" | "runpod-axon-v1" | "gemini" }> {
   const { system, prompt, maxOutputTokens, temperature = 0.5 } = args;
 
   const supabaseKey = await resolveSupabaseKey();
@@ -110,8 +135,18 @@ export async function generateTextGeminiFirst(
       const local = await callAxonLocal(supabaseKey, system, [{ role: "user", content: prompt }]);
       if (local) return { text: local, provider: "axon-local" };
     } catch {
-      // fall through to Gemini
+      // fall through to RunPod, then Gemini
     }
+  }
+
+  // Tier 2: RunPod-hosted AXON v1. Safe no-op (no network call) until
+  // RUNPOD_AXON_V1_ENDPOINT/RUNPOD_AXON_V1_KEY exist in ni_platform_secrets.
+  try {
+    const { endpoint, apiKey } = await resolveRunpodConfig();
+    const runpod = await callAxonRunpod(endpoint, apiKey, system, [{ role: "user", content: prompt }]);
+    if (runpod) return { text: runpod, provider: "runpod-axon-v1" };
+  } catch {
+    // fall through to Gemini
   }
 
   const geminiKeys = await resolveGeminiKeys();

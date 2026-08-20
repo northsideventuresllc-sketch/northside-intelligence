@@ -1,5 +1,16 @@
 import "server-only";
 
+/**
+ * Smart Store "viral picks" ranking is a deterministic formula, NOT AI and NOT a real
+ * trend-analysis feature — no model is called anywhere in this module. `trendTagBoost`
+ * comes from `getTodaysTrendTags()` (`src/lib/store/sources/trends.ts`), a fixed
+ * hardcoded keyword list rotated by day-of-week, not any live trend source. Real
+ * signal only enters via `product.trendScore`/`product.siteScore` (CJ supplier data)
+ * and `siteEventCounts` (actual on-site shopper activity). Confirmed 2026-08-20 (JB
+ * build task) — flagging here so this isn't mistaken for AI/real trend intelligence
+ * by a future reader. Building genuine AI/trend-driven ranking is a separate, larger
+ * project, not a drop-in change here.
+ */
 import type { CatalogProductRow } from "@/lib/store/catalog/products";
 
 const EVENT_WEIGHTS: Record<string, number> = {

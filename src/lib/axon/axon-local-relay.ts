@@ -6,7 +6,17 @@
  * generation 2026-08-05 (Learning #3585) — this is not a status flag, it returns real text.
  *
  * Callers get `null` on any failure/timeout so they can fall through to the next tier
- * (Gemini, then Anthropic last) without throwing.
+ * (RunPod AXON v1, then Gemini) without throwing.
+ *
+ * CANONICAL NVG TIER ORDER (2026-08-20, JB direct order): Local (this file's
+ * `callAxonLocal`) -> RunPod AXON v1 (this file's `callAxonRunpod`, NI-Brain
+ * Decision #1261 — Qwen3-Coder-30B-A3B-Instruct, NOT deployed yet as of this
+ * writing) -> Gemini primary -> Gemini backup -> Anthropic last resort. This
+ * repo's one true chokepoint is `src/lib/ai/gemini-first.ts`, which wires
+ * `callAxonLocal` and `callAxonRunpod` from this file ahead of its Gemini
+ * tiers. Per this repo's own standing rule ("Nothing routes to a paid API.
+ * Ever." — root CLAUDE.md / AGENTS.md), `gemini-first.ts` deliberately has NO
+ * Anthropic tier — that step of the canonical order does not apply here.
  */
 
 import { SUPABASE_URL } from './constants.mjs';
@@ -15,6 +25,7 @@ const MINI_RELAY_MODEL = 'axon-ornith:latest';
 const MINI_RELAY_MAX_WAIT_MS = 45_000;
 const MINI_RELAY_POLL_MS = 2_500;
 const MINI_RELAY_CMD_TIMEOUT_S = 40;
+const RUNPOD_TIMEOUT_MS = 30_000;
 
 type ChatMsg = { role: string; content: string };
 
@@ -104,6 +115,85 @@ export async function callAxonLocal(
   return null; // timed out — caller falls through to the next tier, mini job keeps running
 }
 
+let runpodMissingConfigLogged = false;
+
+/**
+ * Try RunPod-hosted AXON v1 (NVG's own fine-tuned model, Qwen3-Coder-30B-A3B-Instruct,
+ * NI-Brain Decision #1261). Tier 2 — after AXON-local (Mac mini), before Gemini.
+ *
+ * As of 2026-08-20 nothing is deployed to RunPod yet, so `endpoint`/`apiKey` will be
+ * missing (no `RUNPOD_AXON_V1_ENDPOINT` / `RUNPOD_AXON_V1_KEY` rows in
+ * `ni_platform_secrets`) and this returns `null` immediately with no network call —
+ * a deliberate, safe no-op until the endpoint goes live. Same contract as
+ * `callAxonLocal`: never throws, `null` on any failure/timeout/missing-config so the
+ * caller falls through to the next tier.
+ *
+ * Request/response shape is a best-effort RunPod Serverless convention
+ * (`{ input: { messages, ... } }` in, `{ output: ... }` out) — there is no live
+ * endpoint to verify the exact contract against yet. Re-check this parsing against
+ * the real worker response the first time AXON v1 actually deploys to RunPod.
+ */
+export async function callAxonRunpod(
+  endpoint: string | null | undefined,
+  apiKey: string | null | undefined,
+  system: string,
+  messages: ChatMsg[],
+): Promise<string | null> {
+  if (!endpoint || !apiKey) {
+    if (!runpodMissingConfigLogged) {
+      runpodMissingConfigLogged = true;
+      console.log(
+        '[axon-runpod] RUNPOD_AXON_V1_ENDPOINT/RUNPOD_AXON_V1_KEY not configured — RunPod AXON v1 tier is a no-op until it deploys (NI-Brain Decision #1261).',
+      );
+    }
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), RUNPOD_TIMEOUT_MS);
+
+  try {
+    const r = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        input: {
+          messages: [
+            { role: 'system', content: system },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ],
+          max_tokens: 1024,
+          temperature: 0.5,
+        },
+      }),
+      signal: controller.signal,
+    });
+    if (!r.ok) return null;
+
+    const data = await r.json();
+    const output = data?.output;
+    const text: unknown =
+      typeof output === 'string'
+        ? output
+        : typeof output?.text === 'string'
+          ? output.text
+          : typeof output?.choices?.[0]?.message?.content === 'string'
+            ? output.choices[0].message.content
+            : typeof output?.[0]?.choices?.[0]?.tokens?.[0] === 'string'
+              ? output[0].choices[0].tokens[0]
+              : null;
+
+    return typeof text === 'string' && text.trim() ? text.trim() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 /** Try Gemini (free tier). Used as tier 2/3 between AXON-local and paid Anthropic. */
 export async function callGemini(
   apiKey: string | null | undefined,
@@ -140,31 +230,14 @@ export async function callGemini(
   }
 }
 
-export type TierChainResult = { text: string; provider: 'axon-local' | 'gemini-primary' | 'gemini-backup' | 'anthropic' };
-
-/**
- * AXON-first tier chain, per JB directive (DW-LOCAL-MODEL-MIGRATION) and the locked
- * order from Decision #598 item 11: AXON local -> Gemini main -> Gemini backup -> Anthropic last.
- * `callAnthropicLast` is the caller's existing paid-Anthropic function — kept as the final,
- * unchanged safety net so behavior never regresses below what shipped before this change.
- */
-export async function callAxonTierChain(
-  cfg: { supabaseKey?: string | null; geminiKey?: string | null; geminiBackup?: string | null; geminiModel?: string | null },
-  system: string,
-  messages: ChatMsg[],
-  callAnthropicLast: () => Promise<string>,
-): Promise<TierChainResult> {
-  const local = await callAxonLocal(cfg.supabaseKey, system, messages).catch(() => null);
-  if (local) return { text: local, provider: 'axon-local' };
-
-  const model = cfg.geminiModel || 'gemini-2.5-flash-lite';
-
-  const geminiPrimary = await callGemini(cfg.geminiKey, model, system, messages).catch(() => null);
-  if (geminiPrimary) return { text: geminiPrimary, provider: 'gemini-primary' };
-
-  const geminiBackup = await callGemini(cfg.geminiBackup, model, system, messages).catch(() => null);
-  if (geminiBackup) return { text: geminiBackup, provider: 'gemini-backup' };
-
-  const anthropicText = await callAnthropicLast();
-  return { text: anthropicText, provider: 'anthropic' };
-}
+// NOTE (2026-08-20): a `callAxonTierChain` helper + `TierChainResult` type used to live
+// here — a second, parallel implementation of the AXON-first tier chain (local -> Gemini
+// primary -> Gemini backup -> Anthropic) that took a caller-supplied Anthropic function.
+// Confirmed via repo-wide grep this session: it was exported but had ZERO call sites
+// anywhere in this repo — genuinely dead code, and it had already drifted out of sync
+// with the real chokepoint (`generateTextGeminiFirst` in `src/lib/ai/gemini-first.ts`,
+// which has no Anthropic tier at all per this repo's "never pay" rule). Removed rather
+// than kept in sync, since `gemini-first.ts` is the one true chokepoint going forward
+// and a second, uncalled tier-chain implementation is a maintenance footgun with no
+// current caller to justify it. If a future caller needs an in-process (non-HTTP) tier
+// chain, wire it against `callAxonLocal` / `callAxonRunpod` / `callGemini` directly.
