@@ -32,6 +32,7 @@ export interface LeadMeta {
   handle_blocked?: boolean;
   blocked_handle?: string | null;
   sent_from_email?: string | null;
+  deliverable_url?: string | null;
   sent_reply_to?: string | null;
   sent_from_account?: string | null;
   sent_from_handle?: string | null;
