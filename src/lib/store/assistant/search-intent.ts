@@ -1,10 +1,8 @@
 import "server-only";
 
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import { isStoreCategoryId } from "@/lib/store/categories";
 import type { StoreAssistantMessage, StoreAssistantSearchIntent } from "@/lib/store/assistant/types";
-
-const INTENT_MODEL = "anthropic/claude-haiku-4.5";
 
 function parseIntentJson(raw: string): StoreAssistantSearchIntent | null {
   const trimmed = raw.trim();
@@ -65,8 +63,7 @@ export async function extractSearchIntent(
     .join("\n");
 
   try {
-    const { text } = await generateText({
-      model: INTENT_MODEL,
+    const { text } = await generateTextGeminiFirst({
       system: `You extract Smart Store product search intent from a shopping conversation.
 Return ONLY valid JSON with this shape:
 {"searchTerms":["primary query","optional alt"],"category":"kitchen|tech|home|pets|health|beauty|fitness|auto|entertainment|smart-home|general","maxBudgetUsd":number|null,"minBudgetUsd":number|null}

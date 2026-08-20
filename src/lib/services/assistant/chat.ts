@@ -1,6 +1,6 @@
 import "server-only";
 
-import { generateText } from "ai";
+import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
   findServiceRecommendations,
   formatRecommendationLine,
@@ -10,8 +10,6 @@ import type {
   ServiceAssistantMessage,
   ServiceAssistantResponse,
 } from "@/lib/services/assistant/types";
-
-const CHAT_MODEL = "anthropic/claude-haiku-4.5";
 
 export async function runServiceAssistantChat(
   messages: ServiceAssistantMessage[]
@@ -32,8 +30,7 @@ export async function runServiceAssistantChat(
       : "No matching services found right now.";
 
   try {
-    const { text } = await generateText({
-      model: CHAT_MODEL,
+    const { text } = await generateTextGeminiFirst({
       system: `You are the Intelligence Services assistant for Northside Intelligence.
 Help visitors find the right professional service from our catalog at /services.
 
