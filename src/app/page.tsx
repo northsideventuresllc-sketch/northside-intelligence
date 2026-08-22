@@ -2,6 +2,7 @@ import { NavServer } from "@/components/landing/NavServer";
 import { Hero } from "@/components/landing/Hero";
 import { ToolsCarousel } from "@/components/landing/ToolsCarousel";
 import { Mission } from "@/components/landing/Mission";
+import { Founder } from "@/components/landing/Founder";
 import { AxonWaitlistBand } from "@/components/landing/AxonWaitlistBand";
 import { IntelligenceEcosystem } from "@/components/landing/IntelligenceEcosystem";
 import { PricingSection } from "@/components/landing/PricingSection";
@@ -22,6 +23,7 @@ export default async function HomePage() {
       <NavServer />
       <Hero isLoggedIn={!!user} />
       <Mission />
+      <Founder />
       <AxonWaitlistBand />
       <ToolsCarousel tools={tools} />
       <IntelligenceEcosystem />
