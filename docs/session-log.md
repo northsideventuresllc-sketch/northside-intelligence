@@ -2,6 +2,17 @@
 
 Agent session notes. **Read the 🚨 URGENT block first** — do not bury alerts in Carry-over.
 
+<!-- URGENT:infra-health-check -->
+
+## 🚨 URGENT — infra-health-check
+
+Run: 2026-08-24T13:50:26.958Z
+
+- **ANTHROPIC_API_KEY**: missing — GitHub Actions secret ANTHROPIC_API_KEY not set
+- **arm3_opportunities**: no rows in last 7 days — pipeline or generate-tool may be stalled
+- **match_fit_webhook**: GET https://match-fit.net/api/webhooks/stripe → 405 (expected 200)
+
+<!-- URGENT:infra-health-check -->
 ## Carry-over
 
 - **AX-NI-PORTAL-INFRA-CHECK-FIX + prod build restore — PR #160 (draft, awaiting JB sign-off):**
