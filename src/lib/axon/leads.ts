@@ -27,7 +27,7 @@ export function enrichLead(lead: Lead): LeadWithMeta {
   };
 }
 
-export async function fetchLeads(limit = 200): Promise<LeadWithMeta[]> {
+export async function fetchLeads(limit = 200, source = SOURCE): Promise<LeadWithMeta[]> {
   try {
     await sweepLeadLifecycle();
   } catch {
@@ -36,7 +36,7 @@ export async function fetchLeads(limit = 200): Promise<LeadWithMeta[]> {
   const { sbSelect } = getClient();
   const rows = (await sbSelect(
     'ni_brain_outreach',
-    `source=eq.${SOURCE}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
+    `source=eq.${source}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
   )) as Lead[];
   return filterVisibleLeads((rows || []).map(enrichLead));
 }
@@ -56,17 +56,17 @@ export async function findLeadByShortId(sid: string): Promise<LeadWithMeta | nul
   return leads.find((l) => l.shortId === sid || l.id === sid) ?? null;
 }
 
-export async function fetchPipelineStats(): Promise<PipelineStats> {
+export async function fetchPipelineStats(source = SOURCE): Promise<PipelineStats> {
   const { sbSelect } = getClient();
   const today = todayUtc();
 
   const [statusRows, todayRows] = await Promise.all([
-    sbSelect('ni_brain_outreach', `source=eq.${SOURCE}&select=status&limit=500`) as Promise<
+    sbSelect('ni_brain_outreach', `source=eq.${source}&select=status&limit=500`) as Promise<
       { status?: string }[]
     >,
     sbSelect(
       'ni_brain_outreach',
-      `source=eq.${SOURCE}&created_at=gte.${today}T00:00:00Z&select=id`
+      `source=eq.${source}&created_at=gte.${today}T00:00:00Z&select=id`
     ) as Promise<{ id: string }[]>,
   ]);
 
