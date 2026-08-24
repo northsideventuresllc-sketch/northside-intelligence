@@ -12,6 +12,7 @@ export type LeadStatus =
 export type LeadChannel = 'email' | 'linkedin';
 
 export interface LeadMeta {
+  deliverable_url?: string | null;
   channel?: LeadChannel;
   score?: number;
   recommended_service?: string;
