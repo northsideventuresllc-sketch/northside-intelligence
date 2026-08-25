@@ -134,7 +134,7 @@ at least two sub-trees say the opposite:
   `STRIPE_WEBHOOK_SECRET`, favicon must use the tool's own icon not the NI portal emblem.
 - `sector3/axon/AGENTS.md`: mirrors the standalone AXON repo's protocol — NI-Brain
   `ni_brain_outreach` table, **no secrets in git**, **no auto-send** (Telegram approve
-  required), `NORTHSiDE`/JB brand rules.
+  required), `Northside`/JB brand rules.
 
 **Rule for Claude Code sessions here:** default to the root's standing merge/deploy approval
 for the portal shell itself, but treat any change under `sector3/replyflow/` or `sector3/axon/`

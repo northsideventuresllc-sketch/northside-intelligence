@@ -400,7 +400,7 @@ export function TermsOfServiceContent() {
         <h3 className="mb-2 text-base font-medium text-white/90">9.1 NI Ownership</h3>
         <p className="mb-4">
           All content, design, code, software, AI models, brand assets, trademarks, trade names (including
-          &quot;Northside Intelligence,&quot; &quot;NORTHSiDE,&quot; &quot;ReplyFlow,&quot; &quot;GrantBot,&quot;
+          &quot;Northside Intelligence,&quot; &quot;Northside,&quot; &quot;ReplyFlow,&quot; &quot;GrantBot,&quot;
           &quot;Signal Desk,&quot; &quot;GapScan,&quot; &quot;BridgeAI,&quot; and associated logos), and platform
           infrastructure are the exclusive property of Northside Ventures Group LLC or its licensors. Nothing in these
           Terms transfers any IP rights to you.

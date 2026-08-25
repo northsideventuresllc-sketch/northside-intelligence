@@ -32,7 +32,7 @@ export function AxonWaitlistLanding() {
 
         <div className="relative mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-axon-gold">
-            AXON by NORTHSiDE Intelligence
+            AXON by Northside Intelligence
           </p>
           <h1 className="mt-6 text-4xl font-bold leading-tight sm:text-5xl">
             The world&apos;s first neurodivergent artificial intelligence.
