@@ -31,7 +31,7 @@ Enterprise ($12,000–$100,000+):
 export const ICP = `
 Primary: Founders/COOs of 5–50 person SMBs in ops-heavy industries (logistics, healthcare admin, professional services, light manufacturing).
 Enterprise: Ops + compliance leads at regulated or mid-market orgs.
-Voice: Underground-premium, direct, no corporate fluff. Brand: NORTHSiDE. Positioning: AI that partners with humans — not replaces them.
+Voice: Underground-premium, direct, no corporate fluff. Brand: Northside. Positioning: AI that partners with humans — not replaces them.
 CTA: northsideintelligence.com/services
 `.trim();
 

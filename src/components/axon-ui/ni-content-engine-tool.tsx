@@ -54,7 +54,7 @@ export function NiContentEngineTool({ initialPosts }: { initialPosts: ContentPos
       <div>
         <h1 className="text-2xl font-bold text-white">NI Content</h1>
         <p className="text-sm text-axon-muted">
-          Posts for NORTHSiDE Intelligence. Same machine as Match Fit — you read, edit, approve.
+          Posts for Northside Intelligence. Same machine as Match Fit — you read, edit, approve.
           Nothing publishes on its own.
         </p>
       </div>

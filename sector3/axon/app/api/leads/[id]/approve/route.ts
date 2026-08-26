@@ -37,7 +37,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       });
     }
 
-    const subject = meta.email_subject || `NORTHSiDE Intelligence — ${lead.handle}`;
+    const subject = meta.email_subject || `Northside Intelligence — ${lead.handle}`;
     await resendSend(cfg, {
       to,
       subject,

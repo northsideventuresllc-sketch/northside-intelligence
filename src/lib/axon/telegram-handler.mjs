@@ -57,7 +57,7 @@ async function handleApprove(cfg, sbPatch, lead) {
     return `Approved ${shortId(lead.id)}, but email sending isn't set up yet. You'll need to send it manually for now.`;
   }
 
-  const subject = meta.email_subject || `NORTHSiDE Intelligence — ${lead.handle}`;
+  const subject = meta.email_subject || `Northside Intelligence — ${lead.handle}`;
   await resendSend(cfg, {
     to,
     subject,
