@@ -41,12 +41,6 @@ interface OutreachHqToolProps {
   pipelineFilter?: string;
   followUpPending?: LeadWithMeta[];
   followUpDone?: LeadWithMeta[];
-  // AX-MKT-OUT-DEMERGE (2026-08-03): mf-outreach/page.tsx reuses this shared
-  // tool scoped to Match Fit, so the venture/slug/label can't be hardcoded
-  // to NI. Defaults keep every other caller (ni-outreach page) unchanged.
-  venture?: string;
-  toolSlug?: string;
-  displayNameFallback?: string;
 }
 
 export function OutreachHqTool({
@@ -60,13 +54,10 @@ export function OutreachHqTool({
   pipelineFilter,
   followUpPending = [],
   followUpDone = [],
-  venture = 'ni',
-  toolSlug = 'ni-outreach',
-  displayNameFallback = 'NI Outreach HQ',
 }: OutreachHqToolProps) {
   const { tools, getDisplayName } = useAxonToolDisplayNames();
-  const outreach = tools.find((t) => t.slug === toolSlug);
-  const displayName = outreach ? getDisplayName(outreach) : displayNameFallback;
+  const outreach = tools.find((t) => t.slug === 'ni-outreach');
+  const displayName = outreach ? getDisplayName(outreach) : 'NI Outreach HQ';
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as OutreachHqTab | null;
   const tab = tabParam && TABS.some((t) => t.id === tabParam) ? tabParam : initialTab;
@@ -87,7 +78,7 @@ export function OutreachHqTool({
   const [bulkStatus, setBulkStatus] = useState('approved');
 
   useEffect(() => {
-    if (consumeToolLaunch(toolSlug)) setShowLaunch(true);
+    if (consumeToolLaunch('ni-outreach')) setShowLaunch(true);
   }, []);
 
   const onLaunchComplete = useCallback(() => setShowLaunch(false), []);
@@ -137,7 +128,7 @@ export function OutreachHqTool({
   }
 
   function tabHref(nextTab: OutreachHqTab): string {
-    const base = basePath ? appPath(`/tools/${toolSlug}`, basePath) : `/tools/${toolSlug}`;
+    const base = basePath ? appPath('/tools/ni-outreach', basePath) : '/tools/ni-outreach';
     if (nextTab === 'overview') return base;
     return `${base}?tab=${nextTab}`;
   }
@@ -392,7 +383,7 @@ export function OutreachHqTool({
           )}
         </div>
       </div>
-      <AxonToolFooter toolSlug={toolSlug} basePath={basePath} />
+      <AxonToolFooter toolSlug="ni-outreach" basePath={basePath} />
     </>
   );
 }
