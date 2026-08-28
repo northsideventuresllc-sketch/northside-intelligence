@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { axonPublicPath } from "@/lib/axon/paths";
+
+// Live AXON app (the new AXON, not the old embedded-dash copy this portal
+// used to link to). No custom domain configured yet - Vercel default URL.
+const AXON_APP_URL = "https://axon-northsideventuresllc-sketchs-projects.vercel.app/axon";
 
 interface AxonNavDropdownProps {
   canEnterAxonDash: boolean;
@@ -30,10 +33,7 @@ export function AxonNavDropdown({ canEnterAxonDash, portalUsername }: AxonNavDro
     };
   }, []);
 
-  const dashHref =
-    canEnterAxonDash && portalUsername
-      ? axonPublicPath(portalUsername, "/dashboard")
-      : "#";
+  const canOpenAxon = canEnterAxonDash && Boolean(portalUsername);
 
   return (
     <div ref={containerRef} className="relative">
@@ -62,15 +62,17 @@ export function AxonNavDropdown({ canEnterAxonDash, portalUsername }: AxonNavDro
               AXON Home
             </Link>
 
-            {canEnterAxonDash && portalUsername ? (
-              <Link
-                href={dashHref}
+            {canOpenAxon ? (
+              <a
+                href={AXON_APP_URL}
+                target="_blank"
+                rel="noreferrer"
                 role="menuitem"
                 onClick={() => setOpen(false)}
                 className="block px-4 py-2.5 text-sm text-ni-muted transition hover:bg-white/5 hover:text-cyan-300"
               >
                 AXON Dash
-              </Link>
+              </a>
             ) : (
               <span
                 role="menuitem"
