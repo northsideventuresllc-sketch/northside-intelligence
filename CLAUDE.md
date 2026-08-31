@@ -143,14 +143,21 @@ they override the root default where they exist.
 
 ---
 
-## ⚠️ SECURITY: live secret committed in `vercel.json`
+## SECURITY: `NI_AUTH_GATEWAY_SECRET` — resolved, do not resurface (corrected 2026-08-31)
 
-`vercel.json`'s `env` block has `NI_AUTH_GATEWAY_SECRET` in **plaintext**, and this repo is a
-**public** GitHub repo — that secret is currently exposed on the open internet. Unlike
-`NEXT_PUBLIC_SUPABASE_ANON_KEY` in the same block (safe by design, RLS-enforced), this one has
-no `NEXT_PUBLIC_` prefix, meaning it's meant to be server-side-only. Do not silently rotate or
-remove this value — other apps (matchfit, AXON, etc.) may validate requests against it, so
-changing it without coordinating breaks cross-app auth. **Flag to JB immediately if this is
-still true** rather than treating it as routine parity work; a Claude Code session should not
-merge further changes to `vercel.json` here without confirming the secret has been rotated and
-moved out of the tracked file (Vercel dashboard/CLI env instead).
+This section used to warn that `vercel.json`'s `env` block carried `NI_AUTH_GATEWAY_SECRET` in
+plaintext on this public repo, and told agents to flag it to JB and hold merges to the file
+until confirmed rotated. That warning is stale and has been corrected here rather than
+re-flagged as new:
+
+- JB set a new secret value directly in Vercel (production env) and in the `ni-portal-auth`
+  Supabase edge function secrets (project `kxijunwgbrlfzvgkhklo`); the old plaintext value was
+  then removed from this file in PR #153 (merged 2026-07-21), with the production deploy
+  verified clean (NI-Brain Decisions #245 / #246).
+- Live `vercel.json` on this repo's default branch confirmed (2026-08-31) to no longer contain
+  `NI_AUTH_GATEWAY_SECRET` anywhere in its `env` block.
+- JB closed the item directly: "not needed, closed. Do not resurface." (NI-Brain Decision #913,
+  2026-08-13).
+
+No merge-hold applies to `vercel.json` on this basis anymore. If a *new* plaintext secret shows
+up in this file in the future, that is a fresh finding — flag it fresh, don't reuse this section.
