@@ -8,6 +8,7 @@ import {
   PLATFORMS_BY_TYPE,
 } from "./constants";
 import {
+  findExistingDailyPost,
   insertPost,
   loadBrandProfile,
   loadFewShots,
@@ -18,7 +19,12 @@ import {
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
 import { generatePostImage } from "./image-gen";
 import { buildRegenFeedback, runQualityGate } from "./quality-gate";
-import type { ContentPost, GeneratedDraft, GenerateSlotInput } from "./types";
+import type {
+  ContentPost,
+  ContentPostType,
+  GeneratedDraft,
+  GenerateSlotInput,
+} from "./types";
 import {
   buildSlotBrief,
   getDefaultThemeDayIndex,
@@ -279,4 +285,103 @@ export async function generateDailyBatch(args?: {
   }
 
   return { batchId, posts };
+}
+
+/**
+ * CM7-D8-CHUNK (2026-08-31): one slot per call instead of the whole day per call.
+ *
+ * axon_cron_jobs.hermes-content-daily-batch was failing with Vercel's
+ * FUNCTION_INVOCATION_TIMEOUT (504, last run 2026-08-30 11:08 UTC) because
+ * generateDailyBatch ran all 4 post types sequentially inside one serverless
+ * invocation with no chunking. That alone would be tight against maxDuration=300,
+ * but the real compounding cause lives one layer down: every generateSlotDraft
+ * call goes through generateTextGeminiFirst -> callAxonLocal (axon-local-relay.ts),
+ * which polls the Mac-mini job queue for up to MINI_RELAY_MAX_WAIT_MS (45s) before
+ * falling through to Gemini. With up to MAX_REGEN_ATTEMPTS+1=3 quality-gate
+ * attempts per slot, 4 slots x up to 3 attempts x a 45s AXON-local stall alone is
+ * 540s worst case -- comfortably past the 300s budget even before any Gemini
+ * network time, independent of whether the mini happens to be reachable that
+ * morning. Chunking to one slot per invocation bounds the worst case to a single
+ * slot (~3 attempts x ~45-60s <= ~180s), safely under 300s regardless of whether
+ * AXON-local answers or stalls out every time.
+ *
+ * Resumable by construction: checks findExistingDailyPost() before spending an
+ * LLM call, so a partial-day rerun (hermes-rerun-failed.mjs re-invoking the same
+ * trigger script) only regenerates the slot(s) that didn't land, and never
+ * duplicates a slot that already did -- the content_machine_brand_guard trigger's
+ * own week_start/day_index/post_type check-then-insert is the authoritative
+ * backstop against a real duplicate row even if this precheck is stale.
+ *
+ * generateDailyBatch() above is left untouched (same signature, same full-loop
+ * behavior) for its other existing callers (api/content-machine/generate manual
+ * "regenerate whole day", the NI-brand cron) -- only the Match Fit daily-batch
+ * cron path (route.ts) and its Hermes trigger script were changed to call this
+ * once per post type.
+ */
+export async function generateBatchSlot(args: {
+  brandSlug?: string;
+  dayIndex?: number;
+  postType: ContentPostType;
+  withImages?: boolean;
+  batchId?: string;
+  researchSnippet?: string;
+}): Promise<{ batchId: string; post: ContentPost | null; skipped: boolean }> {
+  const brandSlug = args.brandSlug ?? DEFAULT_BRAND_SLUG;
+  const dayIndex = args.dayIndex ?? getDefaultThemeDayIndex();
+  const batchId = args.batchId ?? randomUUID();
+
+  const alreadyGenerated = await findExistingDailyPost({
+    brandSlug,
+    dayIndex,
+    postType: args.postType,
+  });
+  if (alreadyGenerated) {
+    return { batchId, post: null, skipped: true };
+  }
+
+  const theme = getWeekdayTheme(dayIndex);
+  const targetGroup = getThemeAudienceForPost(dayIndex, args.postType);
+  const researchSnippet =
+    args.researchSnippet ?? (await loadRecentLearnings(3)).join("\n");
+
+  const { draft } = await generateSlotWithQualityGate({
+    brandSlug,
+    dayIndex,
+    postType: args.postType,
+    targetGroup,
+    researchSnippet,
+  });
+
+  let imageUrl: string | null = null;
+  if (args.withImages && args.postType !== "Text" && draft.visualPrompt) {
+    try {
+      imageUrl = await generatePostImage({
+        visualPrompt: draft.visualPrompt,
+        brandSlug,
+      });
+    } catch (err) {
+      console.warn("[content-machine] image gen failed:", err);
+    }
+  }
+
+  const post = await insertPost({
+    brand_slug: brandSlug,
+    status: "pending_approval",
+    day_index: dayIndex,
+    post_type: args.postType,
+    target_group: targetGroup,
+    theme_name: theme.name,
+    caption: draft.caption,
+    visual_prompt: draft.visualPrompt,
+    hashtags: draft.hashtags,
+    image_url: imageUrl,
+    scheduled_at: null,
+    published_at: null,
+    platforms: PLATFORMS_BY_TYPE[args.postType],
+    batch_id: batchId,
+    source_post_id: null,
+    meta: { generated_at: new Date().toISOString() },
+  });
+
+  return { batchId, post, skipped: false };
 }
