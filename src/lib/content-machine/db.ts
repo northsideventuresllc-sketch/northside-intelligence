@@ -95,6 +95,56 @@ export async function loadRecentLearnings(limit = 3): Promise<string[]> {
   return (data ?? []).map((r) => r.learning as string).filter(Boolean);
 }
 
+/**
+ * CM7-D8-CHUNK (2026-08-31): precheck for generateBatchSlot() so a resumed/rerun
+ * invocation doesn't spend an LLM call regenerating a slot that already landed.
+ * Best-effort only — NOT the source of correctness against duplicates. For
+ * brand_slug='match-fit' the real guard is the content_machine_brand_guard
+ * Postgres trigger's own week_start/day_index/post_type check-then-insert (see
+ * the swallowed-insert comment in insertPost() below), which still no-ops a
+ * genuine duplicate even if this precheck is stale or its query fails.
+ */
+export async function findExistingDailyPost(args: {
+  brandSlug: string;
+  dayIndex: number;
+  postType: string;
+}): Promise<boolean> {
+  const sb = createServiceClient();
+
+  if (args.brandSlug === "match-fit") {
+    // Match Fit inserts never land in content_machine_posts — the brand guard
+    // trigger redirects them into match_fit_content_calendar_posts, keyed on
+    // week_start/day_index/post_type. day_index is always "today's" weekday
+    // index (getDefaultThemeDayIndex), so post_date for today's row is today's
+    // UTC date — check that directly instead of re-deriving week_start.
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await sb
+      .from("match_fit_content_calendar_posts")
+      .select("id")
+      .eq("post_date", today)
+      .eq("post_type", args.postType)
+      .is("deleted_at", null)
+      .limit(1)
+      .maybeSingle();
+    if (error) return false; // fail open — worst case we regenerate; the trigger still blocks a real duplicate row
+    return Boolean(data);
+  }
+
+  const since = new Date();
+  since.setUTCHours(0, 0, 0, 0);
+  const { data, error } = await sb
+    .from("content_machine_posts")
+    .select("id")
+    .eq("brand_slug", args.brandSlug)
+    .eq("day_index", args.dayIndex)
+    .eq("post_type", args.postType)
+    .gte("created_at", since.toISOString())
+    .limit(1)
+    .maybeSingle();
+  if (error) return false;
+  return Boolean(data);
+}
+
 export async function insertPost(
   post: Omit<ContentPost, "id" | "created_at" | "updated_at">
 ): Promise<ContentPost> {
