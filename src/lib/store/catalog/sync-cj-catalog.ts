@@ -99,19 +99,26 @@ function advanceKeywordSlice(current: string): string | null {
   return slices[idx + 1] ?? null;
 }
 
+/** NI-CRON-TIMEOUT-JSON-FIX-0830: store-viral-refresh calls this then refreshDailyViralPicks()
+ * in the same 300s function — 15 sequential CJ pages could eat the whole budget and starve
+ * the viral refresh. Bail out of the page loop past this wall-clock budget; progress is
+ * already saved per-page so the next run resumes where this one stopped. */
+const SYNC_TIME_BUDGET_MS = 150_000;
+
 /** Ingest the next batch of CJ listV2 pages into ni_store_catalog (fast list data, no per-SKU enrich). */
 export async function syncCjCatalogBatch(
   pagesPerRun = CJ_PAGES_PER_CRON_RUN
 ): Promise<CjCatalogSyncResult> {
   await ensureStoreEnv();
 
+  const startedAt = Date.now();
   const state = await loadSyncState();
   let pagesProcessed = 0;
   let productsUpserted = 0;
   let sliceComplete = false;
   let nextKeywordSlice: string | null = null;
 
-  while (pagesProcessed < pagesPerRun) {
+  while (pagesProcessed < pagesPerRun && Date.now() - startedAt < SYNC_TIME_BUDGET_MS) {
     let pageResult: Awaited<ReturnType<typeof fetchCjCatalogPage>>;
     try {
       pageResult = await fetchCjCatalogPage({

@@ -34,13 +34,32 @@ import {
 
 const MODEL = "anthropic/claude-haiku-4.5";
 
+/** Health Scan 2026-08-30: model output truncated mid-string (hit maxOutputTokens) was
+ * reaching JSON.parse uncaught, killing the whole daily batch with "Unterminated string
+ * in JSON at position N". Wrap it so a bad response is retried like any other gate
+ * failure instead of taking the cron down. */
+class ContentDraftParseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ContentDraftParseError";
+  }
+}
+
 function parseJsonResponse(text: string): GeneratedDraft {
   const cleaned = text
     .trim()
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/\s*```$/i, "");
-  const parsed = JSON.parse(cleaned) as GeneratedDraft;
+  let parsed: Partial<GeneratedDraft>;
+  try {
+    parsed = JSON.parse(cleaned) as GeneratedDraft;
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    throw new ContentDraftParseError(
+      `Model returned invalid JSON (${reason}) — ${cleaned.length} chars, likely truncated: "${cleaned.slice(-120)}"`
+    );
+  }
   return {
     caption: String(parsed.caption ?? "").trim(),
     visualPrompt:
@@ -148,7 +167,7 @@ export async function generateSlotDraft(
     anthropicModel: MODEL,
     system,
     prompt: userPrompt,
-    maxOutputTokens: 1200,
+    maxOutputTokens: 2000,
     temperature: 0.7,
   });
 
@@ -172,7 +191,23 @@ export async function generateSlotWithQualityGate(
   let lastDraft: GeneratedDraft | undefined;
 
   for (let attempt = 1; attempt <= MAX_REGEN_ATTEMPTS + 1; attempt++) {
-    const draft = await generateSlotDraft(input, feedback);
+    let draft: GeneratedDraft;
+    try {
+      draft = await generateSlotDraft(input, feedback);
+    } catch (err) {
+      if (!(err instanceof ContentDraftParseError)) throw err;
+      // On the final attempt this just falls out of the loop with lastDraft unset (if every
+      // attempt failed to parse) or set to the last gate-failing-but-valid draft — same
+      // best-effort-flagged fallback the post-loop block already uses for gate failures.
+      lastFailures = [err.message];
+      feedback = "Your last response was not valid JSON. Output ONLY the JSON object, nothing else.";
+      await logSignal({
+        brandSlug: input.brandSlug,
+        signalType: "REGENERATED",
+        meta: { failures: lastFailures, attempt, parseError: true, ...input },
+      });
+      continue;
+    }
     const gate = runQualityGate({
       draft,
       postType: input.postType,
