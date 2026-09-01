@@ -12,9 +12,10 @@ import { resendSend } from './resend.mjs';
  * - The venture kill switch (automation_controls: 'match_fit.outreach' / 'ni.outreach')
  *   is checked in THIS code, before any network call to Resend — not just relied on as
  *   a DB write-guard, because by the time the DB would reject the status='sent' write
- *   the email has already gone out. Switch state is read live on every run — as of
- *   2026-08-04 both match_fit.outreach and ni.outreach are ON, so do not assume a
- *   run is a no-op.
+ *   the email has already gone out. Switch state is read live on every run — do not
+ *   hardcode a belief about whether it is ON or OFF here (it drifted stale before,
+ *   see WIRE-AUTOMATION-CONTROLS-0825: both switches sat ON in the DB for weeks after
+ *   the standing outreach pause, Decisions #865/#1224).
  * - Success is only recorded with a real provider_id + sent_at (DB constraint
  *   msg_sent_needs_receipt enforces this too).
  * - Failure is only recorded with a real failure_reason of 10+ chars (DB constraint
