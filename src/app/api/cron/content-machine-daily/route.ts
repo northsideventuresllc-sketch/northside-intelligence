@@ -8,7 +8,23 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * CM7 D8 — daily 7 AM batch generation for Match Fit.
+ * CM7 D8 — daily 7 AM batch generation, one brand per run.
+ *
+ * FIXED 2026-09-01 (JB direct live order, this session): this route silently
+ * hardcoded brandSlug to DEFAULT_BRAND_SLUG ("match-fit") on every call, so
+ * despite being named/documented as the NI Portal's daily content generator
+ * (AXON Telegram CM6 approval queue), it could never produce a single row for
+ * any real NI brand (bridgeai, gapscan, grantbot, replyflow, signaldesk,
+ * ni-store, ni-webdesign, ni) -- content_machine_posts saw zero new NI rows
+ * for 6+ days as a direct result. Match Fit content already has its own
+ * dedicated weekly generator in the matchfit repo
+ * (match-fit-content-calendar-weekly-generate.yml -> match_fit_content_calendar_posts
+ * directly) -- this route hitting match-fit via an unrequested default was
+ * never the intended path for MF and duplicated/confused that pipeline.
+ * Now accepts ?brandSlug=<slug> from the caller (falls back to
+ * DEFAULT_BRAND_SLUG only if the caller genuinely omits it, e.g. a manual
+ * admin hit with no param) instead of always overriding whatever was asked
+ * for.
  *
  * CM7-D8-CHUNK (2026-08-31): pass ?postType=Carousel|Static|Video|Text to generate
  * just that one slot in this invocation instead of the whole day. See
@@ -31,6 +47,8 @@ export async function GET(req: NextRequest) {
   const batchIdParam = req.nextUrl.searchParams.get("batchId") ?? undefined;
   const dayIndexParam = req.nextUrl.searchParams.get("dayIndex");
   const dayIndex = dayIndexParam !== null ? Number(dayIndexParam) : undefined;
+  const brandSlugParam = req.nextUrl.searchParams.get("brandSlug")?.trim();
+  const brandSlug = brandSlugParam || DEFAULT_BRAND_SLUG;
 
   try {
     if (postTypeParam) {
@@ -42,7 +60,7 @@ export async function GET(req: NextRequest) {
       }
 
       const result = await generateBatchSlot({
-        brandSlug: DEFAULT_BRAND_SLUG,
+        brandSlug,
         dayIndex,
         postType: postTypeParam as ContentPostType,
         withImages,
@@ -52,6 +70,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         ok: true,
         batchId: result.batchId,
+        brandSlug,
         postType: postTypeParam,
         skipped: result.skipped,
         status: result.skipped ? "already_generated" : "pending_approval",
@@ -59,7 +78,7 @@ export async function GET(req: NextRequest) {
     }
 
     const result = await generateDailyBatch({
-      brandSlug: DEFAULT_BRAND_SLUG,
+      brandSlug,
       withImages,
     });
 
