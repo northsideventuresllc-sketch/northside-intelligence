@@ -267,6 +267,7 @@ export async function generateTextGeminiFirst(
       });
       return { text: runpod.text, provider: "runpod-axon-v1" };
     }
+<<<<<<< HEAD
   } catch {
     // fall through to OpenRouter, then Gemini
   }
@@ -292,6 +293,8 @@ export async function generateTextGeminiFirst(
         }
       }
     }
+=======
+>>>>>>> origin/main
   } catch {
     // fall through to Gemini
   }
