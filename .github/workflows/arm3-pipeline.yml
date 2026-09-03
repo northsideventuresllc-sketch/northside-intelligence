@@ -4,11 +4,10 @@ name: ARM3 Sector 3 Pipeline
 # Date gate in job steps — lifts automatically on/after that date (no JB re-enable).
 # Vault: 04 Workflows & SOPs/IT Build Pause — Until 2026-09-01.md
 
+# Schedule moved off GitHub Actions on 2026-09-03 (Decision #1699). Was: cron "0 14 * * 1,3,5"
+# (10am ET Mon/Wed/Fri). Now runs from the Mac mini cron manifest as roster row ni-arm3-pipeline.
+
 on:
-  schedule:
-    # 10am ET Mon / Wed / Fri (14:00 UTC) — still runs for green health,
-    # but generate-tool is gated until 2026-09-01 (see "IT build pause gate" step).
-    - cron: "0 14 * * 1,3,5"
   workflow_dispatch:
 
 env:

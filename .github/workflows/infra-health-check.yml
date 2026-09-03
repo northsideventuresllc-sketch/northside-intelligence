@@ -1,9 +1,10 @@
 name: Infra Health Check
 
+# Schedule moved off GitHub Actions on 2026-09-03 (Decision #1699). Was: cron "0 13 * * 1"
+# (every Monday 9am ET). Now runs from the Mac mini cron manifest as roster row
+# ni-infra-health-check.
+
 on:
-  schedule:
-    # Every Monday 9am ET (13:00 UTC)
-    - cron: "0 13 * * 1"
   workflow_dispatch:
 
 jobs:
