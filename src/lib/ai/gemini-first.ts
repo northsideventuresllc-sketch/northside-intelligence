@@ -18,17 +18,32 @@ import { logLlmUsage } from "@/lib/ai/usage-ledger";
  * before any Gemini model — still zero paid API, zero Anthropic. Decision
  * #598 item 11 / #619.
  *
- * CANONICAL TIER SYSTEM (2026-08-20, JB direct order): Local -> RunPod AXON
- * v1 -> Gemini primary -> Gemini backup. RunPod AXON v1 (NVG's own
- * fine-tuned Qwen3-Coder-30B-A3B-Instruct, NI-Brain Decision #1261) is tried
- * between AXON-local and Gemini via `callAxonRunpod`. It reads
+ * CANONICAL TIER SYSTEM (2026-08-20, JB direct order; OpenRouter free tier
+ * inserted 2026-09-03, Phase 3 / Decision #1721): Local -> RunPod AXON v1 ->
+ * OpenRouter free -> Gemini primary -> Gemini backup. RunPod AXON v1 (NVG's
+ * own fine-tuned Qwen3-Coder-30B-A3B-Instruct, NI-Brain Decision #1261) is
+ * tried between AXON-local and OpenRouter via `callAxonRunpod`. It reads
  * `RUNPOD_AXON_V1_ENDPOINT` / `RUNPOD_AXON_V1_KEY` from `ni_platform_secrets`
  * and is a safe no-op (no network call) until those are configured — nothing
- * is deployed to RunPod yet as of this writing. This chokepoint still has no
- * Anthropic tier: that step of the org-wide canonical order does not apply
- * here per the "never pay" rule above.
+ * is deployed to RunPod yet as of this writing. OpenRouter (`OPENROUTER_API_KEY`
+ * from `ni_platform_secrets`/env) is likewise a safe no-op until configured,
+ * and only ever calls models read live from NI-Brain `router_models` where
+ * `route='openrouter'` and `cost_tier=0` (free) — it does not add a paid tier.
+ * This chokepoint still has no Anthropic tier: that step of the org-wide
+ * canonical order does not apply here per the "never pay" rule above.
  */
 const FALLBACK_MODELS = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"];
+
+/**
+ * UNVERIFIED fallback only — used when the live NI-Brain query for enabled
+ * cost_tier=0 'openrouter' route models returns no rows. Not confirmed
+ * free/available at read time.
+ */
+const OPENROUTER_FREE_MODEL_FALLBACK_UNVERIFIED = [
+  "meta-llama/llama-3.1-8b-instruct:free",
+  "google/gemma-2-9b-it:free",
+  "mistralai/mistral-7b-instruct:free",
+];
 
 async function resolveSupabaseKey(): Promise<string | null> {
   const key = await resolvePlatformSecret(
@@ -52,6 +67,82 @@ async function resolveRunpodConfig(): Promise<{ endpoint: string | null; apiKey:
     (value) => !value?.trim()
   );
   return { endpoint: endpoint?.trim() || null, apiKey: apiKey?.trim() || null };
+}
+
+async function resolveOpenRouterApiKey(): Promise<string | null> {
+  const key = await resolvePlatformSecret(
+    "OPENROUTER_API_KEY",
+    process.env.OPENROUTER_API_KEY,
+    (value) => !value?.trim()
+  );
+  return key?.trim() || null;
+}
+
+/**
+ * Read the enabled cost_tier=0 model list for the 'openrouter' route from NI-Brain
+ * (router_models joined to router_routes). Falls back to
+ * OPENROUTER_FREE_MODEL_FALLBACK_UNVERIFIED when that query is empty or unreachable.
+ */
+async function resolveOpenRouterFreeModels(supabaseKey: string | null): Promise<string[]> {
+  if (!supabaseKey) return [...OPENROUTER_FREE_MODEL_FALLBACK_UNVERIFIED];
+  try {
+    const url =
+      "https://kxijunwgbrlfzvgkhklo.supabase.co/rest/v1/router_models" +
+      "?select=model,router_routes!inner(name)" +
+      "&router_routes.name=eq.openrouter&cost_tier=eq.0&enabled=eq.true";
+    const r = await fetch(url, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(3_000),
+    });
+    if (!r.ok) return [...OPENROUTER_FREE_MODEL_FALLBACK_UNVERIFIED];
+    const rows = (await r.json()) as Array<{ model?: string }>;
+    const models = Array.isArray(rows) ? rows.map((row) => row.model).filter((m): m is string => Boolean(m)) : [];
+    return models.length ? models : [...OPENROUTER_FREE_MODEL_FALLBACK_UNVERIFIED];
+  } catch {
+    return [...OPENROUTER_FREE_MODEL_FALLBACK_UNVERIFIED];
+  }
+}
+
+type OpenRouterOnceResult = { text: string | null; usage?: { tokensIn?: number; tokensOut?: number }; ms: number };
+
+async function callOpenRouterOnce(
+  apiKey: string,
+  model: string,
+  system: string,
+  prompt: string,
+  maxTokens: number,
+  temperature: number
+): Promise<OpenRouterOnceResult> {
+  const startedAt = Date.now();
+  const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: maxTokens,
+      temperature,
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const ms = Date.now() - startedAt;
+  if (!r.ok) return { text: null, ms };
+  const data = await r.json();
+  const text = data?.choices?.[0]?.message?.content?.trim();
+  const usage = data?.usage
+    ? { tokensIn: data.usage.prompt_tokens, tokensOut: data.usage.completion_tokens }
+    : undefined;
+  return { text: text || null, usage, ms };
 }
 
 async function resolveModels(): Promise<string[]> {
@@ -141,7 +232,7 @@ export type GeminiFirstArgs = {
  */
 export async function generateTextGeminiFirst(
   args: GeminiFirstArgs
-): Promise<{ text: string; provider: "axon-local" | "runpod-axon-v1" | "gemini" }> {
+): Promise<{ text: string; provider: "axon-local" | "runpod-axon-v1" | "openrouter" | "gemini" }> {
   const { system, prompt, maxOutputTokens, temperature = 0.5 } = args;
 
   const supabaseKey = await resolveSupabaseKey();
@@ -175,6 +266,31 @@ export async function generateTextGeminiFirst(
         tokensOut: runpod.usage?.tokensOut,
       });
       return { text: runpod.text, provider: "runpod-axon-v1" };
+    }
+  } catch {
+    // fall through to OpenRouter, then Gemini
+  }
+
+  // Tier 3: OpenRouter free models. Safe no-op (no network call) until
+  // OPENROUTER_API_KEY is configured. Free-tier only — never paid, matching
+  // this file's "never pay" rule.
+  try {
+    const openRouterKey = await resolveOpenRouterApiKey();
+    if (openRouterKey) {
+      const models = await resolveOpenRouterFreeModels(supabaseKey);
+      for (const model of models) {
+        const result = await callOpenRouterOnce(openRouterKey, model, system, prompt, maxOutputTokens, temperature);
+        if (result.text) {
+          logLlmUsage({
+            provider: "openrouter",
+            model,
+            tokensIn: result.usage?.tokensIn,
+            tokensOut: result.usage?.tokensOut,
+            ms: result.ms,
+          });
+          return { text: result.text, provider: "openrouter" };
+        }
+      }
     }
   } catch {
     // fall through to Gemini
