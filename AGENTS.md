@@ -57,7 +57,9 @@ Expected: clean working tree on `main`, build passes.
 
 ### Weekly task: `infra-health-check` (every Monday)
 
-Automated via `.github/workflows/infra-health-check.yml` (Mon 9am ET). Manual run:
+Runs from the Mac mini cron manifest (roster row `ni-infra-health-check`, Decision #1699,
+2026-09-03) — no longer a GitHub Actions schedule. `.github/workflows/infra-health-check.yml`
+still exists for manual/on-demand runs via `workflow_dispatch` only. Manual run:
 
 ```bash
 npm run infra:health-check
