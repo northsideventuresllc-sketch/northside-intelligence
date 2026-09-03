@@ -49,13 +49,26 @@ function sbHeaders(supabaseKey: string) {
   };
 }
 
+export type AxonUsage = { tokensIn?: number; tokensOut?: number };
+export type AxonRelayResult = { text: string | null; usage?: AxonUsage };
+
 /** Try AXON's own local model (Mac mini, Ollama) via the mini job-queue relay. */
 export async function callAxonLocal(
   supabaseKey: string | null | undefined,
   system: string,
   messages: ChatMsg[],
 ): Promise<string | null> {
-  if (!supabaseKey) return null;
+  const result = await callAxonLocalWithUsage(supabaseKey, system, messages);
+  return result.text;
+}
+
+/** Same as callAxonLocal but also surfaces Ollama's token counts when the relay returns them. */
+export async function callAxonLocalWithUsage(
+  supabaseKey: string | null | undefined,
+  system: string,
+  messages: ChatMsg[],
+): Promise<AxonRelayResult> {
+  if (!supabaseKey) return { text: null };
 
   const prompt = buildPrompt(system, messages);
   // think:false is required — axon-ornith is a thinking-capable model (qwen3.5 base) that
@@ -80,13 +93,13 @@ export async function callAxonLocal(
         status: 'queued',
       }),
     });
-    if (!insertRes.ok) return null;
+    if (!insertRes.ok) return { text: null };
     const rows = await insertRes.json();
     jobId = Array.isArray(rows) ? rows[0]?.id : rows?.id;
   } catch {
-    return null;
+    return { text: null };
   }
-  if (!jobId) return null;
+  if (!jobId) return { text: null };
 
   const deadline = Date.now() + MINI_RELAY_MAX_WAIT_MS;
   while (Date.now() < deadline) {
@@ -101,23 +114,26 @@ export async function callAxonLocal(
       const row = rows?.[0];
       if (!row) continue;
 
-      if (row.status === 'failed') return null;
+      if (row.status === 'failed') return { text: null };
       if (row.status !== 'done') continue;
 
       const stdout = row.result?.stdout;
-      if (!stdout) return null;
+      if (!stdout) return { text: null };
       try {
         const parsed = JSON.parse(stdout);
         const text = typeof parsed.response === 'string' ? parsed.response.trim() : null;
-        return text || null;
+        return {
+          text: text || null,
+          usage: { tokensIn: parsed.prompt_eval_count, tokensOut: parsed.eval_count },
+        };
       } catch {
-        return null;
+        return { text: null };
       }
     } catch {
       // transient poll error — keep trying until deadline
     }
   }
-  return null; // timed out — caller falls through to the next tier, mini job keeps running
+  return { text: null }; // timed out — caller falls through to the next tier, mini job keeps running
 }
 
 let runpodMissingConfigLogged = false;
@@ -144,6 +160,17 @@ export async function callAxonRunpod(
   system: string,
   messages: ChatMsg[],
 ): Promise<string | null> {
+  const result = await callAxonRunpodWithUsage(endpoint, apiKey, system, messages);
+  return result.text;
+}
+
+/** Same as callAxonRunpod but also surfaces token usage when RunPod reports one. */
+export async function callAxonRunpodWithUsage(
+  endpoint: string | null | undefined,
+  apiKey: string | null | undefined,
+  system: string,
+  messages: ChatMsg[],
+): Promise<AxonRelayResult> {
   if (!endpoint || !apiKey) {
     if (!runpodMissingConfigLogged) {
       runpodMissingConfigLogged = true;
@@ -151,7 +178,7 @@ export async function callAxonRunpod(
         '[axon-runpod] RUNPOD_AXON_V1_ENDPOINT/RUNPOD_AXON_V1_KEY not configured — RunPod AXON v1 tier is a no-op until it deploys (NI-Brain Decision #1261).',
       );
     }
-    return null;
+    return { text: null };
   }
 
   const controller = new AbortController();
@@ -176,7 +203,7 @@ export async function callAxonRunpod(
       }),
       signal: controller.signal,
     });
-    if (!r.ok) return null;
+    if (!r.ok) return { text: null };
 
     const data = await r.json();
     const output = data?.output;
@@ -191,9 +218,14 @@ export async function callAxonRunpod(
               ? output[0].choices[0].tokens[0]
               : null;
 
-    return typeof text === 'string' && text.trim() ? text.trim() : null;
+    const rawUsage = output?.usage ?? data?.usage;
+    const usage = rawUsage
+      ? { tokensIn: rawUsage.prompt_tokens, tokensOut: rawUsage.completion_tokens }
+      : undefined;
+
+    return { text: typeof text === 'string' && text.trim() ? text.trim() : null, usage };
   } catch {
-    return null;
+    return { text: null };
   } finally {
     clearTimeout(timeoutId);
   }

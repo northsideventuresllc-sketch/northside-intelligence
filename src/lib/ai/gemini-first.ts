@@ -1,7 +1,8 @@
 import "server-only";
 
 import { resolvePlatformSecret } from "@/lib/platform-secrets";
-import { callAxonLocal, callAxonRunpod } from "@/lib/axon/axon-local-relay";
+import { callAxonLocalWithUsage, callAxonRunpodWithUsage } from "@/lib/axon/axon-local-relay";
+import { logLlmUsage } from "@/lib/ai/usage-ledger";
 
 /**
  * Free-tier Gemini models, tried in order. gemini-2.0-flash is deliberately
@@ -81,6 +82,12 @@ async function resolveGeminiKeys(): Promise<string[]> {
   return [primary, backup].filter((k): k is string => Boolean(k?.trim()));
 }
 
+type GeminiOnceResult = {
+  text: string | null;
+  usage?: { tokensIn?: number; tokensOut?: number };
+  ms: number;
+};
+
 async function callGeminiOnce(
   apiKey: string,
   model: string,
@@ -88,7 +95,8 @@ async function callGeminiOnce(
   prompt: string,
   maxOutputTokens: number,
   temperature: number
-): Promise<string | null> {
+): Promise<GeminiOnceResult> {
+  const startedAt = Date.now();
   const r = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
@@ -101,13 +109,20 @@ async function callGeminiOnce(
       }),
     }
   );
-  if (!r.ok) return null;
+  const ms = Date.now() - startedAt;
+  if (!r.ok) return { text: null, ms };
   const data = await r.json();
   const text = data.candidates?.[0]?.content?.parts
     ?.map((p: { text?: string }) => p.text)
     .join("")
     ?.trim();
-  return text || null;
+  const usageMetadata = data.usageMetadata as
+    | { promptTokenCount?: number; candidatesTokenCount?: number }
+    | undefined;
+  const usage = usageMetadata
+    ? { tokensIn: usageMetadata.promptTokenCount, tokensOut: usageMetadata.candidatesTokenCount }
+    : undefined;
+  return { text: text || null, usage, ms };
 }
 
 export type GeminiFirstArgs = {
@@ -132,8 +147,16 @@ export async function generateTextGeminiFirst(
   const supabaseKey = await resolveSupabaseKey();
   if (supabaseKey) {
     try {
-      const local = await callAxonLocal(supabaseKey, system, [{ role: "user", content: prompt }]);
-      if (local) return { text: local, provider: "axon-local" };
+      const local = await callAxonLocalWithUsage(supabaseKey, system, [{ role: "user", content: prompt }]);
+      if (local.text) {
+        logLlmUsage({
+          provider: "ollama",
+          model: "axon-ornith:latest",
+          tokensIn: local.usage?.tokensIn,
+          tokensOut: local.usage?.tokensOut,
+        });
+        return { text: local.text, provider: "axon-local" };
+      }
     } catch {
       // fall through to RunPod, then Gemini
     }
@@ -143,8 +166,16 @@ export async function generateTextGeminiFirst(
   // RUNPOD_AXON_V1_ENDPOINT/RUNPOD_AXON_V1_KEY exist in ni_platform_secrets.
   try {
     const { endpoint, apiKey } = await resolveRunpodConfig();
-    const runpod = await callAxonRunpod(endpoint, apiKey, system, [{ role: "user", content: prompt }]);
-    if (runpod) return { text: runpod, provider: "runpod-axon-v1" };
+    const runpod = await callAxonRunpodWithUsage(endpoint, apiKey, system, [{ role: "user", content: prompt }]);
+    if (runpod.text) {
+      logLlmUsage({
+        provider: "runpod",
+        model: "Qwen3-Coder-30B-A3B-Instruct",
+        tokensIn: runpod.usage?.tokensIn,
+        tokensOut: runpod.usage?.tokensOut,
+      });
+      return { text: runpod.text, provider: "runpod-axon-v1" };
+    }
   } catch {
     // fall through to Gemini
   }
@@ -158,8 +189,17 @@ export async function generateTextGeminiFirst(
   for (const key of geminiKeys) {
     for (const model of models) {
       try {
-        const text = await callGeminiOnce(key, model, system, prompt, maxOutputTokens, temperature);
-        if (text) return { text, provider: "gemini" };
+        const result = await callGeminiOnce(key, model, system, prompt, maxOutputTokens, temperature);
+        if (result.text) {
+          logLlmUsage({
+            provider: "gemini",
+            model,
+            tokensIn: result.usage?.tokensIn,
+            tokensOut: result.usage?.tokensOut,
+            ms: result.ms,
+          });
+          return { text: result.text, provider: "gemini" };
+        }
       } catch {
         // try the next model / key
       }
