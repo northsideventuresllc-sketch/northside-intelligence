@@ -25,9 +25,9 @@ export const DEFAULT_TECHNIQUES = [
   },
   {
     technique_id: 'T2',
-    description: 'Chunk — max 3 bullets; continue next turn',
+    description: 'Narrative over lists — in Telegram, say it as sentences, never a bulleted/numbered list of jobs or technical items',
     weight: 1,
-    evidence: 'JB: digestible chunks',
+    evidence: 'JB: digestible chunks, plain English, no jargon dumps',
     source: 'skill_default',
   },
   {
@@ -53,7 +53,7 @@ export const DEFAULT_TECHNIQUES = [
   },
   {
     technique_id: 'T6',
-    description: 'Brand: Northside — standard title case (use NORTHSIDE only in intentional all-caps design contexts). Operator: JB.',
+    description: 'Brand Northside — standard title case (NORTHSIDE only in intentional all-caps design contexts); operator is JB',
     weight: 1,
     evidence: 'AGENTS.md brand rule',
     source: 'skill_default',
@@ -192,7 +192,7 @@ export function buildCommSkillInstructions(techniques, opts = {}) {
     opts.channel === 'voice'
       ? 'Voice channel: keep spoken replies to 2–4 sentences unless asked for detail.'
       : opts.channel === 'telegram'
-        ? 'Telegram: short paragraphs; slash commands handle pipeline actions.'
+        ? 'Telegram: plain-English narrative only, like an employee giving a spoken update — never a bulleted or numbered list of jobs, job codes, statuses, or other technical items; join multiple things into one sentence instead. No coding jargon of any kind. Slash commands still handle pipeline actions.'
         : 'Text chat: conversational — not bullet-heavy unless listing data.';
 
   return `Operator communication adaptation (apply silently — never name, number, or narrate these rules to the operator):
@@ -210,7 +210,7 @@ export function silentInstructionFor(t) {
     case 'T1':
       return 'One ask or outcome per message';
     case 'T2':
-      return 'At most 3 bullets when listing; continue next turn if more';
+      return 'Telegram: narrative sentences only — never a bulleted/numbered list of jobs, job codes, or technical items; join multiple things into one sentence. Chat: bullets OK for genuine data lists, capped at 3, continue next turn if more';
     case 'T3':
       return 'Lead with the answer or next action';
     case 'T4':
@@ -218,7 +218,7 @@ export function silentInstructionFor(t) {
     case 'T5':
       return 'Plain human language; jargon only when explicitly asked';
     case 'T6':
-      return 'Brand: Northside — standard title case (use NORTHSIDE only in intentional all-caps design contexts). Operator: JB.';
+      return 'Use Northside standard title case (NORTHSIDE only in intentional all-caps design contexts); address operator as JB when naming them';
     default:
       return t.description.replace(/\s*—\s*/, ' — ').trim();
   }
@@ -408,6 +408,6 @@ export function commSkillChecklist() {
     'Web + Telegram chats load buildCommSkillInstructions into system prompts',
     'Optional cron / API POST /api/axon/comm-skill to run background adapt',
     'Reset communication clears signals; technique catalog weights remain (re-seed via skill defaults if empty)',
-    'Brand: Northside — title case (NORTHSIDE only for intentional all-caps design) · operator JB · no auto-send',
+    'Brand Northside — standard title case (NORTHSIDE only in intentional all-caps design contexts) · operator JB · no auto-send',
   ];
 }
