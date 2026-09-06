@@ -165,7 +165,7 @@ export async function generateSlotDraft(
     system,
     prompt: userPrompt,
     maxOutputTokens: 2000,
-    temperature: 0.7,
+    jsonMode: true,
   });
 
   const draft = parseJsonResponse(text);
@@ -327,7 +327,7 @@ export async function generateDailyBatch(args?: {
  * generateDailyBatch ran all 4 post types sequentially inside one serverless
  * invocation with no chunking. That alone would be tight against maxDuration=300,
  * but the real compounding cause lives one layer down: every generateSlotDraft
- * call goes through generateTextGeminiFirst -> callAxonLocal (axon-local-relay.ts),
+ * call goes through generateTextGeminiFirst -> the router's local lane,
  * which polls the Mac-mini job queue for up to MINI_RELAY_MAX_WAIT_MS (45s) before
  * falling through to Gemini. With up to MAX_REGEN_ATTEMPTS+1=3 quality-gate
  * attempts per slot, 4 slots x up to 3 attempts x a 45s AXON-local stall alone is

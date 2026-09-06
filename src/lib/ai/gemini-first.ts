@@ -54,10 +54,11 @@ export type GeminiFirstArgs = {
   prompt: string;
   maxOutputTokens: number;
   /**
-   * @deprecated Kept for call-site compatibility. Sampling temperature is a
-   * per-lane setting inside the router, not a per-call one.
+   * Ask the answering lane for strict JSON. Set it whenever the caller is about
+   * to JSON.parse the result — the Google lane enforces it, the others take it
+   * as a hint and lose nothing.
    */
-  temperature?: number;
+  jsonMode?: boolean;
   /** Optional label for the usage ledger, so a lane failure can be traced to a tool. */
   agentName?: string;
 };
@@ -69,7 +70,7 @@ export type GeminiFirstArgs = {
 export async function generateTextGeminiFirst(
   args: GeminiFirstArgs
 ): Promise<{ text: string; provider: GeneratedTextProvider }> {
-  const { system, prompt, maxOutputTokens, agentName = "ni-portal" } = args;
+  const { system, prompt, maxOutputTokens, jsonMode = false, agentName = "ni-portal" } = args;
 
   const supabaseKey = await resolveSupabaseKey();
 
@@ -80,15 +81,20 @@ export async function generateTextGeminiFirst(
       kind: "cheap_chat",
       agentName,
       maxTokens: maxOutputTokens,
+      jsonMode,
     });
     const text = String(out?.text || "").trim();
     if (!text) throw new Error("empty response");
     const provider =
       LANE_PROVIDER[out.provider as keyof typeof LANE_PROVIDER] ?? ("gemini" as GeneratedTextProvider);
     return { text, provider };
-  } catch {
+  } catch (err) {
+    // The prefix is what a person reads. The router's own reason is appended so the
+    // callers that branch on it (an access/authentication failure, say) still match —
+    // swallowing it made those branches dead code.
+    const reason = err instanceof Error ? err.message : String(err);
     throw new Error(
-      "Text generation could not be completed right now — every option in the chain was unavailable. Nothing is broken and nothing needs paying for; try again shortly."
+      `Text generation could not be completed right now — every option was unavailable. Nothing is broken and nothing needs paying for; try again shortly.${reason ? ` (${reason})` : ""}`
     );
   }
 }

@@ -96,6 +96,7 @@ Rules:
 - focus on the latest visitor need`,
       prompt: transcript,
       maxOutputTokens: 256,
+      jsonMode: true,
     });
 
     const parsed = parseIntentJson(text);
