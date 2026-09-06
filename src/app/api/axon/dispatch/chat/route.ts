@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchDispatchTask, deriveVenture, deriveComplexity } from '@/lib/axon/agent-dispatch';
-import { requireAxonOperatorId } from '@/lib/axon/operator';
 import { routeChat } from '@/lib/axon/axon-router';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    await requireAxonOperatorId();
     const body = await req.json().catch(() => ({}));
     const code = typeof body?.code === 'string' ? body.code : '';
     const message = typeof body?.message === 'string' ? body.message.trim() : '';
@@ -55,7 +53,6 @@ Action: ${task.action_type} · Priority: ${task.priority}`;
     return NextResponse.json({ ok: true, reply: routed.reply });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'chat failed';
-    const status = msg === 'AXON access denied' ? 401 : 500;
-    return NextResponse.json({ ok: false, error: msg }, { status });
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }

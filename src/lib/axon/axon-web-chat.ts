@@ -1,6 +1,7 @@
 import { loadConfig } from './config.mjs';
 import {
   buildToneInstructions,
+  fetchCommunicationTechniques,
   fetchMemories,
   fetchTopSignals,
   getOperatorProfile,
@@ -16,22 +17,41 @@ import {
   getWorkspace,
   setWorkspaceFlags,
 } from './axon-workspace';
+import { loadJspacePromptBlock } from './axon-j-space';
+import { loadWisdomPromptBlock } from './axon-wisdom';
 import type { ChatMessage, TonePreset } from './axon-types';
-import { createSupabaseClient } from './supabase.mjs';
+import { POWER_LEVEL_TO_COST_TIER_FLOOR } from './axon-types';
+import { getPreferences } from './axon-preferences';
 import { routeChat } from './axon-router';
+import { createSupabaseClient } from './supabase.mjs';
 
-/** Routes through the one locked chain (local -> RunPod -> OpenRouter -> Gemini -> Anthropic) instead of hardcoding Anthropic. */
+/**
+ * Every chat surface goes through the one router: it scores each connected lane on
+ * capability fit, cost, live health and quota, prefers free/local/subscription over
+ * metered, and records why it chose — with the locked chain (local -> RunPod ->
+ * OpenRouter free -> Gemini -> Anthropic last) underneath it for plain text.
+ *
+ * ONE ROUTER (2026-09-06): the direct Gemini/Anthropic emergency fallback that used
+ * to sit below this call is gone. It bypassed router_routes/router_models entirely,
+ * so operator lane ordering had no effect on Telegram or voice and they fell through
+ * to PAID Anthropic instead of the free lanes sitting right there.
+ */
 async function callChatModel(
-  supabaseKey: string,
+  keys: { supabaseKey?: string },
   system: string,
   messages: { role: string; content: string }[],
-  opts: { jsonMode?: boolean } = {},
+  opts: { maxTokens?: number; jsonMode?: boolean } = {},
 ): Promise<string> {
-  const routed = await routeChat(supabaseKey ?? '', {
+  // Same operator power-bar lock as app/api/axon-v0/agent-chat/route.ts — Telegram/voice
+  // share the one operator, so their live routing respects the same manual lock.
+  const powerMode = (await getPreferences()).powerMode;
+  const costTierFloor = powerMode.autoSwitchEnabled ? null : POWER_LEVEL_TO_COST_TIER_FLOOR[powerMode.level];
+  const routed = await routeChat(keys.supabaseKey ?? '', {
     messages: [{ role: 'system', content: system }, ...messages],
     mode: 'auto',
-    hasMini: true,
-    maxTokens: 900,
+    hasMini: true, // these surfaces run where the mini relay is reachable
+    costTierFloor,
+    maxTokens: opts.maxTokens ?? 900,
     jsonMode: opts.jsonMode ?? false,
   });
   if (!routed?.reply) throw new Error('the router returned no reply');
@@ -48,25 +68,44 @@ export async function generateAxonReply(
   userMessage: string,
   channel: 'chat' | 'voice',
   history: ChatMessage[],
-  operatorId = 'default',
-  sessionId?: string
+  sessionId?: string,
+  notificationContext?: {
+    title: string;
+    source: string;
+    body?: string;
+    prompt?: string;
+  }
 ) {
   const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const { sbSelect } = createSupabaseClient(key);
   const cfg = await loadConfig(sbSelect);
 
-  const [profile, signals, memories, workspace] = await Promise.all([
-    getOperatorProfile(operatorId),
-    fetchTopSignals(operatorId),
-    fetchMemories(operatorId, 15),
-    getWorkspace(operatorId),
-  ]);
+  const [profile, signals, memories, workspace, jspaceBlock, techniques, wisdomBlock] =
+    await Promise.all([
+      getOperatorProfile(),
+      fetchTopSignals(),
+      fetchMemories(undefined, 15),
+      getWorkspace(),
+      loadJspacePromptBlock(),
+      fetchCommunicationTechniques(),
+      loadWisdomPromptBlock(),
+    ]);
 
-  const toneBlock = buildToneInstructions(profile.tone_preset, signals);
+  const toneBlock = buildToneInstructions(profile.tone_preset, signals, techniques, channel);
   const memoryBlock = memories.length
     ? `\nOperator context you remember:\n${memories.map((m) => `- (${m.memory_type}) ${m.content}`).join('\n')}`
     : '';
   const workspaceBlock = `\n${formatWorkspaceForPrompt(workspace)}`;
+
+  const notificationBlock = notificationContext
+    ? `\n\nACTIVE NOTIFICATION CONTEXT:
+Source: ${notificationContext.source}
+Title: ${notificationContext.title}
+${notificationContext.body ? `Details: ${notificationContext.body}` : ''}
+${notificationContext.prompt ? `Suggested action: ${notificationContext.prompt}` : ''}
+
+Help the operator understand and resolve this notification through conversation. When they confirm the action is complete or they've decided not to act, acknowledge clearly.`
+    : '';
 
   const system = `You are AXON — Northside Intelligence's State of the Art Personalized Agentic Assistant. Underground-premium voice.
 
@@ -74,11 +113,12 @@ You help the operator run autonomous profit engines, review outreach, and make d
 
 You manage the operator's briefing panel and to-do list. When they ask to set up a briefing, add tasks, mark items complete, or enable autonomous management — confirm in your reply and the system will apply updates automatically.
 
+You operate a J-Space global workspace analogue: route high-order reasoning through active concepts before execution. Autonomous research runs 4x/week and surfaces findings in daily briefs.
+
 ${toneBlock}
 ${memoryBlock}
 ${workspaceBlock}
-
-${channel === 'voice' ? 'This is a voice conversation. Keep responses concise (2-4 sentences unless detail is requested). Sound natural when spoken aloud.' : 'This is text chat. Be conversational and human — not bullet-heavy unless listing data.'}
+${jspaceBlock}${wisdomBlock}${notificationBlock}
 
 Brand: Northside Intelligence — standard title case (use NORTHSIDE only in intentional all-caps design contexts). Never auto-send outreach. Phase 1 goal: close 4 paid NI Services clients.`;
 
@@ -87,13 +127,12 @@ Brand: Northside Intelligence — standard title case (use NORTHSIDE only in int
     content: m.content,
   }));
 
-  const reply = await callChatModel(cfg.supabaseKey, system, [
+  const reply = await callChatModel(cfg, system, [
     ...recent,
     { role: 'user', content: userMessage },
   ]);
 
   const userMsg = await insertChatMessage({
-    operator_id: operatorId,
     role: 'user',
     content: userMessage,
     channel,
@@ -101,7 +140,6 @@ Brand: Northside Intelligence — standard title case (use NORTHSIDE only in int
   });
 
   const assistantMsg = await insertChatMessage({
-    operator_id: operatorId,
     role: 'assistant',
     content: reply,
     channel,
@@ -114,12 +152,11 @@ Brand: Northside Intelligence — standard title case (use NORTHSIDE only in int
   try {
     updatedWorkspace =
       (await analyzeAndLearn(
-        cfg.supabaseKey,
+        cfg,
         userMessage,
         reply,
         profile.tone_preset,
-        workspace,
-        operatorId
+        workspace
       )) ?? workspace;
   } catch (err) {
     console.error(err);
@@ -129,12 +166,11 @@ Brand: Northside Intelligence — standard title case (use NORTHSIDE only in int
 }
 
 async function analyzeAndLearn(
-  supabaseKey: string,
+  cfg: { supabaseKey?: string },
   userMessage: string,
   assistantReply: string,
   currentPreset: TonePreset,
-  currentWorkspace: Awaited<ReturnType<typeof getWorkspace>>,
-  operatorId = 'default'
+  currentWorkspace: Awaited<ReturnType<typeof getWorkspace>>
 ) {
   const system = `You analyze operator↔AXON conversations to extract communication learnings and workspace updates. Return JSON only.
 
@@ -179,7 +215,7 @@ Return JSON:
 
   let parsed;
   try {
-    const text = await callChatModel(supabaseKey, system, [{ role: 'user', content: user }], { jsonMode: true });
+    const text = await callChatModel(cfg, system, [{ role: 'user', content: user }], { jsonMode: true });
     parsed = extractJson(text);
   } catch {
     return currentWorkspace;
@@ -188,7 +224,6 @@ Return JSON:
   for (const sig of parsed.signals || []) {
     if (!sig.signal_key || !sig.signal_value) continue;
     await upsertSignal({
-      operator_id: operatorId,
       signal_type: sig.signal_type,
       signal_key: sig.signal_key,
       signal_value: sig.signal_value,
@@ -199,7 +234,6 @@ Return JSON:
   for (const mem of parsed.memories || []) {
     if (!mem.content) continue;
     await insertMemory({
-      operator_id: operatorId,
       content: mem.content,
       memory_type: mem.memory_type,
       confidence: mem.confidence,
@@ -209,22 +243,19 @@ Return JSON:
   let workspace = currentWorkspace;
 
   if (parsed.briefing_updates?.length) {
-    workspace = await applyBriefingUpdates(parsed.briefing_updates, operatorId);
+    workspace = await applyBriefingUpdates(parsed.briefing_updates);
   }
 
   if (parsed.todo_updates?.length) {
-    workspace = await applyTodoUpdates(parsed.todo_updates, operatorId);
+    workspace = await applyTodoUpdates(parsed.todo_updates);
   }
 
   const flags = parsed.workspace_flags;
   if (flags && (flags.briefing_autonomous !== undefined || flags.todos_autonomous !== undefined)) {
-    workspace = await setWorkspaceFlags(
-      {
-        briefing_autonomous: flags.briefing_autonomous,
-        todos_autonomous: flags.todos_autonomous,
-      },
-      operatorId
-    );
+    workspace = await setWorkspaceFlags({
+      briefing_autonomous: flags.briefing_autonomous,
+      todos_autonomous: flags.todos_autonomous,
+    });
   }
 
   const adj = parsed.tone_adjustments;
@@ -251,7 +282,7 @@ Return JSON:
       next.avoid_phrases = [...next.avoid_phrases!.slice(-9), adj.avoid_phrase];
     }
 
-    await updateOperatorProfile(operatorId, { tone_preset: next });
+    await updateOperatorProfile('default', { tone_preset: next });
   }
 
   return workspace;
@@ -270,7 +301,7 @@ export async function refreshTonePresetFromSignals() {
   const user = `Signals:\n${JSON.stringify(signals.slice(0, 10), null, 2)}\nCurrent:\n${JSON.stringify(profile.tone_preset)}\n\nReturn: { "style", "warmth", "directness", "formality", "humor", "summary", "learned_patterns", "preferred_phrases", "avoid_phrases" }`;
 
   try {
-    const text = await callChatModel(cfg.supabaseKey, system, [{ role: 'user', content: user }], { jsonMode: true });
+    const text = await callChatModel(cfg, system, [{ role: 'user', content: user }], { jsonMode: true });
     const next = extractJson(text) as TonePreset;
     await updateOperatorProfile('default', { tone_preset: next });
     return next;
