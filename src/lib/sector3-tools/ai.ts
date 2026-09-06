@@ -1,7 +1,5 @@
 import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 
-const MODEL = "anthropic/claude-haiku-4.5";
-
 const PLAIN_LANGUAGE_RULES = `AUDIENCE RULES (critical):
 - The section BEFORE ---TECHNICAL--- must be understandable by someone with zero coding, API, or AI background.
 - Use everyday words: "connect", "sync", "automatically update" — not webhook, orchestration, idempotent, payload, schema, ETL unless they appear only after ---TECHNICAL---.
@@ -12,7 +10,7 @@ function handleAiError(err: unknown): never {
   const message = err instanceof Error ? err.message : "AI generation failed";
   if (/unauthorized|401|authentication|api key/i.test(message)) {
     throw new Error(
-      "AI service is not configured. Enable AI Gateway on the Vercel project or set ANTHROPIC_API_KEY / AI_GATEWAY_API_KEY."
+      "Text generation is unavailable right now. Nothing is broken — please try again shortly."
     );
   }
   throw new Error(message);
@@ -52,7 +50,6 @@ After ---TECHNICAL--- you may use analyst terminology, metrics shorthand, and co
 
   try {
     const { text } = await generateTextGeminiFirst({
-      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: rawSignals,
       maxOutputTokens: 2400,
@@ -97,7 +94,6 @@ After ---TECHNICAL--- use product, UX, and competitive analysis terminology free
 
   try {
     const { text } = await generateTextGeminiFirst({
-      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: context,
       maxOutputTokens: 2400,
@@ -121,7 +117,6 @@ Answer in plain English for a non-technical user (2-4 short paragraphs max). Avo
 
   try {
     const { text } = await generateTextGeminiFirst({
-      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: question,
       maxOutputTokens: 600,
@@ -166,7 +161,6 @@ After ---TECHNICAL--- provide implementation detail for developers (APIs, webhoo
 
   try {
     const { text } = await generateTextGeminiFirst({
-      anthropicModel: MODEL,
       system: systemPrompt,
       prompt,
       maxOutputTokens: 2600,

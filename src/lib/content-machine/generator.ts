@@ -32,8 +32,6 @@ import {
   getWeekdayTheme,
 } from "./weekday-themes";
 
-const MODEL = "anthropic/claude-haiku-4.5";
-
 /** Health Scan 2026-08-30: model output truncated mid-string (hit maxOutputTokens) was
  * reaching JSON.parse uncaught, killing the whole daily batch with "Unterminated string
  * in JSON at position N". Wrap it so a bad response is retried like any other gate
@@ -164,7 +162,6 @@ export async function generateSlotDraft(
   ].join("");
 
   const { text } = await generateTextGeminiFirst({
-    anthropicModel: MODEL,
     system,
     prompt: userPrompt,
     maxOutputTokens: 2000,
