@@ -75,6 +75,7 @@ Rules:
 - focus on the latest shopper need`,
       prompt: transcript,
       maxOutputTokens: 256,
+      jsonMode: true,
     });
 
     const parsed = parseIntentJson(text);

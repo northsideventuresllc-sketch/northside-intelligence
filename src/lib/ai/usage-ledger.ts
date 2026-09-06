@@ -11,8 +11,12 @@ import { resolvePlatformSecret } from "@/lib/platform-secrets";
  * shape changes.
  *
  * Fire-and-forget: 3s timeout, never throws, never awaited by the caller's response path.
- * This repo has NO Anthropic tier in gemini-first.ts (standing rule: free tiers only here) —
- * this writer is provider-agnostic and works the same for ollama / runpod-axon-v1 / gemini.
+ * NOTE (2026-09-06): this file used to say the portal had no paid tier at all. That is no
+ * longer true — gemini-first.ts now goes through the shared router, whose locked chain keeps
+ * a paid last-resort lane behind four free ones. Free still comes first; there is simply a
+ * safety net now. This writer is provider-agnostic and works the same for every lane. It is
+ * also no longer the portal's only usage record: the router writes its own ledger row for
+ * every attempt, so this one is now a supplement rather than the sole source.
  */
 
 const NI_BRAIN_USAGE_LOG_TIMEOUT_MS = 3_000;

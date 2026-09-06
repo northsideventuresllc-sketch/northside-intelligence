@@ -6,13 +6,11 @@ import {
   type Sector3ClarifyingQuestion,
 } from "@/lib/sector3-tools/clarification";
 
-const MODEL = "anthropic/claude-haiku-4.5";
-
 function handleAiError(err: unknown): never {
   const message = err instanceof Error ? err.message : "AI assessment failed";
   if (/unauthorized|401|authentication|api key/i.test(message)) {
     throw new Error(
-      "AI service is not configured. Enable AI Gateway on the Vercel project or set ANTHROPIC_API_KEY / AI_GATEWAY_API_KEY."
+      "Text generation is unavailable right now. Nothing is broken — please try again shortly."
     );
   }
   throw new Error(message);
@@ -53,7 +51,6 @@ Rules:
 
   try {
     const { text } = await generateTextGeminiFirst({
-      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: fieldSummary,
       maxOutputTokens: 300,
@@ -116,7 +113,6 @@ Rules:
 
   try {
     const { text } = await generateTextGeminiFirst({
-      anthropicModel: MODEL,
       system: systemPrompt,
       prompt: fieldSummary,
       maxOutputTokens: 1800,
