@@ -59,6 +59,20 @@ export const MIN_CONCRETE_DETAILS = 2;
  * CONTENT_CALENDAR_BRAND_FACTS pattern in matchfit/src/lib/content-calendar/constants.ts.
  */
 export const CONTENT_MACHINE_BRAND_FACTS: Record<string, string> = {
+  // Mirrored from CONTENT_CALENDAR_BRAND_FACTS in matchfit/src/lib/content-calendar/constants.ts
+  // (that repo's real, JB-approved Match Fit facts block) — not a placeholder. Match Fit's own
+  // dedicated weekly generator lives in the matchfit repo and content_machine_posts inserts for
+  // brand_slug='match-fit' are redirected server-side into match_fit_content_calendar_posts (see
+  // insertPost() in db.ts) — but generateSlotDraft()/buildSystemPrompt() here can still run for
+  // brand_slug='match-fit' (DEFAULT_BRAND_SLUG, and any caller that omits brandSlug), so this
+  // entry must exist or match-fit itself regresses to the "no product facts configured" fallback.
+  "match-fit": `Match Fit — two-sided fitness marketplace connecting Fitness Pros with clients.
+Beta v1.2+. Clients: $10/month. Independent Pro from $15/month after a 60-day free trial at registration. 20% platform fee on sessions.
+Features: swipe-based discovery, Fit Hub social feed, algorithmic matching, virtual + in-person. Match Fit is worldwide — do NOT name a city, metro or region in marketing, and never imply a launch is limited to one place.
+Brand: bold, direct, real — no fluff. Colors: dark #07080C, orange #FF7E00. Handle: @theofficialmatchfit
+Target audiences: "Join the Team" (Fitness Pros joining Match Fit), "List With Us" (independent Fitness Pros & facilities using Match Fit for listing/discovery), "Clients" (athletes and individuals looking for training).
+Goal: grow beta Fitness Pros and clients. Site: match-fit.net
+Founding Fitness Pro promo (exact meaning; vary wording every time): first 30 Fitness Pros get 60 days of Premium access free (all tools / maximize opportunity); first 10 Fitness Pros get onboarding fees waived completely.`,
   ni: `NORTHSiDE Intelligence (NI) — Northside Ventures' AI/software venture builder and consumer-facing hub. Tagline: "Filling the gaps to build the future."
 Ties together a portal of Sector 3 AI tools: ReplyFlow (AI-powered customer service reply automation), GrantBot (AI grant finder and drafter for nonprofits/creators), GapScan (automated workflow gap detection), BridgeAI (cross-platform AI orchestration), Signal Desk (unified intelligence signals hub) — plus Smart Store, a standalone ecommerce storefront.
 One free Northside Intelligence account unlocks the toolkit. Site: northsideintelligence.com.

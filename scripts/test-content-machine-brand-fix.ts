@@ -120,6 +120,17 @@ for (const slug of ["ni", "ni-store", "grantbot", "gapscan", "bridgeai"]) {
   );
 }
 
+// Regression guard: match-fit itself must keep its OWN real facts (mirrored from
+// matchfit's CONTENT_CALENDAR_BRAND_FACTS), not fall through to the "no product facts
+// configured" placeholder generateSlotDraft() uses for an unconfigured brand — caught by
+// council review round 2 on this PR.
+const matchFitFacts = getContentMachineBrandFacts("match-fit");
+check(Boolean(matchFitFacts && matchFitFacts.length > 40), "match-fit itself has real product facts configured (not a placeholder)");
+check(
+  /fit hub|founding fitness pro|match-fit\.net/i.test(matchFitFacts || ""),
+  "match-fit's facts contain real Match Fit specifics (Fit Hub / founding promo / match-fit.net)"
+);
+
 if (failed > 0) {
   console.error(`\n${failed} CHECK(S) FAILED`);
   process.exit(1);
