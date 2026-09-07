@@ -17,7 +17,7 @@ import {
   logSignal,
 } from "./db";
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
-import { buildMediaPrompt, generatePostImage } from "./image-gen";
+import { buildMediaPrompt, queueContentMachineImageJob } from "./image-gen";
 import { buildRegenFeedback, runQualityGate } from "./quality-gate";
 import type {
   ContentPost,
@@ -282,9 +282,9 @@ export async function generateDailyBatch(args?: {
       researchSnippet,
     });
 
-    // No API call and nothing queued (see ./image-gen.ts — BPA-B2 dependency).
-    // image_url starts null; the prompt itself is stored on the post's own
-    // meta so a human (or the future BPA-B2 media loop) can read it there.
+    // Media is queued to the mini (see ./image-gen.ts), never generated via an
+    // API call here. image_url starts null; the prompt is also stored on the
+    // post's own meta so the UI can show a status without another fetch.
     const wantsMedia = Boolean(
       args?.withImages && postType !== "Text" && draft.visualPrompt
     );
@@ -318,9 +318,9 @@ export async function generateDailyBatch(args?: {
 
     if (wantsMedia && draft.visualPrompt) {
       try {
-        await generatePostImage({ visualPrompt: draft.visualPrompt, brandSlug });
+        await queueContentMachineImageJob({ postId: post.id, brandSlug });
       } catch (err) {
-        console.warn("[content-machine] media prompt log failed:", err);
+        console.warn("[content-machine] image job queue failed:", err);
       }
     }
 
@@ -428,9 +428,9 @@ export async function generateBatchSlot(args: {
 
   if (wantsMedia && draft.visualPrompt) {
     try {
-      await generatePostImage({ visualPrompt: draft.visualPrompt, brandSlug });
+      await queueContentMachineImageJob({ postId: post.id, brandSlug });
     } catch (err) {
-      console.warn("[content-machine] media prompt log failed:", err);
+      console.warn("[content-machine] image job queue failed:", err);
     }
   }
 
