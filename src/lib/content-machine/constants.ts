@@ -78,7 +78,7 @@ Ties together a portal of Sector 3 AI tools: ReplyFlow (AI-powered customer serv
 One free Northside Intelligence account unlocks the toolkit. Site: northsideintelligence.com.
 This is the NI brand itself — do not write about Match Fit (a separate Northside venture, a fitness marketplace) or any single Sector 3 tool as if it were the whole product.`,
   "ni-store": `Smart Store — Northside Intelligence's standalone ecommerce storefront (not an AI intelligence tool). Sells curated physical products across Kitchen, Tech, Home, Pets, Health, Beauty, Fitness, Auto, Entertainment and Smart Home categories.
-Subdomain: shop.northsideintelligence.com. Part of the Northside Intelligence account/portal.
+Site: northsideintelligence.com/store. Part of the Northside Intelligence account/portal.
 Never describe this as an AI tool, a fitness marketplace, or use Match Fit language (Fitness Pros, founding slots, Fit Hub) — Smart Store sells physical products, it has no trainers, coaches or booking.`,
   grantbot: `GrantBot — AI grant finder and drafter for nonprofits, creators, researchers, small businesses, and arts & culture organizations. Powered by Claude, part of Northside Intelligence.
 Describe your organization; GrantBot finds relevant funding opportunities and drafts compelling grant applications. One Northside Intelligence account unlocks it. Site: northsideintelligence.com/grantbot.
@@ -137,7 +137,7 @@ export const CONTENT_MACHINE_FEATURE_KEYWORDS: Record<string, string[]> = {
   ],
   "ni-store": [
     "smart store",
-    "shop.northsideintelligence.com",
+    "northsideintelligence.com/store",
     "kitchen",
     "tech",
     "home",
