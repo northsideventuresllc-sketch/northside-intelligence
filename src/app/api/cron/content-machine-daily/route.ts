@@ -87,6 +87,9 @@ export async function GET(req: NextRequest) {
       batchId: result.batchId,
       postCount: result.posts.length,
       status: "pending_approval",
+      // BUILD fix 2026-09-07: one post type hard-rejected (e.g. banned phrase) no longer
+      // aborts the other post types in this brand's daily batch — see generateDailyBatch.
+      failures: result.failures,
     });
   } catch (err) {
     console.error("[cron/content-machine-daily]", err);

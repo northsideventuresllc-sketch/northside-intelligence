@@ -3,6 +3,7 @@ import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
   CONTENT_POST_TYPES,
   DEFAULT_BRAND_SLUG,
+  getContentMachineBrandFacts,
   MAX_HASHTAGS,
   MAX_REGEN_ATTEMPTS,
   PLATFORMS_BY_TYPE,
@@ -76,6 +77,7 @@ function buildSystemPrompt(args: {
   voiceRules: string[];
   bannedPhrases: string[];
   toneRules: string[];
+  productFacts?: string;
   fewShot?: { caption: string; visual_prompt: string | null; hashtags: string[] };
   researchSnippet?: string;
 }): string {
@@ -88,6 +90,17 @@ function buildSystemPrompt(args: {
     "Banned phrases (never use):",
     ...args.bannedPhrases.map((p) => `- ${p}`),
   ];
+
+  // BUILD fix 2026-09-07: this used to be silent — a brand with no product-facts block
+  // had nothing grounding it but voice/tone, and the quality-requirements bullets below
+  // used to hardcode Match Fit as if every brand were Match Fit. Real per-brand facts now
+  // come from CONTENT_MACHINE_BRAND_FACTS (constants.ts); when a brand has none configured
+  // yet, say so explicitly rather than letting the model invent or drift to another brand.
+  lines.push(
+    "",
+    "Product facts (ground every concrete claim in these — never invent features or pricing, and never write about a different Northside product):",
+    args.productFacts ?? `(No product facts configured yet for ${args.brandName} — stay generic and voice-only; do not invent features, and do not describe any other Northside product.)`
+  );
 
   if (args.toneRules.length) {
     lines.push("", "Learned tone rules from operator edits:", ...args.toneRules.map((r) => `- ${r}`));
@@ -105,6 +118,8 @@ function buildSystemPrompt(args: {
     lines.push("", "Industry research (use as inspiration, not verbatim copy):", args.researchSnippet);
   }
 
+  const isMatchFit = args.brandSlug === "match-fit";
+
   lines.push(
     "",
     "Output schema:",
@@ -112,8 +127,11 @@ function buildSystemPrompt(args: {
     "",
     "Quality requirements:",
     "- Hook: first line must be a question, stat, or pattern interrupt",
-    '- Always say "Fitness Pros" — never trainers or personal trainers',
-    "- At least 2 concrete Match Fit features, promos, or outcomes",
+    // "Fitness Pros" is Match Fit's own vocabulary — was previously forced onto every
+    // brand's prompt regardless of product, which is the root cause every NI-family brand
+    // batch wrote Match Fit copy. Only apply it when this brand IS Match Fit.
+    isMatchFit ? '- Always say "Fitness Pros" — never trainers or personal trainers' : "",
+    `- At least 2 concrete details about ${args.brandName} specifically (from the product facts above) — never another Northside product's name, feature, or promo`,
     "- Visual prompts: scene, subject, action, mood, on-screen text — NOT hex colors only",
     buildHighVolumeHashtagRule(args.brandSlug, MAX_HASHTAGS),
     "- Brand palette (#07080C dark, #FF7E00 orange) is accent only"
@@ -145,6 +163,7 @@ export async function generateSlotDraft(
     voiceRules: profile.voice_rules,
     bannedPhrases: profile.banned_phrases,
     toneRules: toneRules.map((r) => r.rule_text),
+    productFacts: getContentMachineBrandFacts(input.brandSlug),
     fewShot: fewShot ?? undefined,
     researchSnippet: learnings.join("\n") || undefined,
   });
@@ -186,6 +205,11 @@ export async function generateSlotWithQualityGate(
   let feedback: string | undefined;
   let lastFailures: string[] = [];
   let lastDraft: GeneratedDraft | undefined;
+  // Sticky once true: even if a later attempt's OWN gate check doesn't hit a banned
+  // phrase but still fails on something else, the batch must not silently insert
+  // Match-Fit-poisoned copy just because the last-tried draft happened not to repeat
+  // the exact banned string. See the hard-fail block below.
+  let sawHardFail = false;
 
   for (let attempt = 1; attempt <= MAX_REGEN_ATTEMPTS + 1; attempt++) {
     let draft: GeneratedDraft;
@@ -218,6 +242,7 @@ export async function generateSlotWithQualityGate(
 
     lastFailures = gate.failures;
     lastDraft = draft;
+    sawHardFail = sawHardFail || gate.hardFail;
     feedback = buildRegenFeedback(gate.failures);
 
     if (attempt <= MAX_REGEN_ATTEMPTS) {
@@ -234,6 +259,21 @@ export async function generateSlotWithQualityGate(
         },
       });
     }
+  }
+
+  // BUILD fix 2026-09-07: a banned-phrase hit is a correctness bug (wrong-brand or
+  // off-limits content), not a style nit — this used to fall through to the
+  // "keep best draft, accept flagged" path below like any other gate failure, which is
+  // exactly how 8 Match-Fit-branded posts got inserted for ni/ni-store/grantbot/gapscan/
+  // bridgeai on 2026-09-07 despite each brand's banned_phrases containing "Match Fit".
+  // Fail loud instead of inserting a mislabeled post — the caller (cron route) already
+  // handles a thrown error from this function without killing the rest of the batch.
+  if (sawHardFail) {
+    throw new Error(
+      `Quality gate hard-rejected ${input.brandSlug} ${input.postType}: banned phrase present ` +
+        `after ${MAX_REGEN_ATTEMPTS + 1} attempts (${lastFailures.join("; ")}). Refusing to insert ` +
+        `a mislabeled post — this needs a prompt/facts fix for this brand, not an approval click.`
+    );
   }
 
   // Never kill the whole batch over a style rule. After the last retry, keep the
@@ -263,7 +303,7 @@ export async function generateDailyBatch(args?: {
   brandSlug?: string;
   dayIndex?: number;
   withImages?: boolean;
-}): Promise<{ batchId: string; posts: ContentPost[] }> {
+}): Promise<{ batchId: string; posts: ContentPost[]; failures: Array<{ postType: ContentPostType; error: string }> }> {
   const brandSlug = args?.brandSlug ?? DEFAULT_BRAND_SLUG;
   const dayIndex = args?.dayIndex ?? getDefaultThemeDayIndex();
   const theme = getWeekdayTheme(dayIndex);
@@ -271,16 +311,35 @@ export async function generateDailyBatch(args?: {
   const learnings = await loadRecentLearnings(3);
   const researchSnippet = learnings.join("\n");
   const posts: ContentPost[] = [];
+  // BUILD fix 2026-09-07 (PR #220 council review, security+authority lens): this loop used
+  // to call generateSlotWithQualityGate with no per-iteration try/catch, so a thrown error
+  // for ONE post type (e.g. a hard-rejected banned-phrase draft, per the new hardFail gate
+  // above) aborted the whole in-process loop and silently dropped every OTHER post type in
+  // this brand's daily batch too -- a single bad slot took down the whole day's generation
+  // for this full-batch path (used by the manual "regenerate whole day" admin action and
+  // api/content-machine/generate). Catching per-slot means one hard rejection only costs
+  // that one post type; the rest of the day's batch still generates and lands for approval.
+  const failures: Array<{ postType: ContentPostType; error: string }> = [];
 
   for (const postType of CONTENT_POST_TYPES) {
     const targetGroup = getThemeAudienceForPost(dayIndex, postType);
-    const { draft } = await generateSlotWithQualityGate({
-      brandSlug,
-      dayIndex,
-      postType,
-      targetGroup,
-      researchSnippet,
-    });
+    let draft: GeneratedDraft;
+    try {
+      ({ draft } = await generateSlotWithQualityGate({
+        brandSlug,
+        dayIndex,
+        postType,
+        targetGroup,
+        researchSnippet,
+      }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[content-machine] slot failed, continuing rest of daily batch: brand=${brandSlug} postType=${postType}: ${message}`
+      );
+      failures.push({ postType, error: message });
+      continue;
+    }
 
     // Media is queued to the mini (see ./image-gen.ts), never generated via an
     // API call here. image_url starts null; the prompt is also stored on the
@@ -327,7 +386,7 @@ export async function generateDailyBatch(args?: {
     posts.push(post);
   }
 
-  return { batchId, posts };
+  return { batchId, posts, failures };
 }
 
 /**

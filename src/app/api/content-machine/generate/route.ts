@@ -44,6 +44,11 @@ export async function POST(req: NextRequest) {
       ok: true,
       batchId: result.batchId,
       posts: result.posts,
+      // BUILD fix 2026-09-07: generateDailyBatch now continues past a per-slot hard
+      // rejection (e.g. banned phrase) instead of aborting the whole batch — surface
+      // which slots failed so the caller/operator isn't left guessing why a post type
+      // is missing from `posts`.
+      failures: result.failures,
     });
   } catch (err) {
     console.error("[api/content-machine/generate]", err);

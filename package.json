@@ -12,7 +12,8 @@
     "infra:health-check": "npx tsx scripts/infra-health-check.ts",
     "audit:vercel-env": "npx tsx scripts/audit-vercel-env.ts",
     "fulfill:store-order": "npx tsx scripts/fulfill-store-order.ts",
-    "sync:cj-catalog": "npx tsx scripts/run-cj-catalog-sync.ts"
+    "sync:cj-catalog": "npx tsx scripts/run-cj-catalog-sync.ts",
+    "test:content-machine-brand-fix": "npx tsx scripts/test-content-machine-brand-fix.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
