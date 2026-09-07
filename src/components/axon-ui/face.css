@@ -1,0 +1,773 @@
+/* THE FACE — hero chrome. Palette locked: ground #07080C, cyan #00D4FF, navy #0A1628. */
+
+/* The whole home screen: the hero (orb + rails) and the lower band under it. */
+.face-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.face-hero {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100vh - 8rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(0, 212, 255, 0.14);
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(10, 22, 40, 0.85) 0%, rgba(7, 8, 12, 0.98) 62%),
+    #07080c;
+}
+
+/* Faint navy grid so the orb sits in a room, not on a void. */
+.face-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.75) 0%, transparent 72%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- layout: two cards left, the orb, two cards right ------------------------------ */
+.face-grid {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 15rem);
+  gap: 20px;
+  align-items: center;
+  padding: 68px 24px 56px;
+}
+
+.face-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.face-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* The orb keeps the middle of the screen and stays the biggest thing on it. */
+.face-orb-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 44vh;
+  flex: 1;
+}
+
+/* Narrow screens: the orb is still first, the cards flow underneath it. */
+@media (max-width: 900px) {
+  .face-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 62px 16px 52px;
+  }
+  .face-centre {
+    order: -1;
+  }
+  .face-rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .face-rail > * {
+    flex: 1 1 12rem;
+  }
+  .face-orb-wrap {
+    min-height: 46vh;
+  }
+}
+
+.face-orb-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.face-orb-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Reduced motion keeps the slow opacity breathe — a 9s fade is the one movement the spec
+   allows in that mode, and it is what stops the orb reading as a dead image. */
+.face-orb-canvas[data-reduced='true'] {
+  animation: face-breathe 9s ease-in-out infinite;
+}
+
+/* The WebGL context is gone (lost, or never available). Hide the dead canvas, show the
+   bloom. The canvas itself stays in the tree so a restored context can rebuild into it. */
+.face-orb-canvas[data-failed='true'] {
+  visibility: hidden;
+}
+
+/* Used when WebGL is unavailable or the context was lost — a still cyan bloom, never a
+   broken box. */
+.face-orb-fallback {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 48%,
+    rgba(223, 246, 255, 0.9) 0%,
+    rgba(0, 212, 255, 0.5) 14%,
+    rgba(10, 22, 40, 0.35) 46%,
+    rgba(7, 8, 12, 0) 72%
+  );
+  animation: face-breathe 9s ease-in-out infinite;
+}
+
+@keyframes face-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* --- corner-bracket reticles ------------------------------------------------------- */
+.face-reticle {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(0, 212, 255, 0.55);
+  pointer-events: none;
+  z-index: 3;
+}
+.face-reticle--tl {
+  top: 16px;
+  left: 16px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.face-reticle--tr {
+  top: 16px;
+  right: 16px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.face-reticle--bl {
+  bottom: 16px;
+  left: 16px;
+  border-right: 0;
+  border-top: 0;
+}
+.face-reticle--br {
+  bottom: 16px;
+  right: 16px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/* --- micro-labels ------------------------------------------------------------------ */
+.face-micro {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(0, 212, 255, 0.72);
+}
+
+.face-topbar,
+.face-footbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.face-topbar {
+  top: 26px;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 0 60px;
+}
+
+/* Signal: live / demo — dimmed when the screen is running on the test signal. */
+.face-topbar .face-micro[data-live='false'] {
+  color: rgba(226, 240, 252, 0.38);
+}
+
+.face-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  text-align: center;
+}
+
+/* The one quiet way through to the deck until its remaining cards fold into the hero. */
+.face-footbar {
+  bottom: 12px;
+  gap: 18px;
+}
+
+.face-deck-link {
+  pointer-events: auto;
+  padding: 4px 10px;
+  border-bottom: 1px solid transparent;
+  color: rgba(0, 212, 255, 0.45);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.face-deck-link:hover,
+.face-deck-link:focus-visible {
+  color: rgba(0, 212, 255, 0.95);
+  border-bottom-color: rgba(0, 212, 255, 0.6);
+}
+
+.face-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 16px;
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(10, 22, 40, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.face-state[data-working='true'] {
+  border-color: rgba(0, 212, 255, 0.62);
+  box-shadow: 0 0 22px rgba(0, 212, 255, 0.18);
+}
+
+.face-state-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.45);
+}
+
+.face-state[data-working='true'] .face-state-dot {
+  background: #00d4ff;
+  box-shadow: 0 0 10px #00d4ff;
+  animation: face-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes face-dot {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.face-sentence {
+  max-width: 46ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(226, 240, 252, 0.78);
+}
+
+.face-hint {
+  font-size: 11px;
+  color: rgba(226, 240, 252, 0.42);
+}
+
+/* Reduced motion stops everything that moves. The 9s opacity breathe on the orb and the
+   fallback deliberately stays — the spec calls for a static frame plus that slow breathe,
+   and it is well under the flash threshold. */
+@media (prefers-reduced-motion: reduce) {
+  .face-state[data-working='true'] .face-state-dot {
+    animation: none;
+  }
+}
+
+/* --- glass stat cards --------------------------------------------------------------- */
+.face-card {
+  position: relative;
+  padding: 16px 18px 15px;
+  border: 1px solid rgba(0, 212, 255, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgba(10, 22, 40, 0.82) 0%, rgba(7, 8, 12, 0.86) 100%);
+  backdrop-filter: blur(8px);
+}
+
+/* A card with nothing to show sits back rather than shouting an absence. */
+.face-card[data-empty='true'] {
+  border-color: rgba(0, 212, 255, 0.12);
+}
+
+/* Corner-bracket reticle, same language as the four on the hero. */
+.face-card-bracket {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(0, 212, 255, 0.5);
+  pointer-events: none;
+}
+.face-card-bracket--tl {
+  top: 6px;
+  left: 6px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.face-card-bracket--br {
+  bottom: 6px;
+  right: 6px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.face-card-label {
+  margin-bottom: 10px;
+}
+
+.face-card-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 34px;
+  line-height: 1.05;
+  color: #dff6ff;
+}
+
+.face-card-empty {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.3;
+  color: rgba(226, 240, 252, 0.42);
+}
+
+.face-card-caption {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(226, 240, 252, 0.55);
+}
+
+/* --- lower band: revenue + the module list + the agent activity trail --------------- */
+.face-lower {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 18rem);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .face-lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* --- agent activity trail (step 4) --------------------------------------------------
+   Right of the module list on a wide screen, below everything on a narrow one — same
+   glass-card language as the rest of the screen. */
+.face-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.face-activity-item {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.07);
+}
+
+.face-activity-item:last-child {
+  border-bottom: 0;
+}
+
+/* A small dot, dim by default — brightens for anything under two minutes old. Colour is
+   never the only signal: the relative-time text next to it says the same thing in words. */
+.face-activity-dot {
+  flex: none;
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(0, 212, 255, 0.35);
+}
+
+.face-activity-dot[data-fresh='true'] {
+  background: #00d4ff;
+  box-shadow: 0 0 8px #00d4ff;
+}
+
+.face-activity-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(226, 240, 252, 0.8);
+}
+
+.face-activity-agent {
+  color: #dff6ff;
+  font-weight: 600;
+}
+
+.face-activity-to {
+  color: rgba(226, 240, 252, 0.55);
+}
+
+.face-activity-time {
+  flex: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(226, 240, 252, 0.4);
+}
+
+.face-modules {
+  padding-bottom: 18px;
+}
+
+.face-module-group + .face-module-group {
+  margin-top: 16px;
+}
+
+.face-module-heading {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.14);
+  color: rgba(0, 212, 255, 0.55);
+}
+
+.face-module-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.face-module {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.07);
+}
+
+.face-module:last-child {
+  border-bottom: 0;
+}
+
+.face-module-name {
+  font-size: 13px;
+  color: rgba(226, 240, 252, 0.86);
+}
+
+/* --- state pills. Palette is locked: cyan or grey only, never green, never amber. ---- */
+.face-pill {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Running and well — filled cyan. */
+.face-pill--ontrack {
+  border-color: rgba(0, 212, 255, 0.55);
+  background: rgba(0, 212, 255, 0.16);
+  color: #9fe8ff;
+}
+
+/* Alive but not heard from — dim cyan, no fill. */
+.face-pill--quiet {
+  border-color: rgba(0, 212, 255, 0.24);
+  color: rgba(159, 232, 255, 0.62);
+}
+
+/* Needs a look. A hollow cyan pill with a brighter edge does the work amber would
+   normally do — the spec allows no amber and no green anywhere on this screen. */
+.face-pill--attention {
+  border-color: #00d4ff;
+  color: #dff6ff;
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.25), 0 0 12px rgba(0, 212, 255, 0.22);
+}
+
+/* Dormant on purpose — muted grey, out of the cyan conversation entirely. */
+.face-pill--off {
+  border-color: rgba(226, 240, 252, 0.16);
+  color: rgba(226, 240, 252, 0.4);
+}
+
+/* --- voice panel (step 3) ------------------------------------------------------------
+   Docked bottom-centre of the hero, under the orb. Same glass language as the stat cards:
+   thin cyan border, dark glass, corner brackets, monospaced all-caps micro-labels. Cyan
+   and grey only — no green, no amber, in any of the three states. */
+.face-voicebar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px 44px;
+}
+
+.face-voice {
+  position: relative;
+  width: min(46rem, 100%);
+  padding: 12px 16px 11px;
+  border: 1px solid rgba(0, 212, 255, 0.22);
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgba(10, 22, 40, 0.86) 0%, rgba(7, 8, 12, 0.9) 100%);
+  backdrop-filter: blur(8px);
+}
+
+/* Listening and thinking both raise the panel — a border change, never colour alone, and
+   each carries its own written micro-label. */
+.face-voice[data-state='listening'] {
+  border-color: rgba(0, 212, 255, 0.62);
+  box-shadow: 0 0 26px rgba(0, 212, 255, 0.16);
+}
+
+.face-voice[data-state='thinking'] {
+  border-color: rgba(0, 212, 255, 0.42);
+}
+
+.face-voice-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.face-voice-mic {
+  flex: none;
+  color: rgba(226, 240, 252, 0.45);
+}
+
+.face-voice-mic[data-live='true'] {
+  color: #00d4ff;
+}
+
+.face-voice-hold,
+.face-voice-send,
+.face-voice-mute,
+.face-command-back {
+  cursor: pointer;
+  background: none;
+}
+
+/* Push-to-talk. Hold it with a pointer, or focus it and hold Space. */
+.face-voice-hold {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  padding: 7px 14px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(10, 22, 40, 0.6);
+  color: rgba(0, 212, 255, 0.72);
+  touch-action: none;
+  user-select: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.face-voice-hold[data-live='true'] {
+  border-color: rgba(0, 212, 255, 0.7);
+  color: #dff6ff;
+}
+
+.face-voice-hold:focus-visible,
+.face-voice-send:focus-visible,
+.face-voice-mute:focus-visible,
+.face-voice-input:focus-visible,
+.face-command-back:focus-visible {
+  outline: 2px solid #00d4ff;
+  outline-offset: 2px;
+}
+
+/* No dead UI: a browser that cannot transcribe gets this, in the same styling, running the
+   same parser. */
+.face-voice-typed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.face-voice-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(7, 8, 12, 0.72);
+  color: #dff6ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.face-voice-input::placeholder {
+  color: rgba(226, 240, 252, 0.32);
+}
+
+.face-voice-send,
+.face-voice-mute {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 999px;
+  color: rgba(0, 212, 255, 0.72);
+}
+
+.face-voice-mute[aria-pressed='true'] {
+  border-color: rgba(226, 240, 252, 0.2);
+  color: rgba(226, 240, 252, 0.45);
+}
+
+.face-voice-mute {
+  margin-left: auto;
+}
+
+/* Level meter — every bar is the microphone's own level, read off an AnalyserNode. */
+.face-voice-meter {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  height: 22px;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.face-voice-meter[data-listening='true'] {
+  opacity: 1;
+}
+
+.face-voice-bar {
+  width: 3px;
+  height: 22px;
+  border-radius: 2px;
+  background: #00d4ff;
+  transform-origin: center;
+  transform: scaleY(0.08);
+}
+
+/* Reduced motion: static bars, and the written label carries the state instead. */
+.face-voice-meter[data-static='true'] .face-voice-bar {
+  transform: scaleY(0.34) !important;
+}
+
+.face-voice-timer {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: #9fe8ff;
+}
+
+.face-voice-transcript {
+  margin-top: 9px;
+  min-height: 2.4em;
+}
+
+.face-voice-interim {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(226, 240, 252, 0.5);
+}
+
+.face-voice-heard {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(226, 240, 252, 0.86);
+}
+
+.face-voice-reply {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #9fe8ff;
+}
+
+.face-voice-hint {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(226, 240, 252, 0.42);
+}
+
+@media (max-width: 900px) {
+  .face-voicebar {
+    padding: 0 16px 40px;
+  }
+  .face-voice-controls {
+    flex-wrap: wrap;
+  }
+}
+
+/* --- the panel a command puts in the module list's place ----------------------------- */
+.face-command-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.face-command-back {
+  padding: 4px 10px;
+  border: 1px solid rgba(0, 212, 255, 0.28);
+  border-radius: 999px;
+  color: rgba(0, 212, 255, 0.72);
+}
+
+.face-command-back:hover {
+  color: #dff6ff;
+  border-color: rgba(0, 212, 255, 0.6);
+}
+
+.face-command-caption {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.face-command-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.face-command-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.07);
+}
+
+.face-command-item:last-child {
+  border-bottom: 0;
+}
+
+.face-command-index {
+  flex: none;
+  color: rgba(0, 212, 255, 0.5);
+}
+
+.face-command-text {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(226, 240, 252, 0.86);
+}
+
+.face-command-owner {
+  color: rgba(226, 240, 252, 0.45);
+}
