@@ -48,6 +48,8 @@ export interface StoreOrderRecord {
   targetProfitCents: number | null;
   actualProfitCents: number | null;
   reconciliationStatus: string | null;
+  /** "cj" | "fallback_flat_rate" | null - set by reconcileStoreOrder (NI-STORE-SHIP-OVERESTIMATE-0817). */
+  shippingSource: string | null;
   reconciliationAdjustmentCents: number | null;
   stripeCustomerId: string | null;
   stripePaymentMethodId: string | null;
@@ -172,6 +174,7 @@ function mapOrderRow(
       row.target_profit_cents != null ? Number(row.target_profit_cents) : null,
     actualProfitCents: row.actual_profit_cents != null ? Number(row.actual_profit_cents) : null,
     reconciliationStatus: row.reconciliation_status ? String(row.reconciliation_status) : null,
+    shippingSource: row.shipping_source ? String(row.shipping_source) : null,
     reconciliationAdjustmentCents:
       row.reconciliation_adjustment_cents != null
         ? Number(row.reconciliation_adjustment_cents)

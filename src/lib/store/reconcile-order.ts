@@ -30,6 +30,11 @@ export interface PreflightCostEstimate {
   shippingStipendChargedCents: number;
   projectedSurplusCents: number;
   projectedChargeCents: number;
+  /** "cj" = real CJ freight quote used; "fallback" = flat-rate placeholder
+   * used because CJ freight failed/returned no options
+   * (NI-STORE-SHIP-OVERESTIMATE-0817). Written to
+   * ni_store_orders.shipping_source by reconcileStoreOrder. */
+  shippingSource: "cj" | "fallback";
 }
 
 export interface ReconcileOrderResult {
@@ -121,6 +126,7 @@ export async function preflightOrderCosts(
     shippingStipendChargedCents,
     projectedSurplusCents: economics.surplusCents,
     projectedChargeCents: economics.chargeCents,
+    shippingSource: quote.source,
   };
 }
 
@@ -210,6 +216,7 @@ export async function reconcileStoreOrder(
       stripe_fee_cents: preflight.stripeFeeCents,
       target_profit_cents: economics.targetProfitCents,
       actual_profit_cents: economics.surplusCents >= 0 ? economics.targetProfitCents : 0,
+      shipping_source: preflight.shippingSource === "fallback" ? "fallback_flat_rate" : "cj",
       updated_at: now,
     })
     .eq("id", orderId);
