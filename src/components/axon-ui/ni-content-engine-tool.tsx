@@ -2,11 +2,20 @@
 
 import { useState } from 'react';
 import type { ContentPost } from '@/lib/content-machine/types';
+import { mediaStatusLabel } from '@/lib/axon/plain-labels';
 
 /** The date the post is written for, kept alongside the draft. */
 function postDate(p: ContentPost): string {
   const raw = (p.meta as Record<string, unknown> | null)?.content_date;
   return typeof raw === 'string' ? raw : '';
+}
+
+/** media_status is queued alongside the visual prompt once a mini-Chrome job
+ * has been requested (NI-IMAGE-GEN-DIRECT-GEMINI-API-0906) — never generated
+ * via an image API. */
+function mediaStatus(p: ContentPost): string | undefined {
+  const raw = (p.meta as Record<string, unknown> | null)?.media_status;
+  return typeof raw === 'string' ? raw : undefined;
 }
 
 /**
@@ -129,6 +138,12 @@ export function NiContentEngineTool({ initialPosts }: { initialPosts: ContentPos
 
               {p.hashtags?.length ? (
                 <p className="mt-2 text-xs text-axon-blue-glow/80">{p.hashtags.join(' ')}</p>
+              ) : null}
+
+              {mediaStatus(p) ? (
+                <p className="mt-3 rounded-lg border border-axon-blue-glow/30 bg-axon-blue-glow/5 px-3 py-2 text-xs text-axon-blue-glow">
+                  {mediaStatusLabel(mediaStatus(p))}
+                </p>
               ) : null}
 
               {p.visual_prompt ? (

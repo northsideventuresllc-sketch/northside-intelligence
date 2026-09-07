@@ -282,17 +282,12 @@ export async function generateDailyBatch(args?: {
       researchSnippet,
     });
 
-    let imageUrl: string | null = null;
-    if (args?.withImages && postType !== "Text" && draft.visualPrompt) {
-      try {
-        imageUrl = await generatePostImage({
-          visualPrompt: draft.visualPrompt,
-          brandSlug,
-        });
-      } catch (err) {
-        console.warn("[content-machine] image gen failed:", err);
-      }
-    }
+    // Image generation is never synchronous any more (queued to the Mac mini —
+    // see ./image-gen.ts), so image_url starts null and the post carries a
+    // media_status the UI reads via plain-labels once the job is queued below.
+    const wantsMedia = Boolean(
+      args?.withImages && postType !== "Text" && draft.visualPrompt
+    );
 
     const post = await insertPost({
       brand_slug: brandSlug,
@@ -304,14 +299,29 @@ export async function generateDailyBatch(args?: {
       caption: draft.caption,
       visual_prompt: draft.visualPrompt,
       hashtags: draft.hashtags,
-      image_url: imageUrl,
+      image_url: null,
       scheduled_at: null,
       published_at: null,
       platforms: PLATFORMS_BY_TYPE[postType],
       batch_id: batchId,
       source_post_id: null,
-      meta: { generated_at: new Date().toISOString() },
+      meta: {
+        generated_at: new Date().toISOString(),
+        ...(wantsMedia ? { media_status: "pending_mini_chrome" } : {}),
+      },
     });
+
+    if (wantsMedia && draft.visualPrompt) {
+      try {
+        await generatePostImage({
+          visualPrompt: draft.visualPrompt,
+          brandSlug,
+          postId: post.id,
+        });
+      } catch (err) {
+        console.warn("[content-machine] media queue failed:", err);
+      }
+    }
 
     posts.push(post);
   }
@@ -384,17 +394,9 @@ export async function generateBatchSlot(args: {
     researchSnippet,
   });
 
-  let imageUrl: string | null = null;
-  if (args.withImages && args.postType !== "Text" && draft.visualPrompt) {
-    try {
-      imageUrl = await generatePostImage({
-        visualPrompt: draft.visualPrompt,
-        brandSlug,
-      });
-    } catch (err) {
-      console.warn("[content-machine] image gen failed:", err);
-    }
-  }
+  const wantsMedia = Boolean(
+    args.withImages && args.postType !== "Text" && draft.visualPrompt
+  );
 
   const post = await insertPost({
     brand_slug: brandSlug,
@@ -406,14 +408,29 @@ export async function generateBatchSlot(args: {
     caption: draft.caption,
     visual_prompt: draft.visualPrompt,
     hashtags: draft.hashtags,
-    image_url: imageUrl,
+    image_url: null,
     scheduled_at: null,
     published_at: null,
     platforms: PLATFORMS_BY_TYPE[args.postType],
     batch_id: batchId,
     source_post_id: null,
-    meta: { generated_at: new Date().toISOString() },
+    meta: {
+      generated_at: new Date().toISOString(),
+      ...(wantsMedia ? { media_status: "pending_mini_chrome" } : {}),
+    },
   });
+
+  if (wantsMedia && draft.visualPrompt) {
+    try {
+      await generatePostImage({
+        visualPrompt: draft.visualPrompt,
+        brandSlug,
+        postId: post.id,
+      });
+    } catch (err) {
+      console.warn("[content-machine] media queue failed:", err);
+    }
+  }
 
   return { batchId, post, skipped: false };
 }
