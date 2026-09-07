@@ -303,7 +303,7 @@ export async function generateDailyBatch(args?: {
   brandSlug?: string;
   dayIndex?: number;
   withImages?: boolean;
-}): Promise<{ batchId: string; posts: ContentPost[] }> {
+}): Promise<{ batchId: string; posts: ContentPost[]; failures: Array<{ postType: ContentPostType; error: string }> }> {
   const brandSlug = args?.brandSlug ?? DEFAULT_BRAND_SLUG;
   const dayIndex = args?.dayIndex ?? getDefaultThemeDayIndex();
   const theme = getWeekdayTheme(dayIndex);
@@ -311,16 +311,35 @@ export async function generateDailyBatch(args?: {
   const learnings = await loadRecentLearnings(3);
   const researchSnippet = learnings.join("\n");
   const posts: ContentPost[] = [];
+  // BUILD fix 2026-09-07 (PR #220 council review, security+authority lens): this loop used
+  // to call generateSlotWithQualityGate with no per-iteration try/catch, so a thrown error
+  // for ONE post type (e.g. a hard-rejected banned-phrase draft, per the new hardFail gate
+  // above) aborted the whole in-process loop and silently dropped every OTHER post type in
+  // this brand's daily batch too -- a single bad slot took down the whole day's generation
+  // for this full-batch path (used by the manual "regenerate whole day" admin action and
+  // api/content-machine/generate). Catching per-slot means one hard rejection only costs
+  // that one post type; the rest of the day's batch still generates and lands for approval.
+  const failures: Array<{ postType: ContentPostType; error: string }> = [];
 
   for (const postType of CONTENT_POST_TYPES) {
     const targetGroup = getThemeAudienceForPost(dayIndex, postType);
-    const { draft } = await generateSlotWithQualityGate({
-      brandSlug,
-      dayIndex,
-      postType,
-      targetGroup,
-      researchSnippet,
-    });
+    let draft: GeneratedDraft;
+    try {
+      ({ draft } = await generateSlotWithQualityGate({
+        brandSlug,
+        dayIndex,
+        postType,
+        targetGroup,
+        researchSnippet,
+      }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[content-machine] slot failed, continuing rest of daily batch: brand=${brandSlug} postType=${postType}: ${message}`
+      );
+      failures.push({ postType, error: message });
+      continue;
+    }
 
     // Media is queued to the mini (see ./image-gen.ts), never generated via an
     // API call here. image_url starts null; the prompt is also stored on the
@@ -367,7 +386,7 @@ export async function generateDailyBatch(args?: {
     posts.push(post);
   }
 
-  return { batchId, posts };
+  return { batchId, posts, failures };
 }
 
 /**
