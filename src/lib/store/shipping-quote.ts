@@ -60,8 +60,9 @@ export async function quoteCartShipping(
   destinationCountryCode = "US"
 ): Promise<ShippingQuoteResult> {
   const hasExpedited = lines.some((line) => line.shippingTier === "expedited");
-  const cjLines = lines
-    .filter((line) => line.catalog.sourcePlatform === "cj" && line.variantId)
+  const cjCandidateLines = lines.filter((line) => line.catalog.sourcePlatform === "cj");
+  const cjLines = cjCandidateLines
+    .filter((line) => Boolean(line.variantId))
     .map((line) => ({
       variantId: line.variantId!,
       quantity: line.quantity,
@@ -70,8 +71,22 @@ export async function quoteCartShipping(
 
   const { supplierCostCents, productRetailCents } = aggregateSupplierAndRetail(lines);
 
+  // Mapping validation (NI-STORE-SHIP-OVERESTIMATE-0817 item 2): a CJ-sourced
+  // line with no variantId can never get a real freight quote - the previous
+  // "no_cj_lines" log made this indistinguishable from a cart with no CJ
+  // products at all. Surface it separately so it's actionable.
+  if (cjCandidateLines.length && cjLines.length < cjCandidateLines.length) {
+    const droppedSlugs = cjCandidateLines
+      .filter((line) => !line.variantId)
+      .map((line) => line.catalog.slug)
+      .join(",");
+    console.error(
+      `[shipping-quote][FALLBACK_ALERT] reason=missing_cj_variant_id slugs=${droppedSlugs} - CJ-sourced cart line(s) have no variantId, so they were dropped from the CJ freight request. Check catalog sync for these products' variants.`
+    );
+  }
+
   if (!cjLines.length) {
-    logShippingFallback("no_cj_lines", productRetailCents);
+    logShippingFallback(cjCandidateLines.length ? "missing_cj_variant_id" : "no_cj_lines", productRetailCents);
     const fallback = estimateShippingCents(productRetailCents);
     const shippingStipendCents = hasExpedited
       ? fallback + expeditedShippingPremiumCents(fallback)
@@ -134,8 +149,9 @@ export async function quoteCartShipping(
       source: "cj",
     };
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.warn("[store/shipping-quote] CJ freight failed, using fallback", err);
-    logShippingFallback("cj_freight_error", productRetailCents);
+    logShippingFallback(`cj_freight_error:${message}`, productRetailCents);
     const fallback = estimateShippingCents(productRetailCents);
     const shippingStipendCents = hasExpedited
       ? fallback + expeditedShippingPremiumCents(fallback)

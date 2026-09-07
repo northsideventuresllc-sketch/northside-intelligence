@@ -57,18 +57,35 @@ interface CjApiResponse<T> {
 
 async function cjRequest<T>(
   path: string,
-  init: RequestInit & { token: string }
+  init: RequestInit & { token: string; timeoutMs?: number }
 ): Promise<CjApiResponse<T>> {
-  const res = await fetch(`${CJ_API_BASE}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      "CJ-Access-Token": init.token,
-      platformToken: "",
-      ...(init.headers ?? {}),
-    },
-    cache: "no-store",
-  });
+  const { timeoutMs = 8000, ...rest } = init;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(`${CJ_API_BASE}${path}`, {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        "CJ-Access-Token": init.token,
+        platformToken: "",
+        ...(init.headers ?? {}),
+      },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (err) {
+    const timedOut = err instanceof Error && err.name === "AbortError";
+    throw new Error(
+      timedOut
+        ? `CJ API ${path} timed out after ${timeoutMs}ms`
+        : `CJ API ${path} network error: ${err instanceof Error ? err.message : String(err)}`
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   const json = (await res.json()) as CjApiResponse<T>;
   if (!res.ok || json.result === false) {
@@ -77,27 +94,48 @@ async function cjRequest<T>(
   return json;
 }
 
+/**
+ * Retry a CJ call once, after a short backoff, on network/timeout failure -
+ * NI-STORE-SHIP-OVERESTIMATE-0817 item 2. Does not retry on a well-formed
+ * API error response (that's a real "no" from CJ, not a transient blip).
+ */
+async function withOneRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.warn(`[store/cj] ${label} failed once, retrying`, err);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return await fn();
+  }
+}
+
 export async function getCjFreightOptions(input: {
   destinationCountryCode: string;
   lines: CjOrderLineInput[];
 }): Promise<CjFreightOption[]> {
   const token = await getCjAccessToken();
-  if (!token) return [];
+  if (!token) {
+    // Distinguish "CJ auth unavailable" (env/API outage) from a legitimate
+    // empty freight response - the caller treats these differently.
+    throw new Error("CJ_AUTH_UNAVAILABLE: no CJ access token (missing key or auth call failed)");
+  }
 
-  const json = await cjRequest<CjFreightOption[]>(
-    "/logistic/freightCalculate",
-    {
-      token,
-      method: "POST",
-      body: JSON.stringify({
-        startCountryCode: "CN",
-        endCountryCode: input.destinationCountryCode,
-        products: input.lines.map((line) => ({
-          vid: line.variantId,
-          quantity: line.quantity,
-        })),
+  const json = await withOneRetry(
+    () =>
+      cjRequest<CjFreightOption[]>("/logistic/freightCalculate", {
+        token,
+        timeoutMs: 6000,
+        method: "POST",
+        body: JSON.stringify({
+          startCountryCode: "CN",
+          endCountryCode: input.destinationCountryCode,
+          products: input.lines.map((line) => ({
+            vid: line.variantId,
+            quantity: line.quantity,
+          })),
+        }),
       }),
-    }
+    "freightCalculate"
   );
 
   return Array.isArray(json.data) ? json.data.filter((row) => row.logisticName) : [];
