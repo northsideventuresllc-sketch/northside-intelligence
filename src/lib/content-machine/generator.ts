@@ -190,6 +190,7 @@ export async function generateSlotDraft(
     dayIndex: input.dayIndex,
     postType: input.postType,
     targetGroup: input.targetGroup,
+    brandSlug: input.brandSlug,
   });
 
   const userPrompt = [
@@ -324,7 +325,7 @@ export async function generateDailyBatch(args?: {
 }): Promise<{ batchId: string; posts: ContentPost[]; failures: Array<{ postType: ContentPostType; error: string }> }> {
   const brandSlug = args?.brandSlug ?? DEFAULT_BRAND_SLUG;
   const dayIndex = args?.dayIndex ?? getDefaultThemeDayIndex();
-  const theme = getWeekdayTheme(dayIndex);
+  const theme = getWeekdayTheme(dayIndex, brandSlug);
   const batchId = randomUUID();
   const learnings = await loadRecentLearnings(3);
   const researchSnippet = learnings.join("\n");
@@ -340,7 +341,7 @@ export async function generateDailyBatch(args?: {
   const failures: Array<{ postType: ContentPostType; error: string }> = [];
 
   for (const postType of CONTENT_POST_TYPES) {
-    const targetGroup = getThemeAudienceForPost(dayIndex, postType);
+    const targetGroup = getThemeAudienceForPost(dayIndex, postType, brandSlug);
     let draft: GeneratedDraft;
     try {
       ({ draft } = await generateSlotWithQualityGate({
@@ -459,8 +460,8 @@ export async function generateBatchSlot(args: {
     return { batchId, post: null, skipped: true };
   }
 
-  const theme = getWeekdayTheme(dayIndex);
-  const targetGroup = getThemeAudienceForPost(dayIndex, args.postType);
+  const theme = getWeekdayTheme(dayIndex, brandSlug);
+  const targetGroup = getThemeAudienceForPost(dayIndex, args.postType, brandSlug);
   const researchSnippet =
     args.researchSnippet ?? (await loadRecentLearnings(3)).join("\n");
 
