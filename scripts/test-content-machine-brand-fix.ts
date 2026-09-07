@@ -23,11 +23,27 @@
  *     through its exported pieces) only carries the Match-Fit-specific "Fitness Pros"
  *     instruction for brandSlug 'match-fit', and every NI-family brand has its own real
  *     product facts configured (not Match Fit's).
+ *
+ * ROUND 3 (2026-09-07 16:47-16:54 UTC, after PR #220's fix above was already live): the
+ * banned-phrase hit came back for ni/ni-store/grantbot/gapscan anyway -- confirmed via
+ * content_machine_signals that ATTEMPT 1 (before any regen feedback existed) already failed.
+ * Root cause this time: content_machine_tone_rules -- correctly brand-scoped by its own query --
+ * has rows shared verbatim across every NI-family brand that cite "Match Fit"/"match-fit.net" by
+ * name as illustrative/historical examples, and generateSlotDraft() injected that text verbatim
+ * into every brand's "Learned tone rules" prompt section. Separately, buildRegenFeedback()
+ * hardcoded "a concrete Match Fit feature/promo" into every brand's regen-retry instructions,
+ * compounding the drift on attempts 2-3. (loadRecentLearnings() was investigated as a third
+ * candidate and ruled out for this specific incident -- its actual 3-row output at the failure
+ * timestamp did not contain "Match Fit" -- but is sanitized by the same mechanism as defense in
+ * depth, since the NI-Brain Learnings table is regularly flooded with other-venture engineering
+ * notes that DO name other products.)
  */
 import {
+  buildRegenFeedback,
   countConcreteDetails,
   hasBannedPhrase,
   runQualityGate,
+  stripBannedReferences,
 } from "../src/lib/content-machine/quality-gate";
 import { getContentMachineBrandFacts } from "../src/lib/content-machine/constants";
 
@@ -129,6 +145,67 @@ check(Boolean(matchFitFacts && matchFitFacts.length > 40), "match-fit itself has
 check(
   /fit hub|founding fitness pro|match-fit\.net/i.test(matchFitFacts || ""),
   "match-fit's facts contain real Match Fit specifics (Fit Hub / founding promo / match-fit.net)"
+);
+
+// 4. Round-3 root cause (confirmed live 2026-09-07 16:47-16:54 UTC, content_machine_signals
+// attempt=1 firstLine values for ni/ni-store/grantbot/gapscan — a banned-phrase hit BEFORE any
+// regen feedback existed): content_machine_tone_rules rows shared verbatim across every
+// NI-family brand cite "Match Fit" / "match-fit.net" by name as illustrative examples. These
+// are the two actual live rows (grantbot's copy, verified against NI-Brain kxijunwgbrlfzvgkhklo
+// content_machine_tone_rules ids 0009d960-.../0a8c7d38-...).
+const REAL_CONTAMINATED_TONE_RULE_1 =
+  'Every visual_prompt that mentions the brand logo MUST name the exact domain to reference it ' +
+  'against (e.g. "logo styled per northsideintelligence.com/<product>" or "use match-fit.net for ' +
+  'reference") -- never mention "logo" without a concrete reference target.';
+const REAL_CONTAMINATED_TONE_RULE_2 =
+  "On-screen text overlays in Gemini image/video prompts render unreliably (sloppy, misspelled, " +
+  "garbled) past ~6-8 words. Cap every on-screen text instruction to a short punchy phrase. The " +
+  "2026-08-25 Match Fit Static image was unusable for this exact reason (JB had to hand-write his own text).";
+const CLEAN_TONE_RULE =
+  "Every caption must include the product's real URL, no exceptions.";
+
+check(
+  hasBannedPhrase(REAL_CONTAMINATED_TONE_RULE_2, GRANTBOT_BANNED_PHRASES),
+  "sanity check: the real contaminated tone-rule text does contain grantbot's banned phrase 'Match Fit'"
+);
+
+const strippedForGrantbot = stripBannedReferences(
+  [REAL_CONTAMINATED_TONE_RULE_1, REAL_CONTAMINATED_TONE_RULE_2, CLEAN_TONE_RULE],
+  GRANTBOT_BANNED_PHRASES
+);
+check(
+  strippedForGrantbot.length === 1 && strippedForGrantbot[0] === CLEAN_TONE_RULE,
+  "stripBannedReferences() drops both real contaminated tone-rule lines (one says 'Match Fit', the other only names the domain 'match-fit.net') and keeps the clean one, for grantbot's banned phrases"
+);
+check(
+  stripBannedReferences(["use match-fit.net for reference"], ["Match Fit"]).length === 0,
+  "stripBannedReferences() catches the hyphenated domain 'match-fit.net' against the banned phrase 'Match Fit' (separator-normalized matching) — this is deliberately WIDER than hasBannedPhrase()'s exact-substring caption gate, see the doc comment on why"
+);
+check(
+  stripBannedReferences(["completely unrelated line about grants and nonprofits"], ["Match Fit"]).length === 1,
+  "stripBannedReferences() does not touch a genuinely unrelated line"
+);
+check(
+  stripBannedReferences([], ["Match Fit"]).length === 0,
+  "stripBannedReferences() on an empty input returns empty, doesn't throw"
+);
+
+// 5. buildRegenFeedback() must never hardcode Match Fit into another brand's regen-retry
+// instructions — this was actively making every attempt-2/3 caption worse for every
+// non-match-fit brand regardless of what triggered attempt 1.
+const grantbotFeedback = buildRegenFeedback(["Contains banned phrase"], { brandName: "GrantBot" });
+check(
+  !/match fit/i.test(grantbotFeedback),
+  "buildRegenFeedback() for a non-match-fit brand never mentions Match Fit"
+);
+check(
+  /GrantBot/.test(grantbotFeedback),
+  "buildRegenFeedback() names the actual brand (GrantBot) in its retry instructions"
+);
+const matchFitFeedback = buildRegenFeedback(["Lazy or placeholder caption"], { brandName: "Match Fit" });
+check(
+  /Match Fit/.test(matchFitFeedback),
+  "buildRegenFeedback() still names Match Fit for match-fit itself (regression guard — not stripped for the one brand it's actually true for)"
 );
 
 if (failed > 0) {

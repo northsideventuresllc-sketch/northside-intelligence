@@ -19,7 +19,7 @@ import {
 } from "./db";
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
 import { buildMediaPrompt, queueContentMachineImageJob } from "./image-gen";
-import { buildRegenFeedback, runQualityGate } from "./quality-gate";
+import { buildRegenFeedback, hasBannedPhrase, runQualityGate, stripBannedReferences } from "./quality-gate";
 import type {
   ContentPost,
   ContentPostType,
@@ -148,24 +148,42 @@ export async function generateSlotDraft(
   if (!profile) throw new Error(`Brand profile not found: ${input.brandSlug}`);
 
   const toneRules = await loadToneRules(input.brandSlug);
-  const fewShot = await loadFewShots({
+  const fewShotRaw = await loadFewShots({
     brandSlug: input.brandSlug,
     postType: input.postType,
     targetGroup: input.targetGroup,
   });
-  const learnings = input.researchSnippet
+  const learningsRaw = input.researchSnippet
     ? [input.researchSnippet]
     : await loadRecentLearnings(2);
+
+  // See stripBannedReferences() above: tone rules and learnings are correctly
+  // brand-scoped by their own queries, but their TEXT can still cite another
+  // Northside product by name. Drop any line that would leak this brand's own
+  // banned phrase into its own prompt before it gets there. A few-shot example
+  // that itself trips the brand's banned-phrase list is poisoned in full, not
+  // salvageable line-by-line, so it's dropped entirely rather than edited.
+  const safeToneRuleLines = stripBannedReferences(
+    toneRules.map((r) => r.rule_text),
+    profile.banned_phrases
+  );
+  const safeLearnings = stripBannedReferences(learningsRaw, profile.banned_phrases);
+  const fewShot =
+    fewShotRaw &&
+    !hasBannedPhrase(fewShotRaw.caption, profile.banned_phrases) &&
+    !hasBannedPhrase(fewShotRaw.visual_prompt ?? "", profile.banned_phrases)
+      ? fewShotRaw
+      : undefined;
 
   const system = buildSystemPrompt({
     brandSlug: input.brandSlug,
     brandName: profile.name,
     voiceRules: profile.voice_rules,
     bannedPhrases: profile.banned_phrases,
-    toneRules: toneRules.map((r) => r.rule_text),
+    toneRules: safeToneRuleLines,
     productFacts: getContentMachineBrandFacts(input.brandSlug),
     fewShot: fewShot ?? undefined,
-    researchSnippet: learnings.join("\n") || undefined,
+    researchSnippet: safeLearnings.join("\n") || undefined,
   });
 
   const slotBrief = buildSlotBrief({
@@ -243,7 +261,7 @@ export async function generateSlotWithQualityGate(
     lastFailures = gate.failures;
     lastDraft = draft;
     sawHardFail = sawHardFail || gate.hardFail;
-    feedback = buildRegenFeedback(gate.failures);
+    feedback = buildRegenFeedback(gate.failures, { brandName: profile.name });
 
     if (attempt <= MAX_REGEN_ATTEMPTS) {
       await logSignal({
