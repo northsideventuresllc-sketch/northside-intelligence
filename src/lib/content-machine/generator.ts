@@ -17,7 +17,7 @@ import {
   logSignal,
 } from "./db";
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
-import { generatePostImage } from "./image-gen";
+import { buildMediaPrompt, generatePostImage } from "./image-gen";
 import { buildRegenFeedback, runQualityGate } from "./quality-gate";
 import type {
   ContentPost,
@@ -282,9 +282,9 @@ export async function generateDailyBatch(args?: {
       researchSnippet,
     });
 
-    // Image generation is never synchronous any more (queued to the Mac mini —
-    // see ./image-gen.ts), so image_url starts null and the post carries a
-    // media_status the UI reads via plain-labels once the job is queued below.
+    // No API call and nothing queued (see ./image-gen.ts — BPA-B2 dependency).
+    // image_url starts null; the prompt itself is stored on the post's own
+    // meta so a human (or the future BPA-B2 media loop) can read it there.
     const wantsMedia = Boolean(
       args?.withImages && postType !== "Text" && draft.visualPrompt
     );
@@ -307,19 +307,20 @@ export async function generateDailyBatch(args?: {
       source_post_id: null,
       meta: {
         generated_at: new Date().toISOString(),
-        ...(wantsMedia ? { media_status: "pending_mini_chrome" } : {}),
+        ...(wantsMedia && draft.visualPrompt
+          ? {
+              media_status: "pending_mini_chrome",
+              media_prompt: buildMediaPrompt(draft.visualPrompt),
+            }
+          : {}),
       },
     });
 
     if (wantsMedia && draft.visualPrompt) {
       try {
-        await generatePostImage({
-          visualPrompt: draft.visualPrompt,
-          brandSlug,
-          postId: post.id,
-        });
+        await generatePostImage({ visualPrompt: draft.visualPrompt, brandSlug });
       } catch (err) {
-        console.warn("[content-machine] media queue failed:", err);
+        console.warn("[content-machine] media prompt log failed:", err);
       }
     }
 
@@ -416,19 +417,20 @@ export async function generateBatchSlot(args: {
     source_post_id: null,
     meta: {
       generated_at: new Date().toISOString(),
-      ...(wantsMedia ? { media_status: "pending_mini_chrome" } : {}),
+      ...(wantsMedia && draft.visualPrompt
+        ? {
+            media_status: "pending_mini_chrome",
+            media_prompt: buildMediaPrompt(draft.visualPrompt),
+          }
+        : {}),
     },
   });
 
   if (wantsMedia && draft.visualPrompt) {
     try {
-      await generatePostImage({
-        visualPrompt: draft.visualPrompt,
-        brandSlug,
-        postId: post.id,
-      });
+      await generatePostImage({ visualPrompt: draft.visualPrompt, brandSlug });
     } catch (err) {
-      console.warn("[content-machine] media queue failed:", err);
+      console.warn("[content-machine] media prompt log failed:", err);
     }
   }
 
