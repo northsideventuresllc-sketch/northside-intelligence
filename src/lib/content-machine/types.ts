@@ -90,6 +90,10 @@ export type GeneratedDraft = {
 export type QualityGateResult = {
   pass: boolean;
   failures: string[];
+  /** True when `failures` contains a banned-phrase hit — a correctness bug (wrong-brand
+   * or off-limits content), never eligible for the "accept best draft flagged" fallback
+   * after MAX_REGEN_ATTEMPTS. See BANNED_PHRASE_FAILURE in quality-gate.ts. */
+  hardFail: boolean;
 };
 
 export type GenerateSlotInput = {
