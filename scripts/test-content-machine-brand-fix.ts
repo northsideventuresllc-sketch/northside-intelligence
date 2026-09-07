@@ -46,6 +46,13 @@ import {
   stripBannedReferences,
 } from "../src/lib/content-machine/quality-gate";
 import { getContentMachineBrandFacts } from "../src/lib/content-machine/constants";
+import {
+  buildSlotBrief,
+  getThemeAudienceForPost,
+  getWeekdayTheme,
+  MATCH_FIT_WEEKDAY_THEMES,
+  DEFAULT_WEEKDAY_THEMES,
+} from "../src/lib/content-machine/weekday-themes";
 
 let failed = 0;
 function check(cond: boolean, msg: string) {
@@ -206,6 +213,55 @@ const matchFitFeedback = buildRegenFeedback(["Lazy or placeholder caption"], { b
 check(
   /Match Fit/.test(matchFitFeedback),
   "buildRegenFeedback() still names Match Fit for match-fit itself (regression guard — not stripped for the one brand it's actually true for)"
+);
+
+// 6. Round 4 (the deepest root cause — found only by checking a REAL post-fix generation
+// run rather than assuming the tone-rule fix above was enough): getWeekdayTheme() /
+// getThemeAudienceForPost() / buildSlotBrief() used to take no brandSlug and always
+// returned Match Fit's own literal weekly content brief ("Founding Fitness Pro spotlight",
+// "Join the Team", "apply at match-fit.net/trainer/signup") for EVERY brand — this is the
+// actual USER PROMPT the model is given each day, not incidental context. Confirmed live
+// 2026-09-07 17:19 UTC that grantbot/gapscan/ni-store still wrote Match Fit copy on attempt
+// 1 even with the tone-rule fix already deployed.
+for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
+  const defaultTheme = getWeekdayTheme(dayIndex, "grantbot");
+  const asText = JSON.stringify(defaultTheme);
+  check(
+    !/match fit|match-fit|fitness pro|join the team|list with us/i.test(asText),
+    `getWeekdayTheme(${dayIndex}, 'grantbot') carries no Match Fit vocabulary`
+  );
+}
+check(
+  getWeekdayTheme(0, "match-fit") === MATCH_FIT_WEEKDAY_THEMES[0],
+  "getWeekdayTheme(0, 'match-fit') still returns match-fit's own real theme (regression guard)"
+);
+check(
+  getWeekdayTheme(0) === DEFAULT_WEEKDAY_THEMES[0],
+  "getWeekdayTheme() with no brandSlug defaults to the generic skeleton, not Match Fit's"
+);
+check(
+  getThemeAudienceForPost(0, "Carousel", "gapscan") !== "Join the Team",
+  "getThemeAudienceForPost() for a non-match-fit brand never returns Match Fit's own audience label"
+);
+const grantbotBrief = buildSlotBrief({
+  dayIndex: 1,
+  postType: "Static",
+  targetGroup: getThemeAudienceForPost(1, "Static", "grantbot"),
+  brandSlug: "grantbot",
+});
+check(
+  !/match fit|fitness pro/i.test(grantbotBrief),
+  "buildSlotBrief() for grantbot (the actual per-day user prompt) carries no Match Fit vocabulary"
+);
+const matchFitBrief = buildSlotBrief({
+  dayIndex: 0,
+  postType: "Carousel",
+  targetGroup: "Join the Team",
+  brandSlug: "match-fit",
+});
+check(
+  /match-fit\.net|fitness pro/i.test(matchFitBrief),
+  "buildSlotBrief() for match-fit itself still carries its own real content (regression guard)"
 );
 
 if (failed > 0) {

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { createServiceClient } from "@/lib/supabase/server";
-import { WEEKDAY_THEMES } from "./weekday-themes";
+import { DEFAULT_WEEKDAY_THEMES, MATCH_FIT_WEEKDAY_THEMES } from "./weekday-themes";
+import { DEFAULT_BRAND_SLUG } from "./constants";
 import type { BrandProfile, ContentPost, FewShot, ToneRule } from "./types";
 
 function parseJsonArray<T>(value: unknown, fallback: T[]): T[] {
@@ -31,7 +32,15 @@ export async function loadBrandProfile(slug: string): Promise<BrandProfile | nul
       dark: "#07080C",
       accent: "#FF7E00",
     },
-    skeleton: parseJsonArray(data.skeleton, WEEKDAY_THEMES),
+    // BUILD fix 2026-09-07 (round 4): this field isn't currently read by generator.ts (the
+    // real per-day content brief comes from weekday-themes.ts's own brand-aware lookup —
+    // see getWeekdayTheme()), but it used to default every brand with no configured
+    // skeleton to Match Fit's own literal weekly themes, which is wrong regardless of
+    // whether anything consumes it today. Only match-fit itself gets Match Fit's themes.
+    skeleton: parseJsonArray(
+      data.skeleton,
+      slug === DEFAULT_BRAND_SLUG ? MATCH_FIT_WEEKDAY_THEMES : DEFAULT_WEEKDAY_THEMES
+    ),
   };
 }
 
