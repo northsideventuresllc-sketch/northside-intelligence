@@ -245,16 +245,31 @@ export function scoreLanes(lanes, { capabilityClass, quota = {}, costTierFloor =
 // 4. Provider calls — bodies lifted from lib/axon-v0/omni-router.ts
 // ---------------------------------------------------------------------------
 
-async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxTokens = 1024 } = {}) {
-  const r = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
-    body: JSON.stringify({ model, messages, max_tokens: maxTokens }),
-  });
-  if (!r.ok) throw new Error(`provider HTTP ${r.status}`);
-  const text = (await r.json())?.choices?.[0]?.message?.content;
-  if (!text) throw new Error('provider returned no content');
-  return text;
+/**
+ * @param {{maxTokens?: number, timeoutMs?: number}} [opts] - timeoutMs is opt-in (undefined =
+ *   no AbortController, unchanged behavior) — see the runpod tier's call site
+ *   (AX-RUNPOD-STUCK-WORKER-0907) for why one lane needs a bound and the others don't yet.
+ */
+async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxTokens = 1024, timeoutMs } = {}) {
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const r = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
+      body: JSON.stringify({ model, messages, max_tokens: maxTokens }),
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+    if (!r.ok) throw new Error(`provider HTTP ${r.status}`);
+    const text = (await r.json())?.choices?.[0]?.message?.content;
+    if (!text) throw new Error('provider returned no content');
+    return text;
+  } catch (err) {
+    if (controller?.signal.aborted) throw new Error(`provider timed out after ${timeoutMs}ms`);
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 async function callAnthropic(apiKey, model, messages, { maxTokens = 1024 } = {}) {
@@ -646,8 +661,31 @@ async function executeChainTier(supabaseKey, { tier, route, model, accountId, ma
   }
   if (!baseUrl) throw new Error(`${tier} tier: not deployed yet — no endpoint configured`);
   if (!apiKey) throw new Error(`${tier} tier: no key configured`);
+  // AX-RUNPOD-STUCK-WORKER-0907: RUNPOD_AXON_V1_ENDPOINT stores the bare
+  // https://api.runpod.ai/v2/{endpoint_id} base. RunPod's serverless vLLM worker only
+  // exposes OpenAI compatibility under a /openai/v1 sub-path off that base — the bare
+  // base + callOpenAICompatible's own "/chat/completions" suffix (correct for OpenRouter,
+  // whose base_url already includes its full /api/v1) 404s on RunPod ("404 page not
+  // found"), confirmed live 2026-09-07. Only the runpod tier needs this; other tiers'
+  // base_url values already include whatever path segment their API needs.
+  const requestBaseUrl =
+    tier === 'runpod' && !/\/openai\/v\d+$/.test(baseUrl.replace(/\/$/, ''))
+      ? `${baseUrl.replace(/\/$/, '')}/openai/v1`
+      : baseUrl;
+  // Same ticket: RunPod's serverless worker can be cold, stuck, or its queue simply not
+  // draining (confirmed live 2026-09-07 — a well-formed request against the corrected
+  // path above still went unanswered past 90s, worker reported idle/ready throughout).
+  // callOpenAICompatible has no timeout by default, so an unresponsive RunPod worker
+  // would block this tier — and therefore every tier after it — for as long as the
+  // caller's own function budget allows. Bounding only this tier's call keeps a stuck
+  // RunPod worker failing fast into the next tier instead of hanging the whole chain;
+  // 25s mirrors the ~40s bound this repo's local/mini tier and the retired
+  // axon-v1-cloud-relay.mjs both already use for the same kind of relay call.
   return {
-    text: await callOpenAICompatible(baseUrl, apiKey, model.model, messages, { maxTokens }),
+    text: await callOpenAICompatible(requestBaseUrl, apiKey, model.model, messages, {
+      maxTokens,
+      timeoutMs: tier === 'runpod' ? 25_000 : undefined,
+    }),
     usedAccountKey,
     viaBackup: false,
   };
