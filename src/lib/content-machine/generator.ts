@@ -17,7 +17,7 @@ import {
   logSignal,
 } from "./db";
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
-import { generatePostImage } from "./image-gen";
+import { queueContentMachineImageJob } from "./image-gen";
 import { buildRegenFeedback, runQualityGate } from "./quality-gate";
 import type {
   ContentPost,
@@ -282,18 +282,6 @@ export async function generateDailyBatch(args?: {
       researchSnippet,
     });
 
-    let imageUrl: string | null = null;
-    if (args?.withImages && postType !== "Text" && draft.visualPrompt) {
-      try {
-        imageUrl = await generatePostImage({
-          visualPrompt: draft.visualPrompt,
-          brandSlug,
-        });
-      } catch (err) {
-        console.warn("[content-machine] image gen failed:", err);
-      }
-    }
-
     const post = await insertPost({
       brand_slug: brandSlug,
       status: "pending_approval",
@@ -304,7 +292,7 @@ export async function generateDailyBatch(args?: {
       caption: draft.caption,
       visual_prompt: draft.visualPrompt,
       hashtags: draft.hashtags,
-      image_url: imageUrl,
+      image_url: null,
       scheduled_at: null,
       published_at: null,
       platforms: PLATFORMS_BY_TYPE[postType],
@@ -312,6 +300,14 @@ export async function generateDailyBatch(args?: {
       source_post_id: null,
       meta: { generated_at: new Date().toISOString() },
     });
+
+    if (args?.withImages && postType !== "Text" && draft.visualPrompt) {
+      try {
+        await queueContentMachineImageJob({ postId: post.id, brandSlug });
+      } catch (err) {
+        console.warn("[content-machine] image job queue failed:", err);
+      }
+    }
 
     posts.push(post);
   }
@@ -384,18 +380,6 @@ export async function generateBatchSlot(args: {
     researchSnippet,
   });
 
-  let imageUrl: string | null = null;
-  if (args.withImages && args.postType !== "Text" && draft.visualPrompt) {
-    try {
-      imageUrl = await generatePostImage({
-        visualPrompt: draft.visualPrompt,
-        brandSlug,
-      });
-    } catch (err) {
-      console.warn("[content-machine] image gen failed:", err);
-    }
-  }
-
   const post = await insertPost({
     brand_slug: brandSlug,
     status: "pending_approval",
@@ -406,7 +390,7 @@ export async function generateBatchSlot(args: {
     caption: draft.caption,
     visual_prompt: draft.visualPrompt,
     hashtags: draft.hashtags,
-    image_url: imageUrl,
+    image_url: null,
     scheduled_at: null,
     published_at: null,
     platforms: PLATFORMS_BY_TYPE[args.postType],
@@ -414,6 +398,14 @@ export async function generateBatchSlot(args: {
     source_post_id: null,
     meta: { generated_at: new Date().toISOString() },
   });
+
+  if (args.withImages && args.postType !== "Text" && draft.visualPrompt) {
+    try {
+      await queueContentMachineImageJob({ postId: post.id, brandSlug });
+    } catch (err) {
+      console.warn("[content-machine] image job queue failed:", err);
+    }
+  }
 
   return { batchId, post, skipped: false };
 }
