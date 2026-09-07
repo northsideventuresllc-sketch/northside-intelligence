@@ -309,6 +309,27 @@ async function loadSecret(supabaseKey, keyName) {
   return rows?.[0]?.value || null;
 }
 
+/**
+ * Root-cause fix, AX-GEMINI-MODEL-STALE-ENV-0907: production's whole text-generation
+ * chain went down 2026-09-07 because the Vercel prod env var GEMINI_MODEL was frozen at
+ * "gemini-2.0-flash" (a model Google has since retired — real API reply: "This model
+ * models/gemini-2.0-flash is no longer available") while NI-Brain's own GEMINI_MODEL
+ * secret had already been corrected to "gemini-2.5-flash" (confirmed live and working).
+ * loadSecret()'s generic "env wins" convention has no staleness check, so the dead env
+ * value silently shadowed the correct, live-editable NI-Brain value forever. That
+ * convention is right for real credentials (rotated deliberately, rarely, and the env
+ * copy is usually the freshest) but wrong for an operational routing knob like this one,
+ * which this org's own two-brains model treats NI-Brain as the live source of truth for.
+ * NI-Brain wins here; env is now only a fallback for when NI-Brain has nothing on file
+ * (e.g. a fresh account/script with no ni_platform_secrets access at all).
+ */
+async function loadDbFirstOverride(supabaseKey, keyName) {
+  if (!keyName) return null;
+  const rows = await sbGet(supabaseKey, `ni_platform_secrets?select=value&key=eq.${encodeURIComponent(keyName)}`);
+  if (rows?.[0]?.value) return rows[0].value;
+  return process.env[keyName] || null;
+}
+
 // ---------------------------------------------------------------------------
 // 5. Health / circuit breaker — this table has been modelled all along and never written to
 // ---------------------------------------------------------------------------
@@ -548,10 +569,12 @@ async function resolveTierLane(supabaseKey, tier) {
     if (!models?.length) return { route, model: null };
     // openrouter: honor the "FREE models" requirement explicitly, don't just take priority #1.
     let model = tier === 'openrouter' ? models.find((m) => m.cost_tier === 0) || models[0] : models[0];
-    // gemini-first standing rule: GEMINI_MODEL (env or ni_platform_secrets) overrides
-    // whatever router_models has on file for the gemini lane.
+    // gemini-first standing rule: GEMINI_MODEL (ni_platform_secrets, or env as a fallback
+    // only) overrides whatever router_models has on file for the gemini lane.
+    // NI-Brain-first, not env-first — see loadDbFirstOverride's comment
+    // (AX-GEMINI-MODEL-STALE-ENV-0907).
     if (tier === 'gemini') {
-      const override = await loadSecret(supabaseKey, 'GEMINI_MODEL');
+      const override = await loadDbFirstOverride(supabaseKey, 'GEMINI_MODEL');
       if (override) model = { ...model, model: override };
     }
     return { route, model };
