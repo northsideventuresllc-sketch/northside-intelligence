@@ -17,7 +17,7 @@ import {
   logSignal,
 } from "./db";
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
-import { queueContentMachineImageJob } from "./image-gen";
+import { buildMediaPrompt, queueContentMachineImageJob } from "./image-gen";
 import { buildRegenFeedback, runQualityGate } from "./quality-gate";
 import type {
   ContentPost,
@@ -282,6 +282,13 @@ export async function generateDailyBatch(args?: {
       researchSnippet,
     });
 
+    // Media is queued to the mini (see ./image-gen.ts), never generated via an
+    // API call here. image_url starts null; the prompt is also stored on the
+    // post's own meta so the UI can show a status without another fetch.
+    const wantsMedia = Boolean(
+      args?.withImages && postType !== "Text" && draft.visualPrompt
+    );
+
     const post = await insertPost({
       brand_slug: brandSlug,
       status: "pending_approval",
@@ -298,10 +305,18 @@ export async function generateDailyBatch(args?: {
       platforms: PLATFORMS_BY_TYPE[postType],
       batch_id: batchId,
       source_post_id: null,
-      meta: { generated_at: new Date().toISOString() },
+      meta: {
+        generated_at: new Date().toISOString(),
+        ...(wantsMedia && draft.visualPrompt
+          ? {
+              media_status: "pending_mini_chrome",
+              media_prompt: buildMediaPrompt(draft.visualPrompt),
+            }
+          : {}),
+      },
     });
 
-    if (args?.withImages && postType !== "Text" && draft.visualPrompt) {
+    if (wantsMedia && draft.visualPrompt) {
       try {
         await queueContentMachineImageJob({ postId: post.id, brandSlug });
       } catch (err) {
@@ -380,6 +395,10 @@ export async function generateBatchSlot(args: {
     researchSnippet,
   });
 
+  const wantsMedia = Boolean(
+    args.withImages && args.postType !== "Text" && draft.visualPrompt
+  );
+
   const post = await insertPost({
     brand_slug: brandSlug,
     status: "pending_approval",
@@ -396,10 +415,18 @@ export async function generateBatchSlot(args: {
     platforms: PLATFORMS_BY_TYPE[args.postType],
     batch_id: batchId,
     source_post_id: null,
-    meta: { generated_at: new Date().toISOString() },
+    meta: {
+      generated_at: new Date().toISOString(),
+      ...(wantsMedia && draft.visualPrompt
+        ? {
+            media_status: "pending_mini_chrome",
+            media_prompt: buildMediaPrompt(draft.visualPrompt),
+          }
+        : {}),
+    },
   });
 
-  if (args.withImages && args.postType !== "Text" && draft.visualPrompt) {
+  if (wantsMedia && draft.visualPrompt) {
     try {
       await queueContentMachineImageJob({ postId: post.id, brandSlug });
     } catch (err) {

@@ -8,6 +8,15 @@
  * same Mac-mini Chrome/Gemini-Pro job-queue pattern matchfit's
  * queueMiniChromeAgentJob (src/lib/content-calendar/cowork-jobs.ts) uses.
  *
+ * (An earlier draft of this fix, on this same branch, queued an
+ * `nvg_mini_jobs` row of kind `chrome_gemini_media`. Council review (row 228)
+ * caught that `nvg-mini-runner.py`, the Mac mini poller, only executes jobs
+ * of kind `shell` — `chrome_gemini_media` has no consumer. This version fixes
+ * that: `queueContentMachineImageJob` below queues kind `shell`, which the
+ * mini already runs, and the shell command it queues pulls down and runs
+ * `scripts/gemini-content-machine-image.mjs` — a real, working consumer,
+ * not a future dependency.)
+ *
  * Fire-and-forget: queues scripts/gemini-content-machine-image.mjs on the mini
  * via nvg_mini_jobs and returns immediately. The mini writes image_url back
  * onto the post row asynchronously once generation finishes — this function
@@ -47,4 +56,17 @@ export async function queueContentMachineImageJob(args: {
   if (!res.ok) {
     console.warn("[content-machine/image-gen] mini job queue failed:", res.status, await res.text().catch(() => ""));
   }
+}
+
+/** Same prompt text the old direct Gemini call used to send, kept so a post's
+ * `meta.media_prompt` (read by the NI Content tool UI via plain-labels'
+ * mediaStatusLabel/media_status pairing) matches what actually gets queued
+ * above, without duplicating the wording in generator.ts. */
+export function buildMediaPrompt(visualPrompt: string): string {
+  return [
+    visualPrompt,
+    "Match Fit brand: dark backdrop #07080C with orange #FF7E00 accents.",
+    "Social media marketing image, scroll-stopping, professional fitness aesthetic.",
+    "No watermarks, no stock photo feel.",
+  ].join(" ");
 }
