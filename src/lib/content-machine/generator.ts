@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
+  CONTENT_MACHINE_LOCAL_TIER_TIMEOUT_MS,
   CONTENT_POST_TYPES,
   DEFAULT_BRAND_SLUG,
   getContentMachineBrandFacts,
@@ -204,6 +205,7 @@ export async function generateSlotDraft(
     prompt: userPrompt,
     maxOutputTokens: 2000,
     jsonMode: true,
+    localTimeoutMs: CONTENT_MACHINE_LOCAL_TIER_TIMEOUT_MS,
   });
 
   const draft = parseJsonResponse(text);
