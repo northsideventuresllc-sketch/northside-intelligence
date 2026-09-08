@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
   CONTENT_MACHINE_LOCAL_TIER_TIMEOUT_MS,
-  CONTENT_MACHINE_SLOT_TIME_BUDGET_MS,
   CONTENT_POST_TYPES,
   DEFAULT_BRAND_SLUG,
   getContentMachineBrandFacts,
@@ -22,6 +21,7 @@ import {
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
 import { buildMediaPrompt, queueContentMachineImageJob } from "./image-gen";
 import { buildRegenFeedback, hasBannedPhrase, runQualityGate, stripBannedReferences } from "./quality-gate";
+import { isSlotTimeBudgetExceeded } from "./slot-time-budget";
 import type {
   ContentPost,
   ContentPostType,
@@ -241,7 +241,7 @@ export async function generateSlotWithQualityGate(
     // doesn't bound the retry loop itself -- stop launching another full chain-walk
     // once there isn't realistically time left to finish it inside this route's
     // maxDuration, and fall through to the best draft gathered so far instead.
-    if (attempt > 1 && Date.now() - startedAt >= CONTENT_MACHINE_SLOT_TIME_BUDGET_MS) {
+    if (isSlotTimeBudgetExceeded({ attempt, startedAt })) {
       timeBudgetExceeded = true;
       break;
     }
