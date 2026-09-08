@@ -1,9 +1,0 @@
-{
-  "version": 2,
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "rewrites": [
-    { "source": "/api/conversations/([^/]+)/messages", "destination": "/api/conversations/$1/messages" }
-  ]
-}
