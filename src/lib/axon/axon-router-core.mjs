@@ -715,6 +715,12 @@ async function executeChainTier(
  * @param {string} [opts.agentName] - identity for recordLlmUsage
  * @param {number} [opts.maxTokens] - per-call output cap, passed to whichever tier answers
  * @param {boolean} [opts.jsonMode] - ask the gemini tier for strict JSON (responseMimeType)
+ * @param {number} [opts.localTimeoutMs] - overrides the local tier's mini-relay budget for
+ *   this call only (falls back to MINI_CMD_TIMEOUT_S/MINI_MAX_WAIT_MS). A caller that retries
+ *   the whole chain itself (e.g. content-machine's quality-gate regen loop, up to 3 attempts
+ *   inside one 300s Vercel maxDuration) MUST pass a bounded value here — the shared default
+ *   (130s/155s, NI-AXONGEN-ALL-TIERS-DOWN-0907) is sized for a single-shot caller and would
+ *   blow the route's budget across multiple attempts otherwise.
  * @returns {Promise<{text: string, provider: string, model: string|null, usage: {ms: number, attempts: number}}>}
  */
 export async function axonGenerate(supabaseKey, opts = {}) {
@@ -727,6 +733,7 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     agentName = 'axon-chain',
     maxTokens = 1024,
     jsonMode = false,
+    localTimeoutMs,
   } = opts;
   const msgs =
     messages && messages.length
