@@ -53,6 +53,24 @@ export const MAX_REGEN_ATTEMPTS = 2;
  * default since none of them retry the whole chain internally.
  */
 export const CONTENT_MACHINE_LOCAL_TIER_TIMEOUT_MS = 45_000;
+
+/**
+ * NI-AXONGEN-ALL-TIERS-DOWN-0907 (remaining gap after the fix above): capping each
+ * individual attempt's local-tier wait doesn't cap the RETRY LOOP itself. Live
+ * re-verification post-fix still hit the full 300s FUNCTION_INVOCATION_TIMEOUT --
+ * the mini's real generation time (60-120s+ per successful call, not just a cold-load
+ * stall) plus RELAY-95-HARDEN-0907's local-tier retry+backoff means a single
+ * generateSlotDraft() call can legitimately run well past the ~45-90s this file's
+ * older comments assumed, and generateSlotWithQualityGate always attempts
+ * MAX_REGEN_ATTEMPTS + 1 = 3 full chain-walks regardless of how long the earlier
+ * ones took. Tracked elapsed time across the whole retry loop instead: once this
+ * budget is spent, stop starting new attempts and fall through to the existing
+ * best-draft-flagged path (same one used when the quality gate never passes) rather
+ * than launching another attempt with no time left to complete before Vercel kills
+ * the function. Set well under this route's 300s maxDuration to leave room for the
+ * in-flight attempt plus the DB write after the loop.
+ */
+export const CONTENT_MACHINE_SLOT_TIME_BUDGET_MS = 220_000;
 export const MAX_HASHTAGS = 5;
 export const MIN_VISUAL_PROMPT_CHARS = 80;
 export const MIN_CONCRETE_DETAILS = 2;

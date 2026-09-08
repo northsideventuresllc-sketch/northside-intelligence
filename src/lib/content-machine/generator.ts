@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
 import {
   CONTENT_MACHINE_LOCAL_TIER_TIMEOUT_MS,
+  CONTENT_MACHINE_SLOT_TIME_BUDGET_MS,
   CONTENT_POST_TYPES,
   DEFAULT_BRAND_SLUG,
   getContentMachineBrandFacts,
@@ -231,8 +232,20 @@ export async function generateSlotWithQualityGate(
   // Match-Fit-poisoned copy just because the last-tried draft happened not to repeat
   // the exact banned string. See the hard-fail block below.
   let sawHardFail = false;
+  let lastAttempt = 0;
+  let timeBudgetExceeded = false;
+  const startedAt = Date.now();
 
   for (let attempt = 1; attempt <= MAX_REGEN_ATTEMPTS + 1; attempt++) {
+    // CONTENT_MACHINE_SLOT_TIME_BUDGET_MS: bounding each attempt's local-tier wait
+    // doesn't bound the retry loop itself -- stop launching another full chain-walk
+    // once there isn't realistically time left to finish it inside this route's
+    // maxDuration, and fall through to the best draft gathered so far instead.
+    if (attempt > 1 && Date.now() - startedAt >= CONTENT_MACHINE_SLOT_TIME_BUDGET_MS) {
+      timeBudgetExceeded = true;
+      break;
+    }
+    lastAttempt = attempt;
     let draft: GeneratedDraft;
     try {
       draft = await generateSlotDraft(input, feedback);
@@ -292,31 +305,32 @@ export async function generateSlotWithQualityGate(
   if (sawHardFail) {
     throw new Error(
       `Quality gate hard-rejected ${input.brandSlug} ${input.postType}: banned phrase present ` +
-        `after ${MAX_REGEN_ATTEMPTS + 1} attempts (${lastFailures.join("; ")}). Refusing to insert ` +
+        `after ${lastAttempt} attempt(s) (${lastFailures.join("; ")}). Refusing to insert ` +
         `a mislabeled post — this needs a prompt/facts fix for this brand, not an approval click.`
     );
   }
 
-  // Never kill the whole batch over a style rule. After the last retry, keep the
-  // best draft and let it through flagged — JB approves every post by hand
-  // anyway, so a caption he can fix beats no batch at all.
+  // Never kill the whole batch over a style rule. After the last retry (or the time
+  // budget above running out), keep the best draft and let it through flagged — JB
+  // approves every post by hand anyway, so a caption he can fix beats no batch at all.
   if (lastDraft) {
     await logSignal({
       brandSlug: input.brandSlug,
       signalType: "REGENERATED",
       meta: {
         failures: lastFailures,
-        attempt: MAX_REGEN_ATTEMPTS + 1,
+        attempt: lastAttempt,
         acceptedFlagged: true,
+        timeBudgetExceeded,
         firstLine: lastDraft.caption.trim().split(/\n/)[0]?.slice(0, 160) ?? "",
         ...input,
       },
     });
-    return { draft: lastDraft, attempts: MAX_REGEN_ATTEMPTS + 1, failures: lastFailures };
+    return { draft: lastDraft, attempts: lastAttempt, failures: lastFailures };
   }
 
   throw new Error(
-    `Quality gate failed after ${MAX_REGEN_ATTEMPTS + 1} attempts: ${lastFailures.join("; ")}`
+    `Quality gate failed after ${lastAttempt} attempt(s)${timeBudgetExceeded ? " (time budget exhausted)" : ""}: ${lastFailures.join("; ")}`
   );
 }
 
