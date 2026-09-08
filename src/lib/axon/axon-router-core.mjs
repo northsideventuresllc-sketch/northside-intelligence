@@ -14,12 +14,13 @@
  * which model to use is hardcoded in this file.
  */
 
-import { queueMiniShellJob, MINI_CMD_TIMEOUT_S, MINI_MAX_WAIT_MS } from './nvg-mini-queue.mjs';
+import { queueMiniShellJob } from './nvg-mini-queue.mjs';
 import { callSubscriptionCli } from './axon-subscription-cli.mjs';
 import { buildAgentBootContext } from './axon-agent-boot.mjs';
 import { handleToolCall } from './axon-agent-bus.mjs';
 import { getAccountKey } from './axon-account-keys.mjs';
 import { postAgentOps } from './slack-post.mjs';
+import { logRelayMetric, checkRelayHealthAlarm } from './relay-metrics.mjs';
 
 /**
  * Router never fails silently (AX-ROUTER-LOG-FAILURES-0906, Build Plan A ticket A7): one
@@ -245,31 +246,16 @@ export function scoreLanes(lanes, { capabilityClass, quota = {}, costTierFloor =
 // 4. Provider calls — bodies lifted from lib/axon-v0/omni-router.ts
 // ---------------------------------------------------------------------------
 
-/**
- * @param {{maxTokens?: number, timeoutMs?: number}} [opts] - timeoutMs is opt-in (undefined =
- *   no AbortController, unchanged behavior) — see the runpod tier's call site
- *   (AX-RUNPOD-STUCK-WORKER-0907) for why one lane needs a bound and the others don't yet.
- */
-async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxTokens = 1024, timeoutMs } = {}) {
-  const controller = timeoutMs ? new AbortController() : null;
-  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
-  try {
-    const r = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
-      body: JSON.stringify({ model, messages, max_tokens: maxTokens }),
-      ...(controller ? { signal: controller.signal } : {}),
-    });
-    if (!r.ok) throw new Error(`provider HTTP ${r.status}`);
-    const text = (await r.json())?.choices?.[0]?.message?.content;
-    if (!text) throw new Error('provider returned no content');
-    return text;
-  } catch (err) {
-    if (controller?.signal.aborted) throw new Error(`provider timed out after ${timeoutMs}ms`);
-    throw err;
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
+async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxTokens = 1024 } = {}) {
+  const r = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
+    body: JSON.stringify({ model, messages, max_tokens: maxTokens }),
+  });
+  if (!r.ok) throw new Error(`provider HTTP ${r.status}`);
+  const text = (await r.json())?.choices?.[0]?.message?.content;
+  if (!text) throw new Error('provider returned no content');
+  return text;
 }
 
 async function callAnthropic(apiKey, model, messages, { maxTokens = 1024 } = {}) {
@@ -322,27 +308,6 @@ async function loadSecret(supabaseKey, keyName) {
   if (process.env[keyName]) return process.env[keyName]; // env wins, per repo convention
   const rows = await sbGet(supabaseKey, `ni_platform_secrets?select=value&key=eq.${encodeURIComponent(keyName)}`);
   return rows?.[0]?.value || null;
-}
-
-/**
- * Root-cause fix, AX-GEMINI-MODEL-STALE-ENV-0907: production's whole text-generation
- * chain went down 2026-09-07 because the Vercel prod env var GEMINI_MODEL was frozen at
- * "gemini-2.0-flash" (a model Google has since retired — real API reply: "This model
- * models/gemini-2.0-flash is no longer available") while NI-Brain's own GEMINI_MODEL
- * secret had already been corrected to "gemini-2.5-flash" (confirmed live and working).
- * loadSecret()'s generic "env wins" convention has no staleness check, so the dead env
- * value silently shadowed the correct, live-editable NI-Brain value forever. That
- * convention is right for real credentials (rotated deliberately, rarely, and the env
- * copy is usually the freshest) but wrong for an operational routing knob like this one,
- * which this org's own two-brains model treats NI-Brain as the live source of truth for.
- * NI-Brain wins here; env is now only a fallback for when NI-Brain has nothing on file
- * (e.g. a fresh account/script with no ni_platform_secrets access at all).
- */
-async function loadDbFirstOverride(supabaseKey, keyName) {
-  if (!keyName) return null;
-  const rows = await sbGet(supabaseKey, `ni_platform_secrets?select=value&key=eq.${encodeURIComponent(keyName)}`);
-  if (rows?.[0]?.value) return rows[0].value;
-  return process.env[keyName] || null;
 }
 
 // ---------------------------------------------------------------------------
@@ -487,7 +452,7 @@ export async function executeLane(supabaseKey, lane, messages, { hasMini = false
     const base = lane.route.base_url || 'http://localhost:11434';
     const stdout = await queueMiniShellJob(
       supabaseKey,
-      `curl -s -m ${MINI_CMD_TIMEOUT_S} ${base}/api/generate -d ${JSON.stringify(body)}`,
+      `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`,
       { title: `axon-local-${lane.model}` },
     );
     if (!stdout) throw new Error('local lane: no response from the mini');
@@ -545,6 +510,14 @@ const TIER_ROUTE_NAME = {
 /** Provider name as stored in axon_account_provider_keys. 'local' has no key — it's a relay. */
 const TIER_KEY_PROVIDER = { runpod: 'runpod', openrouter: 'openrouter', gemini: 'gemini', anthropic: 'anthropic' };
 
+// RELAY-95-HARDEN-0907: relay_metric (see lib/relay-metrics.mjs) is scoped to the two tiers
+// that actually ride the Mac-mini/RunPod relay transport — the same scope
+// axon-local-relay.mjs and axon-v1-cloud-relay.mjs always had before this chain replaced
+// them as the live call path. api-key tiers (gemini/anthropic/openrouter) already have
+// their own success/latency signal via axon_cost_ledger and don't need a second one.
+const RELAY_METRIC_TIERS = new Set(['local', 'runpod']);
+const RELAY_LOCAL_RETRY_BACKOFF_MS = 1500;
+
 /** Loads the account's chain rows, falling back to the platform account's rows, falling
  *  back to DEFAULT_LLM_CHAIN — an account (or a bare script call with no accountId) is
  *  never stranded with zero tiers to try. */
@@ -584,12 +557,10 @@ async function resolveTierLane(supabaseKey, tier) {
     if (!models?.length) return { route, model: null };
     // openrouter: honor the "FREE models" requirement explicitly, don't just take priority #1.
     let model = tier === 'openrouter' ? models.find((m) => m.cost_tier === 0) || models[0] : models[0];
-    // gemini-first standing rule: GEMINI_MODEL (ni_platform_secrets, or env as a fallback
-    // only) overrides whatever router_models has on file for the gemini lane.
-    // NI-Brain-first, not env-first — see loadDbFirstOverride's comment
-    // (AX-GEMINI-MODEL-STALE-ENV-0907).
+    // gemini-first standing rule: GEMINI_MODEL (env or ni_platform_secrets) overrides
+    // whatever router_models has on file for the gemini lane.
     if (tier === 'gemini') {
-      const override = await loadDbFirstOverride(supabaseKey, 'GEMINI_MODEL');
+      const override = await loadSecret(supabaseKey, 'GEMINI_MODEL');
       if (override) model = { ...model, model: override };
     }
     return { route, model };
@@ -608,27 +579,25 @@ function localPromptFromMessages(messages) {
 }
 
 /** Runs one tier of the chain. Returns { text, usedAccountKey, viaBackup }. Throws on failure
- *  (caller logs + falls through). Account keys, when set, always beat the platform key.
- *  localTimeoutMs (optional) bounds only the local tier's mini-relay wait for this call --
- *  see axonGenerate's opts.localTimeoutMs doc for why a caller that retries the whole chain
- *  itself must pass this. */
-async function executeChainTier(
-  supabaseKey,
-  { tier, route, model, accountId, maxTokens = 1024, jsonMode = false, localTimeoutMs },
-  messages,
-) {
+ *  (caller logs + falls through). Account keys, when set, always beat the platform key. */
+async function executeChainTier(supabaseKey, { tier, route, model, accountId, maxTokens = 1024, jsonMode = false }, messages) {
   if (tier === 'local') {
     const prompt = localPromptFromMessages(messages);
     const body = JSON.stringify({ model: model.model, prompt, stream: false, think: false });
     const base = route.base_url || 'http://localhost:11434';
-    const cmdTimeoutS = localTimeoutMs ? Math.max(5, Math.ceil(localTimeoutMs / 1000)) : MINI_CMD_TIMEOUT_S;
-    const maxWaitMs = localTimeoutMs ? localTimeoutMs + 15_000 : MINI_MAX_WAIT_MS;
-    const stdout = await queueMiniShellJob(
-      supabaseKey,
-      `curl -s -m ${cmdTimeoutS} ${base}/api/generate -d ${JSON.stringify(body)}`,
-      { title: `axon-chain-local-${model.model}`, timeoutS: cmdTimeoutS, maxWaitMs },
-    );
-    if (!stdout) throw new Error('local tier: no response from the mini');
+    const cmd = `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`;
+
+    // RELAY-95-HARDEN-0907, part 2: the mini queue is flaky under disk/load pressure
+    // (AX-RELAY-TIMEOUT-FIX-0828 measured a 78% failure rate at the old 40s curl timeout).
+    // One retry with a short fixed backoff before falling through to the next tier in the
+    // chain -- cheap insurance against a single transient miss, not a substitute for the
+    // per-lane circuit breaker routeChat's lane pool already has (recordHealth below).
+    let stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
+    if (!stdout) {
+      await new Promise((resolve) => setTimeout(resolve, RELAY_LOCAL_RETRY_BACKOFF_MS));
+      stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
+    }
+    if (!stdout) throw new Error('local tier: no response from the mini (after 1 retry)');
     const text = JSON.parse(stdout)?.response?.trim();
     if (!text) throw new Error('local tier: empty response');
     return { text, usedAccountKey: false, viaBackup: false };
@@ -670,31 +639,8 @@ async function executeChainTier(
   }
   if (!baseUrl) throw new Error(`${tier} tier: not deployed yet — no endpoint configured`);
   if (!apiKey) throw new Error(`${tier} tier: no key configured`);
-  // AX-RUNPOD-STUCK-WORKER-0907: RUNPOD_AXON_V1_ENDPOINT stores the bare
-  // https://api.runpod.ai/v2/{endpoint_id} base. RunPod's serverless vLLM worker only
-  // exposes OpenAI compatibility under a /openai/v1 sub-path off that base — the bare
-  // base + callOpenAICompatible's own "/chat/completions" suffix (correct for OpenRouter,
-  // whose base_url already includes its full /api/v1) 404s on RunPod ("404 page not
-  // found"), confirmed live 2026-09-07. Only the runpod tier needs this; other tiers'
-  // base_url values already include whatever path segment their API needs.
-  const requestBaseUrl =
-    tier === 'runpod' && !/\/openai\/v\d+$/.test(baseUrl.replace(/\/$/, ''))
-      ? `${baseUrl.replace(/\/$/, '')}/openai/v1`
-      : baseUrl;
-  // Same ticket: RunPod's serverless worker can be cold, stuck, or its queue simply not
-  // draining (confirmed live 2026-09-07 — a well-formed request against the corrected
-  // path above still went unanswered past 90s, worker reported idle/ready throughout).
-  // callOpenAICompatible has no timeout by default, so an unresponsive RunPod worker
-  // would block this tier — and therefore every tier after it — for as long as the
-  // caller's own function budget allows. Bounding only this tier's call keeps a stuck
-  // RunPod worker failing fast into the next tier instead of hanging the whole chain;
-  // 25s mirrors the ~40s bound this repo's local/mini tier and the retired
-  // axon-v1-cloud-relay.mjs both already use for the same kind of relay call.
   return {
-    text: await callOpenAICompatible(requestBaseUrl, apiKey, model.model, messages, {
-      maxTokens,
-      timeoutMs: tier === 'runpod' ? 25_000 : undefined,
-    }),
+    text: await callOpenAICompatible(baseUrl, apiKey, model.model, messages, { maxTokens }),
     usedAccountKey,
     viaBackup: false,
   };
@@ -715,12 +661,6 @@ async function executeChainTier(
  * @param {string} [opts.agentName] - identity for recordLlmUsage
  * @param {number} [opts.maxTokens] - per-call output cap, passed to whichever tier answers
  * @param {boolean} [opts.jsonMode] - ask the gemini tier for strict JSON (responseMimeType)
- * @param {number} [opts.localTimeoutMs] - overrides the local tier's mini-relay budget for
- *   this call only (falls back to MINI_CMD_TIMEOUT_S/MINI_MAX_WAIT_MS). A caller that retries
- *   the whole chain itself (e.g. content-machine's quality-gate regen loop, up to 3 attempts
- *   inside one 300s Vercel maxDuration) MUST pass a bounded value here — the shared default
- *   (130s/155s, NI-AXONGEN-ALL-TIERS-DOWN-0907) is sized for a single-shot caller and would
- *   blow the route's budget across multiple attempts otherwise.
  * @returns {Promise<{text: string, provider: string, model: string|null, usage: {ms: number, attempts: number}}>}
  */
 export async function axonGenerate(supabaseKey, opts = {}) {
@@ -733,7 +673,6 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     agentName = 'axon-chain',
     maxTokens = 1024,
     jsonMode = false,
-    localTimeoutMs,
   } = opts;
   const msgs =
     messages && messages.length
@@ -771,7 +710,7 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     try {
       const out = await executeChainTier(
         supabaseKey,
-        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode, localTimeoutMs },
+        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode },
         msgs,
       );
       const ms = Date.now() - start;
@@ -782,6 +721,10 @@ export async function axonGenerate(supabaseKey, opts = {}) {
         ms,
         meta: { kind, status: 'ok', usedAccountKey: out.usedAccountKey, viaBackup: out.viaBackup, accountId },
       });
+      if (RELAY_METRIC_TIERS.has(tier)) {
+        await logRelayMetric(supabaseKey, { tier, success: true, durationMs: ms });
+        checkRelayHealthAlarm(supabaseKey).catch(() => {});
+      }
       return {
         text: out.text,
         provider: tier,
@@ -798,6 +741,10 @@ export async function axonGenerate(supabaseKey, opts = {}) {
         ms,
         meta: { kind, status: 'failed', reason, accountId },
       });
+      if (RELAY_METRIC_TIERS.has(tier)) {
+        await logRelayMetric(supabaseKey, { tier, success: false, durationMs: ms });
+        checkRelayHealthAlarm(supabaseKey).catch(() => {});
+      }
       attempts.push({ tier, error: reason });
     }
   }
@@ -817,6 +764,23 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     costUsd: 0,
     meta: { kind, status: 'chain_exhausted', reason: exhaustedReason, accountId, attempts },
   });
+  // RELAY-95-HARDEN-0907, part 2: dead-letter the exhausted request instead of only a log
+  // line + a cost-ledger row nobody watches in real time. axonGenerate is the LOCKED
+  // default chain (Decision #1721) hit first for every plain-text call — routeChat's own
+  // total-fallthrough path already posts to #agent-ops; this path did not, which meant a
+  // fully-exhausted locked chain could go unnoticed as long as the lane-pool fallback below
+  // it (in routeChat) happened to answer instead. Best-effort — must never break the caller.
+  await sbPost(supabaseKey, 'nvg_mini_jobs', {
+    kind: 'relay_dead_letter',
+    title: `axon-generate-chain-exhausted-${kind}`,
+    payload: { kind, accountId, agentName, attempts, reason: exhaustedReason },
+    status: 'failed',
+  }).catch(() => {});
+  await postAgentOps({
+    agentName: 'AXON Router',
+    headline: `locked LLM chain exhausted for "${kind}" — every tier failed or was unconfigured`,
+    body: attempts.map((a) => `• ${a.tier}: ${a.error}`).join('\n').slice(0, 1500),
+  }).catch(() => {});
   throw new Error(`axonGenerate: ${exhaustedReason}`);
 }
 

@@ -42,11 +42,7 @@ export function laneSource(lane) {
  * @param {string} supabaseKey service key the router needs to read its own config
  * @param {{system?: string, user?: string, messages?: Array<{role: string, content: string}>,
  *          kind?: string, agentName?: string, accountId?: string|null, maxTokens?: number,
- *          jsonMode?: boolean, localTimeoutMs?: number}} opts
- *   localTimeoutMs: bounds the router's local (Mac mini) tier for this call only -- see
- *   axonGenerate's own opts.localTimeoutMs doc. Required from any caller that retries the
- *   whole chain itself inside one function-duration budget (e.g. content-machine's
- *   quality-gate regen loop).
+ *          jsonMode?: boolean}} opts
  * @returns {Promise<{text: string, provider: string, model: string|null, source: string}>}
  */
 export async function generateViaRouter(supabaseKey, opts = {}) {
@@ -59,7 +55,6 @@ export async function generateViaRouter(supabaseKey, opts = {}) {
     accountId = null,
     maxTokens,
     jsonMode,
-    localTimeoutMs,
   } = opts;
   const out = await axonGenerate(supabaseKey || '', {
     system,
@@ -70,7 +65,6 @@ export async function generateViaRouter(supabaseKey, opts = {}) {
     accountId,
     maxTokens,
     jsonMode,
-    localTimeoutMs,
   });
   return { text: out.text, provider: out.provider, model: out.model, source: laneSource(out.provider) };
 }
