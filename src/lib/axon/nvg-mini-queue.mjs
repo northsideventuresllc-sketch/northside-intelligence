@@ -27,9 +27,16 @@ function logMiniQueueEvent(event, fields = {}) {
     console.error(`[nvg-mini-queue] ${event}`, fields);
   }
 }
-export const MINI_MAX_WAIT_MS = 45_000;
+// 40s/45s was already proven insufficient for a cold Ollama model load once — nv-vault's
+// sibling relay (.github/scripts/lib/axon-local-relay.mjs, then scripts/lib/axon-llm.mjs's
+// callAxonLocalViaRelay, BUILD-AXON-LLM-MINI-RELAY-TIER1-0908) hit the exact same
+// "no response from the mini" failure at this budget and fixed it by moving to 130s/155s.
+// This module never got the same bump, so NI Portal's axonGenerate local tier (and the
+// content-machine-daily route it backs) still loses that race on every cold load
+// (NI-AXONGEN-ALL-TIERS-DOWN-0907). Reuse the proven pair instead of re-losing it here too.
+export const MINI_MAX_WAIT_MS = 155_000;
 export const MINI_POLL_MS = 2_500;
-export const MINI_CMD_TIMEOUT_S = 40;
+export const MINI_CMD_TIMEOUT_S = 130;
 
 export function sbHeaders(supabaseKey) {
   return {

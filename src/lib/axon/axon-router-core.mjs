@@ -14,7 +14,7 @@
  * which model to use is hardcoded in this file.
  */
 
-import { queueMiniShellJob } from './nvg-mini-queue.mjs';
+import { queueMiniShellJob, MINI_CMD_TIMEOUT_S } from './nvg-mini-queue.mjs';
 import { callSubscriptionCli } from './axon-subscription-cli.mjs';
 import { buildAgentBootContext } from './axon-agent-boot.mjs';
 import { handleToolCall } from './axon-agent-bus.mjs';
@@ -487,7 +487,7 @@ export async function executeLane(supabaseKey, lane, messages, { hasMini = false
     const base = lane.route.base_url || 'http://localhost:11434';
     const stdout = await queueMiniShellJob(
       supabaseKey,
-      `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`,
+      `curl -s -m ${MINI_CMD_TIMEOUT_S} ${base}/api/generate -d ${JSON.stringify(body)}`,
       { title: `axon-local-${lane.model}` },
     );
     if (!stdout) throw new Error('local lane: no response from the mini');
@@ -616,7 +616,7 @@ async function executeChainTier(supabaseKey, { tier, route, model, accountId, ma
     const base = route.base_url || 'http://localhost:11434';
     const stdout = await queueMiniShellJob(
       supabaseKey,
-      `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`,
+      `curl -s -m ${MINI_CMD_TIMEOUT_S} ${base}/api/generate -d ${JSON.stringify(body)}`,
       { title: `axon-chain-local-${model.model}` },
     );
     if (!stdout) throw new Error('local tier: no response from the mini');
