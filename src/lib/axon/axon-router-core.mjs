@@ -14,7 +14,7 @@
  * which model to use is hardcoded in this file.
  */
 
-import { queueMiniShellJob } from './nvg-mini-queue.mjs';
+import { queueMiniShellJob, MINI_CMD_TIMEOUT_S, MINI_MAX_WAIT_MS } from './nvg-mini-queue.mjs';
 import { callSubscriptionCli } from './axon-subscription-cli.mjs';
 import { buildAgentBootContext } from './axon-agent-boot.mjs';
 import { handleToolCall } from './axon-agent-bus.mjs';
@@ -671,22 +671,32 @@ function localPromptFromMessages(messages) {
 
 /** Runs one tier of the chain. Returns { text, usedAccountKey, viaBackup }. Throws on failure
  *  (caller logs + falls through). Account keys, when set, always beat the platform key. */
-async function executeChainTier(supabaseKey, { tier, route, model, accountId, maxTokens = 1024, jsonMode = false }, messages) {
+async function executeChainTier(
+  supabaseKey,
+  { tier, route, model, accountId, maxTokens = 1024, jsonMode = false, localTimeoutMs },
+  messages,
+) {
   if (tier === 'local') {
     const prompt = localPromptFromMessages(messages);
     const body = JSON.stringify({ model: model.model, prompt, stream: false, think: false });
     const base = route.base_url || 'http://localhost:11434';
-    const cmd = `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`;
+    // localTimeoutMs (opt-in): bounds this tier for a caller that retries the whole chain
+    // itself inside one function-duration budget (e.g. content-machine's quality-gate regen
+    // loop) -- see axonGenerate's opts doc for why the shared default is too big for that.
+    const cmdTimeoutS = localTimeoutMs ? Math.max(5, Math.ceil(localTimeoutMs / 1000)) : MINI_CMD_TIMEOUT_S;
+    const maxWaitMs = localTimeoutMs ? localTimeoutMs + 15_000 : MINI_MAX_WAIT_MS;
+    const cmd = `curl -s -m ${cmdTimeoutS} ${base}/api/generate -d ${JSON.stringify(body)}`;
 
     // RELAY-95-HARDEN-0907, part 2: the mini queue is flaky under disk/load pressure
     // (AX-RELAY-TIMEOUT-FIX-0828 measured a 78% failure rate at the old 40s curl timeout).
     // One retry with a short fixed backoff before falling through to the next tier in the
     // chain -- cheap insurance against a single transient miss, not a substitute for the
     // per-lane circuit breaker routeChat's lane pool already has (recordHealth below).
-    let stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
+    const jobOpts = { title: `axon-chain-local-${model.model}`, timeoutS: cmdTimeoutS, maxWaitMs };
+    let stdout = await queueMiniShellJob(supabaseKey, cmd, jobOpts);
     if (!stdout) {
       await new Promise((resolve) => setTimeout(resolve, RELAY_LOCAL_RETRY_BACKOFF_MS));
-      stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
+      stdout = await queueMiniShellJob(supabaseKey, cmd, jobOpts);
     }
     if (!stdout) throw new Error('local tier: no response from the mini (after 1 retry)');
     const text = JSON.parse(stdout)?.response?.trim();
@@ -776,6 +786,13 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     agentName = 'axon-chain',
     maxTokens = 1024,
     jsonMode = false,
+    // Overrides the local tier's mini-relay budget for this call only (falls back to
+    // MINI_CMD_TIMEOUT_S/MINI_MAX_WAIT_MS). A caller that retries the whole chain itself
+    // (e.g. content-machine's quality-gate regen loop, up to 3 attempts inside one 300s
+    // Vercel maxDuration) MUST pass a bounded value here -- the shared default is sized for
+    // a single-shot caller and would blow the route's budget across multiple attempts
+    // otherwise. See NI-AXONGEN-ALL-TIERS-DOWN-0907.
+    localTimeoutMs,
   } = opts;
   const msgs =
     messages && messages.length
@@ -813,7 +830,7 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     try {
       const out = await executeChainTier(
         supabaseKey,
-        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode },
+        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode, localTimeoutMs },
         msgs,
       );
       const ms = Date.now() - start;
