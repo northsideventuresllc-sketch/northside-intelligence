@@ -14,7 +14,7 @@
  * which model to use is hardcoded in this file.
  */
 
-import { queueMiniShellJob, MINI_CMD_TIMEOUT_S } from './nvg-mini-queue.mjs';
+import { queueMiniShellJob, MINI_CMD_TIMEOUT_S, MINI_MAX_WAIT_MS } from './nvg-mini-queue.mjs';
 import { callSubscriptionCli } from './axon-subscription-cli.mjs';
 import { buildAgentBootContext } from './axon-agent-boot.mjs';
 import { handleToolCall } from './axon-agent-bus.mjs';
@@ -608,16 +608,25 @@ function localPromptFromMessages(messages) {
 }
 
 /** Runs one tier of the chain. Returns { text, usedAccountKey, viaBackup }. Throws on failure
- *  (caller logs + falls through). Account keys, when set, always beat the platform key. */
-async function executeChainTier(supabaseKey, { tier, route, model, accountId, maxTokens = 1024, jsonMode = false }, messages) {
+ *  (caller logs + falls through). Account keys, when set, always beat the platform key.
+ *  localTimeoutMs (optional) bounds only the local tier's mini-relay wait for this call --
+ *  see axonGenerate's opts.localTimeoutMs doc for why a caller that retries the whole chain
+ *  itself must pass this. */
+async function executeChainTier(
+  supabaseKey,
+  { tier, route, model, accountId, maxTokens = 1024, jsonMode = false, localTimeoutMs },
+  messages,
+) {
   if (tier === 'local') {
     const prompt = localPromptFromMessages(messages);
     const body = JSON.stringify({ model: model.model, prompt, stream: false, think: false });
     const base = route.base_url || 'http://localhost:11434';
+    const cmdTimeoutS = localTimeoutMs ? Math.max(5, Math.ceil(localTimeoutMs / 1000)) : MINI_CMD_TIMEOUT_S;
+    const maxWaitMs = localTimeoutMs ? localTimeoutMs + 15_000 : MINI_MAX_WAIT_MS;
     const stdout = await queueMiniShellJob(
       supabaseKey,
-      `curl -s -m ${MINI_CMD_TIMEOUT_S} ${base}/api/generate -d ${JSON.stringify(body)}`,
-      { title: `axon-chain-local-${model.model}` },
+      `curl -s -m ${cmdTimeoutS} ${base}/api/generate -d ${JSON.stringify(body)}`,
+      { title: `axon-chain-local-${model.model}`, timeoutS: cmdTimeoutS, maxWaitMs },
     );
     if (!stdout) throw new Error('local tier: no response from the mini');
     const text = JSON.parse(stdout)?.response?.trim();
@@ -755,7 +764,7 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     try {
       const out = await executeChainTier(
         supabaseKey,
-        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode },
+        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode, localTimeoutMs },
         msgs,
       );
       const ms = Date.now() - start;

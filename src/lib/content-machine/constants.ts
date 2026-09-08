@@ -39,6 +39,20 @@ export const BANNED_HASHTAGS: string[] = [];
 export const DEFAULT_BRAND_SLUG = "match-fit";
 
 export const MAX_REGEN_ATTEMPTS = 2;
+
+/**
+ * NI-AXONGEN-ALL-TIERS-DOWN-0907: axonGenerate's local (Mac mini) tier defaults to a
+ * 130s/155s timeout budget, proven-safe for a single-shot caller riding out a cold Ollama
+ * load. generateSlotWithQualityGate calls generateSlotDraft up to MAX_REGEN_ATTEMPTS + 1 = 3
+ * times per slot, each attempt walking the chain from local again on failure -- at the
+ * router's own default that is up to 3 * 155s = 465s against this route's 300s Vercel
+ * maxDuration, before any tier even answers. Content-machine passes this shorter budget as
+ * generateTextGeminiFirst's localTimeoutMs instead, matching the local tier's old (pre-fix)
+ * failure-fast behavior so 3 attempts still fit well inside 300s; every other caller of the
+ * router (chat, negotiate, etc.) is unaffected and keeps the longer, cold-load-tolerant
+ * default since none of them retry the whole chain internally.
+ */
+export const CONTENT_MACHINE_LOCAL_TIER_TIMEOUT_MS = 45_000;
 export const MAX_HASHTAGS = 5;
 export const MIN_VISUAL_PROMPT_CHARS = 80;
 export const MIN_CONCRETE_DETAILS = 2;

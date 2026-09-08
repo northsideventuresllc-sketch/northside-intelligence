@@ -61,6 +61,14 @@ export type GeminiFirstArgs = {
   jsonMode?: boolean;
   /** Optional label for the usage ledger, so a lane failure can be traced to a tool. */
   agentName?: string;
+  /**
+   * Bounds the router's local (Mac mini) tier for this call only. Any caller that retries
+   * the whole chain itself inside one function-duration budget (e.g. content-machine's
+   * quality-gate regen loop, up to 3 attempts) MUST pass this — the router's own default
+   * (130s/155s, sized for a single-shot caller) would blow a shared maxDuration across
+   * multiple attempts otherwise. See NI-AXONGEN-ALL-TIERS-DOWN-0907.
+   */
+  localTimeoutMs?: number;
 };
 
 /**
@@ -70,7 +78,7 @@ export type GeminiFirstArgs = {
 export async function generateTextGeminiFirst(
   args: GeminiFirstArgs
 ): Promise<{ text: string; provider: GeneratedTextProvider }> {
-  const { system, prompt, maxOutputTokens, jsonMode = false, agentName = "ni-portal" } = args;
+  const { system, prompt, maxOutputTokens, jsonMode = false, agentName = "ni-portal", localTimeoutMs } = args;
 
   const supabaseKey = await resolveSupabaseKey();
 
@@ -82,6 +90,7 @@ export async function generateTextGeminiFirst(
       agentName,
       maxTokens: maxOutputTokens,
       jsonMode,
+      localTimeoutMs,
     });
     const text = String(out?.text || "").trim();
     if (!text) throw new Error("empty response");
