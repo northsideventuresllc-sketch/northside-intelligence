@@ -14,7 +14,7 @@
  * which model to use is hardcoded in this file.
  */
 
-import { queueMiniShellJob, MINI_CMD_TIMEOUT_S, MINI_MAX_WAIT_MS } from './nvg-mini-queue.mjs';
+import { queueMiniShellJob } from './nvg-mini-queue.mjs';
 import { callSubscriptionCli } from './axon-subscription-cli.mjs';
 import { buildAgentBootContext } from './axon-agent-boot.mjs';
 import { handleToolCall } from './axon-agent-bus.mjs';
@@ -343,7 +343,22 @@ async function callAnthropic(apiKey, model, messages, { maxTokens = 1024 } = {})
       messages: messages.filter((m) => m.role !== 'system'),
     }),
   });
-  if (!r.ok) throw new Error(`anthropic HTTP ${r.status}`);
+  if (!r.ok) {
+    // A bare status code masks the difference between a real malformed-request bug and an
+    // operational issue (expired key, low credit balance) — both surface as HTTP 400/401/403
+    // with the real cause only in the body. AXON-RESEARCH-CASCADE-FAIL-AND-SILENT-0909 spent
+    // an investigation cycle re-deriving "credit balance too low" from a bare "HTTP 400" log
+    // line; surface the body's message so the next cascade is diagnosable from the log alone.
+    const body = await r.text().catch(() => '');
+    const detail = (() => {
+      try {
+        return JSON.parse(body)?.error?.message;
+      } catch {
+        return null;
+      }
+    })();
+    throw new Error(`anthropic HTTP ${r.status}${detail ? `: ${detail}` : ''}`);
+  }
   const text = (await r.json())?.content?.[0]?.text;
   if (!text) throw new Error('anthropic returned no content');
   return text;
@@ -596,10 +611,15 @@ const TIER_ROUTE_NAME = {
   openrouter: 'openrouter',
   gemini: 'gemini-api',
   anthropic: 'anthropic-api',
+  // deepseek-api is genuinely OpenAI-compatible, so it needs no new branch in
+  // executeChainTier — it falls into the generic callOpenAICompatible block at the bottom
+  // the same way openrouter does. Not added to DEFAULT_LLM_CHAIN (Decision #1721 locked
+  // that platform-wide order); accounts that want it add it to their own axon_llm_chain rows.
+  deepseek: 'deepseek-api',
 };
 
 /** Provider name as stored in axon_account_provider_keys. 'local' has no key — it's a relay. */
-const TIER_KEY_PROVIDER = { runpod: 'runpod', openrouter: 'openrouter', gemini: 'gemini', anthropic: 'anthropic' };
+const TIER_KEY_PROVIDER = { runpod: 'runpod', openrouter: 'openrouter', gemini: 'gemini', anthropic: 'anthropic', deepseek: 'deepseek' };
 
 // RELAY-95-HARDEN-0907: relay_metric (see lib/relay-metrics.mjs) is scoped to the two tiers
 // that actually ride the Mac-mini/RunPod relay transport — the same scope
@@ -671,32 +691,22 @@ function localPromptFromMessages(messages) {
 
 /** Runs one tier of the chain. Returns { text, usedAccountKey, viaBackup }. Throws on failure
  *  (caller logs + falls through). Account keys, when set, always beat the platform key. */
-async function executeChainTier(
-  supabaseKey,
-  { tier, route, model, accountId, maxTokens = 1024, jsonMode = false, localTimeoutMs },
-  messages,
-) {
+async function executeChainTier(supabaseKey, { tier, route, model, accountId, maxTokens = 1024, jsonMode = false }, messages) {
   if (tier === 'local') {
     const prompt = localPromptFromMessages(messages);
     const body = JSON.stringify({ model: model.model, prompt, stream: false, think: false });
     const base = route.base_url || 'http://localhost:11434';
-    // localTimeoutMs (opt-in): bounds this tier for a caller that retries the whole chain
-    // itself inside one function-duration budget (e.g. content-machine's quality-gate regen
-    // loop) -- see axonGenerate's opts doc for why the shared default is too big for that.
-    const cmdTimeoutS = localTimeoutMs ? Math.max(5, Math.ceil(localTimeoutMs / 1000)) : MINI_CMD_TIMEOUT_S;
-    const maxWaitMs = localTimeoutMs ? localTimeoutMs + 15_000 : MINI_MAX_WAIT_MS;
-    const cmd = `curl -s -m ${cmdTimeoutS} ${base}/api/generate -d ${JSON.stringify(body)}`;
+    const cmd = `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`;
 
     // RELAY-95-HARDEN-0907, part 2: the mini queue is flaky under disk/load pressure
     // (AX-RELAY-TIMEOUT-FIX-0828 measured a 78% failure rate at the old 40s curl timeout).
     // One retry with a short fixed backoff before falling through to the next tier in the
     // chain -- cheap insurance against a single transient miss, not a substitute for the
     // per-lane circuit breaker routeChat's lane pool already has (recordHealth below).
-    const jobOpts = { title: `axon-chain-local-${model.model}`, timeoutS: cmdTimeoutS, maxWaitMs };
-    let stdout = await queueMiniShellJob(supabaseKey, cmd, jobOpts);
+    let stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
     if (!stdout) {
       await new Promise((resolve) => setTimeout(resolve, RELAY_LOCAL_RETRY_BACKOFF_MS));
-      stdout = await queueMiniShellJob(supabaseKey, cmd, jobOpts);
+      stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
     }
     if (!stdout) throw new Error('local tier: no response from the mini (after 1 retry)');
     const text = JSON.parse(stdout)?.response?.trim();
@@ -786,13 +796,6 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     agentName = 'axon-chain',
     maxTokens = 1024,
     jsonMode = false,
-    // Overrides the local tier's mini-relay budget for this call only (falls back to
-    // MINI_CMD_TIMEOUT_S/MINI_MAX_WAIT_MS). A caller that retries the whole chain itself
-    // (e.g. content-machine's quality-gate regen loop, up to 3 attempts inside one 300s
-    // Vercel maxDuration) MUST pass a bounded value here -- the shared default is sized for
-    // a single-shot caller and would blow the route's budget across multiple attempts
-    // otherwise. See NI-AXONGEN-ALL-TIERS-DOWN-0907.
-    localTimeoutMs,
   } = opts;
   const msgs =
     messages && messages.length
@@ -830,7 +833,7 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     try {
       const out = await executeChainTier(
         supabaseKey,
-        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode, localTimeoutMs },
+        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode },
         msgs,
       );
       const ms = Date.now() - start;

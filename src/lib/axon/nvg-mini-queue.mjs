@@ -27,12 +27,9 @@ function logMiniQueueEvent(event, fields = {}) {
     console.error(`[nvg-mini-queue] ${event}`, fields);
   }
 }
-// AX-RUNPOD-JOB-QUEUE-0908: restores NI-AXONGEN-ALL-TIERS-DOWN-0907 / #227's fix, which a
-// later automated AXON-repo sync (#229/#230) silently reverted back to the proven-too-short
-// 40s/45s pair (78% mini-relay failure rate under load, per AX-RELAY-TIMEOUT-FIX-0828).
-export const MINI_MAX_WAIT_MS = 155_000;
+export const MINI_MAX_WAIT_MS = 45_000;
 export const MINI_POLL_MS = 2_500;
-export const MINI_CMD_TIMEOUT_S = 130;
+export const MINI_CMD_TIMEOUT_S = 40;
 
 export function sbHeaders(supabaseKey) {
   return {
