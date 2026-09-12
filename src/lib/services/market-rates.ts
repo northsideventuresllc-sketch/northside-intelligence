@@ -68,6 +68,7 @@ export const TEAM_SIZE_MULTIPLIERS: Record<string, number> = {
 };
 
 export const TIMELINE_MULTIPLIERS: Record<string, number> = {
+  "Emergency / Critical (Same-Week / Immediate)": 1.45,
   "As soon as possible": 1.18,
   "Within 1–3 months": 1.08,
   "Within 3–6 months": 1.0,

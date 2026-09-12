@@ -275,12 +275,23 @@ export function ServiceNegotiationChat({
               )
             )}
             {isFinalOffer && (
-              <p className="mt-2 text-center text-xs text-ni-muted">
-                This is our final offer. Need more help?{" "}
-                <a href="mailto:support@northsideintelligence.com" className="text-cyan-300 hover:underline">
-                  Contact Support
-                </a>
-              </p>
+              <div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-center">
+                <p className="text-xs text-ni-muted">
+                  This is our final automated offer. Still out of reach?
+                </p>
+                <div className="mt-2 flex justify-center gap-3 text-xs">
+                  <a
+                    href="mailto:jb@northsideintelligence.com?subject=Financial%20Assistance%20Application%20-%20Service%20Quote"
+                    className="font-medium text-cyan-300 underline-offset-2 hover:underline"
+                  >
+                    Apply for Financial Assistance
+                  </a>
+                  <span className="text-white/20">•</span>
+                  <span className="text-emerald-300">
+                    Pay over time via Stripe BNPL (Affirm/Klarna)
+                  </span>
+                </div>
+              </div>
             )}
           </div>
         )}

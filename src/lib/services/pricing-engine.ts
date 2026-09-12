@@ -164,7 +164,12 @@ export function generateServiceQuote(input: QuoteInput): ServiceQuoteResult {
       marketReferenceCents * audienceMult * teamMult * (timelineMult - 1)
     );
     lineItems.push({
-      label: input.timeline === "As soon as possible" ? "Rush Timeline" : "Timeline Adjustment",
+      label:
+        input.timeline.includes("Emergency")
+          ? "Emergency / Critical Priority (Immediate Engineering Deployment)"
+          : input.timeline === "As soon as possible"
+          ? "Rush Timeline"
+          : "Timeline Adjustment",
       amountCents: delta,
       description: input.timeline,
     });

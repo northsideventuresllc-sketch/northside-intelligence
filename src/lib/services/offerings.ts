@@ -655,6 +655,7 @@ export interface ServiceRequestPayload {
 }
 
 export const TIMELINE_OPTIONS = [
+  "Emergency / Critical (Same-Week / Immediate)",
   "As soon as possible",
   "Within 1–3 months",
   "Within 3–6 months",
