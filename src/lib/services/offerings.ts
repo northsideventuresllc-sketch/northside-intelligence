@@ -88,43 +88,43 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "intelligence-audit",
     name: "Intelligence Audit & Gap Analysis",
     description:
-      "A comprehensive review of your current systems, workflows, and intelligence gaps — with a prioritized roadmap for improvement.",
+      "A comprehensive diagnostic review of your current systems, workflows, data bottlenecks, and intelligence gaps — delivered with an actionable, prioritized ROI roadmap.",
     status: "LIVE",
     audience: "both",
     highlights: [
-      "Workflow and system mapping",
-      "Gap identification and prioritization",
-      "Actionable recommendations report",
-      "30-day follow-up consultation included",
+      "End-to-end workflow, tool ecosystem, and data bottleneck mapping",
+      "Actionable gap identification with clear ROI modeling and cost-saving estimates",
+      "Prioritized implementation roadmap from quick wins to strategic architecture",
+      "30-day post-audit advisory consultation and execution support included",
     ],
     pricing: {
       individual: {
         model: "range",
         amount: "$299 – $799",
-        note: "Personal workflow audit — delivered in 1–2 weeks",
+        note: "Solopreneurs & solo founders — 1-week turnaround; advisory from $49/mo",
       },
       business: {
         model: "range",
-        amount: "$2,500 – $5,000",
-        note: "Team & org-wide audit — delivered in 2–3 weeks",
+        amount: "$1,500 – $15,000+",
+        note: "Small Business ($1.5k–$4.5k) | Enterprise / Mid-Market ($5k–$15k+)",
       },
     },
     modalCopy: {
-      subtitle: "Know where you stand before you build.",
+      subtitle: "Know where you stand before you build or buy.",
       description:
-        "Before investing in new tools or infrastructure, understand exactly where your intelligence gaps are. Our audit delivers a clear, prioritized roadmap — not a generic checklist.",
+        "Before investing in new software, AI tools, or infrastructure, diagnose exactly where your operational bottlenecks and intelligence gaps are. Our audit delivers a clear, ranked execution roadmap — not generic advice.",
       sections: [
         {
           heading: "System & Workflow Mapping",
-          body: "We document your current tools, data flows, and decision points across teams or personal workflows.",
+          body: "We map your current tools, data handoffs, and operational friction points across your entire personal or business stack.",
         },
         {
-          heading: "Gap Analysis",
-          body: "We identify bottlenecks, redundancies, and missed opportunities where intelligence could accelerate outcomes.",
+          heading: "Gap Analysis & ROI Modeling",
+          body: "We identify redundant software, manual bottlenecks, and missed opportunities — showing the exact hours and dollars saved by closing each gap.",
         },
         {
-          heading: "Prioritized Roadmap",
-          body: "You receive a ranked action plan with quick wins, medium-term improvements, and strategic investments.",
+          heading: "Prioritized Action Roadmap",
+          body: "You receive a structured implementation plan categorized by immediate quick wins, medium-term automations, and strategic infrastructure investments.",
         },
       ],
       ctaLabel: "Request an Audit",
