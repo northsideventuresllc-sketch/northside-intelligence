@@ -462,43 +462,43 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "custom-web-design-management",
     name: "Custom Web Design and Management",
     description:
-      "Custom-designed websites with ongoing management — from personal portfolios to business sites with content updates, performance monitoring, and security.",
+      "Modern, sub-second responsive Next.js websites with flexible design systems (dynamic, 3D interactive, or high-trust) and ongoing hands-free management.",
     status: "LIVE",
     audience: "both",
     highlights: [
-      "Custom design aligned to your brand and goals",
-      "Responsive, performance-optimized builds",
-      "Content updates and ongoing site management",
-      "Hosting, security, and analytics setup",
+      "Custom Next.js design tailored to your audience (dynamic, 3D interactive, or conversion-focused)",
+      "Guaranteed sub-second load times & mobile-first responsiveness",
+      "Built-in SEO fundamentals, analytics, and conversion lead captures",
+      "Hands-free ongoing management: updates, security, hosting & backups",
     ],
     pricing: {
       individual: {
         model: "range",
-        amount: "$499 – $2,500",
-        note: "Personal sites & portfolios — management from $49/mo",
+        amount: "$750 – $2,000",
+        note: "Solopreneurs, creators & portfolios — management from $79/mo",
       },
       business: {
         model: "range",
-        amount: "$2,500 – $50,000+",
-        note: "Small business from $2,500 — enterprise builds priced by scope; management from $149/mo",
+        amount: "$2,500 – $35,000+",
+        note: "Small Business ($2.5k–$7.5k, mgmt $199/mo) | Enterprise ($10k–$35k+, mgmt $499/mo)",
       },
     },
     modalCopy: {
-      subtitle: "Your site, designed and maintained.",
+      subtitle: "Fast, custom-tailored, and completely managed.",
       description:
-        "Whether you need a polished personal portfolio or a full business web presence, Northside Intelligence designs, builds, and manages custom websites — so you stay focused on your work, not WordPress updates.",
+        "Whether you're a solopreneur needing a high-converting portfolio or an enterprise scaling a multi-location platform, Northside Intelligence designs, engineers, and manages custom Next.js web applications tailored to your specific audience.",
       sections: [
         {
-          heading: "Discovery & Design",
-          body: "We learn your brand, audience, and goals — then design a custom layout, information architecture, and visual system tailored to how you want to be seen online.",
+          heading: "Audience & Aesthetic Matching",
+          body: "We diagnose your audience and match the exact visual style that drives conversions — whether that's 3D interactive depth, clean dynamic typography, or direct high-trust layouts.",
         },
         {
-          heading: "Build & Launch",
-          body: "We develop a fast, responsive site with SEO fundamentals, analytics, and hosting configured — integrated with your CMS, forms, and third-party tools where needed.",
+          heading: "Modern Next.js Engineering",
+          body: "We engineer lightning-fast sites with sub-second load times, automated appointment booking, quote calculators, SEO fundamentals, and seamless third-party integrations.",
         },
         {
-          heading: "Ongoing Management",
-          body: "Content updates, security patches, performance monitoring, and backup management handled for you — with clear SLAs for small businesses and custom support plans for enterprise sites.",
+          heading: "Worry-Free Ongoing Management",
+          body: "Zero tech headaches. We handle hosting, continuous speed optimizations, security patches, regular content updates, and automated backups so you stay focused on growing your business.",
         },
       ],
       ctaLabel: "Start Your Request",
