@@ -339,38 +339,43 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "workflow-integration",
     name: "Workflow Integration & Automation",
     description:
-      "Connect your tools, eliminate manual handoffs, and automate intelligence flows across your business operations.",
+      "Connect your disparate tools, eliminate manual handoffs, and automate intelligence workflows with self-healing error handling across your operations.",
     status: "LIVE",
-    audience: "business",
+    audience: "both",
     highlights: [
-      "Cross-platform integration design",
-      "Automation pipeline build-out",
-      "Ongoing monitoring and optimization",
-      "Team training included",
+      "Cross-platform integration design & API bridges (CRM, Stripe, databases, internal apps)",
+      "Autonomous automation pipeline build-out with dead-letter queue error recovery",
+      "Elimination of repetitive manual data entry, handoff bottlenecks, and delayed ops",
+      "Ongoing system monitoring, performance tuning, and team workflow training",
     ],
     pricing: {
+      individual: {
+        model: "range",
+        amount: "$950 – $2,500",
+        note: "Solopreneurs & creators — 2–4 tool connections; management from $99/mo",
+      },
       business: {
         model: "range",
-        amount: "$4,500 – $15,000",
-        note: "Or $175/hr for scoped integration work",
+        amount: "$3,500 – $25,000+",
+        note: "Business ($3.5k–$8.5k, mgmt $299/mo) | Enterprise ($10k–$25k+, mgmt $699/mo)",
       },
     },
     modalCopy: {
-      subtitle: "Your tools should talk to each other.",
+      subtitle: "Your tools should talk to each other — flawlessly.",
       description:
-        "Manual data entry, copy-paste between systems, and broken handoffs cost your team hours every week. We design and build integrations that automate intelligence flows across your entire operation.",
+        "Manual data entry, disconnected SaaS platforms, and broken handoffs cost your team hundreds of hours and lost revenue. Northside Intelligence designs, engineers, and monitors custom automation pipelines that keep your intelligence flowing automatically.",
       sections: [
         {
-          heading: "Integration Mapping",
-          body: "We map your current tool ecosystem and identify the highest-impact connection points and automations.",
+          heading: "Comprehensive Friction Diagnostic",
+          body: "We map your entire operational landscape — identifying repetitive tasks, sync bottlenecks, delayed responses, and high-impact automation opportunities.",
         },
         {
-          heading: "Pipeline Build-Out",
-          body: "We build reliable automation pipelines with error handling, monitoring, and fallback workflows.",
+          heading: "Resilient Pipeline Engineering",
+          body: "We engineer robust automation pipelines with self-healing error recovery, webhook transformations, and fallback workflows so your data never drops.",
         },
         {
-          heading: "Optimization & Training",
-          body: "Ongoing monitoring plus team training ensures automations stay healthy and your team knows how to maintain them.",
+          heading: "Continuous Optimization & Training",
+          body: "Ongoing monitoring plus hands-on team training ensures automations stay resilient, fast, and aligned with your evolving business operations.",
         },
       ],
       ctaLabel: "Automate My Workflows",
