@@ -42,43 +42,43 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "tailored-intelligence-server",
     name: "Tailored Intelligence Server",
     description:
-      "A bespoke intelligence server built around your workflows, systems, and goals — designed, deployed, and maintained by Northside Intelligence.",
+      "A bespoke private intelligence server built around your proprietary workflows, data, and security requirements — designed, deployed, and maintained by Northside Intelligence.",
     status: "LIVE",
     audience: "both",
     highlights: [
-      "On-site or remote discovery and workflow audit",
-      "Custom intelligence server architecture",
-      "Integration with your existing tools and systems",
-      "Planned path forward with milestones and deliverables",
+      "Custom private intelligence server architecture (cloud or on-premise) with zero data leakage",
+      "Private semantic knowledge search across company documents, databases & internal tools",
+      "Integration with existing workflows, multi-agent automations, and role-based permissions",
+      "Continuous system maintenance, automated backups, and 99.9% uptime reliability",
     ],
     pricing: {
       individual: {
         model: "range",
         amount: "$499 – $4,500",
-        note: "Scoped personal automation & home-office setups",
+        note: "Personal & home-office setups ($499–$4.5k, mgmt from $49/mo)",
       },
       business: {
         model: "range",
         amount: "$5,000 – $100,000+",
-        note: "Enterprise builds priced by scope, integrations, and support",
+        note: "Team Server ($5k–$25k, mgmt $399/mo) | Enterprise Scale ($25k–$100k+, mgmt $1.2k/mo)",
       },
     },
     modalCopy: {
-      subtitle: "Built for you. Built with you.",
+      subtitle: "Your own private intelligence brain — secured and fully managed.",
       description:
-        "Northside Intelligence doesn't ship one-size-fits-all solutions. We come in, learn how you or your organization actually operates, and build an intelligence server tailored to your workflows, systems, and ambitions.",
+        "Northside Intelligence engineers and manages dedicated, private intelligence servers tailored to your operations. Keep your proprietary company data secure while unlocking private semantic search, automated workflows, and custom AI agents.",
       sections: [
         {
-          heading: "Discovery & Audit",
-          body: "We map your current workflows, tools, and data flows — identifying gaps, bottlenecks, and opportunities where intelligence can fill what's missing.",
+          heading: "Comprehensive Architecture Discovery",
+          body: "We map your data landscape, security compliance needs, and workflow bottlenecks — designing an architecture that scales with your growth without boxing you into rigid constraints.",
         },
         {
-          heading: "Custom Build",
-          body: "Our team designs and deploys a bespoke intelligence server architecture — integrated with your existing systems, configured for your team, and built to scale as you grow.",
+          heading: "Private, Secure Deployment",
+          body: "Our team deploys your dedicated server — integrated with your internal tools, configured with strict encryption and role-based access, and tested under real operational loads.",
         },
         {
-          heading: "Planned Path Forward",
-          body: "You receive a clear roadmap with milestones, deliverables, and ongoing support options. We don't disappear after deployment — we stay in your corner as your intelligence infrastructure evolves.",
+          heading: "Proactive Ongoing Management",
+          body: "We handle server maintenance, model performance tuning, automated nightly backups, and security patches so your intelligence infrastructure runs uninterrupted.",
         },
       ],
       ctaLabel: "Start Your Request",
