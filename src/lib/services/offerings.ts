@@ -134,38 +134,38 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "personal-intelligence-setup",
     name: "Personal Intelligence Setup",
     description:
-      "A tailored intelligence environment for individuals — personal productivity, research, and decision-making tools configured for how you work.",
+      "A bespoke personal intelligence environment — research tools, second-brain note systems, AI assistants, and automated workflows configured for your unique cognitive style.",
     status: "LIVE",
     audience: "individual",
     highlights: [
-      "Personal workflow assessment",
-      "Custom tool configuration",
-      "Training and 30-day support",
-      "Privacy-first architecture",
+      "Personal cognitive workflow assessment & tool stack audit",
+      "Custom tool configuration (Obsidian second brain, AI assistants, API automations)",
+      "Hands-on 1-on-1 walkthrough and 30-day continuous support",
+      "Privacy-first local/cloud architecture with zero data sharing",
     ],
     pricing: {
       individual: {
         model: "range",
-        amount: "$149 – $499",
-        note: "One-time setup — most personal stacks land around $249",
+        amount: "$149 – $950",
+        note: "Starter Setup ($149–$349) | Full Cognitive Stack ($499–$950); maintenance from $29/mo",
       },
     },
     modalCopy: {
-      subtitle: "Your intelligence stack, configured for you.",
+      subtitle: "Your personal intelligence stack, configured around how you think.",
       description:
-        "Stop juggling disconnected apps. We build a cohesive personal intelligence environment — research tools, note systems, AI assistants, and automations — all configured around how you actually work.",
+        "Stop juggling disconnected apps and forgetting critical ideas. Northside Intelligence builds a cohesive personal intelligence environment — connecting research feeds, knowledge bases, AI agents, and automations into one seamless system.",
       sections: [
         {
-          heading: "Workflow Assessment",
-          body: "We map your daily routines, research habits, and decision-making patterns to design the right setup.",
+          heading: "Cognitive Workflow Assessment",
+          body: "We map your daily routines, information gathering, and decision-making patterns to design an intuitive setup.",
         },
         {
-          heading: "Custom Configuration",
-          body: "We configure and integrate your tools — from AI assistants to knowledge bases — into one coherent system.",
+          heading: "Custom Stack Configuration",
+          body: "We configure your tools — from localized AI assistants to interconnected knowledge vaults — into one unified workspace.",
         },
         {
-          heading: "Training & Support",
-          body: "Hands-on training plus 30 days of support so you're confident using your new intelligence environment.",
+          heading: "Walkthrough & Ongoing Support",
+          body: "Hands-on walkthrough plus 30 days of direct support so you master your personal intelligence environment with zero friction.",
         },
       ],
       ctaLabel: "Get Started",
@@ -175,38 +175,38 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "ai-research-assistant",
     name: "AI Research Assistant Setup",
     description:
-      "A custom AI research assistant trained on your domains, sources, and methodology — delivering faster, more reliable insights.",
+      "A custom AI research assistant calibrated to your specific domains, trusted sources, and verification methodology — delivering fast, hallucination-free intelligence.",
     status: "LIVE",
     audience: "individual",
     highlights: [
-      "Domain-specific source curation",
-      "Custom prompt and methodology design",
-      "Citation and verification workflows",
-      "Ongoing tuning for 60 days",
+      "Domain-specific source curation across academic, market, and technical databases",
+      "Custom prompt engineering, verification filters, and citation workflows",
+      "Automated literature and market synthesis pipelines",
+      "60-day ongoing tuning and model refinement",
     ],
     pricing: {
       individual: {
         model: "range",
-        amount: "$99 – $399",
-        note: "Includes 60-day tuning — starter setups from $149",
+        amount: "$149 – $750",
+        note: "Starter Assistant ($149–$299) | Multi-Domain Research Engine ($399–$750)",
       },
     },
     modalCopy: {
-      subtitle: "Research that matches your standards.",
+      subtitle: "Domain research that matches your standards — cited and verified.",
       description:
-        "Generic AI tools give generic answers. We build a research assistant calibrated to your domains, sources, and quality standards — so you get reliable insights, not hallucinations.",
+        "Generic AI tools hallucinate and give surface-level summaries. We build a specialized research assistant calibrated to your domains, databases, and quality benchmarks — delivering verifiable insights you can trust.",
       sections: [
         {
-          heading: "Source Curation",
-          body: "We identify and configure trusted sources, databases, and reference materials relevant to your research areas.",
+          heading: "Source & Database Curation",
+          body: "We connect trusted journals, market feeds, and private reference archives relevant to your specific research focus.",
         },
         {
-          heading: "Methodology Design",
-          body: "Custom prompts, verification steps, and citation workflows ensure outputs meet your quality bar.",
+          heading: "Verification Methodology",
+          body: "Custom prompts, cross-referencing logic, and citation pipelines ensure every finding is backed by evidence.",
         },
         {
-          heading: "Ongoing Tuning",
-          body: "60 days of refinement based on your feedback — the assistant gets sharper with every use.",
+          heading: "60-Day Adaptive Tuning",
+          body: "Continuous refinement based on your daily feedback — sharpening the assistant's accuracy with every query.",
         },
       ],
       ctaLabel: "Set Up My Assistant",
@@ -216,38 +216,38 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "personal-knowledge-base",
     name: "Personal Knowledge Base Build",
     description:
-      "A structured, searchable knowledge base for your notes, research, and insights — connected to your AI tools and workflows.",
+      "A structured, searchable semantic knowledge vault for your lifetime notes, research, and insights — connected to your AI tools with automated bi-directional linking.",
     status: "LIVE",
     audience: "individual",
     highlights: [
-      "Information architecture design",
-      "AI-powered search and retrieval",
-      "Cross-tool synchronization",
-      "Migration from existing notes",
+      "Information architecture and interconnected graph taxonomy design",
+      "Semantic search and AI-powered associative retrieval",
+      "Full migration of existing notes from Notion, Apple Notes, or Google Docs",
+      "Cross-device encryption and automated backup synchronization",
     ],
     pricing: {
       individual: {
         model: "range",
-        amount: "$149 – $449",
-        note: "Includes data migration — typical builds around $249",
+        amount: "$199 – $950",
+        note: "Starter Vault ($199–$399) | Full Historical Migration & Graph System ($499–$950)",
       },
     },
     modalCopy: {
-      subtitle: "Everything you know, instantly accessible.",
+      subtitle: "Everything you've ever learned — instantly searchable and interconnected.",
       description:
-        "Your notes, research, and insights scattered across apps are useless until you can find them. We build a unified knowledge base with AI-powered search that connects to your existing tools.",
+        "Your notes and insights scattered across fragmented apps are lost opportunities. We build a unified, future-proof semantic knowledge base with AI search that connects your past learning directly to your current decisions.",
       sections: [
         {
-          heading: "Architecture Design",
-          body: "We design a taxonomy and structure that matches how you think — not a rigid folder system.",
+          heading: "Adaptive Architecture Design",
+          body: "We design a dynamic structure matching your natural associative memory — eliminating rigid, forgotten folder hierarchies.",
         },
         {
-          heading: "Migration & Integration",
-          body: "We migrate your existing notes and connect your knowledge base to AI tools, calendars, and workflows.",
+          heading: "Data Migration & Cleaning",
+          body: "We migrate your historical notes, clean formatting, and link related concepts across years of accumulated ideas.",
         },
         {
-          heading: "AI-Powered Retrieval",
-          body: "Semantic search lets you find anything by meaning, not just keywords — even across years of notes.",
+          heading: "Semantic AI Retrieval",
+          body: "Search by concepts, themes, or fuzzy memories — instantly surfacing the exact note, reference, or insight you need.",
         },
       ],
       ctaLabel: "Build My Knowledge Base",
@@ -257,38 +257,38 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "executive-briefing-intelligence",
     name: "Executive Briefing Intelligence",
     description:
-      "Automated daily and weekly intelligence briefings tailored to your interests, markets, and decision priorities.",
+      "Automated high-signal daily and weekly intelligence briefings tailored to your specific markets, competitors, policy updates, and executive decision priorities.",
     status: "LIVE",
     audience: "individual",
     highlights: [
-      "Custom briefing templates",
-      "Multi-source aggregation",
-      "Priority signal filtering",
-      "Delivery via email or dashboard",
+      "Custom executive briefing templates and priority signal filters",
+      "Multi-source aggregation (news, regulatory filings, competitor tracking)",
+      "Zero noise — strictly high-impact operational intelligence",
+      "Automated delivery via email, private portal dashboard, or Telegram",
     ],
     pricing: {
       individual: {
         model: "monthly",
-        amount: "$39 – $79/mo",
-        note: "Setup: $99 – $249 (waived with annual plan)",
+        amount: "$49 – $149/mo",
+        note: "Setup: $149 (waived with annual subscription)",
       },
     },
     modalCopy: {
-      subtitle: "Stay ahead without the information overload.",
+      subtitle: "Stay 10 steps ahead without the information overload.",
       description:
-        "Stop drowning in news feeds and email alerts. We build automated briefings that surface only what matters to your decisions — markets, competitors, policy, and trends — delivered on your schedule.",
+        "Stop drowning in endless news feeds and fragmented email newsletters. We engineer automated briefing pipelines that filter out the noise and surface only the high-impact shifts that dictate your strategic decisions.",
       sections: [
         {
-          heading: "Interest Mapping",
-          body: "We define your briefing scope — industries, geographies, competitors, and topics that drive your decisions.",
+          heading: "Executive Priority Mapping",
+          body: "We map your specific strategic landscape — tracking target industries, key competitors, macroeconomic signals, and emerging tech.",
         },
         {
-          heading: "Signal Filtering",
-          body: "AI-powered filtering cuts through noise to surface high-signal updates, not every headline.",
+          heading: "High-Signal AI Filtering",
+          body: "Multi-layered filtering strips out fluff and clickbait, highlighting only verified market intelligence with clear business implications.",
         },
         {
-          heading: "Automated Delivery",
-          body: "Daily or weekly briefings delivered via email, dashboard, or both — formatted for quick scanning.",
+          heading: "Automated Executive Dispatch",
+          body: "Delivered on your exact schedule via executive email digests or private mobile push for rapid morning scanning.",
         },
       ],
       ctaLabel: "Start My Briefings",
@@ -385,38 +385,38 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "ai-governance-compliance",
     name: "AI Governance & Compliance Framework",
     description:
-      "Policies, procedures, and monitoring systems to ensure your AI usage meets regulatory requirements and internal standards.",
+      "Enterprise policies, automated monitoring systems, and audit trails to ensure organizational AI usage meets global regulatory standards and internal security requirements.",
     status: "LIVE",
     audience: "business",
     highlights: [
-      "Regulatory landscape assessment",
-      "AI usage policy development",
-      "Risk monitoring and audit trails",
-      "Employee training program",
+      "Regulatory assessment (EU AI Act, HIPAA, SOC2, state privacy frameworks)",
+      "Comprehensive internal AI usage policies and data-handling standards",
+      "Automated audit trail logging, data leakage monitors, and risk dashboards",
+      "Employee compliance training program and 90-day implementation support",
     ],
     pricing: {
       business: {
         model: "range",
-        amount: "$8,000 – $25,000",
-        note: "Includes 90-day implementation support",
+        amount: "$3,500 – $35,000+",
+        note: "Compliance Starter ($3.5k–$7.5k) | Mid-Market ($8k–$18k) | Enterprise ($20k–$35k+); retainer from $399/mo",
       },
     },
     modalCopy: {
-      subtitle: "Use AI confidently, stay compliant.",
+      subtitle: "Deploy production AI with total confidence and zero compliance liability.",
       description:
-        "As AI regulation accelerates, organizations need governance frameworks before problems arise. We build policies, monitoring systems, and training programs that let you adopt AI at speed without compliance risk.",
+        "As global AI regulations accelerate, organizations need robust governance before liabilities arise. Northside Intelligence builds institutional policies, automated audit trails, and monitoring systems that let your teams move fast without compliance risks.",
       sections: [
         {
-          heading: "Regulatory Assessment",
-          body: "We map applicable regulations (EU AI Act, state laws, industry standards) to your specific AI use cases.",
+          heading: "Regulatory & Risk Diagnostic",
+          body: "We map applicable global standards and industry frameworks against your specific software tools, data pipelines, and vendor models.",
         },
         {
-          heading: "Policy Development",
-          body: "Clear, actionable AI usage policies covering data handling, model selection, human oversight, and accountability.",
+          heading: "Policy Architecture & Safeguards",
+          body: "Clear, enforceable AI usage policies covering proprietary data boundaries, model selection, human oversight, and IP protection.",
         },
         {
-          heading: "Monitoring & Training",
-          body: "Audit trail systems, risk dashboards, and employee training so governance is lived — not just documented.",
+          heading: "Automated Audit Systems & Training",
+          body: "Real-time risk monitoring dashboards, encrypted audit trails, and interactive employee training to ensure living compliance.",
         },
       ],
       ctaLabel: "Build My Framework",
@@ -426,38 +426,38 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "team-intelligence-training",
     name: "Team Intelligence Training & Onboarding",
     description:
-      "Hands-on training programs that get your team productive with AI tools, intelligence workflows, and Northside systems.",
+      "Hands-on role-based training programs and async academies that get your teams highly productive with production AI tools, workflows, and autonomous systems.",
     status: "LIVE",
     audience: "business",
     highlights: [
-      "Role-based curriculum design",
-      "Live workshops and async modules",
-      "Hands-on practice with real workflows",
-      "30-day post-training support",
+      "Role-based curriculum designed around actual daily team workflows",
+      "Interactive live workshops and self-paced async video/code modules",
+      "Hands-on exercises solving real company operational bottlenecks",
+      "30-day post-training office hours and continuous adoption coaching",
     ],
     pricing: {
       business: {
         model: "range",
-        amount: "$2,500 – $8,500",
-        note: "Up to 25 participants per cohort — additional seats quoted separately",
+        amount: "$1,500 – $18,000+",
+        note: "Small Team Cohort (≤10 seats: $1.5k–$3.5k) | Mid-Market ($4.5k–$8.5k) | Enterprise ($10k–$18k+)",
       },
     },
     modalCopy: {
-      subtitle: "Tools are useless if your team won't use them.",
+      subtitle: "The best AI tools are useless if your team doesn't adopt them.",
       description:
-        "The best intelligence infrastructure fails without adoption. We design and deliver training programs tailored to your team's roles, workflows, and skill levels — so everyone is productive from day one.",
+        "Technology investments only deliver ROI when your workforce uses them daily. We deliver tailored training programs mapped to your team's specific roles, systems, and skill levels — turning AI from a novelty into an operational supercharger.",
       sections: [
         {
-          heading: "Curriculum Design",
-          body: "Role-based training paths for executives, managers, and individual contributors — focused on their actual workflows.",
+          heading: "Role-Specific Curriculum",
+          body: "Custom learning paths for executives, operations managers, and individual contributors — focused entirely on their real daily tasks.",
         },
         {
-          heading: "Live & Async Delivery",
-          body: "Interactive workshops combined with self-paced modules and hands-on exercises using your real systems.",
+          heading: "Interactive Execution & Labs",
+          body: "Hands-on workshops using your actual tools and data — building real automations, prompts, and workflows during training.",
         },
         {
-          heading: "Adoption Support",
-          body: "30 days of post-training office hours and support to ensure skills stick and questions get answered.",
+          heading: "Continuous Adoption Coaching",
+          body: "30 days of office hours, async Q&A, and workflow optimization reviews to make sure productivity gains stick permanently.",
         },
       ],
       ctaLabel: "Train My Team",
