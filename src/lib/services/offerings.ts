@@ -298,38 +298,38 @@ export const INTELLIGENCE_SERVICES: ServiceOffering[] = [
     slug: "enterprise-ai-strategy",
     name: "Enterprise AI Strategy",
     description:
-      "Strategic planning for AI adoption across your organization — from pilot programs to full-scale intelligence infrastructure.",
+      "Boardroom-ready strategic roadmaps for AI adoption across your organization — from pilot feasibility and vendor evaluation to enterprise ROI modeling and infrastructure.",
     status: "LIVE",
     audience: "business",
     highlights: [
-      "AI readiness assessment",
-      "Use case identification and ROI modeling",
-      "Implementation roadmap and vendor evaluation",
-      "Executive stakeholder alignment",
+      "Comprehensive AI readiness assessment & data infrastructure evaluation",
+      "Prioritized use-case portfolio with EBITDA and ROI financial modeling",
+      "Phased implementation roadmap, vendor selection matrix, and change management",
+      "Executive stakeholder alignment & board-ready strategic presentations",
     ],
     pricing: {
       business: {
         model: "range",
-        amount: "$12,000 – $35,000",
-        note: "4–6 week engagement — scoped by org size and complexity",
+        amount: "$4,500 – $65,000+",
+        note: "Growth ($4.5k–$9.5k) | Mid-Market ($12k–$25k) | Corporate ($25k–$65k+); advisory from $499/mo",
       },
     },
     modalCopy: {
-      subtitle: "AI strategy that survives the boardroom.",
+      subtitle: "AI strategy that survives the boardroom and drives real EBITDA.",
       description:
-        "Most AI initiatives fail because they lack strategic grounding. We deliver an enterprise AI strategy with clear use cases, ROI projections, and a phased implementation plan your leadership can act on.",
+        "Most enterprise AI initiatives fail because they lack financial grounding and strategic alignment. Northside Intelligence delivers an actionable AI roadmap with validated use cases, ROI projections, and a phased execution blueprint your leadership can execute with confidence.",
       sections: [
         {
-          heading: "Readiness Assessment",
-          body: "We evaluate your data infrastructure, team capabilities, and organizational readiness for AI adoption.",
+          heading: "Readiness & Data Assessment",
+          body: "We evaluate your existing software stack, data architecture, security posture, and team capabilities for production AI adoption.",
         },
         {
-          heading: "Use Case Portfolio",
-          body: "Prioritized use cases with ROI modeling, risk assessment, and resource requirements for each.",
+          heading: "Use Case Portfolio & ROI Modeling",
+          body: "We rank high-impact use cases by feasibility and EBITDA impact — modeling resource requirements, expected cost savings, and revenue expansion.",
         },
         {
-          heading: "Implementation Roadmap",
-          body: "A phased plan from pilots to scale — including vendor evaluation, governance frameworks, and change management.",
+          heading: "Phased Implementation Blueprint",
+          body: "A structured rollout plan from rapid proof-of-concepts to full enterprise deployment — including build vs. buy matrices, governance, and vendor selection.",
         },
       ],
       ctaLabel: "Plan My AI Strategy",
