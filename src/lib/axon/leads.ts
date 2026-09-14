@@ -8,6 +8,7 @@ import {
   todayUtc,
 } from './constants.mjs';
 import { filterVisibleLeads, sweepLeadLifecycle } from './outreach-lifecycle';
+import { backfillNiServicesArtifacts } from './ni-services-artifact-pipeline.mjs';
 import type { Lead, LeadWithMeta, PipelineStats } from './types';
 import { GOAL_TARGET } from './types';
 
@@ -27,6 +28,30 @@ export function enrichLead(lead: Lead): LeadWithMeta {
   };
 }
 
+/**
+ * NI-OUTREACH-ARTIFACT-GAP-0914: best-effort, same shape as the
+ * sweepLeadLifecycle() call above it — never lets a slow/broken artifact
+ * generation turn into a broken leads list. Persists through the same
+ * updateLeadStatus() every other write in this file already goes through.
+ */
+async function backfillArtifactsBestEffort(rows: Lead[], source: string) {
+  if (source !== SOURCE || !rows?.length) return;
+  try {
+    await backfillNiServicesArtifacts(rows, {
+      persist: (id: string, patch: Record<string, unknown>) => updateLeadStatus(id, patch),
+      onError: (err: unknown, lead: { id?: string }) => {
+        console.warn(
+          `NI Services artifact generation failed for lead ${lead?.id}: ${
+            err instanceof Error ? err.message : String(err)
+          }`
+        );
+      },
+    });
+  } catch {
+    /* artifact backfill is best-effort, same as the lifecycle sweep above */
+  }
+}
+
 export async function fetchLeads(limit = 200, source = SOURCE): Promise<LeadWithMeta[]> {
   try {
     await sweepLeadLifecycle();
@@ -38,6 +63,7 @@ export async function fetchLeads(limit = 200, source = SOURCE): Promise<LeadWith
     'ni_brain_outreach',
     `source=eq.${source}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
   )) as Lead[];
+  await backfillArtifactsBestEffort(rows || [], source);
   return filterVisibleLeads((rows || []).map(enrichLead));
 }
 
@@ -47,6 +73,7 @@ export async function fetchLeadById(id: string): Promise<LeadWithMeta | null> {
     'ni_brain_outreach',
     `source=eq.${SOURCE}&id=eq.${id}&select=*&limit=1`
   )) as Lead[];
+  await backfillArtifactsBestEffort(rows || [], SOURCE);
   const lead = rows?.[0];
   return lead ? enrichLead(lead) : null;
 }
