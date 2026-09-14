@@ -42,9 +42,13 @@ export function laneSource(lane) {
  * @param {string} supabaseKey service key the router needs to read its own config
  * @param {{system?: string, user?: string, messages?: Array<{role: string, content: string}>,
  *          kind?: string, agentName?: string, accountId?: string|null, maxTokens?: number,
- *          jsonMode?: boolean, hasMini?: boolean}} opts hasMini gates any subscription-kind
- *          tier (claude_subscription/chatgpt_subscription/gemini_subscription) the account
- *          may have opted into its own axon_llm_chain — defaults false, same as axonGenerate.
+ *          jsonMode?: boolean, hasMini?: boolean, localTimeoutMs?: number}} opts hasMini gates
+ *          any subscription-kind tier (claude_subscription/chatgpt_subscription/gemini_subscription)
+ *          the account may have opted into its own axon_llm_chain — defaults false, same as
+ *          axonGenerate. localTimeoutMs is accepted for call-site compatibility with callers
+ *          that bound the router's local (Mac mini) tier per-call; the mirrored axonGenerate()
+ *          in axon-router-core.mjs does not implement it yet, so it is currently a no-op here
+ *          (not forwarded) rather than silently rejected by the type checker.
  * @returns {Promise<{text: string, provider: string, model: string|null, source: string}>}
  */
 export async function generateViaRouter(supabaseKey, opts = {}) {
