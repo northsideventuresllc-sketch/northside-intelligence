@@ -8,6 +8,7 @@ import {
   todayUtc,
 } from './constants.mjs';
 import { filterVisibleLeads, sweepLeadLifecycle } from './outreach-lifecycle';
+import { backfillNiServicesArtifacts } from './ni-services-artifact-pipeline.mjs';
 import type { Lead, LeadWithMeta, PipelineStats } from './types';
 import { GOAL_TARGET } from './types';
 
@@ -49,6 +50,93 @@ export async function fetchLeadById(id: string): Promise<LeadWithMeta | null> {
   )) as Lead[];
   const lead = rows?.[0];
   return lead ? enrichLead(lead) : null;
+}
+
+/**
+ * ARTIFACT_GENERATION_CLAIM sentinel: written into the `artifact_url` column
+ * to atomically "claim" a lead for artifact generation before any GitHub
+ * write is attempted (see claimLeadForArtifactBackfill below). Chosen so it
+ * also satisfies isNiServicesLeadEligibleForArtifact()'s own `artifact_url`
+ * truthy check — a claimed-but-not-yet-generated lead reads as "already has
+ * one" to any other caller until the claim resolves or is released.
+ */
+const ARTIFACT_GENERATION_CLAIM = '__ni_services_artifact_generating__';
+
+/** Atomic claim: succeeds only if this row still has no artifact_url. */
+async function claimLeadForArtifactBackfill(id: string): Promise<boolean> {
+  const { sbPatch } = getClient();
+  const claimed = await sbPatch(
+    'ni_brain_outreach',
+    `id=eq.${encodeURIComponent(id)}&artifact_url=is.null`,
+    { artifact_url: ARTIFACT_GENERATION_CLAIM }
+  );
+  return Boolean(claimed);
+}
+
+/** Release a claim this run made (only ever clears our own sentinel value). */
+async function releaseLeadArtifactBackfillClaim(id: string): Promise<void> {
+  const { sbPatch } = getClient();
+  await sbPatch(
+    'ni_brain_outreach',
+    `id=eq.${encodeURIComponent(id)}&artifact_url=eq.${encodeURIComponent(ARTIFACT_GENERATION_CLAIM)}`,
+    { artifact_url: null }
+  );
+}
+
+/** Live on/off switch, same automation_controls convention as outreach-sender. Defaults OFF. */
+async function isArtifactBackfillEnabled(): Promise<boolean> {
+  const { sbSelect } = getClient();
+  const rows = (await sbSelect(
+    'automation_controls',
+    `scope=eq.${encodeURIComponent('ni.artifact_backfill')}&select=enabled&limit=1`
+  )) as { enabled?: boolean }[];
+  return Boolean(rows?.[0]?.enabled);
+}
+
+/**
+ * NI-OUTREACH-ARTIFACT-GAP-0914 / NI-OUTREACH-ARTIFACT-CONCURRENCY-0915:
+ * explicit, on-purpose entry point for NI Services artifact generation — NOT
+ * called from fetchLeads()/fetchLeadById() or any other ordinary read path.
+ * Council review on PR #247 found the original inline-on-every-read wiring
+ * fired a live external GitHub push (plus a DB write) as a side effect of an
+ * ordinary page load, with no on/off switch and no concurrency guard, so two
+ * overlapping reads could double-generate/double-push the same lead. This
+ * function is the fix: it only runs when a human or the scheduler calls it
+ * on purpose (see src/app/api/cron/ni-services-artifact-backfill/route.ts),
+ * it no-ops unless the `ni.artifact_backfill` automation_controls switch is
+ * explicitly ON, and it claims each lead atomically before generating so
+ * concurrent invocations can't collide on the same row.
+ */
+export async function runNiServicesArtifactBackfill(
+  opts: { limit?: number; scanLimit?: number } = {}
+): Promise<{ enabled: boolean; scanned: number; generated: number }> {
+  const { limit = 3, scanLimit = 50 } = opts;
+
+  if (!(await isArtifactBackfillEnabled())) {
+    return { enabled: false, scanned: 0, generated: 0 };
+  }
+
+  const { sbSelect } = getClient();
+  const rows = (await sbSelect(
+    'ni_brain_outreach',
+    `source=eq.${SOURCE}&status=neq.purged&artifact_url=is.null&select=*&order=created_at.asc&limit=${scanLimit}`
+  )) as Lead[];
+
+  const generated = await backfillNiServicesArtifacts(rows || [], {
+    limit,
+    claim: claimLeadForArtifactBackfill,
+    release: releaseLeadArtifactBackfillClaim,
+    persist: (id: string, patch: Record<string, unknown>) => updateLeadStatus(id, patch),
+    onError: (err: unknown, lead: { id?: string }) => {
+      console.warn(
+        `NI Services artifact generation failed for lead ${lead?.id}: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    },
+  });
+
+  return { enabled: true, scanned: rows?.length || 0, generated };
 }
 
 export async function findLeadByShortId(sid: string): Promise<LeadWithMeta | null> {

@@ -370,6 +370,22 @@ export function LeadDetailView({ lead }: { lead: LeadWithMeta }) {
         </section>
       )}
 
+      {(lead.artifact_url || lead.meta.deliverable_url) && (
+        <section className="rounded-xl border border-axon-border bg-axon-surface p-5">
+          <h2 className="text-xs uppercase tracking-wider text-axon-muted">
+            {lead.meta.deliverable_label || 'Site Preview'}
+          </h2>
+          <a
+            href={`/api/leads/${lead.id}/deliverable`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-sm text-axon-teal hover:underline"
+          >
+            Open interactive preview →
+          </a>
+        </section>
+      )}
+
       {lead.meta.source_link && (
         <section className="rounded-xl border border-axon-border bg-axon-surface p-5">
           <h2 className="text-xs uppercase tracking-wider text-axon-muted">Source</h2>
