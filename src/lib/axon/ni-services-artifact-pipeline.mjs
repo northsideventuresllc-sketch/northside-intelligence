@@ -93,26 +93,45 @@ export async function ensureNiServicesArtifact(lead, deps = {}) {
  * Best-effort backfill across a batch of already-fetched rows (mutates each
  * eligible row in place with the new fields so a caller's in-memory list
  * reflects the change immediately, without a second round-trip read).
- * Capped per call so one slow GitHub round-trip can never turn a leads-list
- * request into a multi-artifact-generation request.
+ * Capped per call so one slow GitHub round-trip can never turn a single
+ * invocation into a multi-artifact-generation request.
+ *
+ * Concurrency guard (NI-OUTREACH-ARTIFACT-CONCURRENCY-0915): when the caller
+ * supplies `claim`/`release`, each row is atomically claimed (a conditional
+ * DB update tied to the row id, expected to no-op if another in-flight run
+ * already claimed it) before any GitHub write is attempted, and released
+ * again if generation fails or turns out not to be owed — so two overlapping
+ * invocations for the same lead can never both fire a live GitHub push.
+ * Callers that omit `claim` get no guard (e.g. the unit test harness, which
+ * never runs concurrently with itself).
  * @param {Array<import('./types').Lead>} rows
- * @param {{ limit?: number, persist?: (id: string, patch: Record<string, unknown>) => Promise<unknown>, onError?: (err: unknown, lead: Record<string, unknown>) => void }} [opts]
+ * @param {{ limit?: number, persist?: (id: string, patch: Record<string, unknown>) => Promise<unknown>, claim?: (id: string) => Promise<boolean>, release?: (id: string) => Promise<unknown>, onError?: (err: unknown, lead: Record<string, unknown>) => void }} [opts]
  */
 export async function backfillNiServicesArtifacts(rows, opts = {}) {
-  const { limit = 3, persist, onError } = opts;
+  const { limit = 3, persist, claim, release, onError } = opts;
   let used = 0;
   for (const row of rows || []) {
     if (used >= limit) break;
     if (!isNiServicesLeadEligibleForArtifact(row)) continue;
+
+    if (typeof claim === 'function') {
+      const claimed = await claim(row.id);
+      if (!claimed) continue; // another in-flight run already owns this lead
+    }
+
     try {
       const patch = await ensureNiServicesArtifact(row);
-      if (!patch) continue;
+      if (!patch) {
+        if (typeof release === 'function') await release(row.id);
+        continue;
+      }
       if (typeof persist === 'function') {
         await persist(row.id, patch);
       }
       Object.assign(row, patch);
       used += 1;
     } catch (err) {
+      if (typeof release === 'function') await release(row.id);
       if (typeof onError === 'function') onError(err, row);
     }
   }
