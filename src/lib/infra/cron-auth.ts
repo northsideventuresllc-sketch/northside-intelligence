@@ -1,6 +1,14 @@
+import { createHash, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
 import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 import { readPlatformSecret } from "@/lib/platform-secrets";
+
+/** Timing-safe secret compare (hash first so length differences don't leak). */
+function safeSecretCompare(provided: string, expected: string): boolean {
+  const a = createHash("sha256").update(provided).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
 
 /**
  * Authorize Vercel cron invocations and manual triggers.
@@ -16,7 +24,9 @@ export function isCronAuthorized(req: Pick<NextRequest, "headers">): boolean {
   if (!cronSecret) return false;
 
   const authHeader = req.headers.get("authorization");
-  return authHeader === `Bearer ${cronSecret}`;
+  if (!authHeader?.startsWith("Bearer ")) return false;
+  const token = authHeader.slice("Bearer ".length);
+  return safeSecretCompare(token, cronSecret);
 }
 
 /**
@@ -34,8 +44,8 @@ export async function isCronAuthorizedAsync(
 
   await hydratePlatformEnvFromDatabase();
   const envSecret = process.env.CRON_SECRET?.trim();
-  if (envSecret && token === envSecret) return true;
+  if (envSecret && safeSecretCompare(token, envSecret)) return true;
 
-  const vaultSecret = await readPlatformSecret("CRON_SECRET");
-  return Boolean(vaultSecret?.trim() && token === vaultSecret.trim());
+  const vaultSecret = (await readPlatformSecret("CRON_SECRET"))?.trim();
+  return Boolean(vaultSecret && safeSecretCompare(token, vaultSecret));
 }

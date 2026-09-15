@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getClient, enrichLead, updateLeadNotes } from '@/lib/axon/leads';
 import { SOURCE, parseNotes } from '@/lib/axon/constants.mjs';
+import { requireAxonOperatorId } from '@/lib/axon/operator';
 import type { Lead } from '@/lib/axon/types';
 
 /** Fetch sent leads that need follow-up (no follow_up_sent_at yet). */
 export async function GET() {
   try {
+    await requireAxonOperatorId();
     const { sbSelect } = getClient();
     const rows = (await sbSelect(
       'ni_brain_outreach',
@@ -20,16 +22,16 @@ export async function GET() {
 
     return NextResponse.json({ pending, done, total: leads.length });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to load follow-up leads' },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : 'Failed to load follow-up leads';
+    const status = message === 'AXON access denied' ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
 /** Draft or regenerate a follow-up message for a sent lead. */
 export async function POST(req: Request) {
   try {
+    await requireAxonOperatorId();
     const body = await req.json().catch(() => ({}));
     const { leadId, action } = body as { leadId?: string; action?: string };
 
@@ -80,10 +82,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, draft, leadId });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Draft failed' },
-      { status: 500 }
-    );
+    const message = err instanceof Error ? err.message : 'Draft failed';
+    const status = message === 'AXON access denied' ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
