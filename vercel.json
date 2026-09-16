@@ -47,6 +47,10 @@
     {
       "path": "/api/cron/outreach-sender",
       "schedule": "0 * * * 1-5"
+    },
+    {
+      "path": "/api/cron/ni-services-artifact-backfill",
+      "schedule": "0 */4 * * *"
     }
   ],
   "env": {
