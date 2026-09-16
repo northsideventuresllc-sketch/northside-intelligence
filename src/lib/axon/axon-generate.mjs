@@ -49,7 +49,8 @@ export function laneSource(lane) {
  *          compatibility but is NOT currently wired to any timeout override inside
  *          axonGenerate/axon-router-core.mjs (per-tier timeouts there are hardcoded) — see
  *          northside-intelligence-main-build-broken-localTimeoutMs-0914 for the real-wiring
- *          follow-up, this type-only change just fixes the build break.
+ *          follow-up, this type-only change just fixes the build break. Also filed AXON-side
+ *          (axon#232) so future syncs of this file stop reverting it.
  * @returns {Promise<{text: string, provider: string, model: string|null, source: string}>}
  */
 export async function generateViaRouter(supabaseKey, opts = {}) {
