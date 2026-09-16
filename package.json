@@ -14,7 +14,8 @@
     "fulfill:store-order": "npx tsx scripts/fulfill-store-order.ts",
     "sync:cj-catalog": "npx tsx scripts/run-cj-catalog-sync.ts",
     "test:content-machine-brand-fix": "npx tsx scripts/test-content-machine-brand-fix.ts",
-    "test:content-machine-slot-time-budget": "npx tsx scripts/test-content-machine-slot-time-budget.ts"
+    "test:content-machine-slot-time-budget": "npx tsx scripts/test-content-machine-slot-time-budget.ts",
+    "test:ni-services-artifact": "npx tsx scripts/test-ni-services-artifact.ts"
   },
   "dependencies": {
     "@remotion/player": "^4.0.515",

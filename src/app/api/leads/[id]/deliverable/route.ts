@@ -17,7 +17,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
-    const url = lead.meta.deliverable_url;
+    // NI-OUTREACH-ARTIFACT-GAP-0914: the canonical column now wins over the
+    // legacy meta.deliverable_url convention, but meta stays as a fallback so
+    // rows written before this column existed (e.g. NorthPoint) keep working.
+    const url = lead.artifact_url || lead.meta.deliverable_url;
     if (!url) {
       return NextResponse.json({ error: 'No deliverable attached to this lead' }, { status: 404 });
     }

@@ -117,22 +117,33 @@ CloseKit, ToneCheck. Bad: AIReply, SmartOutreach, IntelliContent, AutoAds, NI Ou
 
 ## SECTOR 3 SUB-REPO RULES DIFFER — READ BEFORE MERGING THERE
 
+**Corrected 2026-09-14** — this section previously pointed at `sector3/replyflow/` and
+`sector3/axon/` as directories in this repo. Neither exists: `sector3/` currently contains only
+`sector3/it-template/`. That made the override below dead text — a rule that could never
+actually trigger because the path it named was wrong. Re-checked directly against this repo's
+working tree before writing this correction.
+
 The root `AGENTS.md` above grants **standing approval to merge PRs and deploy `main` without
-asking each time**. That does **not** carry down into every `sector3/*` tool automatically —
-at least two sub-trees say the opposite:
+asking each time**. That does **not** carry down to ReplyFlow automatically:
 
-- `sector3/replyflow/.cursorrules`: **"Wait for JB approval before merging to `main`."** Also:
-  snippets only, no drive-by refactors, never hardcode secrets, no `console.log`/`console.error`
-  in app code, `replyflow_` Supabase table prefix, verify Stripe webhook signatures with
-  `STRIPE_WEBHOOK_SECRET`, favicon must use the tool's own icon not the NI portal emblem.
-- `sector3/axon/AGENTS.md`: mirrors the standalone AXON repo's protocol — NI-Brain
-  `ni_brain_outreach` table, **no secrets in git**, **no auto-send** (Telegram approve
-  required), `Northside`/JB brand rules.
+- **ReplyFlow's actual current code paths** in this repo: `src/app/replyflow`,
+  `src/app/api/replyflow`, `src/components/replyflow`, `src/lib/replyflow`, and
+  `src/lib/billing/replyflow-access.ts`. Its stricter Cursor-era rule ("wait for JB approval
+  before merging to `main`"; snippets only, no drive-by refactors, never hardcode secrets, no
+  `console.log`/`console.error` in app code, `replyflow_` Supabase table prefix, verify Stripe
+  webhook signatures with `STRIPE_WEBHOOK_SECRET`, favicon must use the tool's own icon not the
+  NI portal emblem) is archived at
+  `_archive/cursor-retired-2026-09-02/sector3-replyflow.cursorrules` — Cursor is retired, but the
+  substance of that rule (JB approval before merging ReplyFlow changes to `main`) still applies
+  to the paths above.
+- **`sector3/axon/AGENTS.md` does not apply to any path in this repo** — it never existed here,
+  archived or otherwise. AXON's own protocol lives entirely in the separate standalone `axon`
+  repo. This repo's only AXON-related file is the docs reference `docs/axon-env.example.md`;
+  there is no AXON product-code sub-tree here to hold an override.
 
-**Rule for Claude Code sessions here:** default to the root's standing merge/deploy approval
-for the portal shell itself, but treat any change under `sector3/replyflow/` or `sector3/axon/`
-as needing JB's go-ahead before merging to `main`, per those sub-trees' own stricter rules —
-they override the root default where they exist.
+**Rule for Claude Code sessions here:** default to the root's standing merge/deploy approval for
+the portal shell itself, but treat any change under the ReplyFlow paths listed above as needing
+JB's go-ahead before merging to `main`. There is no equivalent AXON carve-out in this repo.
 
 ---
 
