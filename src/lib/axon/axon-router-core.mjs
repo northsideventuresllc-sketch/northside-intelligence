@@ -76,9 +76,23 @@ async function sbPost(key, table, row, prefer = 'return=minimal') {
       headers: { ...hdrs(key), Prefer: prefer },
       body: JSON.stringify(row),
     });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      // PULSE-LASTFIRED-COSTLEDGER-AXON-GAP-0909: this returned null with zero
+      // trace anywhere -- axon_cost_ledger sat at 0 rows since table creation
+      // with no way to tell whether every insert was silently rejected (bad
+      // key, RLS, schema mismatch) or genuinely never called. logRouterEvent
+      // above already promises "one structured console line per swallowed/
+      // total failure" for this file; sbPost never actually kept that promise
+      // for itself. Every table this function writes to (axon_cost_ledger,
+      // router_health, axon_router_decisions, nvg_mini_jobs) gets the same
+      // visibility now.
+      const body = await r.text().catch(() => '');
+      logRouterEvent('sbPost_failed', { table, status: r.status, body: body.slice(0, 300) });
+      return null;
+    }
     return prefer.includes('representation') ? await r.json() : true;
-  } catch {
+  } catch (err) {
+    logRouterEvent('sbPost_threw', { table, error: String(err?.message || err).slice(0, 300) });
     return null;
   }
 }
@@ -271,12 +285,27 @@ async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxToken
  * single-prompt convention, used for the 'local' tier) and `messages` in the job input so
  * the worker's handler can use whichever shape it actually expects — RunPod queues
  * arbitrary `input` JSON regardless, so sending both costs nothing.
+ *
+ * AX-RUNPOD-ZERO-SUCCESS-0915: the job-queue contract above is confirmed correct (live
+ * /run calls return HTTP 200 with a queued job id) — the 0% success rate is NOT a
+ * call-shape bug. Live root cause, confirmed via RunPod's account API this same session:
+ * `clientBalance` is negative, so RunPod's autoscaler never spins up a worker for ANY
+ * queued job regardless of endpoint config (workersMax/workersStandby are irrelevant with
+ * no billable balance) — every job sits IN_QUEUE until our client times out and abandons
+ * it. That abandonment is what this function now guards against: without a cancel, each
+ * timed-out attempt leaves an orphaned job in RunPod's queue forever, so the backlog grows
+ * unbounded (measured 24 stuck jobs before this fix, all still IN_QUEUE at the time of
+ * measurement, none ever COMPLETED/FAILED). Fixing the balance is a billing action, not a
+ * code fix — tracked separately; this function still cancels its own orphan either way so
+ * the queue stays clean once billing is restored.
  */
 async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens = 1024, timeoutMs = 25_000 } = {}) {
   const base = baseUrl.replace(/\/$/, '');
   const deadline = Date.now() + timeoutMs;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let jobId = null;
+  let completed = false;
   try {
     const submitRes = await fetch(`${base}/run`, {
       method: 'POST',
@@ -289,7 +318,11 @@ async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens 
     if (!submitRes.ok) throw new Error(`runpod /run HTTP ${submitRes.status}`);
     const job = await submitRes.json();
     if (!job?.id) throw new Error('runpod /run returned no job id');
-    if (job.status === 'COMPLETED') return extractRunpodOutput(job.output);
+    jobId = job.id;
+    if (job.status === 'COMPLETED') {
+      completed = true;
+      return extractRunpodOutput(job.output);
+    }
     if (job.status === 'FAILED' || job.status === 'CANCELLED') {
       throw new Error(`runpod job ${job.status.toLowerCase()} at submit`);
     }
@@ -304,7 +337,10 @@ async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens 
       });
       if (!statusRes.ok) continue; // transient — keep polling within the deadline
       const statusJob = await statusRes.json();
-      if (statusJob.status === 'COMPLETED') return extractRunpodOutput(statusJob.output);
+      if (statusJob.status === 'COMPLETED') {
+        completed = true;
+        return extractRunpodOutput(statusJob.output);
+      }
       if (statusJob.status === 'FAILED' || statusJob.status === 'CANCELLED') {
         throw new Error(`runpod job ${statusJob.status.toLowerCase()}: ${JSON.stringify(statusJob.error || '').slice(0, 200)}`);
       }
@@ -316,7 +352,17 @@ async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens 
     throw err;
   } finally {
     clearTimeout(timer);
+    if (jobId && !completed) cancelRunpodJob(base, apiKey, jobId);
   }
+}
+
+// Best-effort, fire-and-forget: prevents a client-abandoned job from sitting in RunPod's
+// queue forever (see AX-RUNPOD-ZERO-SUCCESS-0915). Never throws, never awaited by callers.
+function cancelRunpodJob(base, apiKey, jobId) {
+  fetch(`${base}/cancel/${jobId}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}` },
+  }).catch(() => {});
 }
 
 function extractRunpodOutput(output) {
@@ -563,8 +609,8 @@ export async function executeLane(
     const base = lane.route.base_url || 'http://localhost:11434';
     const stdout = await queueMiniShellJob(
       supabaseKey,
-      `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`,
-      { title: `axon-local-${lane.model}` },
+      `curl -s -m ${RELAY_LOCAL_CURL_TIMEOUT_S} ${base}/api/generate -d ${JSON.stringify(body)}`,
+      { title: `axon-local-${lane.model}`, maxWaitMs: RELAY_LOCAL_MAX_WAIT_MS },
     );
     if (!stdout) throw new Error('local lane: no response from the mini');
     const text = JSON.parse(stdout)?.response?.trim();
@@ -648,6 +694,21 @@ const TIER_KEY_PROVIDER = { runpod: 'runpod', openrouter: 'openrouter', gemini: 
 // their own success/latency signal via axon_cost_ledger and don't need a second one.
 const RELAY_METRIC_TIERS = new Set(['local', 'runpod']);
 const RELAY_LOCAL_RETRY_BACKOFF_MS = 1500;
+// AX-RELAY-TIMEOUT-FIX-0828 (NI-Brain Decision #1503): 40s was too short for real
+// /api/generate calls under mini disk/load pressure (measured 78% failure rate, curl
+// exit 28, 2026-08-28). axon-local-relay.mjs was raised to 120s that same day; these two
+// call sites in this file were missed and still ran -m 40 until this fix (found live,
+// 2026-09-15 ponder run — one of them cites the 78% figure in its own retry comment two
+// lines below the still-hardcoded 40). Both now use this shared constant.
+//
+// The curl timeout alone is not enough — queueMiniShellJob's own default poll budget
+// (nvg-mini-queue.mjs MINI_MAX_WAIT_MS, 45s) is shorter than this 120s curl timeout, so
+// without an explicit maxWaitMs override the caller gives up and reports failure at 45s
+// regardless of what curl would have returned at 46-119s. axon-local-relay.mjs already
+// pairs its 120s curl timeout with a 130s wait budget (MINI_RELAY_MAX_WAIT_MS) for exactly
+// this reason — both call sites below now pass the same matching wait budget.
+const RELAY_LOCAL_CURL_TIMEOUT_S = 120;
+const RELAY_LOCAL_MAX_WAIT_MS = 130_000;
 
 /** Loads the account's chain rows, falling back to the platform account's rows, falling
  *  back to DEFAULT_LLM_CHAIN — an account (or a bare script call with no accountId) is
@@ -741,17 +802,24 @@ async function executeChainTier(
     const prompt = localPromptFromMessages(messages);
     const body = JSON.stringify({ model: model.model, prompt, stream: false, think: false });
     const base = route.base_url || 'http://localhost:11434';
-    const cmd = `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`;
+    const cmd = `curl -s -m ${RELAY_LOCAL_CURL_TIMEOUT_S} ${base}/api/generate -d ${JSON.stringify(body)}`;
 
     // RELAY-95-HARDEN-0907, part 2: the mini queue is flaky under disk/load pressure
-    // (AX-RELAY-TIMEOUT-FIX-0828 measured a 78% failure rate at the old 40s curl timeout).
+    // (AX-RELAY-TIMEOUT-FIX-0828 measured a 78% failure rate at the old 40s curl timeout,
+    // now fixed above — this retry is extra insurance on top, not the fix itself).
     // One retry with a short fixed backoff before falling through to the next tier in the
     // chain -- cheap insurance against a single transient miss, not a substitute for the
     // per-lane circuit breaker routeChat's lane pool already has (recordHealth below).
-    let stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
+    let stdout = await queueMiniShellJob(supabaseKey, cmd, {
+      title: `axon-chain-local-${model.model}`,
+      maxWaitMs: RELAY_LOCAL_MAX_WAIT_MS,
+    });
     if (!stdout) {
       await new Promise((resolve) => setTimeout(resolve, RELAY_LOCAL_RETRY_BACKOFF_MS));
-      stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
+      stdout = await queueMiniShellJob(supabaseKey, cmd, {
+        title: `axon-chain-local-${model.model}`,
+        maxWaitMs: RELAY_LOCAL_MAX_WAIT_MS,
+      });
     }
     if (!stdout) throw new Error('local tier: no response from the mini (after 1 retry)');
     const text = JSON.parse(stdout)?.response?.trim();
