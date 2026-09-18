@@ -1,15 +1,27 @@
+import { redirect } from 'next/navigation';
 import { AxonTrustHaltControl } from '@/components/axon-ui/axon-trust-halt-control';
 import {
   getGlobalHaltStatus,
   getMoralityPinStatus,
   getRecentMoralityAudit,
 } from '@/lib/axon/morality-trust';
+import { requireAxonMasterOperatorId } from '@/lib/axon/operator';
 import { requireAxonPortalUser } from '@/lib/axon/portal-guard';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AxonTrustPage({ params }: { params: { username: string } }) {
   await requireAxonPortalUser(params.username);
+
+  // requireAxonPortalUser only enforces canEnterAxonPortal, which access.ts documents as a
+  // pre-launch gate that will later widen to entitled purchasers. This page must stay
+  // master-only even after that happens, so it re-checks isMasterAccount directly (same
+  // check the halt route uses) rather than relying on the portal gate alone.
+  try {
+    await requireAxonMasterOperatorId();
+  } catch {
+    redirect('/axon');
+  }
 
   const [pin, haltStatus, auditEvents] = await Promise.all([
     getMoralityPinStatus(),
