@@ -1,94 +1,210 @@
-import { redirectLoggedInSector3ToDashboard } from "@/lib/sector3-auth-redirect";
-import Link from "next/link";
-import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
-import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
-import { ReplyFlowPricingSection } from "@/components/replyflow/ReplyFlowPricingSection";
-import { portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
-import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
+'use client';
 
-const tones = ["Professional", "Friendly", "Empathetic", "Firm"];
+import React, { useState } from 'react';
+import { MCPManagerModal } from '../../components/it/MCPManagerModal';
+import { ITFeedbackWidget } from '../../components/it/ITFeedbackWidget';
 
-export default async function ReplyFlowHome() {
-  await redirectLoggedInSector3ToDashboard("/replyflow");
+const DEFAULT_MCPS = [
+  // Email & Support Hubs
+  {
+    id: 'mcp-gmail',
+    name: 'Email & Gmail Client',
+    description: 'Fetch incoming customer emails and draft instant responses directly in client',
+    category: 'email',
+    isEnabled: true,
+  },
+  {
+    id: 'mcp-zendesk',
+    name: 'Zendesk & HelpDesk Hub',
+    description: 'Query customer ticket history and sync drafted resolutions',
+    category: 'crm',
+    isEnabled: false,
+  },
+  {
+    id: 'mcp-slack',
+    name: 'Slack & Discord Messenger',
+    description: 'Monitor support channels and post verified replies directly',
+    category: 'chat',
+    isEnabled: false,
+  },
+  // Social Media Management Platforms
+  {
+    id: 'mcp-buffer',
+    name: 'Buffer Management Platform',
+    description: 'Sync scheduled drafts and reply queues across all connected Buffer channels',
+    category: 'social-platform',
+    isEnabled: false,
+  },
+  {
+    id: 'mcp-hootsuite',
+    name: 'Hootsuite Streams Hub',
+    description: 'Monitor brand mentions, inbox streams, and dispatch approved social responses',
+    category: 'social-platform',
+    isEnabled: false,
+  },
+  // Individual Social Networks
+  {
+    id: 'mcp-twitter-x',
+    name: 'Twitter / X API Connector',
+    description: 'Auto-scan mentions, quote tweets, and DMs with 1-tap contextual reply dispatch',
+    category: 'social-network',
+    isEnabled: true,
+  },
+  {
+    id: 'mcp-linkedin',
+    name: 'LinkedIn Direct & Post Engagement',
+    description: 'Draft executive commentary and direct message responses for B2B accounts',
+    category: 'social-network',
+    isEnabled: true,
+  },
+  {
+    id: 'mcp-meta-instagram',
+    name: 'Instagram & Meta Business Suite',
+    description: 'Capture Instagram DMs, story replies, and post comments for instant support',
+    category: 'social-network',
+    isEnabled: false,
+  },
+  {
+    id: 'mcp-reddit',
+    name: 'Reddit Community Scanner',
+    description: 'Track brand keywords on target subreddits and generate helpful community replies',
+    category: 'social-network',
+    isEnabled: false,
+  },
+  {
+    id: 'mcp-youtube',
+    name: 'YouTube Comments Manager',
+    description: 'Synthesize helpful responses to video comments and customer inquiries',
+    category: 'social-network',
+    isEnabled: false,
+  },
+];
 
-  const signupUrl = portalSignUpUrl();
-  const freeTierLabel = formatFreeTierHeroLabel("replyflow");
+export default function ReplyFlowPage() {
+  const [tier, setTier] = useState<'free' | 'saas' | 'agentic'>('agentic');
+  const [isMCPModalOpen, setIsMCPModalOpen] = useState(false);
+  const [inputMessage, setInputMessage] = useState('');
+  const [tone, setTone] = useState('Professional');
+  const [generatedReply, setGeneratedReply] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerate = () => {
+    if (!inputMessage) return;
+    setIsGenerating(true);
+    setTimeout(() => {
+      setGeneratedReply(
+        `Hi there,\n\nThank you for reaching out to us. We truly appreciate your patience. Based on your inquiry regarding "${inputMessage.slice(0, 30)}...", we have verified the details and have applied the requested adjustments to your account.\n\nPlease let us know if you have any further questions!\n\nBest regards,\nCustomer Support Team`
+      );
+      setIsGenerating(false);
+    }, 800);
+  };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <ReplyFlowBackground />
-      <ReplyFlowNav />
-
-      <main className="relative z-10">
-        <section className="mx-auto flex max-w-5xl flex-col items-center px-6 pb-20 pt-24 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-rf-rose/30 bg-rf-rose/10 px-4 py-1.5 text-sm text-rf-rose">
-            <span className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="inline-block h-1.5 w-1.5 rounded-full bg-rf-rose animate-wave"
-                  style={{ animationDelay: `${i * 0.15}s` }}
-                />
-              ))}
-            </span>
-            Powered by Claude · Part of Northside Intelligence
-          </div>
-
-          <h1 className="max-w-3xl text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
-            <span className="rf-gradient-text">Customer Replies</span>
-            <br />
-            <span className="text-white">That Sound Human, Ship Fast</span>
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg text-rf-muted">
-            Paste any message. Pick a tone. ReplyFlow crafts on-brand responses in seconds — one NI
-            account unlocks everything.
-          </p>
-
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <a
-              href={signupUrl}
-              className="rounded-2xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet px-8 py-3.5 text-lg font-semibold text-white shadow-rf-glow transition hover:scale-[1.02] hover:opacity-95"
-            >
-              Start Free — {freeTierLabel}
-            </a>
-            <Link
-              href={replyflowPath("/dashboard")}
-              className="rounded-2xl border border-white/15 bg-white/5 px-8 py-3.5 text-lg font-semibold text-white/90 transition hover:border-rf-rose/40 hover:bg-white/10"
-            >
-              Open Dashboard
-            </Link>
-          </div>
-
-          <div className="rf-glass mt-16 w-full max-w-2xl rounded-3xl p-6 text-left shadow-rf-violet">
-            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-rf-muted">
-              Live preview
-            </p>
-            <div className="mb-4 rounded-2xl border border-white/10 bg-rf-bg/60 p-4 text-sm text-rf-muted">
-              &ldquo;I&apos;ve been waiting 2 weeks for my refund. This is unacceptable.&rdquo;
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 flex flex-col items-center">
+      <div className="max-w-4xl w-full space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-zinc-900 border border-zinc-800 p-5 rounded-xl">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black tracking-tight text-white">ReplyFlow</h1>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-950 text-blue-400 border border-blue-800 font-mono">
+                IT · Sector 3
+              </span>
             </div>
-            <div className="mb-4 flex flex-wrap gap-2">
-              {tones.map((t) => (
-                <span
+            <p className="text-xs text-zinc-400 mt-1">Instant customer response and automated support reply generator.</p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Simple Tier Switcher */}
+            <select
+              value={tier}
+              onChange={(e) => setTier(e.target.value as any)}
+              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-zinc-200 font-semibold"
+            >
+              <option value="free">Free Trial (10 free replies)</option>
+              <option value="saas">Standard Web Mode ($15/mo · Unlimited)</option>
+              <option value="agentic">⚡ Autopilot Mode ($22.50/mo · Connects to Email & Socials)</option>
+            </select>
+
+            {/* Connected Apps Button */}
+            <button
+              onClick={() => setIsMCPModalOpen(true)}
+              className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-200 flex items-center gap-1.5 shadow transition"
+            >
+              <span>⚡ Connected Apps</span>
+              {tier === 'agentic' && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Main Interface */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-5">
+          <div>
+            <label className="text-xs font-semibold text-zinc-300">Customer Message / Inquiry / Email</label>
+            <textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              rows={4}
+              placeholder="Paste customer message, DM, or support inquiry here..."
+              className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3 text-sm text-zinc-200 mt-1.5 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-400">Tone:</span>
+              {['Professional', 'Friendly', 'Empathetic', 'Firm'].map((t) => (
+                <button
                   key={t}
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    t === "Empathetic"
-                      ? "border border-rf-rose/50 bg-rf-rose/20 text-rf-rose"
-                      : "border border-white/10 bg-white/5 text-rf-muted"
-                  }`}
+                  onClick={() => setTone(t)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium border ${tone === t ? 'bg-blue-600 border-blue-500 text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-400'}`}
                 >
                   {t}
-                </span>
+                </button>
               ))}
             </div>
-            <div className="rounded-2xl border border-rf-violet/30 bg-gradient-to-br from-rf-violet/10 to-rf-rose/5 p-4 text-sm leading-relaxed text-white/90">
-              Thank you for your patience — I completely understand how frustrating this delay must
-              feel. I&apos;ve escalated your refund and you&apos;ll see it within 3–5 business days.
-            </div>
-          </div>
-        </section>
 
-        <ReplyFlowPricingSection />
-      </main>
+            <button
+              onClick={handleGenerate}
+              disabled={isGenerating || !inputMessage}
+              className="bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow transition"
+            >
+              {isGenerating ? 'Synthesizing...' : 'Generate On-Brand Reply'}
+            </button>
+          </div>
+
+          {generatedReply && (
+            <div className="mt-4 pt-4 border-t border-zinc-800 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-emerald-400">Generated Reply:</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(generatedReply)}
+                  className="text-xs bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded text-zinc-300"
+                >
+                  Copy to Clipboard
+                </button>
+              </div>
+              <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800 text-sm whitespace-pre-wrap text-zinc-200 font-sans">
+                {generatedReply}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* MCP Manager Modal */}
+      <MCPManagerModal
+        isOpen={isMCPModalOpen}
+        onClose={() => setIsMCPModalOpen(false)}
+        toolId="replyflow"
+        tier={tier}
+        defaultIntegrations={DEFAULT_MCPS}
+      />
+
+      {/* Persistent Feedback Widget */}
+      <ITFeedbackWidget toolId="replyflow" />
     </div>
   );
 }
