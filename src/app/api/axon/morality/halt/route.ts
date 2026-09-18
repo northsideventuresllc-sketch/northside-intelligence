@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAxonOperatorId } from "@/lib/axon/operator";
+import { requireAxonMasterOperatorId } from "@/lib/axon/operator";
 import {
   clearGlobalHalt,
   declareGlobalHalt,
@@ -8,7 +8,7 @@ import {
 
 export async function GET() {
   try {
-    await requireAxonOperatorId();
+    await requireAxonMasterOperatorId();
     const status = await getGlobalHaltStatus();
     return NextResponse.json({ status });
   } catch (err) {
@@ -20,7 +20,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const operatorId = await requireAxonOperatorId();
+    const operatorId = await requireAxonMasterOperatorId();
     const { action, reason } = await req.json();
 
     if (action !== "halt" && action !== "clear") {
