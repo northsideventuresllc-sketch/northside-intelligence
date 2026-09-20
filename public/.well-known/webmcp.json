@@ -1,0 +1,406 @@
+{
+  "schema_version": "2026-09-01",
+  "provider": "Northside Intelligence",
+  "provider_url": "https://northsideintelligence.com",
+  "contact_email": "jb@northsideintelligence.com",
+  "tagline": "Filling the gaps to build the future.",
+  "protocol": "WebMCP / Model Context Protocol v1.0",
+  "tools": [
+    {
+      "name": "mf_search_coaches",
+      "description": "Search and filter certified personal fitness coaches across the United States by specialty, price tier, and client goals.",
+      "sector": "1A",
+      "product": "Match Fit",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "specialty": {
+            "type": "string",
+            "description": "e.g., strength, weight loss, mobility, bodybuilding, athletic conditioning"
+          },
+          "max_monthly_budget": {
+            "type": "number",
+            "description": "Maximum monthly budget for coach tier (minimum $15)"
+          },
+          "virtual_only": {
+            "type": "boolean",
+            "description": "Filter for online/virtual coaching (default: true)"
+          }
+        }
+      },
+      "floor_price_usd": 0,
+      "target_url": "https://northsideintelligence.com/api/agentic/execute?tool=mf_search_coaches"
+    },
+    {
+      "name": "mf_book_coach",
+      "description": "Book an intro assessment or purchase monthly coach client membership on Match Fit.",
+      "sector": "1A",
+      "product": "Match Fit",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "coach_id",
+          "client_email",
+          "tier"
+        ],
+        "properties": {
+          "coach_id": {
+            "type": "string",
+            "description": "Unique coach ID"
+          },
+          "client_email": {
+            "type": "string",
+            "description": "Client contact email for onboarding"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "free",
+              "vip_client",
+              "independent_pro",
+              "elite_pro"
+            ],
+            "description": "Selected tier"
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Scoped Stripe/x402 payment token"
+          }
+        }
+      },
+      "floor_price_usd": 10,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    },
+    {
+      "name": "ni_replyflow_subscribe",
+      "description": "Subscribe to ReplyFlow automated lead DM & email follow-up response generation engine (Standard $15/mo or Agentic $22.50/mo).",
+      "sector": "3",
+      "product": "ReplyFlow",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "account_email",
+          "tier"
+        ],
+        "properties": {
+          "account_email": {
+            "type": "string",
+            "description": "Subscriber email"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "agentic",
+              "core_bundle_agentic",
+              "pro_bundle_agentic",
+              "power_bundle_agentic"
+            ],
+            "default": "standard",
+            "description": "Standard SaaS ($15/mo) or Agentic Tier with default Gmail/Zendesk/Slack MCP integrations ($22.50/mo)"
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Authorized payment token"
+          }
+        }
+      },
+      "floor_price_usd": 15,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    },
+    {
+      "name": "ni_replyflow_generate",
+      "description": "Generate high-converting personalized follow-up response for a cold lead message using ReplyFlow.",
+      "sector": "3",
+      "product": "ReplyFlow",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "lead_message",
+          "context",
+          "tone"
+        ],
+        "properties": {
+          "lead_message": {
+            "type": "string",
+            "description": "The received lead message or DM"
+          },
+          "context": {
+            "type": "string",
+            "description": "Product or service context"
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "direct",
+              "consultative",
+              "casual",
+              "urgent"
+            ],
+            "default": "direct"
+          }
+        }
+      },
+      "floor_price_usd": 0.1,
+      "target_url": "https://northsideintelligence.com/api/agentic/execute?tool=ni_replyflow_generate"
+    },
+    {
+      "name": "ni_gapscan_run",
+      "description": "Run an evidence-backed intelligence gap report and digital audit on a target company URL (Single $18, Standard $18/mo, Agentic $27/mo).",
+      "sector": "3",
+      "product": "GapScan",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "target_domain"
+        ],
+        "properties": {
+          "target_domain": {
+            "type": "string",
+            "description": "Domain of target company to audit"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "single_scan",
+              "standard",
+              "agentic"
+            ],
+            "default": "single_scan",
+            "description": "Single Scan ($18), Standard SaaS ($18/mo), or Agentic Tier with Lighthouse/Site Crawler MCPs ($27/mo)"
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Payment token for one-off or subscription access"
+          }
+        }
+      },
+      "floor_price_usd": 18,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    },
+    {
+      "name": "ni_signaldesk_brief",
+      "description": "Fetch real-time daily prioritized market signal briefs from defined source sets (Standard $24/mo or Agentic $36/mo).",
+      "sector": "3",
+      "product": "Signal Desk",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "industry_vertical"
+        ],
+        "properties": {
+          "industry_vertical": {
+            "type": "string",
+            "description": "Industry or market sector focus"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "agentic"
+            ],
+            "default": "standard",
+            "description": "Standard SaaS ($24/mo) or Agentic Tier with SERP/HN/ProductHunt MCPs ($36/mo)"
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Payment token"
+          }
+        }
+      },
+      "floor_price_usd": 24,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    },
+    {
+      "name": "ni_grantbot_search",
+      "description": "Search open grant opportunities and generate application drafts for creators and orgs (Standard $39/mo or Agentic $58.50/mo).",
+      "sector": "3",
+      "product": "GrantBot",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "discipline"
+        ],
+        "properties": {
+          "discipline": {
+            "type": "string",
+            "description": "Discipline or focus area (e.g. music, tech, community)"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "agentic"
+            ],
+            "default": "standard",
+            "description": "Standard SaaS ($39/mo) or Agentic Tier with Grants.gov/Doc-Parser MCPs ($58.50/mo)"
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Payment token"
+          }
+        }
+      },
+      "floor_price_usd": 39,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    },
+    {
+      "name": "ni_bridgeai_run",
+      "description": "Bridge legacy business workflows to modern AI agent endpoints without code rebuilds (Standard $29/mo or Agentic $43.50/mo).",
+      "sector": "3",
+      "product": "BridgeAI",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "workflow_type"
+        ],
+        "properties": {
+          "workflow_type": {
+            "type": "string",
+            "description": "Type of workflow to modernize"
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "agentic"
+            ],
+            "default": "standard",
+            "description": "Standard SaaS ($29/mo) or Agentic Tier with Multi-LLM/Zapier MCPs ($43.50/mo)"
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Payment token"
+          }
+        }
+      },
+      "floor_price_usd": 29,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    },
+    {
+      "name": "ni_store_search",
+      "description": "Search the Northside Intelligence Smart Store catalog for trending products and verified dropship inventory.",
+      "sector": "4",
+      "product": "Smart Store",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Product search terms"
+          },
+          "max_price": {
+            "type": "number",
+            "description": "Max item price in USD"
+          }
+        }
+      },
+      "floor_price_usd": 0,
+      "target_url": "https://northsideintelligence.com/api/agentic/execute?tool=ni_store_search"
+    },
+    {
+      "name": "ni_store_order",
+      "description": "Programmatically purchase an item from the Smart Store with express fulfillment.",
+      "sector": "4",
+      "product": "Smart Store",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "item_sku",
+          "quantity",
+          "shipping_address",
+          "payment_token"
+        ],
+        "properties": {
+          "item_sku": {
+            "type": "string",
+            "description": "Product SKU"
+          },
+          "quantity": {
+            "type": "integer",
+            "default": 1
+          },
+          "shipping_address": {
+            "type": "object",
+            "required": [
+              "street",
+              "city",
+              "state",
+              "postal_code",
+              "country"
+            ],
+            "properties": {
+              "street": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string"
+              },
+              "postal_code": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              }
+            }
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Payment token"
+          }
+        }
+      },
+      "floor_price_usd": 15,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    },
+    {
+      "name": "ni_services_reserve",
+      "description": "Reserve a custom web design, intelligence server setup, or enterprise AI architecture project with deposit kickoff ($499 - $2,500 deposit).",
+      "sector": "2",
+      "product": "NI Core Services",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "service_type",
+          "client_name",
+          "client_email",
+          "payment_token"
+        ],
+        "properties": {
+          "service_type": {
+            "type": "string",
+            "enum": [
+              "custom_web_design",
+              "tailored_intelligence_server",
+              "intelligence_audit_gap_analysis",
+              "workflow_integration_automation",
+              "personal_intelligence_setup"
+            ],
+            "description": "Selected service package"
+          },
+          "client_name": {
+            "type": "string",
+            "description": "Company or individual client name"
+          },
+          "client_email": {
+            "type": "string",
+            "description": "Contact email"
+          },
+          "project_notes": {
+            "type": "string",
+            "description": "Brief overview of goals and timeline"
+          },
+          "payment_token": {
+            "type": "string",
+            "description": "Authorized payment token for deposit"
+          }
+        }
+      },
+      "floor_price_usd": 499,
+      "target_url": "https://northsideintelligence.com/api/agentic/checkout"
+    }
+  ]
+}
