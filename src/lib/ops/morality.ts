@@ -111,37 +111,72 @@ export async function listAmendments(): Promise<MoralityAmendment[]> {
   }));
 }
 
-export async function castVote(
+/**
+ * The ops session cookie proves "has ops access", not "is this specific steward" — it's a
+ * single shared secret with no per-person identity. Rather than trust a client-supplied
+ * steward/chair/ratifier id (which any ops-session holder could spoof to vote or veto as
+ * anyone), every mutating action derives the acting steward here: if exactly one active
+ * steward exists, that's unambiguously who's acting; with more than one, real per-steward
+ * auth doesn't exist yet, so we refuse instead of silently allowing impersonation.
+ */
+export async function resolveSoleActingSteward(client: SupabaseClient): Promise<MoralitySteward> {
+  const { data, error } = await client
+    .from("axon_morality_stewards")
+    .select("id,display_name,role,active,can_propose,can_vote,can_ratify")
+    .eq("active", true);
+  if (error) throw new Error(error.message);
+  const rows = data ?? [];
+  if (rows.length === 0) throw new Error("No active stewards configured");
+  if (rows.length > 1) {
+    throw new Error(
+      `${rows.length} active stewards configured — per-steward identity isn't verified by the ops ` +
+        "session yet, so multi-steward actions are refused until real per-steward auth ships."
+    );
+  }
+  return rows[0]!;
+}
+
+export async function castVoteAsSoleSteward(
   amendmentId: string,
-  stewardId: string,
   vote: "approve" | "deny" | "abstain",
   note?: string | null
 ) {
-  const { data, error } = await serviceClient().rpc("fn_morality_cast_vote", {
+  const client = serviceClient();
+  const steward = await resolveSoleActingSteward(client);
+  if (!steward.can_vote) throw new Error(`Steward ${steward.id} is not a voting steward`);
+  const { data, error } = await client.rpc("fn_morality_cast_vote", {
     p_amendment_id: amendmentId,
-    p_steward_id: stewardId,
+    p_steward_id: steward.id,
     p_vote: vote,
     p_note: note ?? null,
   });
   if (error) throw new Error(error.message);
-  return data;
+  return { steward, result: data };
 }
 
-export async function chairVeto(amendmentId: string, chairId: string, reason: string) {
-  const { data, error } = await serviceClient().rpc("fn_morality_chair_veto", {
+export async function chairVetoAsSoleSteward(amendmentId: string, reason: string) {
+  const client = serviceClient();
+  const steward = await resolveSoleActingSteward(client);
+  if (steward.role !== "chair") {
+    throw new Error(`Only the chair steward may veto (acting steward has role=${steward.role})`);
+  }
+  const { data, error } = await client.rpc("fn_morality_chair_veto", {
     p_amendment_id: amendmentId,
-    p_chair_id: chairId,
+    p_chair_id: steward.id,
     p_reason: reason,
   });
   if (error) throw new Error(error.message);
-  return data;
+  return { steward, result: data };
 }
 
-export async function ratifyAmendment(amendmentId: string, ratifierId: string) {
-  const { data, error } = await serviceClient().rpc("fn_morality_ratify", {
+export async function ratifyAsSoleSteward(amendmentId: string) {
+  const client = serviceClient();
+  const steward = await resolveSoleActingSteward(client);
+  if (!steward.can_ratify) throw new Error(`Steward ${steward.id} does not have ratify power`);
+  const { data, error } = await client.rpc("fn_morality_ratify", {
     p_amendment_id: amendmentId,
-    p_ratifier_id: ratifierId,
+    p_ratifier_id: steward.id,
   });
   if (error) throw new Error(error.message);
-  return data;
+  return { steward, result: data };
 }

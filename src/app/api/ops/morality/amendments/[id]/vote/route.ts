@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOpsSession } from "@/lib/ops/guard";
-import { castVote } from "@/lib/ops/morality";
+import { castVoteAsSoleSteward } from "@/lib/ops/morality";
 
 const VALID_VOTES = new Set(["approve", "deny", "abstain"]);
 
@@ -10,28 +10,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params;
 
-  let body: { steward_id?: string; vote?: string; note?: string };
+  let body: { vote?: string; note?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (!body.steward_id || !body.vote || !VALID_VOTES.has(body.vote)) {
+  if (!body.vote || !VALID_VOTES.has(body.vote)) {
     return NextResponse.json(
-      { error: "steward_id and a valid vote (approve|deny|abstain) are required" },
+      { error: "vote must be one of approve|deny|abstain" },
       { status: 400 }
     );
   }
 
   try {
-    const result = await castVote(
+    const { steward, result } = await castVoteAsSoleSteward(
       id,
-      body.steward_id,
       body.vote as "approve" | "deny" | "abstain",
       body.note
     );
-    return NextResponse.json({ result });
+    return NextResponse.json({ steward: steward.id, result });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Vote failed";
     return NextResponse.json({ error: message }, { status: 400 });

@@ -1,10 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { loadFromStorage, saveToStorage } from "@/lib/ops-storage";
+import { useState } from "react";
 import type { MoralityAmendment, MoralitySteward } from "@/lib/ops/morality";
-
-const ACTING_STEWARD_KEY = "ni_ops_morality_acting_steward";
 
 const PENDING_STATUSES = new Set(["draft", "deliberation", "voting", "approved"]);
 
@@ -39,25 +36,17 @@ interface Props {
 
 export function MoralityAmendments({ initialAmendments, stewards }: Props) {
   const [amendments, setAmendments] = useState(initialAmendments);
-  const [actingStewardId, setActingStewardId] = useState<string>(() =>
-    loadFromStorage(ACTING_STEWARD_KEY, stewards[0]?.id ?? "")
-  );
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const actingSteward = useMemo(
-    () => stewards.find((s) => s.id === actingStewardId) ?? null,
-    [stewards, actingStewardId]
-  );
+  // The ops session is one shared secret with no per-person identity, so the server refuses
+  // to trust a client-picked steward. It can only unambiguously act as "the acting steward"
+  // when exactly one active steward exists — see resolveSoleActingSteward in lib/ops/morality.
+  const soleSteward = stewards.length === 1 ? stewards[0]! : null;
 
   const pending = amendments.filter((a) => PENDING_STATUSES.has(a.status));
   const resolved = amendments.filter((a) => !PENDING_STATUSES.has(a.status));
-
-  function handleStewardChange(id: string) {
-    setActingStewardId(id);
-    saveToStorage(ACTING_STEWARD_KEY, id);
-  }
 
   async function refresh() {
     const res = await fetch("/api/ops/morality/amendments");
@@ -89,52 +78,37 @@ export function MoralityAmendments({ initialAmendments, stewards }: Props) {
   }
 
   function castVote(amendmentId: string, vote: "approve" | "deny" | "abstain") {
-    if (!actingStewardId) return;
-    void runAction(amendmentId, "vote", {
-      steward_id: actingStewardId,
-      vote,
-      note: notes[amendmentId] || undefined,
-    });
+    void runAction(amendmentId, "vote", { vote, note: notes[amendmentId] || undefined });
   }
 
   function chairVeto(amendmentId: string) {
-    if (!actingStewardId) return;
     const reason = notes[amendmentId]?.trim();
     if (!reason) {
       setError("A veto reason is required — add a note first.");
       return;
     }
-    void runAction(amendmentId, "veto", { chair_id: actingStewardId, reason });
+    void runAction(amendmentId, "veto", { reason });
   }
 
   function ratify(amendmentId: string) {
-    if (!actingStewardId) return;
-    void runAction(amendmentId, "ratify", { ratifier_id: actingStewardId });
+    void runAction(amendmentId, "ratify", {});
   }
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4">
-        <label htmlFor="acting-steward" className="text-sm text-ni-muted">
-          Acting as steward
-        </label>
-        <select
-          id="acting-steward"
-          value={actingStewardId}
-          onChange={(e) => handleStewardChange(e.target.value)}
-          className="rounded-lg border border-white/10 bg-ni-bg px-3 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50"
-        >
-          {stewards.length === 0 && <option value="">No active stewards</option>}
-          {stewards.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.display_name} ({s.role})
-            </option>
-          ))}
-        </select>
-        {actingSteward && (
-          <span className="text-xs text-ni-muted">
-            can_vote={String(actingSteward.can_vote)} · can_ratify={String(actingSteward.can_ratify)}
-          </span>
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
+        {soleSteward ? (
+          <p className="text-ni-muted">
+            Acting as steward <span className="text-white">{soleSteward.display_name}</span> (
+            {soleSteward.role}) · can_vote={String(soleSteward.can_vote)} · can_ratify=
+            {String(soleSteward.can_ratify)}
+          </p>
+        ) : (
+          <p className="text-amber-400">
+            {stewards.length === 0
+              ? "No active stewards configured — voting, veto, and ratify are disabled."
+              : `${stewards.length} active stewards configured — per-steward identity isn't verified by the shared ops session yet, so actions are disabled until real per-steward auth ships.`}
+          </p>
         )}
       </div>
 
@@ -155,7 +129,7 @@ export function MoralityAmendments({ initialAmendments, stewards }: Props) {
                 key={a.id}
                 amendment={a}
                 busy={busyId === a.id}
-                actingSteward={actingSteward}
+                soleSteward={soleSteward}
                 note={notes[a.id] ?? ""}
                 onNoteChange={(v) => setNotes((prev) => ({ ...prev, [a.id]: v }))}
                 onVote={(vote) => castVote(a.id, vote)}
@@ -207,7 +181,7 @@ export function MoralityAmendments({ initialAmendments, stewards }: Props) {
 function AmendmentCard({
   amendment,
   busy,
-  actingSteward,
+  soleSteward,
   note,
   onNoteChange,
   onVote,
@@ -216,7 +190,7 @@ function AmendmentCard({
 }: {
   amendment: MoralityAmendment;
   busy: boolean;
-  actingSteward: MoralitySteward | null;
+  soleSteward: MoralitySteward | null;
   note: string;
   onNoteChange: (v: string) => void;
   onVote: (vote: "approve" | "deny" | "abstain") => void;
@@ -225,9 +199,9 @@ function AmendmentCard({
 }) {
   const canVote = amendment.status === "deliberation" || amendment.status === "voting";
   const canRatify = amendment.status === "approved" && !amendment.chair_veto;
-  const canVeto = actingSteward?.role === "chair";
-  const myVote = actingSteward
-    ? amendment.votes.find((v) => v.steward_id === actingSteward.id)
+  const canVeto = soleSteward?.role === "chair";
+  const myVote = soleSteward
+    ? amendment.votes.find((v) => v.steward_id === soleSteward.id)
     : undefined;
 
   return (
@@ -270,7 +244,7 @@ function AmendmentCard({
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={busy || !canVote || !actingSteward?.can_vote}
+          disabled={busy || !canVote || !soleSteward?.can_vote}
           onClick={() => onVote("approve")}
           className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -278,7 +252,7 @@ function AmendmentCard({
         </button>
         <button
           type="button"
-          disabled={busy || !canVote || !actingSteward?.can_vote}
+          disabled={busy || !canVote || !soleSteward?.can_vote}
           onClick={() => onVote("deny")}
           className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -286,7 +260,7 @@ function AmendmentCard({
         </button>
         <button
           type="button"
-          disabled={busy || !canVote || !actingSteward?.can_vote}
+          disabled={busy || !canVote || !soleSteward?.can_vote}
           onClick={() => onVote("abstain")}
           className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-ni-muted hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -305,7 +279,7 @@ function AmendmentCard({
         {canRatify && (
           <button
             type="button"
-            disabled={busy || !actingSteward?.can_ratify}
+            disabled={busy || !soleSteward?.can_ratify}
             onClick={onRatify}
             className="rounded-lg border border-cyan-500/40 bg-cyan-500/20 px-3 py-1.5 text-xs font-medium text-cyan-200 hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-40"
           >
