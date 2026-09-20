@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/ops#matchfit", label: "Match Fit" },
   { href: "/ops#revenue", label: "Revenue Tracker" },
   { href: "/ops#links", label: "Quick Links" },
+  { href: "/ops/trust", label: "Trust & Morality", exact: true },
 ];
 
 export function OpsSidebar() {
@@ -27,10 +28,7 @@ export function OpsSidebar() {
       </div>
       <nav className="flex-1 space-y-1 p-3">
         {NAV_ITEMS.map((item) => {
-          const active =
-            item.exact && pathname === item.href
-              ? pathname === "/ops"
-              : false;
+          const active = item.exact ? pathname === item.href : false;
           return (
             <Link
               key={item.href}
