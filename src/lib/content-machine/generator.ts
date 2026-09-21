@@ -21,6 +21,7 @@ import {
 import { buildHighVolumeHashtagRule, enforceHighVolumeHashtags } from "./hashtag-policy";
 import { buildMediaPrompt, queueContentMachineImageJob } from "./image-gen";
 import { buildRegenFeedback, hasBannedPhrase, runQualityGate, stripBannedReferences } from "./quality-gate";
+import { draftContentReviewArtifact } from "./review-gate";
 import { isSlotTimeBudgetExceeded } from "./slot-time-budget";
 import type {
   ContentPost,
@@ -382,6 +383,7 @@ export async function generateDailyBatch(args?: {
     const wantsMedia = Boolean(
       args?.withImages && postType !== "Text" && draft.visualPrompt
     );
+    const generatedAt = new Date().toISOString();
 
     const post = await insertPost({
       brand_slug: brandSlug,
@@ -400,7 +402,7 @@ export async function generateDailyBatch(args?: {
       batch_id: batchId,
       source_post_id: null,
       meta: {
-        generated_at: new Date().toISOString(),
+        generated_at: generatedAt,
         ...(wantsMedia && draft.visualPrompt
           ? {
               media_status: "pending_mini_chrome",
@@ -415,6 +417,29 @@ export async function generateDailyBatch(args?: {
         await queueContentMachineImageJob({ postId: post.id, brandSlug });
       } catch (err) {
         console.warn("[content-machine] image job queue failed:", err);
+      }
+    }
+
+    // Decision #1888 Phase 4: mirror a review-queue row for every non-Match-Fit brand
+    // alongside the live content_machine_posts row above. Match Fit (Sector 1A) is
+    // explicitly out of scope. Never fatal — a mirror failure must not abort content
+    // generation, matching the queueContentMachineImageJob catch pattern just above.
+    if (brandSlug !== "match-fit") {
+      try {
+        await draftContentReviewArtifact({
+          brandSlug,
+          themeName: theme.name,
+          postType,
+          dayIndex,
+          batchId,
+          targetGroup,
+          draft,
+          wantsMedia,
+          post,
+          generatedAt,
+        });
+      } catch (err) {
+        console.warn("[content-machine] review artifact mirror failed:", err);
       }
     }
 
@@ -492,6 +517,7 @@ export async function generateBatchSlot(args: {
   const wantsMedia = Boolean(
     args.withImages && args.postType !== "Text" && draft.visualPrompt
   );
+  const generatedAt = new Date().toISOString();
 
   const post = await insertPost({
     brand_slug: brandSlug,
@@ -510,7 +536,7 @@ export async function generateBatchSlot(args: {
     batch_id: batchId,
     source_post_id: null,
     meta: {
-      generated_at: new Date().toISOString(),
+      generated_at: generatedAt,
       ...(wantsMedia && draft.visualPrompt
         ? {
             media_status: "pending_mini_chrome",
@@ -525,6 +551,29 @@ export async function generateBatchSlot(args: {
       await queueContentMachineImageJob({ postId: post.id, brandSlug });
     } catch (err) {
       console.warn("[content-machine] image job queue failed:", err);
+    }
+  }
+
+  // Decision #1888 Phase 4: mirror a review-queue row for every non-Match-Fit brand
+  // alongside the live content_machine_posts row above. Match Fit (Sector 1A) is
+  // explicitly out of scope. Never fatal — a mirror failure must not abort content
+  // generation, matching the queueContentMachineImageJob catch pattern just above.
+  if (brandSlug !== "match-fit") {
+    try {
+      await draftContentReviewArtifact({
+        brandSlug,
+        themeName: theme.name,
+        postType: args.postType,
+        dayIndex,
+        batchId,
+        targetGroup,
+        draft,
+        wantsMedia,
+        post,
+        generatedAt,
+      });
+    } catch (err) {
+      console.warn("[content-machine] review artifact mirror failed:", err);
     }
   }
 

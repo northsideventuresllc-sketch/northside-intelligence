@@ -1,4 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { queueContentMachineImageJob } from "@/lib/content-machine/image-gen";
+import { setNiPostStatus } from "@/lib/content-machine/ni-content";
 
 const SUPABASE_URL =
   process.env.NI_BRAIN_SUPABASE_URL ||
@@ -87,5 +89,47 @@ export async function decideReviewArtifact(
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error(`Artifact ${id} was decided by someone else just now — refresh and retry`);
+
+  // nvg_review_artifacts_content_kind_check (live schema) only allows 'social_post' |
+  // 'outreach_message' | 'other' — CONTENT's mirrored drafts use content_kind='social_post'
+  // (see draftContentReviewArtifact in src/lib/content-machine/review-gate.ts), same as any
+  // other social-post artifact. created_by_agent='CONTENT' is the precise discriminator for
+  // "this row has a linked content_machine_posts row via source_ref" so approving some other
+  // agent's unrelated social_post artifact never touches content_machine_posts.
+  if (decision === "approved" && data.content_kind === "social_post" && data.created_by_agent === "CONTENT") {
+    await applyContentApprovalSideEffects(data);
+  }
+
   return data;
+}
+
+/**
+ * Decision #1888 Phase 4 (BUILD-ARTIFACT-PIPELINE-CONTENT-INTEGRATION-0914-04):
+ * CONTENT drafts land in nvg_review_artifacts (content_kind="social_post",
+ * created_by_agent="CONTENT") mirrored alongside their live content_machine_posts row
+ * (source_ref links the two — see draftContentReviewArtifact in
+ * src/lib/content-machine/review-gate.ts). Approving
+ * the artifact here must also carry that approval through to the linked
+ * content_machine_posts row so the existing draft -> pending_approval -> approved
+ * -> scheduled -> published state machine (schedule.ts) can proceed, and optionally
+ * queue the Gemini Mac-mini generation job if the draft wanted media. Never fatal —
+ * the artifact decision itself has already committed by the time this runs.
+ */
+async function applyContentApprovalSideEffects(artifact: ReviewArtifact): Promise<void> {
+  if (!artifact.source_ref) return;
+
+  try {
+    await setNiPostStatus(artifact.source_ref, "approved");
+  } catch (err) {
+    console.warn("[ops/review-artifacts] failed to flip linked content_machine_posts row:", err);
+  }
+
+  const wantsMedia = Boolean((artifact.metadata as Record<string, unknown> | null)?.wants_media);
+  if (wantsMedia && artifact.venture_id) {
+    try {
+      await queueContentMachineImageJob({ postId: artifact.source_ref, brandSlug: artifact.venture_id });
+    } catch (err) {
+      console.warn("[ops/review-artifacts] failed to queue mini image job on approval:", err);
+    }
+  }
 }
