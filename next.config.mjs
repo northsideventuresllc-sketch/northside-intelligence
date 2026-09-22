@@ -18,6 +18,14 @@ const nextConfig = {
         source: "/api/agentic/:path*",
         destination: "/api/webmcp",
       },
+      {
+        source: "/.well-known/mcp.json",
+        destination: "/.well-known/webmcp.json",
+      },
+      {
+        source: "/.well-known/mcp/server-card.json",
+        destination: "/.well-known/webmcp.json",
+      },
     ];
   },
   images: {
