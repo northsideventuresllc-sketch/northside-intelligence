@@ -45,13 +45,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Connect to Supabase via service client
-    let accountId = "7e82a9db-b86e-4f21-b797-99b6931c9728"; // JB default account
+    let authUserId = "ccd98883-214d-47c0-96a9-e65a58005f3d"; // JB primary auth user
+    let axonAccountId = "7e82a9db-b86e-4f21-b797-99b6931c9728"; // Default AXON account
     let supabase = null;
     try {
       supabase = createServiceClient();
       const { data: acct } = await supabase.from("axon_accounts").select("id").limit(1).maybeSingle();
       if (acct?.id) {
-        accountId = acct.id;
+        axonAccountId = acct.id;
       }
     } catch (err: any) {
       console.warn("[WebMCP] Service client init fallback:", err.message);
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
     if (supabase) {
       try {
         const clientName = parameters.client_name || "Autonomous Buyer Agent";
-        const clientEmail = parameters.client_email || "buyer@northsideintelligence.com";
+        const clientEmail = parameters.account_email || parameters.client_email || "buyer@northsideintelligence.com";
         const priceCents = parameters.offered_price_usd
           ? Math.round(parameters.offered_price_usd * 100)
           : Math.round((tool.floor_price_usd || 15) * 100);
@@ -74,18 +75,18 @@ export async function POST(req: NextRequest) {
           
           await supabase.from("outreach_leads").insert({
             venture: "ni",
-            channel: "webmcp",
+            channel: "other",
             full_name: clientName,
             email: clientEmail,
             company: engine,
             source: "webmcp_buyer_catching",
             why: `Subscribed to ReplyFlow (${tier}) via WebMCP`,
             score: 95,
-            status: "qualified"
+            status: "new"
           });
 
           const { data: srv } = await supabase.from("ni_service_requests").insert({
-            user_id: accountId,
+            user_id: authUserId,
             service_slug: "replyflow_subscription",
             account_type: "business",
             status: "pending",
@@ -114,18 +115,18 @@ export async function POST(req: NextRequest) {
 
           await supabase.from("outreach_leads").insert({
             venture: "ni",
-            channel: "webmcp",
+            channel: "other",
             full_name: clientName,
             email: clientEmail,
             company: engine,
             source: "webmcp_buyer_catching",
             why: `Reserved ${serviceType} via WebMCP`,
             score: 95,
-            status: "qualified"
+            status: "new"
           });
 
           const { data: srv } = await supabase.from("ni_service_requests").insert({
-            user_id: accountId,
+            user_id: authUserId,
             service_slug: serviceType,
             account_type: "business",
             status: "pending",
@@ -155,7 +156,7 @@ export async function POST(req: NextRequest) {
 
         // Always log ingress to axon_agent_messages with required account_id
         await supabase.from("axon_agent_messages").insert({
-          account_id: accountId,
+          account_id: axonAccountId,
           thread: "webmcp_ingress",
           sender: engine,
           content: natural_query || `WebMCP execution: ${tool_name}`,
