@@ -63,53 +63,86 @@ export async function POST(req: NextRequest) {
 
     if (supabase) {
       try {
-        if (tool_name === "ni_replyflow_subscribe") {
-          const tier = parameters.tier || "standard";
-          const { data: sub, error: subErr } = await supabase.from("ni_subscriptions").insert({
-            tier: tier,
-            billing_interval: "month",
-            current_period_end: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
-            stripe_customer_id: `cus_agent_${Date.now()}`,
-            stripe_subscription_id: `sub_agent_${Date.now()}`
-          }).select().maybeSingle();
+        const clientName = parameters.client_name || "Autonomous Buyer Agent";
+        const clientEmail = parameters.client_email || "buyer@northsideintelligence.com";
+        const priceCents = parameters.offered_price_usd
+          ? Math.round(parameters.offered_price_usd * 100)
+          : Math.round((tool.floor_price_usd || 15) * 100);
 
-          if (subErr) console.warn("[WebMCP] ni_subscriptions write notice:", subErr.message);
+        if (tool_name === "ni_replyflow_subscribe") {
+          const tier = parameters.tier || "pro";
+          
+          await supabase.from("outreach_leads").insert({
+            venture: "ni",
+            channel: "webmcp",
+            full_name: clientName,
+            email: clientEmail,
+            company: engine,
+            source: "webmcp_buyer_catching",
+            why: `Subscribed to ReplyFlow (${tier}) via WebMCP`,
+            score: 95,
+            status: "qualified"
+          });
+
+          const { data: srv } = await supabase.from("ni_service_requests").insert({
+            user_id: accountId,
+            service_slug: "replyflow_subscription",
+            account_type: "business",
+            status: "pending",
+            payload: {
+              product: "ReplyFlow",
+              tier: tier,
+              billing_interval: "monthly",
+              engine,
+              signature,
+              source: "webmcp_ingress"
+            },
+            agreed_price_cents: priceCents
+          }).select().maybeSingle();
 
           fulfillmentPayload = {
             product: "ReplyFlow",
-            subscription_id: sub?.id || txId,
+            subscription_id: srv?.id || txId,
             tier: tier,
             access_token: `rf_live_${Math.random().toString(36).substring(2, 14)}`,
             connection_endpoint: "https://northsideintelligence.com/api/webmcp",
-            monthly_cost_usd: 15.00,
+            monthly_cost_usd: priceCents / 100,
             status: "active"
           };
         } else if (tool_name === "ni_services_reserve") {
           const serviceType = parameters.service_type || "custom_web_design";
-          const clientName = parameters.client_name || "Autonomous Buyer";
-          const clientEmail = parameters.client_email || "buyer@northsideintelligence.com";
 
-          const { data: srv, error: srvErr } = await supabase.from("ni_service_requests").insert({
+          await supabase.from("outreach_leads").insert({
+            venture: "ni",
+            channel: "webmcp",
+            full_name: clientName,
+            email: clientEmail,
+            company: engine,
+            source: "webmcp_buyer_catching",
+            why: `Reserved ${serviceType} via WebMCP`,
+            score: 95,
+            status: "qualified"
+          });
+
+          const { data: srv } = await supabase.from("ni_service_requests").insert({
             user_id: accountId,
             service_slug: serviceType,
-            account_type: "agentic",
-            status: "pending_deposit",
+            account_type: "business",
+            status: "pending",
             payload: {
               client_name: clientName,
               client_email: clientEmail,
               project_notes: parameters.project_notes || "Agentic WebMCP booking",
               source: "webmcp_agentic_ingress"
             },
-            agreed_price_cents: 49900
+            agreed_price_cents: priceCents
           }).select().maybeSingle();
-
-          if (srvErr) console.warn("[WebMCP] ni_service_requests write notice:", srvErr.message);
 
           fulfillmentPayload = {
             service: serviceType,
             request_id: srv?.id || txId,
             client: clientName,
-            deposit_cents: 49900,
+            deposit_cents: priceCents,
             status: "confirmed"
           };
         } else {
