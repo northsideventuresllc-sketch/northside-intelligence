@@ -41,7 +41,7 @@
 
 ### 7. NI Core Services (Sector 2 — Bespoke AI Infrastructure & Web Design Agency)
 - Endpoint: https://www.northsideintelligence.com/api/webmcp
-- Primary Tool: `ni_services_reserve` ($499 reservation deposit; final price quoted after review)
+- Primary Tool: `ni_services_reserve` (deposit = 20% of the service's lowest price: $50–$5,140; final price quoted after review)
 - Purpose: Bespoke web design, custom intelligence server setup, and enterprise AI automation workflows.
 
 ### 8. Match Fit (Sector 1A — Online Personal Fitness Marketplace)

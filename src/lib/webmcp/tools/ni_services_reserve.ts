@@ -1,8 +1,23 @@
 import { getServiceBySlug } from "@/lib/services/offerings";
+import { COMPETITIVE_DISCOUNT, FLOOR_RATIO, SERVICE_MARKET_RATES_CENTS } from "@/lib/services/market-rates";
 import { createWebmcpCheckout } from "../checkout";
 import type { FulfilHandler, ToolHandler } from "../types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Deposit = 20% of the service's lowest acceptable price (JB, 2026-09-23), rounded to $10, min $50.
+// Lowest price mirrors pricing-engine: market rate x (1 - competitive discount) x floor ratio.
+const DEPOSIT_SHARE = 0.2;
+const MIN_DEPOSIT_CENTS = 5000;
+// Stripe metadata caps each value at 500 chars; keep notes short enough to fit with the other params.
+const MAX_NOTES_CHARS = 200;
+
+export function depositCentsFor(slug: string): number | null {
+  const market = SERVICE_MARKET_RATES_CENTS[slug];
+  if (!market) return null;
+  const floor = market * (1 - COMPETITIVE_DISCOUNT) * FLOOR_RATIO;
+  return Math.max(MIN_DEPOSIT_CENTS, Math.round((floor * DEPOSIT_SHARE) / 1000) * 1000);
+}
 
 /**
  * The published webmcp.json manifest's `service_type` enum uses its own short
@@ -20,7 +35,7 @@ const SERVICE_TYPE_TO_SLUG: Record<string, string> = {
   personal_intelligence_setup: "personal-intelligence-setup",
 };
 
-export const handler: ToolHandler = async (tool, params) => {
+export const handler: ToolHandler = async (_tool, params) => {
   const rawType = typeof params.service_type === "string" ? params.service_type.trim() : "";
   const slug = SERVICE_TYPE_TO_SLUG[rawType];
   const service = slug ? getServiceBySlug(slug) : undefined;
@@ -42,18 +57,10 @@ export const handler: ToolHandler = async (tool, params) => {
   }
 
   const projectNotes =
-    typeof params.project_notes === "string" ? params.project_notes.trim().slice(0, 2000) : "";
+    typeof params.project_notes === "string" ? params.project_notes.trim().slice(0, MAX_NOTES_CHARS) : "";
 
-  // src/lib/services/pricing-engine.ts has no fixed "deposit" concept at all —
-  // real pricing is a dynamic quote (ni_service_quotes) generated only after an
-  // authenticated NI Portal intake form, and the real checkout
-  // (src/app/api/services/checkout/route.ts) charges that quote's full/plan/bnpl
-  // price, never a flat deposit. There is no per-service deposit amount anywhere
-  // in the services code to read, so per instructions this uses the manifest's
-  // own tool-level floor_price_usd as the reservation deposit rather than
-  // inventing a number.
-  const depositUsd = tool.floor_price_usd;
-  const depositCents = Math.round(depositUsd * 100);
+  const depositCents = depositCentsFor(service.slug);
+  if (!depositCents) return { status: "unavailable", message: `${service.name} can't be reserved online yet.` };
 
   return createWebmcpCheckout({
     tool: "ni_services_reserve",

@@ -290,7 +290,7 @@
     },
     {
       "name": "ni_services_reserve",
-      "description": "Reserve a Northside Intelligence service project (custom web design, intelligence server, audit, workflow automation, personal setup) with a $499 reservation deposit. Final price is quoted after review. Returns a checkout_url and order_id; after payment call ni_order_status with order_id to get the result.",
+      "description": "Reserve a Northside Intelligence service project with a deposit of 20% of that service's lowest price: intelligence audit $410, personal intelligence setup $50, workflow integration $1,010, custom web design $1,370, tailored intelligence server $5,140. Final price is quoted after review. Returns a checkout_url and order_id; after payment call ni_order_status with order_id.",
       "sector": "2",
       "product": "NI Core Services",
       "parameters": {
@@ -322,11 +322,11 @@
           },
           "project_notes": {
             "type": "string",
-            "description": "Brief overview of goals and timeline"
+            "description": "Short project notes, up to 200 characters."
           }
         }
       },
-      "floor_price_usd": 499,
+      "floor_price_usd": 50,
       "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
