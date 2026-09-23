@@ -1,5 +1,5 @@
 import { getServiceBySlug } from "@/lib/services/offerings";
-import { DEPOSIT_SHARE, MIN_DEPOSIT_CENTS } from "@/lib/services/deposit";
+import { DEPOSIT_SHARE, MIN_DEPOSIT_CENTS, depositSessionParams } from "@/lib/services/deposit";
 import { COMPETITIVE_DISCOUNT, FLOOR_RATIO, SERVICE_MARKET_RATES_CENTS } from "@/lib/services/market-rates";
 import { createWebmcpCheckout } from "../checkout";
 import type { FulfilHandler, ToolHandler } from "../types";
@@ -65,7 +65,13 @@ export const handler: ToolHandler = async (_tool, params) => {
     tool: "ni_services_reserve",
     mode: "payment",
     amountCents: depositCents,
-    productName: `${service.name} — Reservation Deposit`,
+    productName: `${service.name} — 20% Non-Refundable Deposit`,
+    // Card is saved so JB can charge the balance when the service is complete (Decision #1996).
+    sessionExtras: depositSessionParams({
+      serviceSlug: service.slug,
+      totalCents: Math.round(depositCents / DEPOSIT_SHARE),
+      depositCents,
+    }),
     customerEmail: clientEmail,
     params: { service_type: rawType, service_slug: slug, client_name: clientName, client_email: clientEmail, project_notes: projectNotes },
   });
@@ -89,8 +95,8 @@ export const fulfil: FulfilHandler = async (order, params) => {
   return {
     message:
       `Deposit of $${depositUsd.toFixed(0)} received for ${service?.name ?? "the requested service"}. ` +
-      "This is a reservation only, not a final price. Northside Intelligence (JB) will follow up " +
-      "directly with the client to scope the project and confirm the full quote.",
+      "The deposit is non-refundable. Northside Intelligence will scope the project and confirm the final " +
+      "price; the remaining balance is charged to the saved card when the service is complete.",
     service: service?.name ?? serviceSlug,
     client_name: clientName,
     client_email: clientEmail,

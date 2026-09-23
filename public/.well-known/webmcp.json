@@ -290,7 +290,7 @@
     },
     {
       "name": "ni_services_reserve",
-      "description": "Reserve a Northside Intelligence service project with a deposit of 20% of that service's lowest price: intelligence audit $410, personal intelligence setup $50, workflow integration $1,010, custom web design $1,370, tailored intelligence server $5,140. Final price is quoted after review. Returns a checkout_url and order_id; after payment call ni_order_status with order_id.",
+      "description": "Reserve a Northside Intelligence service project with a non-refundable deposit of 20% of that service's lowest price: intelligence audit $410, personal intelligence setup $50, workflow integration $1,010, custom web design $1,370, tailored intelligence server $5,140. The buyer's card is saved and the balance is charged when the service is complete; final price is confirmed after scoping. Returns a checkout_url and order_id; after payment call ni_order_status with order_id.",
       "sector": "2",
       "product": "NI Core Services",
       "parameters": {

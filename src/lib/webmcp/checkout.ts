@@ -1,4 +1,5 @@
 import { ensureBillingEnvHydrated, getBillingConfigError, getBillingStripe } from "@/lib/billing/stripe";
+import type Stripe from "stripe";
 import type { ToolResult } from "./types";
 
 const SITE = "https://www.northsideintelligence.com";
@@ -9,6 +10,8 @@ export type CheckoutInput = {
   productName: string;
   customerEmail?: string;
   params: Record<string, unknown>;
+  /** Extra Stripe session params (e.g. saving the card for a later balance charge). */
+  sessionExtras?: Pick<Stripe.Checkout.SessionCreateParams, "customer_creation" | "payment_intent_data" | "custom_text">;
 } & ({ mode: "payment"; amountCents: number } | { mode: "subscription"; priceId: string });
 
 /**
@@ -36,6 +39,7 @@ export async function createWebmcpCheckout(input: CheckoutInput): Promise<ToolRe
     success_url: `${SITE}/?webmcp_order={CHECKOUT_SESSION_ID}`,
     cancel_url: `${SITE}/`,
     metadata: { source: "webmcp", tool: input.tool, params: paramsJson },
+    ...(input.mode === "payment" ? input.sessionExtras ?? {} : {}),
     ...(input.mode === "subscription" ? { subscription_data: { metadata: { source: "webmcp", tool: input.tool } } } : {}),
   });
   if (!session.url) return { status: "unavailable", message: "Checkout is temporarily unavailable." };
