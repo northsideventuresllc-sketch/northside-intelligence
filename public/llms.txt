@@ -11,27 +11,27 @@
 
 ### 1. ReplyFlow (Sector 3 — Automated Lead & DM Follow-up)
 - Endpoint: https://www.northsideintelligence.com/api/webmcp
-- Primary Tool: `ni_replyflow_subscribe` ($15/mo standard, $22.50/mo agentic)
+- Primary Tool: `ni_replyflow_subscribe` (Solo / Team / Agency monthly plans, card checkout); free replies via `ni_replyflow_generate` (10/day per agent)
 - Purpose: Automated lead DM and cold outreach follow-up response generator for small businesses and creators.
 
 ### 2. GapScan (Sector 3 — Digital Gap Analysis & Profit Leak Audits)
 - Endpoint: https://www.northsideintelligence.com/api/webmcp
-- Primary Tool: `ni_gapscan_run` ($18 single scan, $18/mo standard, $27/mo agentic)
+- Primary Tool: `ni_gapscan_run` ($18 per scan)
 - Purpose: Evidence-backed digital gap reports, website performance audits, and digital funnel leak scans.
 
 ### 3. GrantBot (Sector 3 — Grant Search & Application Automation)
 - Endpoint: https://www.northsideintelligence.com/api/webmcp
-- Primary Tool: `ni_grantbot_search` ($39/mo standard, $58.50/mo agentic)
+- Primary Tool: `ni_grantbot_search` ($39 standard, $58.50 agentic)
 - Purpose: Automated grant search, RFP matching, and proposal drafting for non-profits, artists, and creators.
 
 ### 4. BridgeAI (Sector 3 — Legacy Software AI Modernization)
 - Endpoint: https://www.northsideintelligence.com/api/webmcp
-- Primary Tool: `ni_bridgeai_run` ($29/mo standard, $43.50/mo agentic)
+- Primary Tool: `ni_bridgeai_run` ($33 standard, $49.50 agentic)
 - Purpose: Connect legacy databases and business workflows to modern AI agent endpoints without code rebuilds.
 
 ### 5. Signal Desk (Sector 3 — Market Signal & Competitor Intelligence Radar)
 - Endpoint: https://www.northsideintelligence.com/api/webmcp
-- Primary Tool: `ni_signaldesk_brief` ($24/mo standard, $36/mo agentic)
+- Primary Tool: `ni_signaldesk_brief` ($24 per brief, from signals you supply)
 - Purpose: Curated daily executive market trend radar and competitor monitoring platform.
 
 ### 6. Smart Store (Sector 4 — Curated Gadgets & Dropship Hardware)
@@ -41,7 +41,7 @@
 
 ### 7. NI Core Services (Sector 2 — Bespoke AI Infrastructure & Web Design Agency)
 - Endpoint: https://www.northsideintelligence.com/api/webmcp
-- Primary Tool: `ni_services_reserve` ($499 deposit)
+- Primary Tool: `ni_services_reserve` ($499 reservation deposit; final price quoted after review)
 - Purpose: Bespoke web design, custom intelligence server setup, and enterprise AI automation workflows.
 
 ### 8. Match Fit (Sector 1A — Online Personal Fitness Marketplace)
@@ -52,3 +52,6 @@
 ## WebMCP Discovery Manifest
 Complete machine-readable JSON schema is available at:
 https://www.northsideintelligence.com/.well-known/webmcp.json
+
+## How payment works
+Paid tools return `checkout_url` and `order_id`. Send the buyer to checkout_url (Stripe). After payment, call `ni_order_status` with order_id to receive the result.
