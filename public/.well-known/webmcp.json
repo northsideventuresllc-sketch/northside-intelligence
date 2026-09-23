@@ -1,14 +1,14 @@
 {
-  "schema_version": "2026-09-01",
+  "schema_version": "2026-09-23",
   "provider": "Northside Intelligence",
-  "provider_url": "https://northsideintelligence.com",
+  "provider_url": "https://www.northsideintelligence.com",
   "contact_email": "jb@northsideintelligence.com",
   "tagline": "Filling the gaps to build the future.",
   "protocol": "WebMCP / Model Context Protocol v1.0",
   "tools": [
     {
       "name": "mf_search_coaches",
-      "description": "Search and filter certified personal fitness coaches across the United States by specialty, price tier, and client goals.",
+      "description": "Search online Match Fit fitness coaches nationwide by specialty and monthly budget. Free.",
       "sector": "1A",
       "product": "Match Fit",
       "parameters": {
@@ -21,59 +21,35 @@
           "max_monthly_budget": {
             "type": "number",
             "description": "Maximum monthly budget for coach tier (minimum $15)"
-          },
-          "virtual_only": {
-            "type": "boolean",
-            "description": "Filter for online/virtual coaching (default: true)"
           }
         }
       },
       "floor_price_usd": 0,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "mf_book_coach",
-      "description": "Book an intro assessment or purchase monthly coach client membership on Match Fit.",
+      "description": "Get the link to book a Match Fit coach. The buyer creates a Match Fit account and pays the coach on match-fit.net; nothing is booked or charged by this call.",
       "sector": "1A",
       "product": "Match Fit",
       "parameters": {
         "type": "object",
         "required": [
-          "coach_id",
-          "client_email",
-          "tier"
+          "coach_id"
         ],
         "properties": {
           "coach_id": {
             "type": "string",
-            "description": "Unique coach ID"
-          },
-          "client_email": {
-            "type": "string",
-            "description": "Client contact email for onboarding"
-          },
-          "tier": {
-            "type": "string",
-            "enum": [
-              "free",
-              "vip_client",
-              "independent_pro",
-              "elite_pro"
-            ],
-            "description": "Selected tier"
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Scoped Stripe/x402 payment token"
+            "description": "Coach username from mf_search_coaches"
           }
         }
       },
-      "floor_price_usd": 10,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "floor_price_usd": 0,
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_replyflow_subscribe",
-      "description": "Subscribe to ReplyFlow automated lead DM & email follow-up response generation engine (Standard $15/mo or Agentic $22.50/mo).",
+      "description": "Subscribe to ReplyFlow, the automated lead DM and email reply engine (Solo, Team or Agency plan, billed monthly by card). Returns a checkout_url and order_id; after payment call ni_order_status with order_id to get the result.",
       "sector": "3",
       "product": "ReplyFlow",
       "parameters": {
@@ -90,27 +66,21 @@
           "tier": {
             "type": "string",
             "enum": [
-              "standard",
-              "agentic",
-              "core_bundle_agentic",
-              "pro_bundle_agentic",
-              "power_bundle_agentic"
+              "solo",
+              "team",
+              "agency"
             ],
-            "default": "standard",
-            "description": "Standard SaaS ($15/mo) or Agentic Tier with default Gmail/Zendesk/Slack MCP integrations ($22.50/mo)"
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Authorized payment token"
+            "default": "solo",
+            "description": "ReplyFlow plan. Price is shown on the Stripe checkout page."
           }
         }
       },
       "floor_price_usd": 15,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_replyflow_generate",
-      "description": "Generate high-converting personalized follow-up response for a cold lead message using ReplyFlow.",
+      "description": "Generate a personalized reply to a lead message using ReplyFlow. Free tier, limited to 10 replies per agent per day; subscribe for more.",
       "sector": "3",
       "product": "ReplyFlow",
       "parameters": {
@@ -141,12 +111,12 @@
           }
         }
       },
-      "floor_price_usd": 0.1,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "floor_price_usd": 0,
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_gapscan_run",
-      "description": "Run an evidence-backed intelligence gap report and digital audit on a target company URL (Single $18, Standard $18/mo, Agentic $27/mo).",
+      "description": "Run an evidence-backed digital gap report on a target company website. $18 per scan. Returns a checkout_url and order_id; after payment call ni_order_status with order_id to get the result.",
       "sector": "3",
       "product": "GapScan",
       "parameters": {
@@ -158,29 +128,15 @@
           "target_domain": {
             "type": "string",
             "description": "Domain of target company to audit"
-          },
-          "tier": {
-            "type": "string",
-            "enum": [
-              "single_scan",
-              "standard",
-              "agentic"
-            ],
-            "default": "single_scan",
-            "description": "Single Scan ($18), Standard SaaS ($18/mo), or Agentic Tier with Lighthouse/Site Crawler MCPs ($27/mo)"
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Payment token for one-off or subscription access"
           }
         }
       },
       "floor_price_usd": 18,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_signaldesk_brief",
-      "description": "Fetch real-time daily prioritized market signal briefs from defined source sets (Standard $24/mo or Agentic $36/mo).",
+      "description": "Get a prioritized market signal brief for an industry vertical, built from signals you supply. $24 per brief. Returns a checkout_url and order_id; after payment call ni_order_status with order_id to get the result.",
       "sector": "3",
       "product": "Signal Desk",
       "parameters": {
@@ -193,27 +149,18 @@
             "type": "string",
             "description": "Industry or market sector focus"
           },
-          "tier": {
+          "signals": {
             "type": "string",
-            "enum": [
-              "standard",
-              "agentic"
-            ],
-            "default": "standard",
-            "description": "Standard SaaS ($24/mo) or Agentic Tier with SERP/HN/ProductHunt MCPs ($36/mo)"
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Payment token"
+            "description": "Optional raw signals (news, posts, notes) to brief from, up to 6000 characters. Without it, the brief is written from general knowledge of the vertical."
           }
         }
       },
       "floor_price_usd": 24,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_grantbot_search",
-      "description": "Search open grant opportunities and generate application drafts for creators and orgs (Standard $39/mo or Agentic $58.50/mo).",
+      "description": "Search open grant opportunities for a discipline and get matched listings (Standard $39 or Agentic $58.50). Returns a checkout_url and order_id; after payment call ni_order_status with order_id to get the result.",
       "sector": "3",
       "product": "GrantBot",
       "parameters": {
@@ -232,21 +179,16 @@
               "standard",
               "agentic"
             ],
-            "default": "standard",
-            "description": "Standard SaaS ($39/mo) or Agentic Tier with Grants.gov/Doc-Parser MCPs ($58.50/mo)"
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Payment token"
+            "default": "standard"
           }
         }
       },
       "floor_price_usd": 39,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_bridgeai_run",
-      "description": "Bridge legacy business workflows to modern AI agent endpoints without code rebuilds (Standard $29/mo or Agentic $43.50/mo).",
+      "description": "Get a plan to connect a legacy business workflow to modern AI agent endpoints without a code rebuild (Standard $33 or Agentic $49.50). Returns a checkout_url and order_id; after payment call ni_order_status with order_id to get the result.",
       "sector": "3",
       "product": "BridgeAI",
       "parameters": {
@@ -265,17 +207,12 @@
               "standard",
               "agentic"
             ],
-            "default": "standard",
-            "description": "Standard SaaS ($29/mo) or Agentic Tier with Multi-LLM/Zapier MCPs ($43.50/mo)"
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Payment token"
+            "default": "standard"
           }
         }
       },
-      "floor_price_usd": 29,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "floor_price_usd": 33,
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_store_search",
@@ -296,11 +233,11 @@
         }
       },
       "floor_price_usd": 0,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_store_order",
-      "description": "Programmatically purchase an item from the Smart Store with express fulfillment.",
+      "description": "Buy an item from the Northside Intelligence Smart Store (US shipping). Card payment and shipping details are collected on Stripe checkout; returns checkout_url and order_id.",
       "sector": "4",
       "product": "Smart Store",
       "parameters": {
@@ -308,8 +245,7 @@
         "required": [
           "item_sku",
           "quantity",
-          "shipping_address",
-          "payment_token"
+          "shipping_address"
         ],
         "properties": {
           "item_sku": {
@@ -346,19 +282,15 @@
                 "type": "string"
               }
             }
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Payment token"
           }
         }
       },
       "floor_price_usd": 15,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_services_reserve",
-      "description": "Reserve a custom web design, intelligence server setup, or enterprise AI architecture project with deposit kickoff ($499 - $2,500 deposit).",
+      "description": "Reserve a Northside Intelligence service project with a non-refundable deposit of 20% of that service's lowest price: intelligence audit $410, personal intelligence setup $50, workflow integration $1,010, custom web design $1,370, tailored intelligence server $5,140. The buyer's card is saved and the balance is charged when the service is complete; final price is confirmed after scoping. Returns a checkout_url and order_id; after payment call ni_order_status with order_id.",
       "sector": "2",
       "product": "NI Core Services",
       "parameters": {
@@ -366,8 +298,7 @@
         "required": [
           "service_type",
           "client_name",
-          "client_email",
-          "payment_token"
+          "client_email"
         ],
         "properties": {
           "service_type": {
@@ -391,16 +322,32 @@
           },
           "project_notes": {
             "type": "string",
-            "description": "Brief overview of goals and timeline"
-          },
-          "payment_token": {
-            "type": "string",
-            "description": "Authorized payment token for deposit"
+            "description": "Short project notes, up to 200 characters."
           }
         }
       },
-      "floor_price_usd": 499,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "floor_price_usd": 50,
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
+    },
+    {
+      "name": "ni_order_status",
+      "description": "Check payment status for an order returned by any paid tool, and receive the purchased result once paid.",
+      "sector": "3",
+      "product": "Northside Intelligence",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "order_id"
+        ],
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "order_id returned with a checkout_url"
+          }
+        }
+      },
+      "floor_price_usd": 0,
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     }
   ]
 }

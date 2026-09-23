@@ -1,302 +1,232 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
-import fs from "node:fs";
-import path from "node:path";
+import { manifest, findTool } from "@/lib/webmcp/manifest";
+import { runTool } from "@/lib/webmcp/dispatch";
+import {
+  JSON_RPC_ERRORS,
+  isNotification,
+  isValidJsonRpcRequest,
+  negotiateProtocolVersion,
+  newSessionId,
+  rpcErrorBody,
+  rpcResultBody,
+  type JsonRpcId,
+  type JsonRpcRequest,
+} from "@/lib/webmcp/lane5/protocol";
+import { annotationsFor } from "@/lib/webmcp/lane5/annotations";
+import { clientKeyFromHeaders, rateLimitCheck } from "@/lib/webmcp/lane5/rate-limit";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, X-Agent-Engine, X-Agent-Signature, MCP-Protocol-Version, Mcp-Session-Id",
+  "Access-Control-Expose-Headers": "Mcp-Session-Id, MCP-Protocol-Version",
+} as const;
 
 function getManifest() {
-  const filePath = path.join(process.cwd(), "public", ".well-known", "webmcp.json");
-  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  return manifest;
 }
 
-export async function GET() {
+// GET serves the human/agent-readable manifest, unless the caller is asking for a
+// server-initiated SSE stream on the endpoint — this server does not offer one
+// (spec 2025-06-18 §Streamable HTTP: server-initiated GET SSE is OPTIONAL).
+export async function GET(req: NextRequest) {
+  const accept = req.headers.get("accept") || "";
+  if (accept.toLowerCase().includes("text/event-stream")) {
+    return NextResponse.json(
+      { error: "Server-initiated SSE is not supported on this endpoint." },
+      { status: 405, headers: CORS_HEADERS }
+    );
+  }
+
   const manifest = getManifest();
-  return NextResponse.json(manifest, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Agent-Engine, X-Agent-Signature",
-    },
-  });
+  return NextResponse.json(manifest, { headers: CORS_HEADERS });
+}
+
+/** Processes a single JSON-RPC request/notification object. Returns null for a notification (no body owed). */
+async function handleRpcCall(
+  raw: unknown,
+  req: NextRequest
+): Promise<{ status: number; body: unknown } | null> {
+  if (!isValidJsonRpcRequest(raw)) {
+    const id: JsonRpcId = raw && typeof raw === "object" && "id" in (raw as Record<string, unknown>)
+      ? ((raw as Record<string, unknown>).id as JsonRpcId) ?? null
+      : null;
+    return { status: 200, body: rpcErrorBody(id, JSON_RPC_ERRORS.INVALID_REQUEST, "Invalid Request") };
+  }
+
+  const rpc = raw as JsonRpcRequest;
+  const id: JsonRpcId = (rpc.id as JsonRpcId) ?? null;
+  const method = rpc.method as string;
+  const manifest = getManifest();
+
+  if (isNotification(rpc)) {
+    // Notifications (e.g. notifications/initialized) never get a JSON-RPC response body.
+    return null;
+  }
+
+  switch (method) {
+    case "initialize": {
+      const protocolVersion = negotiateProtocolVersion(rpc.params?.protocolVersion);
+      return {
+        status: 200,
+        body: rpcResultBody(id, {
+          protocolVersion,
+          capabilities: { tools: { listChanged: false } },
+          serverInfo: { name: "Northside-Intelligence-WebMCP", version: "1.1.0" },
+          instructions:
+            "Northside Intelligence automated multi-sector tools for agents: coaching, subscriptions, site gap audits, signal briefs, and grant search.",
+        }),
+      };
+    }
+
+    case "ping": {
+      return { status: 200, body: rpcResultBody(id, {}) };
+    }
+
+    case "tools/list": {
+      return {
+        status: 200,
+        body: rpcResultBody(id, {
+          tools: manifest.tools.map((t) => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: t.parameters || { type: "object", properties: {} },
+            ...(annotationsFor(t.name) ? { annotations: annotationsFor(t.name) } : {}),
+          })),
+        }),
+      };
+    }
+
+    case "tools/call": {
+      const toolName = rpc.params?.name;
+      const toolParams = (rpc.params?.arguments as Record<string, unknown>) || {};
+
+      const tool = findTool(toolName);
+      if (!tool) {
+        return {
+          status: 200,
+          body: rpcErrorBody(id, JSON_RPC_ERRORS.INVALID_PARAMS, `Tool '${String(toolName)}' not found.`),
+        };
+      }
+
+      const fulfillmentResult = await runTool(tool, toolParams, req);
+      return {
+        status: 200,
+        body: rpcResultBody(id, {
+          content: [{ type: "text", text: JSON.stringify(fulfillmentResult, null, 2) }],
+          isError: fulfillmentResult.status === "unavailable" || fulfillmentResult.status === "invalid_input",
+        }),
+      };
+    }
+
+    default:
+      return { status: 200, body: rpcErrorBody(id, JSON_RPC_ERRORS.METHOD_NOT_FOUND, `Method '${method}' not implemented.`) };
+  }
 }
 
 export async function POST(req: NextRequest) {
+  const clientKey = clientKeyFromHeaders(req.headers);
+  const rate = rateLimitCheck(clientKey);
+  if (!rate.allowed) {
+    return NextResponse.json(
+      rpcErrorBody(null, JSON_RPC_ERRORS.RATE_LIMITED, "Rate limit exceeded. Try again shortly."),
+      { status: 429, headers: { ...CORS_HEADERS, "Retry-After": String(rate.retryAfterSeconds) } }
+    );
+  }
+
+  let body: unknown;
   try {
-    const body = await req.json().catch(() => ({}));
-    const manifest = getManifest();
-    const engine = req.headers.get("x-agent-engine") || req.headers.get("user-agent") || "unknown_crawler";
-    const signature = req.headers.get("x-agent-signature") || "unsigned";
-
-    // ----------------------------------------------------
-    // 1. Standard MCP JSON-RPC 2.0 Protocol Handler
-    // ----------------------------------------------------
-    if (body.jsonrpc === "2.0" || body.method) {
-      const id = body.id ?? 1;
-      const method = body.method;
-
-      if (method === "initialize") {
-        return NextResponse.json({
-          jsonrpc: "2.0",
-          id,
-          result: {
-            protocolVersion: "2024-11-05",
-            capabilities: {
-              tools: {
-                listChanged: false
-              }
-            },
-            serverInfo: {
-              name: "Northside-Intelligence-WebMCP",
-              version: "1.0.0"
-            },
-            instructions: "Northside Intelligence automated multi-sector tools for agents: coaching, subscriptions, site gap audits, signal briefs, and grant search."
-          }
-        }, {
-          headers: { "Access-Control-Allow-Origin": "*" }
-        });
-      }
-
-      if (method === "notifications/initialized" || method === "initialized") {
-        return new NextResponse(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*" } });
-      }
-
-      if (method === "ping") {
-        return NextResponse.json({ jsonrpc: "2.0", id, result: {} }, { headers: { "Access-Control-Allow-Origin": "*" } });
-      }
-
-      if (method === "tools/list") {
-        return NextResponse.json({
-          jsonrpc: "2.0",
-          id,
-          result: {
-            tools: manifest.tools.map((t: any) => ({
-              name: t.name,
-              description: t.description,
-              inputSchema: t.parameters || { type: "object", properties: {} }
-            }))
-          }
-        }, {
-          headers: { "Access-Control-Allow-Origin": "*" }
-        });
-      }
-
-      if (method === "tools/call") {
-        const toolName = body.params?.name;
-        const toolParams = body.params?.arguments || {};
-        
-        const tool = manifest.tools.find((t: any) => t.name === toolName);
-        if (!tool) {
-          return NextResponse.json({
-            jsonrpc: "2.0",
-            id,
-            error: { code: -32601, message: `Tool '${toolName}' not found.` }
-          }, { status: 404, headers: { "Access-Control-Allow-Origin": "*" } });
-        }
-
-        const fulfillmentResult = await executeTool(tool, toolParams, engine, signature, req);
-        return NextResponse.json({
-          jsonrpc: "2.0",
-          id,
-          result: {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(fulfillmentResult, null, 2)
-              }
-            ]
-          }
-        }, { headers: { "Access-Control-Allow-Origin": "*" } });
-      }
-
-      // Default JSON-RPC fallback
-      return NextResponse.json({
-        jsonrpc: "2.0",
-        id,
-        error: { code: -32601, message: `Method '${method}' not implemented.` }
-      }, { status: 400, headers: { "Access-Control-Allow-Origin": "*" } });
-    }
-
-    // ----------------------------------------------------
-    // 2. Direct WebMCP Simplified REST Handler
-    // ----------------------------------------------------
-    const { tool_name, parameters = {}, natural_query } = body;
-    const tool = manifest.tools.find((t: any) => t.name === tool_name);
-    if (!tool) {
-      return NextResponse.json({
-        error: `Tool '${tool_name}' not found.`,
-        available_tools: manifest.tools.map((t: any) => t.name),
-      }, { status: 404, headers: { "Access-Control-Allow-Origin": "*" } });
-    }
-
-    if (parameters.offered_price_usd !== undefined && parameters.offered_price_usd < tool.floor_price_usd) {
-      return NextResponse.json({
-        error: `Offered price $${parameters.offered_price_usd} is below minimum floor of $${tool.floor_price_usd}.`,
-        floor_price_usd: tool.floor_price_usd,
-      }, { status: 402, headers: { "Access-Control-Allow-Origin": "*" } });
-    }
-
-    const execution = await executeTool(tool, parameters, engine, signature, req, natural_query);
-
-    return NextResponse.json({
-      success: true,
-      transaction_id: execution.txId,
-      tool: tool_name,
-      product: tool.product,
-      sector: tool.sector,
-      attribution: { engine, signature },
-      status: "fulfilled",
-      fulfillment: execution.fulfillmentPayload,
-      message: `Successfully executed ${tool_name} via Northside Intelligence WebMCP.`
-    }, {
-      headers: { "Access-Control-Allow-Origin": "*" }
+    const text = await req.text();
+    body = text.length ? JSON.parse(text) : {};
+  } catch {
+    return NextResponse.json(rpcErrorBody(null, JSON_RPC_ERRORS.PARSE_ERROR, "Parse error"), {
+      status: 200,
+      headers: CORS_HEADERS,
     });
-
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
-  }
-}
-
-async function executeTool(tool: any, parameters: any, engine: string, signature: string, req: NextRequest, natural_query?: string) {
-  let authUserId = "ccd98883-214d-47c0-96a9-e65a58005f3d"; // JB primary auth user
-  let axonAccountId = "7e82a9db-b86e-4f21-b797-99b6931c9728"; // Default AXON account
-  let supabase = null;
-  try {
-    supabase = createServiceClient();
-    const { data: acct } = await supabase.from("axon_accounts").select("id").limit(1).maybeSingle();
-    if (acct?.id) {
-      axonAccountId = acct.id;
-    }
-  } catch (err: any) {
-    console.warn("[WebMCP] Service client init fallback:", err.message);
   }
 
-  let fulfillmentPayload: Record<string, any> = {};
-  const txId = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  const protocolVersionHeader = req.headers.get("mcp-protocol-version");
+  const responseHeaders: Record<string, string> = { ...CORS_HEADERS };
+  if (protocolVersionHeader) responseHeaders["MCP-Protocol-Version"] = negotiateProtocolVersion(protocolVersionHeader);
 
-  if (supabase) {
+  // ----------------------------------------------------
+  // 1. JSON-RPC 2.0 (single request or batch array)
+  // ----------------------------------------------------
+  const looksLikeRpc = Array.isArray(body) || (body && typeof body === "object" && ("jsonrpc" in (body as object) || "method" in (body as object)));
+
+  if (looksLikeRpc) {
     try {
-      const clientName = parameters.client_name || "Autonomous Buyer Agent";
-      const clientEmail = parameters.account_email || parameters.client_email || "buyer@northsideintelligence.com";
-      const priceCents = parameters.offered_price_usd
-        ? Math.round(parameters.offered_price_usd * 100)
-        : Math.round((tool.floor_price_usd || 15) * 100);
+      if (Array.isArray(body)) {
+        if (body.length === 0) {
+          return NextResponse.json(rpcErrorBody(null, JSON_RPC_ERRORS.INVALID_REQUEST, "Invalid Request"), {
+            status: 200,
+            headers: responseHeaders,
+          });
+        }
 
-      if (tool.name === "ni_replyflow_subscribe") {
-        const tier = parameters.tier || "pro";
-        
-        await supabase.from("outreach_leads").insert({
-          venture: "ni",
-          channel: "other",
-          full_name: clientName,
-          email: clientEmail,
-          company: engine,
-          source: "webmcp_buyer_catching",
-          why: `Subscribed to ReplyFlow (${tier}) via WebMCP`,
-          score: 95,
-          status: "new"
-        });
+        const results = await Promise.all(body.map((item) => handleRpcCall(item, req)));
+        const responses = results.filter((r): r is { status: number; body: unknown } => r !== null).map((r) => r.body);
 
-        const { data: srv } = await supabase.from("ni_service_requests").insert({
-          user_id: authUserId,
-          service_slug: "replyflow_subscription",
-          account_type: "business",
-          status: "pending",
-          payload: {
-            product: "ReplyFlow",
-            tier: tier,
-            billing_interval: "monthly",
-            engine,
-            signature,
-            source: "webmcp_ingress"
-          },
-          agreed_price_cents: priceCents
-        }).select().maybeSingle();
+        if (responses.length === 0) {
+          // Entire batch was notifications — nothing is owed back.
+          return new NextResponse(null, { status: 202, headers: responseHeaders });
+        }
 
-        fulfillmentPayload = {
-          product: "ReplyFlow",
-          subscription_id: srv?.id || txId,
-          tier: tier,
-          access_token: `rf_live_${Math.random().toString(36).substring(2, 14)}`,
-          connection_endpoint: "https://northsideintelligence.com/api/webmcp",
-          monthly_cost_usd: priceCents / 100,
-          status: "active"
-        };
-      } else if (tool.name === "ni_services_reserve") {
-        const serviceType = parameters.service_type || "custom_web_design";
+        const isInit = body.some((item) => item && typeof item === "object" && (item as JsonRpcRequest).method === "initialize");
+        if (isInit) responseHeaders["Mcp-Session-Id"] = newSessionId();
 
-        await supabase.from("outreach_leads").insert({
-          venture: "ni",
-          channel: "other",
-          full_name: clientName,
-          email: clientEmail,
-          company: engine,
-          source: "webmcp_buyer_catching",
-          why: `Reserved ${serviceType} via WebMCP`,
-          score: 95,
-          status: "new"
-        });
-
-        const { data: srv } = await supabase.from("ni_service_requests").insert({
-          user_id: authUserId,
-          service_slug: serviceType,
-          account_type: "business",
-          status: "pending",
-          payload: {
-            client_name: clientName,
-            client_email: clientEmail,
-            project_notes: parameters.project_notes || "Agentic WebMCP booking",
-            source: "webmcp_agentic_ingress"
-          },
-          agreed_price_cents: priceCents
-        }).select().maybeSingle();
-
-        fulfillmentPayload = {
-          service: serviceType,
-          request_id: srv?.id || txId,
-          client: clientName,
-          deposit_cents: priceCents,
-          status: "confirmed"
-        };
-      } else {
-        fulfillmentPayload = {
-          tool: tool.name,
-          status: "executed",
-          parameters
-        };
+        return NextResponse.json(responses, { status: 200, headers: responseHeaders });
       }
 
-      // Always log ingress to axon_agent_messages
-      await supabase.from("axon_agent_messages").insert({
-        account_id: axonAccountId,
-        thread: "webmcp_ingress",
-        sender: engine,
-        content: natural_query || `WebMCP execution: ${tool.name}`,
-        meta: {
-          tool_name: tool.name,
-          parameters,
-          engine,
-          signature,
-          converted: true,
-          floor_price_usd: tool.floor_price_usd,
-          transaction_id: txId,
-          fulfillment: fulfillmentPayload,
-          timestamp: new Date().toISOString()
-        }
-      });
-    } catch (dbErr: any) {
-      console.warn("[WebMCP] DB write warning:", dbErr.message);
+      const single = await handleRpcCall(body, req);
+      if (single === null) {
+        // Pure notification (e.g. notifications/initialized).
+        return new NextResponse(null, { status: 202, headers: responseHeaders });
+      }
+
+      const rpc = body as JsonRpcRequest;
+      if (rpc.method === "initialize") {
+        responseHeaders["Mcp-Session-Id"] = newSessionId();
+        responseHeaders["MCP-Protocol-Version"] = negotiateProtocolVersion(rpc.params?.protocolVersion);
+      }
+
+      return NextResponse.json(single.body, { status: single.status, headers: responseHeaders });
+    } catch (err) {
+      console.error("[webmcp] rpc error:", err);
+      return NextResponse.json(
+        rpcErrorBody(null, JSON_RPC_ERRORS.INTERNAL_ERROR, "Internal error"),
+        { status: 200, headers: responseHeaders }
+      );
     }
   }
 
-  return { txId, fulfillmentPayload };
+  // ----------------------------------------------------
+  // 2. Direct WebMCP Simplified REST Handler
+  //    (offered_price_usd floor check removed — payment is enforced by Stripe
+  //    Checkout at charge time via createWebmcpCheckout, not by a client-supplied
+  //    price field on either the REST or JSON-RPC path. See docs/webmcp/directory-submission.md.)
+  // ----------------------------------------------------
+  try {
+    const { tool_name, parameters = {}, natural_query } = (body as Record<string, unknown>) || {};
+    const manifest = getManifest();
+    const tool = findTool(tool_name);
+    if (!tool) {
+      return NextResponse.json(
+        { error: `Tool '${String(tool_name)}' not found.`, available_tools: manifest.tools.map((t) => t.name) },
+        { status: 404, headers: CORS_HEADERS }
+      );
+    }
+
+    const result = await runTool(tool, parameters as Record<string, unknown>, req, natural_query as string | undefined);
+
+    return NextResponse.json({ tool: tool_name, product: tool.product, ...result }, { headers: CORS_HEADERS });
+  } catch (err) {
+    console.error("[webmcp] rest error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500, headers: CORS_HEADERS });
+  }
 }
 
 export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Agent-Engine, X-Agent-Signature",
-    },
-  });
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
