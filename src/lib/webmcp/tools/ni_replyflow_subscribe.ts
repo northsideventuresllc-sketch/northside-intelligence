@@ -80,9 +80,8 @@ export const fulfil: FulfilHandler = async (order, params) => {
   return {
     message:
       `Payment received — a ReplyFlow ${plan || "subscription"} plan was purchased. ` +
-      "To use it, sign in (or create a free account if this is the first time) at the NI Portal " +
-      "using the exact same email address used at checkout. Subscriptions are matched to an " +
-      "account by that email — there is no separate access token from this call.",
+      "Sign in (or create a free account) at the NI Portal with the same email used at checkout — " +
+      "the plan is linked to that account automatically. There is no separate access token.",
     account_email: email,
     sign_in_url: portalSignInUrl(),
     sign_up_url: portalSignUpUrl(),

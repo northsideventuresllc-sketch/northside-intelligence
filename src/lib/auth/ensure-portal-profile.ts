@@ -3,6 +3,7 @@ import { normalizeUsername } from "@/lib/auth/username";
 import { ensureGrantBotProfile } from "@/lib/grantbot/profile";
 import { ensureNotificationPreferences } from "@/lib/notifications/preferences";
 import { ensureAllSector3ToolProfiles } from "@/lib/sector3-tools/profile";
+import { claimWebmcpReplyflowSubscription } from "@/lib/replyflow/webmcp-claim";
 
 type AuthUser = Pick<User, "id" | "email" | "user_metadata">;
 
@@ -58,8 +59,12 @@ export async function ensurePortalProfile(
       created_at: now,
       updated_at: now,
     },
-    { onConflict: "id" }
+    // Insert-only: never reset an existing plan or usage counter on sign-in.
+    { onConflict: "id", ignoreDuplicates: true }
   );
+
+  // A ReplyFlow plan bought through an AI agent (guest checkout) is linked here by email.
+  await claimWebmcpReplyflowSubscription(admin, user.id, email);
 
   await ensureGrantBotProfile(admin, user.id, email);
   await ensureAllSector3ToolProfiles(admin, user.id, email);
