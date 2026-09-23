@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PaymentPlanOption, ServiceQuoteResult } from "@/lib/services/pricing-engine";
 import { formatCents, formatCentsMonthly } from "@/lib/services/pricing-engine";
+import { balanceCentsFor, depositCentsForTotal } from "@/lib/services/deposit";
 import { ServiceNegotiationChat } from "@/components/services/ServiceNegotiationChat";
 
 interface ServiceQuotePanelProps {
@@ -17,10 +18,13 @@ export function ServiceQuotePanel({
   onPriceChange,
 }: ServiceQuotePanelProps) {
   const [negotiateOpen, setNegotiateOpen] = useState(false);
-  const [paymentType, setPaymentType] = useState<"full" | "plan" | "bnpl">("full");
+  const [paymentType, setPaymentType] = useState<"full" | "plan" | "bnpl" | "deposit">("full");
   const [planMonths, setPlanMonths] = useState(1);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+
+  const depositCents = depositCentsForTotal(currentPriceCents);
+  const depositBalanceCents = balanceCentsFor(currentPriceCents, depositCents);
 
   async function handleCheckout() {
     setCheckoutError("");
@@ -114,6 +118,24 @@ export function ServiceQuotePanel({
               <span className="text-sm text-white">Pay In Full — {formatCents(currentPriceCents)}</span>
             </label>
 
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 px-3 py-2 transition hover:border-cyan-500/30">
+              <input
+                type="radio"
+                name="paymentType"
+                checked={paymentType === "deposit"}
+                onChange={() => setPaymentType("deposit")}
+                className="accent-cyan-400"
+              />
+              <div>
+                <span className="text-sm text-white">
+                  Pay 20% Deposit Now — {formatCents(depositCents)}
+                </span>
+                <p className="text-xs text-ni-muted">
+                  Balance of {formatCents(depositBalanceCents)} is charged when your service is complete
+                </p>
+              </div>
+            </label>
+
             {quote.paymentPlans.filter((p) => p.months > 1).map((plan) => (
               <PlanOption
                 key={plan.months}
@@ -150,6 +172,30 @@ export function ServiceQuotePanel({
               {formatCentsMonthly(selectedPlan.monthlyCents)} × {selectedPlan.months} months ={" "}
               {formatCents(selectedPlan.totalCents)} total. First payment due at checkout.
             </p>
+          )}
+
+          {paymentType === "deposit" && (
+            <div className="mt-3 space-y-1.5 text-xs text-ni-muted">
+              <p>
+                Deposit {formatCents(depositCents)} due now. Non-refundable deposit — the{" "}
+                {formatCents(depositBalanceCents)} balance is not charged until Northside
+                Intelligence marks your service complete.
+              </p>
+              <p>
+                Your card is saved securely by Stripe and the remaining balance is charged to it
+                automatically when your service is complete.
+              </p>
+              <p>
+                <a
+                  href="/legal/terms"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-cyan-300 underline-offset-2 hover:underline"
+                >
+                  Read Our Terms Of Service
+                </a>
+              </p>
+            </div>
           )}
         </div>
 
