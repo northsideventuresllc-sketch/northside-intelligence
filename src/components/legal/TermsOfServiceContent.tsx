@@ -271,8 +271,9 @@ export function TermsOfServiceContent() {
             balance can be charged later. NI never stores your card number — only a Stripe payment method reference.
           </li>
           <li>
-            The final total for a Service may be adjusted from the reservation estimate after scoping. We will tell
-            you the final amount before it is charged.
+            The final total for a Service may be adjusted from the reservation estimate after scoping. If it
+            changes, we will confirm the new total with you before the balance is charged, and Stripe emails you a
+            receipt for every charge.
           </li>
           <li>
             When NI marks the Service complete, NI staff (not an automated process) charge the remaining balance

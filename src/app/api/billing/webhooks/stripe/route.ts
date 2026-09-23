@@ -1,3 +1,4 @@
+import { reconcileBalanceFollowUpPaid } from "@/lib/services/balance-billing";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import {
@@ -82,6 +83,11 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        // Service balance follow-up links carry no userId — reconcile them before the userId gate.
+        if (session.metadata?.serviceBalance === "true") {
+          await reconcileBalanceFollowUpPaid(session);
+          break;
+        }
         const userId = session.metadata?.userId;
         if (!userId) break;
 

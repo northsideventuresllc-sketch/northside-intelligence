@@ -40,6 +40,10 @@ export async function createWebmcpCheckout(input: CheckoutInput): Promise<ToolRe
     cancel_url: `${SITE}/`,
     metadata: { source: "webmcp", tool: input.tool, params: paramsJson },
     ...(input.mode === "payment" ? input.sessionExtras ?? {} : {}),
+    // A card saved for a later off-session charge must be a card (other methods can't be reused).
+    ...(input.mode === "payment" && input.sessionExtras?.payment_intent_data?.setup_future_usage
+      ? { payment_method_types: ["card" as const] }
+      : {}),
     ...(input.mode === "subscription" ? { subscription_data: { metadata: { source: "webmcp", tool: input.tool } } } : {}),
   });
   if (!session.url) return { status: "unavailable", message: "Checkout is temporarily unavailable." };

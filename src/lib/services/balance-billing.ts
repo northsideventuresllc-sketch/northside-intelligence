@@ -40,6 +40,8 @@ export interface PendingServiceBalance {
   depositPaymentIntentId: string;
   portalRequestId: string | null;
   checkoutSessionId: string | null;
+  /** Stripe Checkout Session of an outstanding "send this link" balance follow-up, if any. */
+  followUpSessionId: string | null;
 }
 
 export interface ChargeBalanceResult {
@@ -128,6 +130,10 @@ async function listPortalPendingBalances(): Promise<PendingServiceBalance[]> {
       depositPaymentIntentId: deposit.payment_intent_id,
       portalRequestId: String(row.id),
       checkoutSessionId: null,
+      followUpSessionId:
+        typeof (payload.balance as { fallback_session_id?: unknown } | undefined)?.fallback_session_id === "string"
+          ? ((payload.balance as { fallback_session_id: string }).fallback_session_id)
+          : null,
     });
   }
   return rows;
@@ -194,6 +200,7 @@ async function listAgentPendingBalances(): Promise<PendingServiceBalance[]> {
         depositPaymentIntentId: pi.id,
         portalRequestId: null,
         checkoutSessionId: session.id,
+        followUpSessionId: pi.metadata?.balanceFollowUpSession || null,
       });
     }
 
@@ -259,6 +266,7 @@ async function recordPortalOutcome(
     status: "succeeded" | "requires_followup";
     charged_at: string;
     fallback_checkout_url?: string;
+    fallback_session_id?: string;
   }
 ): Promise<void> {
   const admin = createServiceClient();
@@ -290,6 +298,28 @@ export async function chargeServiceBalance(
 ): Promise<ChargeBalanceResult> {
   await ensureBillingEnvHydrated();
   const stripe = getBillingStripe();
+
+  // Never charge the saved card while an earlier "send this link" follow-up could also be paid.
+  if (row.followUpSessionId) {
+    const prior = await stripe.checkout.sessions.retrieve(row.followUpSessionId);
+    if (prior.payment_status === "paid") {
+      const piId = typeof prior.payment_intent === "string" ? prior.payment_intent : prior.payment_intent?.id;
+      await recordOutcomeForRow(row, {
+        payment_intent_id: piId ?? undefined,
+        amount_cents: prior.amount_total ?? 0,
+        status: "succeeded",
+        charged_at: new Date().toISOString(),
+      });
+      return {
+        ok: true,
+        outcome: "charged",
+        amountCents: prior.amount_total ?? 0,
+        paymentIntentId: piId ?? undefined,
+        message: "The client already paid the balance using the payment link. Nothing new was charged.",
+      };
+    }
+    if (prior.status === "open") await stripe.checkout.sessions.expire(prior.id);
+  }
 
   const baseMetadata: Record<string, string> = {
     serviceBalance: "true",
@@ -362,6 +392,7 @@ export async function chargeServiceBalance(
       metadata: {
         ...baseMetadata,
         balanceFollowUp: "true",
+        ...(row.portalRequestId ? { portalRequestId: row.portalRequestId } : {}),
       },
       success_url: `${portalAppUrl()}/services?balance=paid`,
       cancel_url: `${portalAppUrl()}/services?balance=cancelled`,
@@ -376,6 +407,7 @@ export async function chargeServiceBalance(
       status: "requires_followup",
       charged_at: new Date().toISOString(),
       fallback_checkout_url: checkoutSession.url,
+      fallback_session_id: checkoutSession.id,
     });
 
     return {
@@ -397,6 +429,7 @@ async function recordOutcomeForRow(
     status: "succeeded" | "requires_followup";
     charged_at: string;
     fallback_checkout_url?: string;
+    fallback_session_id?: string;
   }
 ): Promise<void> {
   if (row.source === "portal" && row.portalRequestId) {
@@ -407,11 +440,15 @@ async function recordOutcomeForRow(
   // Agent booking — no DB row. Record on the deposit PaymentIntent's own metadata
   // so the next list pass excludes it (a successful charge) or so the operator can
   // see the follow-up link was already sent (checked via the fallback response).
+  await ensureBillingEnvHydrated();
+  const stripe = getBillingStripe();
   if (outcome.status === "succeeded") {
-    await ensureBillingEnvHydrated();
-    const stripe = getBillingStripe();
     await stripe.paymentIntents.update(row.depositPaymentIntentId, {
-      metadata: { balanceChargedPaymentIntent: outcome.payment_intent_id ?? "" },
+      metadata: { balanceChargedPaymentIntent: outcome.payment_intent_id ?? "paid" },
+    });
+  } else if (outcome.fallback_session_id) {
+    await stripe.paymentIntents.update(row.depositPaymentIntentId, {
+      metadata: { balanceFollowUpSession: outcome.fallback_session_id },
     });
   }
   // A "requires_followup" outcome for an agent booking is not persisted anywhere —
@@ -424,4 +461,31 @@ function portalAppUrl(): string {
   if (base?.startsWith("http")) return base.replace(/\/$/, "");
   if (base) return `https://${base}`;
   return "https://www.northsideintelligence.com";
+}
+
+/**
+ * Webhook hook: a client paid a balance follow-up link. Marks the balance as paid so the
+ * operator list clears it and no second charge can be made against the saved card.
+ */
+export async function reconcileBalanceFollowUpPaid(session: Stripe.Checkout.Session): Promise<void> {
+  const meta = session.metadata ?? {};
+  if (meta.serviceBalance !== "true" || meta.balanceFollowUp !== "true") return;
+  if (session.payment_status !== "paid") return;
+  const piId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+  const outcome = {
+    payment_intent_id: piId ?? undefined,
+    amount_cents: session.amount_total ?? 0,
+    status: "succeeded" as const,
+    charged_at: new Date().toISOString(),
+  };
+  if (meta.source === "portal" && meta.portalRequestId) {
+    await recordPortalOutcome(meta.portalRequestId, outcome);
+    return;
+  }
+  if (meta.source === "agent" && meta.depositPaymentIntentId) {
+    await ensureBillingEnvHydrated();
+    await getBillingStripe().paymentIntents.update(meta.depositPaymentIntentId, {
+      metadata: { balanceChargedPaymentIntent: piId ?? "paid" },
+    });
+  }
 }

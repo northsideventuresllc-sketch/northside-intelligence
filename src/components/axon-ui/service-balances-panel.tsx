@@ -213,6 +213,9 @@ export function ServiceBalancesPanel() {
                 <dd>{formatCents(confirmBalanceCents)}</dd>
               </div>
             </dl>
+            <p className="mt-3 text-xs text-white/60">
+              If the total changed from the estimate, confirm it with the client first. The Terms promise this.
+            </p>
 
             {confirmBalanceCents <= 0 && (
               <p className="mt-2 text-xs text-red-300">
