@@ -8,7 +8,7 @@
   "tools": [
     {
       "name": "mf_search_coaches",
-      "description": "Search and filter certified personal fitness coaches across the United States by specialty, price tier, and client goals.",
+      "description": "Search online Match Fit fitness coaches nationwide by specialty and monthly budget. Free.",
       "sector": "1A",
       "product": "Match Fit",
       "parameters": {
@@ -21,10 +21,6 @@
           "max_monthly_budget": {
             "type": "number",
             "description": "Maximum monthly budget for coach tier (minimum $15)"
-          },
-          "virtual_only": {
-            "type": "boolean",
-            "description": "Filter for online/virtual coaching (default: true)"
           }
         }
       },
@@ -33,38 +29,22 @@
     },
     {
       "name": "mf_book_coach",
-      "description": "Book an intro assessment or purchase monthly coach client membership on Match Fit.",
+      "description": "Get the link to book a Match Fit coach. The buyer creates a Match Fit account and pays the coach on match-fit.net; nothing is booked or charged by this call.",
       "sector": "1A",
       "product": "Match Fit",
       "parameters": {
         "type": "object",
         "required": [
-          "coach_id",
-          "client_email",
-          "tier"
+          "coach_id"
         ],
         "properties": {
           "coach_id": {
             "type": "string",
-            "description": "Unique coach ID"
-          },
-          "client_email": {
-            "type": "string",
-            "description": "Client contact email for onboarding"
-          },
-          "tier": {
-            "type": "string",
-            "enum": [
-              "free",
-              "vip_client",
-              "independent_pro",
-              "elite_pro"
-            ],
-            "description": "Selected tier"
+            "description": "Coach username from mf_search_coaches"
           }
         }
       },
-      "floor_price_usd": 10,
+      "floor_price_usd": 0,
       "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
