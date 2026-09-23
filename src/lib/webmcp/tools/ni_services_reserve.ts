@@ -1,4 +1,5 @@
 import { getServiceBySlug } from "@/lib/services/offerings";
+import { DEPOSIT_SHARE, MIN_DEPOSIT_CENTS } from "@/lib/services/deposit";
 import { COMPETITIVE_DISCOUNT, FLOOR_RATIO, SERVICE_MARKET_RATES_CENTS } from "@/lib/services/market-rates";
 import { createWebmcpCheckout } from "../checkout";
 import type { FulfilHandler, ToolHandler } from "../types";
@@ -7,8 +8,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Deposit = 20% of the service's lowest acceptable price (JB, 2026-09-23), rounded to $10, min $50.
 // Lowest price mirrors pricing-engine: market rate x (1 - competitive discount) x floor ratio.
-const DEPOSIT_SHARE = 0.2;
-const MIN_DEPOSIT_CENTS = 5000;
 // Stripe metadata caps each value at 500 chars; keep notes short enough to fit with the other params.
 const MAX_NOTES_CHARS = 200;
 
