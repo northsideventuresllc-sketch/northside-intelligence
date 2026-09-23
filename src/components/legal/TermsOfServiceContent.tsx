@@ -226,8 +226,9 @@ export function TermsOfServiceContent() {
         <p className="mb-4">
           We offer a <strong className="text-white/90">7-day refund window</strong> for new annual plan purchases if
           you have not materially used the plan. Refund requests must be submitted to <LegalEmail />. Refunds for
-          Intelligence Services are governed by the individual service agreement. Smart Store purchases are subject to
-          the refund policy in Section 9.5.
+          Intelligence Services are governed by the individual service agreement, except that a{" "}
+          <strong className="text-white/90">20% Intelligence Services deposit is always non-refundable</strong> once
+          paid, as described in Section 6.2. Smart Store purchases are subject to the refund policy in Section 9.5.
         </p>
 
         <h3 className="mb-2 text-base font-medium text-white/90">5.7 Disputed Charges</h3>
@@ -248,9 +249,43 @@ export function TermsOfServiceContent() {
         </p>
 
         <h3 className="mb-2 text-base font-medium text-white/90">6.2 Payment for Services</h3>
+        <p className="mb-2">
+          For each Intelligence Service, you may pay in full at the time of booking, use an available payment plan
+          or buy-now-pay-later option, or reserve the engagement with a{" "}
+          <strong className="text-white/90">20% deposit</strong> of the agreed price. Payment plan and
+          buy-now-pay-later terms (installment schedule, any financing provider involved) are disclosed to you
+          before you confirm the order and are set out in the individual service agreement.
+        </p>
+        <p className="mb-2">
+          If you choose the deposit option:
+        </p>
+        <ul className="mb-4 list-disc space-y-2 pl-5">
+          <li>
+            The 20% deposit is charged immediately and is{" "}
+            <strong className="text-white/90">always non-refundable</strong>, regardless of whether the engagement
+            is later cancelled, rescheduled, or does not proceed.
+          </li>
+          <li>
+            Choosing the deposit option saves your payment method with{" "}
+            <strong className="text-white/90">Stripe</strong>, our third-party payment processor, so the remaining
+            balance can be charged later. NI never stores your card number — only a Stripe payment method reference.
+          </li>
+          <li>
+            The final total for a Service may be adjusted from the reservation estimate after scoping. We will tell
+            you the final amount before it is charged.
+          </li>
+          <li>
+            When NI marks the Service complete, NI staff (not an automated process) charge the remaining balance
+            (the final total minus the deposit already paid) to your saved payment method.
+          </li>
+          <li>
+            If that balance charge fails or requires additional authentication, we will send you a secure payment
+            link to complete payment. Work and deliverables may be withheld until the balance is paid.
+          </li>
+        </ul>
         <p className="mb-4">
-          Services require a deposit or payment schedule as outlined in the individual agreement. Failure to remit
-          payment may result in suspension of work and forfeiture of deposits.
+          Failure to remit payment under any option may result in suspension of work and, for the deposit option,
+          forfeiture of the non-refundable deposit.
         </p>
 
         <h3 className="mb-2 text-base font-medium text-white/90">6.3 Client Responsibilities</h3>
@@ -267,9 +302,39 @@ export function TermsOfServiceContent() {
         </p>
 
         <h3 className="mb-2 text-base font-medium text-white/90">6.5 No Guarantee of Outcomes</h3>
-        <p>
+        <p className="mb-4">
           Intelligence Services are professional advisory and implementation services. We do not guarantee specific
           business outcomes, ROI, regulatory compliance, or grant award success.
+        </p>
+
+        <h3 className="mb-2 text-base font-medium text-white/90">6.6 Purchases Made by AI Agents</h3>
+        <p className="mb-2">
+          NI operates a public machine interface (an MCP endpoint) that allows AI agents to purchase NI products and
+          Services on a person&apos;s behalf. The following terms apply to purchases made this way:
+        </p>
+        <ul className="mb-4 list-disc space-y-2 pl-5">
+          <li>
+            Every agent-initiated purchase is completed by a{" "}
+            <strong className="text-white/90">person on a Stripe checkout page</strong> — an agent cannot complete
+            payment on its own.
+          </li>
+          <li>
+            The person who pays is bound by these Terms exactly as if they had purchased directly, and is
+            responsible for the actions of any AI agent they authorize to act on their behalf.
+          </li>
+          <li>
+            When an AI agent reserves an Intelligence Service, the deposit is{" "}
+            <strong className="text-white/90">20% of that Service&apos;s lowest published price</strong>. The
+            deposit is non-refundable under the same terms as Section 6.2, and the remaining balance is charged the
+            same way once the Service is complete.
+          </li>
+          <li>
+            Free agent tool calls to the machine interface are{" "}
+            <strong className="text-white/90">rate-limited</strong> to prevent abuse.
+          </li>
+        </ul>
+        <p>
+          See our Privacy Policy for what we log about AI agent calls to the machine interface.
         </p>
       </section>
 

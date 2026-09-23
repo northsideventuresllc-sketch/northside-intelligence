@@ -81,6 +81,11 @@ export function ServiceDetailModal({
           <ServicePriceDisplay pricing={service.pricing} audience={service.audience} size="modal" />
         </div>
 
+        <p className="mb-4 text-xs text-ni-muted">
+          Pay in full, choose a payment plan, or reserve with a non-refundable 20% deposit — the rest is charged
+          to your saved card when your service is complete.
+        </p>
+
         <p className="mb-6 leading-relaxed text-ni-muted">{service.modalCopy.description}</p>
 
         <div className="mb-8 space-y-5">
