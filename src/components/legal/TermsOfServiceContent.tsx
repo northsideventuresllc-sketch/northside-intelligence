@@ -228,7 +228,7 @@ export function TermsOfServiceContent() {
           you have not materially used the plan. Refund requests must be submitted to <LegalEmail />. Refunds for
           Intelligence Services are governed by the individual service agreement, except that a{" "}
           <strong className="text-white/90">20% Intelligence Services deposit is always non-refundable</strong> once
-          paid, as described in Section 6.2. Smart Store purchases are subject to the refund policy in Section 9.5.
+          paid, as described in Section 6.2. Smart Store purchases are subject to the refund policy in Section 7.8.
         </p>
 
         <h3 className="mb-2 text-base font-medium text-white/90">5.7 Disputed Charges</h3>
