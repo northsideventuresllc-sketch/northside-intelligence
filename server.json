@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schema.json",
+  "name": "io.github.northsideventuresllc-sketch/northside-intelligence",
+  "title": "Northside Intelligence WebMCP",
+  "description": "11 production-ready WebMCP tools for autonomous AI agents across lead automation, site gap audits, market briefs, grant search, and commerce.",
+  "version": "1.0.0",
+  "url": "https://www.northsideintelligence.com/api/webmcp",
+  "homepage": "https://northsideintelligence.com",
+  "license": "MIT",
+  "capabilities": {
+    "tools": true
+  },
+  "transport": {
+    "type": "http",
+    "url": "https://www.northsideintelligence.com/api/webmcp"
+  }
+}
