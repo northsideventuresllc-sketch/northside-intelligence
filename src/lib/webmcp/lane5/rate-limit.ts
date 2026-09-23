@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 /**
  * In-memory per-IP token bucket. Per-instance only — this does NOT share state across
  * Vercel lambda instances/regions, so the effective global ceiling is
@@ -40,7 +41,17 @@ export function rateLimitCheck(key: string): { allowed: boolean; retryAfterSecon
 }
 
 export function clientKeyFromHeaders(headers: Headers): string {
+  // Vercel sets x-vercel-forwarded-for / x-real-ip itself; prefer those over client-controllable values.
+  const vercel = headers.get("x-vercel-forwarded-for");
+  if (vercel) return vercel.split(",")[0]!.trim();
+  const real = headers.get("x-real-ip");
+  if (real) return real.trim();
   const fwd = headers.get("x-forwarded-for");
   if (fwd) return fwd.split(",")[0]!.trim();
-  return headers.get("x-real-ip") || "unknown";
+  return "unknown";
+}
+
+/** One-way hash of the client key, so metering rows never store a raw IP. */
+export function clientKeyHash(headers: Headers): string {
+  return createHash("sha256").update(`webmcp:${clientKeyFromHeaders(headers)}`).digest("hex").slice(0, 16);
 }

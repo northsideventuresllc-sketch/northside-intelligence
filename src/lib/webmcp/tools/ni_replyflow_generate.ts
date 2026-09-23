@@ -1,6 +1,7 @@
 import { generateReply } from "@/lib/replyflow/ai";
 import { getSector3FreeTierSpec } from "@/lib/billing/sector3-tool-pricing";
 import type { ToolContext, ToolHandler } from "../types";
+import { clientKeyHash } from "../lane5/rate-limit";
 
 // Anonymous free-tier caps (per rolling 24h) so a public endpoint can't run up AI costs.
 const DAILY_CAP_TOTAL = 100;
@@ -19,7 +20,9 @@ async function overDailyCap(ctx: ToolContext): Promise<boolean> {
       .eq("meta->>tool_name", "ni_replyflow_generate")
       .eq("meta->>result_status", "ok")
       .gte("created_at", since);
-  const [{ count: total }, { count: mine }] = await Promise.all([base(), base().eq("sender", ctx.engine)]);
+  // Per-caller cap keys on client IP (hashed into meta.client_key), not the spoofable agent header.
+  const key = clientKeyHash(ctx.req.headers);
+  const [{ count: total }, { count: mine }] = await Promise.all([base(), base().eq("meta->>client_key", key)]);
   return (total ?? 0) >= DAILY_CAP_TOTAL || (mine ?? 0) >= DAILY_CAP_PER_ENGINE;
 }
 

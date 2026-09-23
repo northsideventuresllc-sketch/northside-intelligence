@@ -193,8 +193,9 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(single.body, { status: single.status, headers: responseHeaders });
     } catch (err) {
+      console.error("[webmcp] rpc error:", err);
       return NextResponse.json(
-        rpcErrorBody(null, JSON_RPC_ERRORS.INTERNAL_ERROR, (err as Error).message || "Internal error"),
+        rpcErrorBody(null, JSON_RPC_ERRORS.INTERNAL_ERROR, "Internal error"),
         { status: 200, headers: responseHeaders }
       );
     }
@@ -220,8 +221,9 @@ export async function POST(req: NextRequest) {
     const result = await runTool(tool, parameters as Record<string, unknown>, req, natural_query as string | undefined);
 
     return NextResponse.json({ tool: tool_name, product: tool.product, ...result }, { headers: CORS_HEADERS });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500, headers: CORS_HEADERS });
+  } catch (err) {
+    console.error("[webmcp] rest error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500, headers: CORS_HEADERS });
   }
 }
 

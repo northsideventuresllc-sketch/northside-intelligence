@@ -7,8 +7,6 @@
 export const READ_ONLY_TOOLS = new Set<string>([
   "mf_search_coaches",
   "ni_store_search",
-  "ni_signaldesk_brief",
-  "ni_grantbot_search",
   "ni_order_status",
 ]);
 
