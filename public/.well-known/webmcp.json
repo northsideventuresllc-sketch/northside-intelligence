@@ -401,6 +401,26 @@
       },
       "floor_price_usd": 499,
       "target_url": "https://northsideintelligence.com/api/webmcp"
+    },
+    {
+      "name": "ni_order_status",
+      "description": "Check payment status for an order returned by any paid tool, and receive the purchased result once paid.",
+      "sector": "3",
+      "product": "Northside Intelligence",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "order_id"
+        ],
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "order_id returned with a checkout_url"
+          }
+        }
+      },
+      "floor_price_usd": 0,
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     }
   ]
 }

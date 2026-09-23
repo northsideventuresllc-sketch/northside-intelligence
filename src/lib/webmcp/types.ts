@@ -34,3 +34,12 @@ export type ToolHandler = (
   params: Record<string, unknown>,
   ctx: ToolContext
 ) => Promise<ToolResult>;
+
+/** Runs after payment is confirmed (called by ni_order_status). `order` is the paid Stripe Checkout Session. */
+export type FulfilHandler = (
+  order: { id: string; customer_email: string | null; amount_total: number | null; metadata: Record<string, string> },
+  params: Record<string, unknown>,
+  ctx: ToolContext
+) => Promise<Record<string, unknown>>;
+
+export type ToolModule = { handler: ToolHandler; fulfil?: FulfilHandler };
