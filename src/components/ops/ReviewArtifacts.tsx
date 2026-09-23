@@ -31,6 +31,7 @@ export function ReviewArtifacts({ initialArtifacts }: Props) {
   const [artifacts, setArtifacts] = useState(initialArtifacts);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   const pending = artifacts.filter((a) => a.status === "pending");
@@ -43,14 +44,18 @@ export function ReviewArtifacts({ initialArtifacts }: Props) {
     setArtifacts(data.artifacts);
   }
 
-  async function runAction(id: string, path: "approve" | "reject" | "request-changes") {
+  async function runAction(
+    id: string,
+    path: "approve" | "reject" | "request-changes",
+    extra?: Record<string, unknown>
+  ) {
     setBusyId(id);
     setError(null);
     try {
       const res = await fetch(`/api/ops/artifacts/${id}/${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reviewer_notes: notes[id]?.trim() || undefined }),
+        body: JSON.stringify({ reviewer_notes: notes[id]?.trim() || undefined, ...extra }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
@@ -65,8 +70,11 @@ export function ReviewArtifacts({ initialArtifacts }: Props) {
     }
   }
 
-  function approve(id: string) {
-    void runAction(id, "approve");
+  function approve(id: string, originalDraftContent: string | null) {
+    const edited = drafts[id];
+    const draftContent =
+      edited !== undefined && edited !== (originalDraftContent ?? "") ? edited : undefined;
+    void runAction(id, "approve", draftContent !== undefined ? { draft_content: draftContent } : undefined);
   }
 
   function reject(id: string) {
@@ -106,7 +114,9 @@ export function ReviewArtifacts({ initialArtifacts }: Props) {
                 busy={busyId === a.id}
                 note={notes[a.id] ?? ""}
                 onNoteChange={(v) => setNotes((prev) => ({ ...prev, [a.id]: v }))}
-                onApprove={() => approve(a.id)}
+                draftValue={drafts[a.id] ?? a.draft_content ?? ""}
+                onDraftChange={(v) => setDrafts((prev) => ({ ...prev, [a.id]: v }))}
+                onApprove={() => approve(a.id, a.draft_content)}
                 onReject={() => reject(a.id)}
                 onRequestChanges={() => requestChanges(a.id)}
               />
@@ -159,6 +169,8 @@ function ArtifactCard({
   busy,
   note,
   onNoteChange,
+  draftValue,
+  onDraftChange,
   onApprove,
   onReject,
   onRequestChanges,
@@ -167,6 +179,8 @@ function ArtifactCard({
   busy: boolean;
   note: string;
   onNoteChange: (v: string) => void;
+  draftValue: string;
+  onDraftChange: (v: string) => void;
   onApprove: () => void;
   onReject: () => void;
   onRequestChanges: () => void;
@@ -188,9 +202,12 @@ function ArtifactCard({
       </div>
 
       {artifact.draft_content ? (
-        <p className="mb-3 whitespace-pre-wrap rounded-lg border border-white/10 bg-ni-bg p-3 text-sm text-white/80">
-          {artifact.draft_content}
-        </p>
+        <textarea
+          value={draftValue}
+          onChange={(e) => onDraftChange(e.target.value)}
+          rows={6}
+          className="mb-3 w-full whitespace-pre-wrap rounded-lg border border-white/10 bg-ni-bg p-3 text-sm text-white/80 outline-none focus:border-cyan-500/50"
+        />
       ) : artifact.draft_ref ? (
         <p className="mb-3 text-sm text-white/80">
           <span className="text-ni-muted">Draft: </span>

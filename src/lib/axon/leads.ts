@@ -9,6 +9,7 @@ import {
 } from './constants.mjs';
 import { filterVisibleLeads, sweepLeadLifecycle } from './outreach-lifecycle';
 import { backfillNiServicesArtifacts } from './ni-services-artifact-pipeline.mjs';
+import { draftOutreachReviewArtifact } from './outreach-review-gate';
 import type { Lead, LeadWithMeta, PipelineStats } from './types';
 import { GOAL_TARGET } from './types';
 
@@ -39,7 +40,27 @@ export async function fetchLeads(limit = 200, source = SOURCE): Promise<LeadWith
     'ni_brain_outreach',
     `source=eq.${source}&status=neq.purged&select=*&order=created_at.desc&limit=${limit}`
   )) as Lead[];
-  return filterVisibleLeads((rows || []).map(enrichLead));
+  const leads = filterVisibleLeads((rows || []).map(enrichLead));
+
+  // Decision #1888 Phase 3 (BUILD-ARTIFACT-PIPELINE-OUTREACH-INTEGRATION-0914-03):
+  // mirror every NI Services lead awaiting human review into nvg_review_artifacts
+  // so it can be approved/edited through the NI Portal Ops review gate. Explicitly
+  // scoped to source === SOURCE ('axon_ni_services') — Match Fit (source ===
+  // MATCH_FIT_SOURCE) is out of scope for Decision #1888, same carve-out CONTENT's
+  // Phase 4 already made. Best-effort, same idiom as sweepLeadLifecycle() above.
+  if (source === SOURCE) {
+    for (const lead of leads) {
+      if (lead.status === 'pending_approval' && lead.comment_draft) {
+        try {
+          await draftOutreachReviewArtifact(lead);
+        } catch {
+          /* review-artifact mirroring is best-effort */
+        }
+      }
+    }
+  }
+
+  return leads;
 }
 
 export async function fetchLeadById(id: string): Promise<LeadWithMeta | null> {
