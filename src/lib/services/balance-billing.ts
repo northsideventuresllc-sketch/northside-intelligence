@@ -310,7 +310,9 @@ export async function chargeServiceBalance(
         confirm: true,
         metadata: baseMetadata,
       },
-      { idempotencyKey: `balance:${row.depositPaymentIntentId}` }
+      // Blocks accidental double-submits (same amount within 10 minutes) but still lets the
+      // operator retry later or with a corrected total after a declined card.
+      { idempotencyKey: `balance:${row.depositPaymentIntentId}:${balanceCents}:${Math.floor(Date.now() / 600_000)}` }
     );
 
     if (paymentIntent.status !== "succeeded") {

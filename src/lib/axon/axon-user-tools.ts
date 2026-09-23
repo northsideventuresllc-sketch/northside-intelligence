@@ -25,6 +25,15 @@ export const AXON_USER_TOOLS: AxonUserTool[] = [
     sourceType: 'custom',
   },
   {
+    // Deposit clients awaiting their balance charge (Decision #1996). Operator-triggered only.
+    slug: 'service-balances',
+    defaultDisplayName: 'Service Balances',
+    href: '/tools/service-balances',
+    icon: '💳',
+    sourceType: 'custom',
+    venture: 'ni',
+  },
+  {
     slug: 'match-fit-admin',
     defaultDisplayName: 'Match Fit Marketing',
     href: '/tools/match-fit-admin',
