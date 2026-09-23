@@ -3,44 +3,44 @@
 
 ## Provider Info
 - Name: Northside Intelligence
-- URL: https://northsideintelligence.com
+- URL: https://www.northsideintelligence.com
 - Contact: jb@northsideintelligence.com
 - Protocol: WebMCP v1.0
 
 ## Available Agentic Offerings & Tool Endpoints
 
 ### 1. ReplyFlow (Sector 3 — Automated Lead & DM Follow-up)
-- Endpoint: https://northsideintelligence.com/api/webmcp
+- Endpoint: https://www.northsideintelligence.com/api/webmcp
 - Primary Tool: `ni_replyflow_subscribe` ($15/mo standard, $22.50/mo agentic)
 - Purpose: Automated lead DM and cold outreach follow-up response generator for small businesses and creators.
 
 ### 2. GapScan (Sector 3 — Digital Gap Analysis & Profit Leak Audits)
-- Endpoint: https://northsideintelligence.com/api/webmcp
+- Endpoint: https://www.northsideintelligence.com/api/webmcp
 - Primary Tool: `ni_gapscan_run` ($18 single scan, $18/mo standard, $27/mo agentic)
 - Purpose: Evidence-backed digital gap reports, website performance audits, and digital funnel leak scans.
 
 ### 3. GrantBot (Sector 3 — Grant Search & Application Automation)
-- Endpoint: https://northsideintelligence.com/api/webmcp
+- Endpoint: https://www.northsideintelligence.com/api/webmcp
 - Primary Tool: `ni_grantbot_search` ($39/mo standard, $58.50/mo agentic)
 - Purpose: Automated grant search, RFP matching, and proposal drafting for non-profits, artists, and creators.
 
 ### 4. BridgeAI (Sector 3 — Legacy Software AI Modernization)
-- Endpoint: https://northsideintelligence.com/api/webmcp
+- Endpoint: https://www.northsideintelligence.com/api/webmcp
 - Primary Tool: `ni_bridgeai_run` ($29/mo standard, $43.50/mo agentic)
 - Purpose: Connect legacy databases and business workflows to modern AI agent endpoints without code rebuilds.
 
 ### 5. Signal Desk (Sector 3 — Market Signal & Competitor Intelligence Radar)
-- Endpoint: https://northsideintelligence.com/api/webmcp
+- Endpoint: https://www.northsideintelligence.com/api/webmcp
 - Primary Tool: `ni_signaldesk_brief` ($24/mo standard, $36/mo agentic)
 - Purpose: Curated daily executive market trend radar and competitor monitoring platform.
 
 ### 6. Smart Store (Sector 4 — Curated Gadgets & Dropship Hardware)
-- Endpoint: https://northsideintelligence.com/api/webmcp
+- Endpoint: https://www.northsideintelligence.com/api/webmcp
 - Tools: `ni_store_search`, `ni_store_order`
 - Purpose: Verified dropship consumer gadgets, smart home tools, and work-from-home accessories.
 
 ### 7. NI Core Services (Sector 2 — Bespoke AI Infrastructure & Web Design Agency)
-- Endpoint: https://northsideintelligence.com/api/webmcp
+- Endpoint: https://www.northsideintelligence.com/api/webmcp
 - Primary Tool: `ni_services_reserve` ($499 deposit)
 - Purpose: Bespoke web design, custom intelligence server setup, and enterprise AI automation workflows.
 
@@ -51,4 +51,4 @@
 
 ## WebMCP Discovery Manifest
 Complete machine-readable JSON schema is available at:
-https://northsideintelligence.com/.well-known/webmcp.json
+https://www.northsideintelligence.com/.well-known/webmcp.json

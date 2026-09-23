@@ -1,7 +1,7 @@
 {
-  "schema_version": "2026-09-01",
+  "schema_version": "2026-09-23",
   "provider": "Northside Intelligence",
-  "provider_url": "https://northsideintelligence.com",
+  "provider_url": "https://www.northsideintelligence.com",
   "contact_email": "jb@northsideintelligence.com",
   "tagline": "Filling the gaps to build the future.",
   "protocol": "WebMCP / Model Context Protocol v1.0",
@@ -29,7 +29,7 @@
         }
       },
       "floor_price_usd": 0,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "mf_book_coach",
@@ -69,7 +69,7 @@
         }
       },
       "floor_price_usd": 10,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_replyflow_subscribe",
@@ -106,7 +106,7 @@
         }
       },
       "floor_price_usd": 15,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_replyflow_generate",
@@ -142,7 +142,7 @@
         }
       },
       "floor_price_usd": 0.1,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_gapscan_run",
@@ -176,7 +176,7 @@
         }
       },
       "floor_price_usd": 18,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_signaldesk_brief",
@@ -209,7 +209,7 @@
         }
       },
       "floor_price_usd": 24,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_grantbot_search",
@@ -242,7 +242,7 @@
         }
       },
       "floor_price_usd": 39,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_bridgeai_run",
@@ -275,7 +275,7 @@
         }
       },
       "floor_price_usd": 29,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_store_search",
@@ -296,7 +296,7 @@
         }
       },
       "floor_price_usd": 0,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_store_order",
@@ -354,7 +354,7 @@
         }
       },
       "floor_price_usd": 15,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_services_reserve",
@@ -400,7 +400,7 @@
         }
       },
       "floor_price_usd": 499,
-      "target_url": "https://northsideintelligence.com/api/webmcp"
+      "target_url": "https://www.northsideintelligence.com/api/webmcp"
     },
     {
       "name": "ni_order_status",
