@@ -18,8 +18,10 @@ export const DEPOSIT_META = {
   serviceSlug: "serviceSlug",
 } as const;
 
+/** 20% of the total (whole dollars), at least $50, but never more than the total itself. */
 export function depositCentsForTotal(totalCents: number): number {
-  return Math.max(MIN_DEPOSIT_CENTS, Math.round((totalCents * DEPOSIT_SHARE) / 100) * 100);
+  const deposit = Math.max(MIN_DEPOSIT_CENTS, Math.round((totalCents * DEPOSIT_SHARE) / 100) * 100);
+  return Math.min(Math.max(0, Math.round(totalCents)), deposit);
 }
 
 export function balanceCentsFor(totalCents: number, depositCents: number): number {

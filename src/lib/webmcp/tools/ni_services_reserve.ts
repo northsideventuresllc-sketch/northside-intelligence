@@ -11,11 +11,18 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Stripe metadata caps each value at 500 chars; keep notes short enough to fit with the other params.
 const MAX_NOTES_CHARS = 200;
 
-export function depositCentsFor(slug: string): number | null {
+/** The service's lowest acceptable price, rounded to whole dollars — the agreed total for agent reservations. */
+export function floorCentsFor(slug: string): number | null {
   const market = SERVICE_MARKET_RATES_CENTS[slug];
   if (!market) return null;
-  const floor = market * (1 - COMPETITIVE_DISCOUNT) * FLOOR_RATIO;
-  return Math.max(MIN_DEPOSIT_CENTS, Math.round((floor * DEPOSIT_SHARE) / 1000) * 1000);
+  return Math.round((market * (1 - COMPETITIVE_DISCOUNT) * FLOOR_RATIO) / 100) * 100;
+}
+
+export function depositCentsFor(slug: string): number | null {
+  const floor = floorCentsFor(slug);
+  if (!floor) return null;
+  const deposit = Math.max(MIN_DEPOSIT_CENTS, Math.round((floor * DEPOSIT_SHARE) / 1000) * 1000);
+  return Math.min(floor, deposit);
 }
 
 /**
@@ -69,7 +76,8 @@ export const handler: ToolHandler = async (_tool, params) => {
     // Card is saved so JB can charge the balance when the service is complete (Decision #1996).
     sessionExtras: depositSessionParams({
       serviceSlug: service.slug,
-      totalCents: Math.round(depositCents / DEPOSIT_SHARE),
+      // Real floor price, not deposit / 20% — the $50 minimum would otherwise inflate the total.
+      totalCents: floorCentsFor(service.slug) ?? depositCents,
       depositCents,
     }),
     customerEmail: clientEmail,

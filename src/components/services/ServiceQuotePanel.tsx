@@ -192,7 +192,7 @@ export function ServiceQuotePanel({
                   rel="noreferrer"
                   className="font-medium text-cyan-300 underline-offset-2 hover:underline"
                 >
-                  Read Our Terms Of Service
+                  Read Our Terms of Service
                 </a>
               </p>
             </div>
