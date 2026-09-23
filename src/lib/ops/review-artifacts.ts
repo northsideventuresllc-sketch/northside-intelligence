@@ -258,18 +258,6 @@ async function applyOutreachApprovalSideEffects(artifact: ReviewArtifact): Promi
       );
     }
 
-    try {
-      await assertFireAllowed("outreach.run");
-    } catch (err) {
-      if (err instanceof FireHoldError) {
-        await writeOutreachLearning(
-          `[OUTREACH-ARTIFACT] artifact ${artifact.id} lead ${lead.id} approved but send held — AXON FIRE gate is on HOLD (${err.message}); lead left unsent for manual send once fire resumes.`
-        );
-        return;
-      }
-      throw err;
-    }
-
     const channel = typeof metadata.channel === "string" ? metadata.channel : lead.meta?.channel;
     const contactEmail =
       typeof metadata.contact_email === "string" ? metadata.contact_email : lead.meta?.contact_email;
@@ -277,9 +265,14 @@ async function applyOutreachApprovalSideEffects(artifact: ReviewArtifact): Promi
       (typeof metadata.email_subject === "string" ? metadata.email_subject : lead.meta?.email_subject) ||
       `Northside Intelligence — ${lead.handle}`;
 
-    // Same manual-fallback branches as leads/[id]/approve/route.ts: linkedin, no
-    // contact email, or Resend not configured all leave the lead at 'approved' for
-    // a human to send by hand, instead of attempting resendSend.
+    // Same manual-fallback branches as leads/[id]/approve/route.ts, checked in the
+    // same order and — critically — BEFORE the fire-gate check below: linkedin, no
+    // contact email, or Resend not configured all leave the lead at 'approved' for a
+    // human to send by hand without ever attempting resendSend, so none of them
+    // should be blocked by AXON FIRE being on HOLD (route.ts only calls
+    // assertFireAllowed immediately before its own resendSend call, not before these
+    // manual-fallback branches — getting this order wrong would make a HOLD block
+    // manual-send approvals that the un-gated route never blocked).
     if (channel === "linkedin" || !contactEmail) {
       await updateLeadStatus(lead.id, { status: "approved", comment_draft: finalDraft ?? undefined });
       await logOutreachApprovalSignal(lead.id);
@@ -293,6 +286,18 @@ async function applyOutreachApprovalSideEffects(artifact: ReviewArtifact): Promi
       await updateLeadStatus(lead.id, { status: "approved", comment_draft: finalDraft ?? undefined });
       await logOutreachApprovalSignal(lead.id);
       return;
+    }
+
+    try {
+      await assertFireAllowed("outreach.run");
+    } catch (err) {
+      if (err instanceof FireHoldError) {
+        await writeOutreachLearning(
+          `[OUTREACH-ARTIFACT] artifact ${artifact.id} lead ${lead.id} approved but send held — AXON FIRE gate is on HOLD (${err.message}); lead left unsent for manual send once fire resumes.`
+        );
+        return;
+      }
+      throw err;
     }
 
     try {
