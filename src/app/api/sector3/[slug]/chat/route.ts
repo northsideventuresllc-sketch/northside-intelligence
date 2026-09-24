@@ -9,10 +9,8 @@ import {
 } from "@/lib/sector3-tools/conversations";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const slug = params.slug;
   if (!isValidSector3HelpSlug(slug)) {
     return NextResponse.json({ error: "Unknown tool" }, { status: 404 });

@@ -5,11 +5,12 @@ import { requireAxonPortalUser } from '@/lib/axon/portal-guard';
 export const dynamic = 'force-dynamic';
 
 /** Droid Space merged into Command Center (JB decision 2026-07-26, #335). */
-export default async function AxonDroidSpaceRedirect({
-  params,
-}: {
-  params: { username: string };
-}) {
+export default async function AxonDroidSpaceRedirect(
+  props: {
+    params: Promise<{ username: string }>;
+  }
+) {
+  const params = await props.params;
   const { username } = await requireAxonPortalUser(params.username);
   redirect(`${axonPublicPath(username)}/tools/command-center`);
 }

@@ -5,11 +5,12 @@ import { requireAxonPortalUser } from '@/lib/axon/portal-guard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AxonCommandCenterPage({
-  params,
-}: {
-  params: { username: string };
-}) {
+export default async function AxonCommandCenterPage(
+  props: {
+    params: Promise<{ username: string }>;
+  }
+) {
+  const params = await props.params;
   const { username } = await requireAxonPortalUser(params.username);
   const data = await loadCommandCenter();
   return <CommandCenterTool data={data} basePath={axonPublicPath(username)} />;

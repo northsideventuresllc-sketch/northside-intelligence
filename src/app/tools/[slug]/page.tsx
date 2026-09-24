@@ -23,10 +23,11 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
 interface ToolPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: ToolPageProps): Promise<Metadata> {
+export async function generateMetadata(props: ToolPageProps): Promise<Metadata> {
+  const params = await props.params;
   const tool = INTELLIGENCE_TOOLS.find((t) => t.slug === params.slug);
   if (!tool) return { title: "Tool | Northside Intelligence" };
   return {
@@ -35,7 +36,8 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
   };
 }
 
-export default async function ToolPage({ params }: ToolPageProps) {
+export default async function ToolPage(props: ToolPageProps) {
+  const params = await props.params;
   const tool = INTELLIGENCE_TOOLS.find((t) => t.slug === params.slug);
   if (!tool) notFound();
 

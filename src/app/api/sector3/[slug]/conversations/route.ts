@@ -12,10 +12,8 @@ import {
 import { isValidSector3HelpSlug } from "@/lib/sector3-tools/help-content";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const slug = params.slug;
   if (!isValidSector3HelpSlug(slug)) {
     return NextResponse.json({ error: "Unknown tool" }, { status: 404 });
@@ -45,10 +43,8 @@ export async function GET(
   return NextResponse.json({ conversations });
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const slug = params.slug;
   if (!isValidSector3HelpSlug(slug)) {
     return NextResponse.json({ error: "Unknown tool" }, { status: 404 });
@@ -77,10 +73,8 @@ export async function POST(
   return NextResponse.json({ conversation });
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const slug = params.slug;
   if (!isValidSector3HelpSlug(slug)) {
     return NextResponse.json({ error: "Unknown tool" }, { status: 404 });
@@ -116,10 +110,8 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const slug = params.slug;
   if (!isValidSector3HelpSlug(slug)) {
     return NextResponse.json({ error: "Unknown tool" }, { status: 404 });
