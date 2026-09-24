@@ -14,7 +14,7 @@
  * which model to use is hardcoded in this file.
  */
 
-import { queueMiniShellJob } from './nvg-mini-queue.mjs';
+import { queueMiniShellJob, queueMiniShellJobDetailed } from './nvg-mini-queue.mjs';
 import { callSubscriptionCli } from './axon-subscription-cli.mjs';
 import { buildAgentBootContext } from './axon-agent-boot.mjs';
 import { handleToolCall } from './axon-agent-bus.mjs';
@@ -76,9 +76,23 @@ async function sbPost(key, table, row, prefer = 'return=minimal') {
       headers: { ...hdrs(key), Prefer: prefer },
       body: JSON.stringify(row),
     });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      // PULSE-LASTFIRED-COSTLEDGER-AXON-GAP-0909: this returned null with zero
+      // trace anywhere -- axon_cost_ledger sat at 0 rows since table creation
+      // with no way to tell whether every insert was silently rejected (bad
+      // key, RLS, schema mismatch) or genuinely never called. logRouterEvent
+      // above already promises "one structured console line per swallowed/
+      // total failure" for this file; sbPost never actually kept that promise
+      // for itself. Every table this function writes to (axon_cost_ledger,
+      // router_health, axon_router_decisions, nvg_mini_jobs) gets the same
+      // visibility now.
+      const body = await r.text().catch(() => '');
+      logRouterEvent('sbPost_failed', { table, status: r.status, body: body.slice(0, 300) });
+      return null;
+    }
     return prefer.includes('representation') ? await r.json() : true;
-  } catch {
+  } catch (err) {
+    logRouterEvent('sbPost_threw', { table, error: String(err?.message || err).slice(0, 300) });
     return null;
   }
 }
@@ -246,11 +260,11 @@ export function scoreLanes(lanes, { capabilityClass, quota = {}, costTierFloor =
 // 4. Provider calls — bodies lifted from lib/axon-v0/omni-router.ts
 // ---------------------------------------------------------------------------
 
-async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxTokens = 1024 } = {}) {
+async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxTokens = 1024, extraBody = null } = {}) {
   const r = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}) },
-    body: JSON.stringify({ model, messages, max_tokens: maxTokens }),
+    body: JSON.stringify({ model, messages, max_tokens: maxTokens, ...(extraBody || {}) }),
   });
   if (!r.ok) throw new Error(`provider HTTP ${r.status}`);
   const text = (await r.json())?.choices?.[0]?.message?.content;
@@ -271,12 +285,27 @@ async function callOpenAICompatible(baseUrl, apiKey, model, messages, { maxToken
  * single-prompt convention, used for the 'local' tier) and `messages` in the job input so
  * the worker's handler can use whichever shape it actually expects — RunPod queues
  * arbitrary `input` JSON regardless, so sending both costs nothing.
+ *
+ * AX-RUNPOD-ZERO-SUCCESS-0915: the job-queue contract above is confirmed correct (live
+ * /run calls return HTTP 200 with a queued job id) — the 0% success rate is NOT a
+ * call-shape bug. Live root cause, confirmed via RunPod's account API this same session:
+ * `clientBalance` is negative, so RunPod's autoscaler never spins up a worker for ANY
+ * queued job regardless of endpoint config (workersMax/workersStandby are irrelevant with
+ * no billable balance) — every job sits IN_QUEUE until our client times out and abandons
+ * it. That abandonment is what this function now guards against: without a cancel, each
+ * timed-out attempt leaves an orphaned job in RunPod's queue forever, so the backlog grows
+ * unbounded (measured 24 stuck jobs before this fix, all still IN_QUEUE at the time of
+ * measurement, none ever COMPLETED/FAILED). Fixing the balance is a billing action, not a
+ * code fix — tracked separately; this function still cancels its own orphan either way so
+ * the queue stays clean once billing is restored.
  */
 async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens = 1024, timeoutMs = 25_000 } = {}) {
   const base = baseUrl.replace(/\/$/, '');
   const deadline = Date.now() + timeoutMs;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let jobId = null;
+  let completed = false;
   try {
     const submitRes = await fetch(`${base}/run`, {
       method: 'POST',
@@ -289,7 +318,11 @@ async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens 
     if (!submitRes.ok) throw new Error(`runpod /run HTTP ${submitRes.status}`);
     const job = await submitRes.json();
     if (!job?.id) throw new Error('runpod /run returned no job id');
-    if (job.status === 'COMPLETED') return extractRunpodOutput(job.output);
+    jobId = job.id;
+    if (job.status === 'COMPLETED') {
+      completed = true;
+      return extractRunpodOutput(job.output);
+    }
     if (job.status === 'FAILED' || job.status === 'CANCELLED') {
       throw new Error(`runpod job ${job.status.toLowerCase()} at submit`);
     }
@@ -304,7 +337,10 @@ async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens 
       });
       if (!statusRes.ok) continue; // transient — keep polling within the deadline
       const statusJob = await statusRes.json();
-      if (statusJob.status === 'COMPLETED') return extractRunpodOutput(statusJob.output);
+      if (statusJob.status === 'COMPLETED') {
+        completed = true;
+        return extractRunpodOutput(statusJob.output);
+      }
       if (statusJob.status === 'FAILED' || statusJob.status === 'CANCELLED') {
         throw new Error(`runpod job ${statusJob.status.toLowerCase()}: ${JSON.stringify(statusJob.error || '').slice(0, 200)}`);
       }
@@ -316,7 +352,17 @@ async function callRunpodJobQueue(baseUrl, apiKey, model, messages, { maxTokens 
     throw err;
   } finally {
     clearTimeout(timer);
+    if (jobId && !completed) cancelRunpodJob(base, apiKey, jobId);
   }
+}
+
+// Best-effort, fire-and-forget: prevents a client-abandoned job from sitting in RunPod's
+// queue forever (see AX-RUNPOD-ZERO-SUCCESS-0915). Never throws, never awaited by callers.
+function cancelRunpodJob(base, apiKey, jobId) {
+  fetch(`${base}/cancel/${jobId}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}` },
+  }).catch(() => {});
 }
 
 function extractRunpodOutput(output) {
@@ -557,14 +603,19 @@ export async function executeLane(
       .filter((m) => m.role !== 'system')
       .map((m) => `${m.role === 'assistant' ? 'Assistant' : 'User'}: ${m.content}`)
       .join('\n')}\nAssistant:`;
-    // think:false is required — axon-ornith is a thinking-capable model that otherwise puts
-    // its whole answer in `thinking` and leaves `response` empty (Learning #3625, 2026-08-05).
-    const body = JSON.stringify({ model: lane.model, prompt, stream: false, think: false });
     const base = lane.route.base_url || 'http://localhost:11434';
     const stdout = await queueMiniShellJob(
       supabaseKey,
-      `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`,
-      { title: `axon-local-${lane.model}` },
+      buildLocalGenerateCmd(base, lane.model, prompt),
+      {
+        title: `axon-local-${lane.model}`,
+        maxWaitMs: RELAY_LOCAL_MAX_WAIT_MS,
+        // AX-LOCAL-OLLAMA-TIMEOUT-SINCE-0913: queueMiniShellJob defaults timeoutS to
+        // MINI_CMD_TIMEOUT_S (40s) when not passed, which sets payload.timeout=45 — the
+        // mini runner then kills the curl process at 45s, well before this cmd's own
+        // `-m ${RELAY_LOCAL_CURL_TIMEOUT_S}` (120s) ever gets to finish. Must match.
+        timeoutS: RELAY_LOCAL_CURL_TIMEOUT_S,
+      },
     );
     if (!stdout) throw new Error('local lane: no response from the mini');
     const text = JSON.parse(stdout)?.response?.trim();
@@ -648,6 +699,123 @@ const TIER_KEY_PROVIDER = { runpod: 'runpod', openrouter: 'openrouter', gemini: 
 // their own success/latency signal via axon_cost_ledger and don't need a second one.
 const RELAY_METRIC_TIERS = new Set(['local', 'runpod']);
 const RELAY_LOCAL_RETRY_BACKOFF_MS = 1500;
+// AX-RELAY-TIMEOUT-FIX-0828 (NI-Brain Decision #1503): 40s was too short for real
+// /api/generate calls under mini disk/load pressure (measured 78% failure rate, curl
+// exit 28, 2026-08-28). axon-local-relay.mjs was raised to 120s that same day; these two
+// call sites in this file were missed and still ran -m 40 until this fix (found live,
+// 2026-09-15 ponder run — one of them cites the 78% figure in its own retry comment two
+// lines below the still-hardcoded 40). Both now use this shared constant.
+//
+// The curl timeout alone is not enough — queueMiniShellJob's own default poll budget
+// (nvg-mini-queue.mjs MINI_MAX_WAIT_MS, 45s) is shorter than this 120s curl timeout, so
+// without an explicit maxWaitMs override the caller gives up and reports failure at 45s
+// regardless of what curl would have returned at 46-119s. axon-local-relay.mjs already
+// pairs its 120s curl timeout with a 130s wait budget (MINI_RELAY_MAX_WAIT_MS) for exactly
+// this reason — both call sites below now pass the same matching wait budget.
+const RELAY_LOCAL_CURL_TIMEOUT_S = 120;
+
+// AG-VERIFY-CHAIN-EXHAUSTION-0924 (security): the local-tier curl used to pass its JSON body
+// as `-d ${JSON.stringify(body)}` — a DOUBLE-quoted zsh string. zsh still expands `$(...)`,
+// backticks and `$VAR` inside double quotes, so prompt text was being evaluated as shell on
+// the Mac mini. Live proof: nvg_mini_jobs 4191/4192/4194/4209 (2026-09-24) failed with
+// "zsh:1: command not found: superseded_note" — a backticked word from a prompt was run as a
+// command. Single quotes are fully literal in POSIX sh/zsh; the only character to escape is
+// the single quote itself. The allowlisted template (`... /api/generate -d `) is unchanged.
+export function shSingleQuote(s) {
+  return `'${String(s).replace(/'/g, `'\\''`)}'`;
+}
+
+export function buildLocalGenerateCmd(base, model, prompt) {
+  // think:false is required — axon-ornith is a thinking-capable model that otherwise puts
+  // its whole answer in `thinking` and leaves `response` empty (Learning #3625, 2026-08-05).
+  const body = JSON.stringify({ model, prompt, stream: false, think: false });
+  return `curl -s -m ${RELAY_LOCAL_CURL_TIMEOUT_S} ${base}/api/generate -d ${shSingleQuote(body)}`;
+}
+
+// Gemini model ids Google has retired — confirmed 404 "no longer available" on both platform
+// keys, live 2026-09-24 (gemini-2.0-flash). The GEMINI_MODEL secret still named it, and that
+// override beat router_models, so the whole gemini tier 404'd on every call. A retired id is
+// now ignored in favour of router_models' own live ids, and any 404 moves to the next model.
+const RETIRED_GEMINI_MODEL_RE = /^(models\/)?gemini-(1\.|2\.0-|pro$|pro-vision$)/;
+export function isRetiredGeminiModel(id) {
+  return RETIRED_GEMINI_MODEL_RE.test(String(id || ''));
+}
+
+/** Ordered, deduped candidate model rows for a tier (primary first). Exported for tests. */
+export function buildTierModelCandidates(tier, models, override = null) {
+  const rows = Array.isArray(models) ? models : [];
+  let list;
+  if (tier === 'openrouter') {
+    // FREE models only, in priority order — the old code took ONLY the first free row, so
+    // one flaky free model ("provider returned no content") stranded the whole tier.
+    const free = rows.filter((m) => m.cost_tier === 0);
+    list = free.length ? free : rows.slice(0, 1);
+  } else if (tier === 'gemini') {
+    const free = rows.filter((m) => m.cost_tier === 0 || m.cost_tier == null);
+    const base = free.length ? free : rows.slice(0, 1);
+    list = override && !isRetiredGeminiModel(override) && base.length
+      ? [{ ...base[0], model: override }, ...base]
+      : override && !isRetiredGeminiModel(override)
+        ? [{ model: override }]
+        : base;
+    list = list.filter((m) => !isRetiredGeminiModel(m.model));
+  } else {
+    list = rows.slice(0, 1);
+  }
+  const seen = new Set();
+  return list.filter((m) => m?.model && !seen.has(m.model) && seen.add(m.model));
+}
+const RELAY_LOCAL_MAX_WAIT_MS = 130_000;
+
+// AX-RUNPOD-AUTO-SKIP-0924 (NI-Brain Decision #2001, 2026-09-24): RunPod AXON v1 is paid
+// GPU hosting, not free, and has been failing consistently (AX-RUNPOD-ZERO-SUCCESS-0915,
+// negative clientBalance -> autoscaler never spins up a worker). JB's decision: skip the
+// RunPod tier automatically while it keeps failing, with no spend, and disable it by
+// default until funded. This is an additive circuit breaker only — DEFAULT_LLM_CHAIN keeps
+// 'runpod' in its locked position (tests/runpod-tier.test.mjs still asserts that), no other
+// tier is reordered, and no tier is reached any earlier than before; RunPod is simply
+// skipped-in-place, exactly like an unconfigured tier already is.
+const RUNPOD_BREAKER_FAILURE_THRESHOLD = 3;
+const RUNPOD_BREAKER_WINDOW_MS = 6 * 60 * 60 * 1000; // 6h
+const runpodFailureLog = []; // in-process timestamps of recent RunPod tier failures (this process only)
+
+function recordRunpodOutcome(success) {
+  if (success) {
+    runpodFailureLog.length = 0;
+    return;
+  }
+  runpodFailureLog.push(Date.now());
+}
+
+function runpodBreakerTripped() {
+  const cutoff = Date.now() - RUNPOD_BREAKER_WINDOW_MS;
+  while (runpodFailureLog.length && runpodFailureLog[0] < cutoff) runpodFailureLog.shift();
+  return runpodFailureLog.length >= RUNPOD_BREAKER_FAILURE_THRESHOLD;
+}
+
+/** Why the RunPod tier should be skipped this call, or null if it should be attempted.
+ *  Checked in order: explicit force-skip env flag, default-disabled (Decision #2001 —
+ *  opt in with AXON_ENABLE_RUNPOD=1), then the in-process failure-streak breaker. */
+function runpodSkipReason() {
+  if (process.env.AXON_SKIP_RUNPOD === '1') return 'AXON_SKIP_RUNPOD=1 set';
+  if (process.env.AXON_ENABLE_RUNPOD !== '1') {
+    return 'RunPod tier disabled by default (Decision #2001, paid GPU hosting) — set AXON_ENABLE_RUNPOD=1 to opt in';
+  }
+  if (runpodBreakerTripped()) {
+    return `circuit breaker tripped — ${RUNPOD_BREAKER_FAILURE_THRESHOLD}+ RunPod failures in the last ${Math.round(RUNPOD_BREAKER_WINDOW_MS / 3_600_000)}h`;
+  }
+  return null;
+}
+
+// Exported for tests only — not part of the public router API.
+export const __runpodBreakerTestHooks = {
+  recordRunpodOutcome,
+  runpodBreakerTripped,
+  runpodSkipReason,
+  resetRunpodBreaker: () => {
+    runpodFailureLog.length = 0;
+  },
+};
 
 /** Loads the account's chain rows, falling back to the platform account's rows, falling
  *  back to DEFAULT_LLM_CHAIN — an account (or a bare script call with no accountId) is
@@ -687,14 +855,18 @@ async function resolveTierLane(supabaseKey, tier) {
     );
     if (!models?.length) return { route, model: null };
     // openrouter: honor the "FREE models" requirement explicitly, don't just take priority #1.
-    let model = tier === 'openrouter' ? models.find((m) => m.cost_tier === 0) || models[0] : models[0];
-    // gemini-first standing rule: GEMINI_MODEL (env or ni_platform_secrets) overrides
-    // whatever router_models has on file for the gemini lane.
+    // gemini-first standing rule: GEMINI_MODEL (env or ni_platform_secrets) is tried FIRST
+    // for the gemini lane — unless it names a retired model (see isRetiredGeminiModel).
+    let override = null;
     if (tier === 'gemini') {
-      const override = await loadSecret(supabaseKey, 'GEMINI_MODEL');
-      if (override) model = { ...model, model: override };
+      override = await loadSecret(supabaseKey, 'GEMINI_MODEL');
+      if (override && isRetiredGeminiModel(override)) {
+        logRouterEvent('gemini_model_override_retired_ignored', { override });
+      }
     }
-    return { route, model };
+    const candidates = buildTierModelCandidates(tier, models, override);
+    const model = candidates[0] || models[0];
+    return { route, model, fallbackModels: candidates.slice(1) };
   } catch (err) {
     logRouterEvent('resolve_tier_lane_failed', { tier, reason: String(err?.message || err).slice(0, 300) });
     return null;
@@ -713,7 +885,7 @@ function localPromptFromMessages(messages) {
  *  (caller logs + falls through). Account keys, when set, always beat the platform key. */
 async function executeChainTier(
   supabaseKey,
-  { tier, route, model, accountId, maxTokens = 1024, jsonMode = false, hasMini = false },
+  { tier, route, model, fallbackModels = [], accountId, maxTokens = 1024, jsonMode = false, hasMini = false },
   messages,
 ) {
   // Subscription lanes (AX-CHAIN-SUBSCRIPTION-TIERS-0909): keyed off route.connector_kind
@@ -739,21 +911,36 @@ async function executeChainTier(
 
   if (tier === 'local') {
     const prompt = localPromptFromMessages(messages);
-    const body = JSON.stringify({ model: model.model, prompt, stream: false, think: false });
     const base = route.base_url || 'http://localhost:11434';
-    const cmd = `curl -s -m 40 ${base}/api/generate -d ${JSON.stringify(body)}`;
+    const cmd = buildLocalGenerateCmd(base, model.model, prompt);
 
     // RELAY-95-HARDEN-0907, part 2: the mini queue is flaky under disk/load pressure
-    // (AX-RELAY-TIMEOUT-FIX-0828 measured a 78% failure rate at the old 40s curl timeout).
+    // (AX-RELAY-TIMEOUT-FIX-0828 measured a 78% failure rate at the old 40s curl timeout,
+    // now fixed above — this retry is extra insurance on top, not the fix itself).
     // One retry with a short fixed backoff before falling through to the next tier in the
     // chain -- cheap insurance against a single transient miss, not a substitute for the
     // per-lane circuit breaker routeChat's lane pool already has (recordHealth below).
-    let stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
-    if (!stdout) {
+    // AX-LOCAL-OLLAMA-TIMEOUT-SINCE-0913: timeoutS must be passed explicitly here too —
+    // left to its queueMiniShellJob default (MINI_CMD_TIMEOUT_S=40, i.e. payload.timeout=45)
+    // the mini runner kills this job at 45s, before cmd's own `-m ${RELAY_LOCAL_CURL_TIMEOUT_S}`
+    // (120s) has a chance to complete. Measured live: ~40-46s failures on every attempt,
+    // compounding to the ~91-124s two-attempt signature that looked like a real 120s stall.
+    const jobOpts = {
+      title: `axon-chain-local-${model.model}`,
+      maxWaitMs: RELAY_LOCAL_MAX_WAIT_MS,
+      timeoutS: RELAY_LOCAL_CURL_TIMEOUT_S,
+    };
+    let out = await queueMiniShellJobDetailed(supabaseKey, cmd, jobOpts);
+    // AG-VERIFY-CHAIN-EXHAUSTION-0924: a gate block is deterministic for the same prompt —
+    // retrying only opens another JB card and burns another wait. Fall through at once.
+    if (out.blocked) throw new Error(`local tier: ${out.reason}`);
+    if (!out.stdout) {
       await new Promise((resolve) => setTimeout(resolve, RELAY_LOCAL_RETRY_BACKOFF_MS));
-      stdout = await queueMiniShellJob(supabaseKey, cmd, { title: `axon-chain-local-${model.model}` });
+      out = await queueMiniShellJobDetailed(supabaseKey, cmd, jobOpts);
+      if (out.blocked) throw new Error(`local tier: ${out.reason}`);
     }
-    if (!stdout) throw new Error('local tier: no response from the mini (after 1 retry)');
+    const stdout = out.stdout;
+    if (!stdout) throw new Error(`local tier: no response from the mini (after 1 retry; ${out.reason || 'no stdout'})`);
     const text = JSON.parse(stdout)?.response?.trim();
     if (!text) throw new Error('local tier: empty response');
     return { text, usedAccountKey: false, viaBackup: false };
@@ -766,21 +953,36 @@ async function executeChainTier(
 
   if (tier === 'gemini') {
     if (!apiKey) throw new Error('gemini tier: no key configured');
-    try {
-      return { text: await callGemini(apiKey, model.model, messages, { maxTokens, jsonMode }), usedAccountKey, viaBackup: false };
-    } catch (err) {
-      // The locked chain names GEMINI_API_KEY / _BACKUP explicitly — only the platform's
-      // own backup key is tried; an account key that fails does not fall back to a
-      // platform credential the account never asked to use.
-      if (usedAccountKey) throw err;
-      const backupKey = await loadSecret(supabaseKey, 'GEMINI_API_KEY_BACKUP');
-      if (!backupKey) throw err;
-      return {
-        text: await callGemini(backupKey, model.model, messages, { maxTokens, jsonMode }),
-        usedAccountKey: false,
-        viaBackup: true,
-      };
+    // Each candidate model (GEMINI_MODEL override first unless retired, then router_models'
+    // free rows) is tried on the primary key, then the backup key, before moving on.
+    const geminiModels = [model, ...fallbackModels];
+    let backupKey;
+    let lastErr;
+    for (const m of geminiModels) {
+      try {
+        return { text: await callGemini(apiKey, m.model, messages, { maxTokens, jsonMode }), usedAccountKey, viaBackup: false, usedModel: m.model };
+      } catch (err) {
+        lastErr = err;
+        // The locked chain names GEMINI_API_KEY / _BACKUP explicitly — only the platform's
+        // own backup key is tried; an account key that fails does not fall back to a
+        // platform credential the account never asked to use. A 404 is a dead model id,
+        // not a key problem, so it skips straight to the next model.
+        if (usedAccountKey || /HTTP 404/.test(String(err?.message))) continue;
+        if (backupKey === undefined) backupKey = (await loadSecret(supabaseKey, 'GEMINI_API_KEY_BACKUP')) || null;
+        if (!backupKey) continue;
+        try {
+          return {
+            text: await callGemini(backupKey, m.model, messages, { maxTokens, jsonMode }),
+            usedAccountKey: false,
+            viaBackup: true,
+            usedModel: m.model,
+          };
+        } catch (backupErr) {
+          lastErr = backupErr;
+        }
+      }
     }
+    throw new Error(`${String(lastErr?.message || lastErr || 'gemini tier failed')} (tried ${geminiModels.map((m) => m.model).join(', ')})`);
   }
 
   if (tier === 'anthropic') {
@@ -807,11 +1009,29 @@ async function executeChainTier(
   }
 
   // openrouter — genuinely OpenAI-compatible, base_url already includes its full /api/v1 path.
-  return {
-    text: await callOpenAICompatible(baseUrl, apiKey, model.model, messages, { maxTokens }),
-    usedAccountKey,
-    viaBackup: false,
-  };
+  // AG-VERIFY-CHAIN-EXHAUSTION-0924: walk EVERY enabled free model in priority order instead
+  // of stopping at the first one. The priority-6 free model (a reasoning model) intermittently
+  // returned an empty `content` — "provider returned no content" — and that one miss used to
+  // fail the whole tier. `reasoning: {effort: 'low', exclude: true}` keeps reasoning models
+  // from spending the max_tokens budget on hidden reasoning (verified live 2026-09-24: both
+  // current free ids return content with it; OpenRouter ignores it for non-reasoning models).
+  // Only OpenRouter gets that field — deepseek-api and custom lanes are untouched.
+  const extraBody = tier === 'openrouter' ? { reasoning: { effort: 'low', exclude: true } } : null;
+  const orModels = [model, ...fallbackModels];
+  let lastErr;
+  for (const m of orModels) {
+    try {
+      return {
+        text: await callOpenAICompatible(baseUrl, apiKey, m.model, messages, { maxTokens, extraBody }),
+        usedAccountKey,
+        viaBackup: false,
+        usedModel: m.model,
+      };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw new Error(`${String(lastErr?.message || lastErr)} (tried ${orModels.map((m) => m.model).join(', ')})`);
 }
 
 /**
@@ -866,6 +1086,22 @@ export async function axonGenerate(supabaseKey, opts = {}) {
   for (const row of ordered) {
     const tier = row.tier;
     const start = Date.now();
+
+    if (tier === 'runpod') {
+      const skipReason = runpodSkipReason();
+      if (skipReason) {
+        const ms = Date.now() - start;
+        await recordLlmUsage(supabaseKey, {
+          agentName,
+          provider: tier,
+          ms,
+          meta: { kind, status: 'skipped', reason: skipReason, accountId },
+        });
+        attempts.push({ tier, error: skipReason });
+        continue;
+      }
+    }
+
     const resolved = await resolveTierLane(supabaseKey, tier).catch(() => null);
 
     if (!resolved || !resolved.route || (tier !== 'local' && !resolved.model) || (tier === 'local' && !resolved.model)) {
@@ -884,14 +1120,14 @@ export async function axonGenerate(supabaseKey, opts = {}) {
     try {
       const out = await executeChainTier(
         supabaseKey,
-        { tier, route: resolved.route, model: resolved.model, accountId, maxTokens, jsonMode, hasMini },
+        { tier, route: resolved.route, model: resolved.model, fallbackModels: resolved.fallbackModels || [], accountId, maxTokens, jsonMode, hasMini },
         msgs,
       );
       const ms = Date.now() - start;
       await recordLlmUsage(supabaseKey, {
         agentName,
         provider: tier,
-        model: resolved.model.model,
+        model: out.usedModel || resolved.model.model,
         ms,
         meta: { kind, status: 'ok', usedAccountKey: out.usedAccountKey, viaBackup: out.viaBackup, accountId },
       });
@@ -899,10 +1135,11 @@ export async function axonGenerate(supabaseKey, opts = {}) {
         await logRelayMetric(supabaseKey, { tier, success: true, durationMs: ms });
         checkRelayHealthAlarm(supabaseKey).catch(() => {});
       }
+      if (tier === 'runpod') recordRunpodOutcome(true);
       return {
         text: out.text,
         provider: tier,
-        model: resolved.model.model,
+        model: out.usedModel || resolved.model.model,
         usage: { ms, attempts: attempts.length + 1 },
       };
     } catch (err) {
@@ -919,6 +1156,7 @@ export async function axonGenerate(supabaseKey, opts = {}) {
         await logRelayMetric(supabaseKey, { tier, success: false, durationMs: ms });
         checkRelayHealthAlarm(supabaseKey).catch(() => {});
       }
+      if (tier === 'runpod') recordRunpodOutcome(false);
       attempts.push({ tier, error: reason });
     }
   }
