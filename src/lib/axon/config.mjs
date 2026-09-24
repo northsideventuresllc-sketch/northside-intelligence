@@ -42,20 +42,21 @@ export async function loadTelegramConfig(agentKey, sbSelect) {
   ]);
   // TELEGRAM-APPROVALS-TO-DM-0924 (NI-Brain Decision #2012, JB live 2026-09-24):
   // JB was not reliably seeing cards posted to the NVG Agents group's
-  // Approvals topic, so every JB-facing approval/alert path — including this
-  // outreach bot's own /approve, /reject, /sent_li command surface and the
-  // inbound-chat authorization it gates — now targets his PRIVATE chat with
-  // the bot (TELEGRAM_CHAT_ID) by default, never the group+topic, regardless
-  // of whether the group and approvals-thread secrets are provisioned.
-  // telegramGroupChatId / telegramApprovalsThreadId are still resolved and
-  // returned below for any agent-to-agent chatter that is NOT JB-facing and
-  // may legitimately stay in the group; they no longer feed telegramChatId.
-  // Supersedes the AGENT-COMMS-TELEGRAM-STANDARD-0903 precedence, which
-  // preferred the group+topic once both were provisioned — that is the exact
-  // behavior JB asked to retire. TELEGRAM-ROUTING-FIX-0905 (JB live,
-  // 2026-09-05) still applies: JB's private chat stays a valid inbound chat
-  // (see isAuthorizedChat in telegram-auth.mjs) alongside the group, so a
-  // stray group message is not silently dropped either.
+  // Approvals topic, so every JB-facing Telegram path — including this
+  // webhook's inbound authorization and the button-tap handlers in
+  // telegram-handler.mjs / nvg-approve-telegram.mjs — now targets his
+  // PRIVATE chat with the bot (TELEGRAM_CHAT_ID) by default, never the
+  // group+topic, regardless of whether the group and approvals-thread
+  // secrets are provisioned. telegramGroupChatId / telegramApprovalsThreadId
+  // are still resolved and returned below for any agent-to-agent chatter
+  // that is NOT JB-facing and may legitimately stay in the group; they no
+  // longer feed telegramChatId. Supersedes the AGENT-COMMS-TELEGRAM-
+  // STANDARD-0903 precedence, which preferred the group+topic once both were
+  // provisioned — that is the exact behavior JB asked to retire.
+  // TELEGRAM-ROUTING-FIX-0905 (JB live, 2026-09-05) still applies: JB's
+  // private chat stays a valid inbound chat (see isAuthorizedChat in
+  // telegram-auth.mjs) alongside the group, so a stray group message is not
+  // silently dropped either.
   const defaults = {
     telegramToken: defaultToken,
     telegramChatId: defaultChatId,
