@@ -36,7 +36,7 @@ fetch_platform_secret() {
   curl -sf "${SUPABASE_PROJECT_URL}/rest/v1/ni_platform_secrets?key=eq.${key}&select=value&limit=1" \
     -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
     -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['value'] if d else '')"
+    | jq -r '.[0].value // empty'
 }
 
 upsert_vercel_env() {
