@@ -57,7 +57,22 @@ export async function POST(req: NextRequest) {
           const email = (session.customer_details?.email ?? session.customer_email ?? "").trim().toLowerCase();
           if (email) {
             const { data: profile } = await supabase.from("replyflow_profiles").select("id").ilike("email", email).maybeSingle();
-            if (profile?.id) await claimWebmcpReplyflowSubscription(supabase, profile.id, email);
+            if (profile?.id) {
+              await claimWebmcpReplyflowSubscription(supabase, profile.id, email);
+            } else {
+              // No account yet: record the email actually used to pay, so the sign-in check finds
+              // this purchase even if it differs from the email the agent sent.
+              const { data: acct } = await supabase.from("axon_accounts").select("id").limit(1).maybeSingle();
+              if (acct?.id) {
+                await supabase.from("axon_agent_messages").insert({
+                  account_id: acct.id,
+                  thread: "webmcp_ingress",
+                  sender: "stripe-webhook",
+                  content: "WebMCP ReplyFlow purchase awaiting account link",
+                  meta: { tool_name: "ni_replyflow_subscribe", parameters: { account_email: email }, result_status: "paid", checkout_session: session.id },
+                });
+              }
+            }
           }
           break;
         }
