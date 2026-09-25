@@ -11,11 +11,12 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function AxonUserEntryPage({
-  params,
-}: {
-  params: { username: string };
-}) {
+export default async function AxonUserEntryPage(
+  props: {
+    params: Promise<{ username: string }>;
+  }
+) {
+  const params = await props.params;
   const username = params.username.trim().toLowerCase();
   const supabase = await createServerAuthClient();
   const {

@@ -11,10 +11,8 @@ import { getSector3ToolConfig } from "@/lib/sector3-tools/registry-fields";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { getUserBillingState, userCanUseTool } from "@/lib/billing/entitlements";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const slug = params.slug;
   if (!isValidSector3HelpSlug(slug)) {
     return NextResponse.json({ error: "Unknown tool" }, { status: 404 });

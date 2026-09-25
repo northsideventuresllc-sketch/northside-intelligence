@@ -18,11 +18,12 @@ export const dynamic = "force-dynamic";
  * render it, and it then does a full browser navigation to the bootstrap
  * endpoint, which sets the session cookie and forwards to the dashboard.
  */
-export default async function AxonEnterPage({
-  searchParams,
-}: {
-  searchParams: { username?: string };
-}) {
+export default async function AxonEnterPage(
+  props: {
+    searchParams: Promise<{ username?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const username = (searchParams.username ?? "").trim().toLowerCase();
   const target = `/api/axon/bootstrap?username=${encodeURIComponent(username)}`;
 

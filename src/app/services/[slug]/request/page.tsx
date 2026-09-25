@@ -9,10 +9,11 @@ import { getServiceBySlug, type AccountType } from "@/lib/services/offerings";
 import { ServicePriceDisplay } from "@/components/services/ServicePriceDisplay";
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const service = getServiceBySlug(params.slug);
   if (!service) {
     return { title: "Service Not Found | Northside Intelligence" };
@@ -23,7 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ServiceRequestPage({ params }: PageProps) {
+export default async function ServiceRequestPage(props: PageProps) {
+  const params = await props.params;
   const service = getServiceBySlug(params.slug);
   if (!service) notFound();
 

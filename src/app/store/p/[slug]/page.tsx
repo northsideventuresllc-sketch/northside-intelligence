@@ -18,11 +18,12 @@ import { STORE_PLATFORM_LABELS } from "@/lib/store/platform-labels";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const product = await getCatalogProductBySlug(params.slug);
   if (!product) return { title: smartStorePageTitle("Product") };
   return {
@@ -31,7 +32,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function CatalogProductPage({ params }: { params: { slug: string } }) {
+export default async function CatalogProductPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   await ensureStoreEnv();
   const row = await getCatalogProductBySlug(params.slug);
   if (!row) notFound();
