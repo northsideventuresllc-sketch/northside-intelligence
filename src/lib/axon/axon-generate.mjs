@@ -46,11 +46,13 @@ export function laneSource(lane) {
  *          any subscription-kind tier (claude_subscription/chatgpt_subscription/
  *          gemini_subscription) the account may have opted into its own axon_llm_chain —
  *          defaults false, same as axonGenerate. localTimeoutMs is accepted for call-site
- *          compatibility but is NOT currently wired to any timeout override inside
- *          axonGenerate/axon-router-core.mjs (per-tier timeouts there are hardcoded) — see
- *          northside-intelligence-main-build-broken-localTimeoutMs-0914 for the real-wiring
- *          follow-up, this type-only change just fixes the build break. Also filed AXON-side
- *          (axon#232) so future syncs of this file stop reverting it.
+ *          compatibility (some callers, e.g. the northside-intelligence portal, pass it) but
+ *          is NOT currently wired to any timeout override inside axonGenerate/
+ *          axon-router-core.mjs (per-tier timeouts there are hardcoded) — this is a type-only
+ *          addition so this file's own copy stays a superset of every downstream sync target's
+ *          usage. Dropping it here previously broke the northside-intelligence portal's build
+ *          every time this file synced over there and clobbered a portal-local fix (see
+ *          northside-intelligence-main-build-broken-localTimeoutMs-0914).
  * @returns {Promise<{text: string, provider: string, model: string|null, source: string}>}
  */
 export async function generateViaRouter(supabaseKey, opts = {}) {
