@@ -19,6 +19,7 @@ const EXPLORE_ITS_URL = 'https://www.northsideintelligence.com/toolkit';
 
 const TOP_NAV = [
   { href: '/', label: 'AXON Dash', icon: '◈' },
+  { href: '/trust', label: 'Trust', icon: '⚖' },
   { href: '/settings', label: 'Settings', icon: '⚙' },
 ] as const;
 
