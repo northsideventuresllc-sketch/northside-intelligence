@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "verify:cj-pricing": "npx tsx scripts/verify-cj-pricing.ts",
     "verify:store-webhook": "npx tsx scripts/verify-store-webhook.ts",
     "infra:health-check": "npx tsx scripts/infra-health-check.ts",
