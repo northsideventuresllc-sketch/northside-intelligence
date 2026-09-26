@@ -155,4 +155,3 @@ function getServiceRange(service: string): string {
   }
   return '$4,500–$15,000';
 }
-
