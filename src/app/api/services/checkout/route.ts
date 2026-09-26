@@ -6,10 +6,11 @@ import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { getServiceBySlug } from "@/lib/services/offerings";
 import { BNPL_MAX_CENTS, BNPL_MIN_CENTS } from "@/lib/services/market-rates";
 import { formatCents } from "@/lib/services/pricing-engine";
+import { DEPOSIT_META, balanceCentsFor, depositCentsForTotal, depositSessionParams } from "@/lib/services/deposit";
 
 interface CheckoutBody {
   quoteId: string;
-  paymentType: "full" | "plan" | "bnpl";
+  paymentType: "full" | "plan" | "bnpl" | "deposit";
   planMonths?: number;
 }
 
@@ -90,22 +91,39 @@ export async function POST(request: NextRequest) {
   const stripe = getBillingStripe();
   const now = new Date().toISOString();
 
+  const depositCents = paymentType === "deposit" ? depositCentsForTotal(priceCents) : 0;
+
   const chargeCents =
-    paymentType === "plan" && planMonths > 1
-      ? Math.round(priceCents / planMonths)
-      : priceCents;
+    paymentType === "deposit"
+      ? depositCents
+      : paymentType === "plan" && planMonths > 1
+        ? Math.round(priceCents / planMonths)
+        : priceCents;
 
   const productName =
-    paymentType === "plan" && planMonths > 1
-      ? `${service.name} — Payment 1 of ${planMonths}`
-      : service.name;
+    paymentType === "deposit"
+      ? `${service.name} — 20% Deposit`
+      : paymentType === "plan" && planMonths > 1
+        ? `${service.name} — Payment 1 of ${planMonths}`
+        : service.name;
 
   const productDescription =
-    paymentType === "plan" && planMonths > 1
-      ? `${formatCents(priceCents)} total over ${planMonths} months. Affirm/Klarna soft credit check available at checkout for remaining balance.`
-      : paymentType === "bnpl"
-        ? "Pay over time with Affirm or Klarna. A soft credit check may be performed."
-        : `Intelligence Service — ${formatCents(priceCents)}`;
+    paymentType === "deposit"
+      ? `Non-refundable 20% deposit of ${formatCents(priceCents)} total. Your card is saved securely and the remaining ${formatCents(balanceCentsFor(priceCents, depositCents))} balance is charged when your service is marked complete.`
+      : paymentType === "plan" && planMonths > 1
+        ? `${formatCents(priceCents)} total over ${planMonths} months. Affirm/Klarna soft credit check available at checkout for remaining balance.`
+        : paymentType === "bnpl"
+          ? "Pay over time with Affirm or Klarna. A soft credit check may be performed."
+          : `Intelligence Service — ${formatCents(priceCents)}`;
+
+  const depositExtras =
+    paymentType === "deposit"
+      ? depositSessionParams({
+          serviceSlug: quote.service_slug,
+          totalCents: priceCents,
+          depositCents,
+        })
+      : {};
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -140,7 +158,17 @@ export async function POST(request: NextRequest) {
         paymentType,
         planMonths: String(planMonths),
         chargeCents: String(chargeCents),
+        ...(paymentType === "deposit"
+          ? {
+              [DEPOSIT_META.flag]: "true",
+              [DEPOSIT_META.serviceSlug]: quote.service_slug,
+              [DEPOSIT_META.totalCents]: String(priceCents),
+              [DEPOSIT_META.depositCents]: String(depositCents),
+              [DEPOSIT_META.balanceCents]: String(balanceCentsFor(priceCents, depositCents)),
+            }
+          : {}),
       },
+      ...depositExtras,
     });
 
     if (!session.url) {

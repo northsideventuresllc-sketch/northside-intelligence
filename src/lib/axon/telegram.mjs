@@ -28,19 +28,36 @@ export function cleanTelegramHumanText(text) {
   return out.trim();
 }
 
+export function chunkTelegramText(text, maxChars = 3800) {
+  if (!text || text.length <= maxChars) return [text || ''];
+  const chunks = [];
+  let remaining = text;
+  while (remaining.length > 0) {
+    if (remaining.length <= maxChars) {
+      chunks.push(remaining);
+      break;
+    }
+    let splitIdx = remaining.lastIndexOf('\n\n', maxChars);
+    if (splitIdx < maxChars * 0.3) {
+      splitIdx = remaining.lastIndexOf('\n', maxChars);
+    }
+    if (splitIdx < maxChars * 0.3) {
+      splitIdx = remaining.lastIndexOf('. ', maxChars);
+      if (splitIdx > 0) splitIdx += 1;
+    }
+    if (splitIdx < maxChars * 0.3) {
+      splitIdx = remaining.lastIndexOf(' ', maxChars);
+    }
+    if (splitIdx <= 0) {
+      splitIdx = maxChars;
+    }
+    chunks.push(remaining.slice(0, splitIdx).trim());
+    remaining = remaining.slice(splitIdx).trim();
+  }
+  return chunks.filter(Boolean);
+}
+
 export async function telegramSend(token, chatId, text, dryRun = false, options = {}) {
-  // IDENTITY FIX (2026-08-27, JB direct order): JB could not tell which agent
-  // sent a given Telegram message, because every agent shares this one bot.
-  // This is AXON's own outreach/content-machine send path — tag it precisely,
-  // not just "[AXON]", so it reads distinctly from ARCEUS/EXEC/PULSE/SENSEI
-  // alerts that go out through the separate mini-job-queue send path (those
-  // are being tagged with their own agent name at the source, not here).
-  //
-  // GROUNDED CHAT (2026-09-06): JB's private chat is where he talks to AXON —
-  // the fleet, not a narrow outreach helper (Decision #1696). Replies there are
-  // sent with `untagged: true` and go out plain, first line answering the
-  // question. Every other caller — approval pings, notifications, the
-  // content machine — keeps the tag exactly as before.
   const { threadId, untagged = false } = options || {};
   const cleanedText = cleanTelegramHumanText(text);
   const alreadyTagged = /^\[[^\]]+\]/.test(cleanedText);
@@ -49,22 +66,26 @@ export async function telegramSend(token, chatId, text, dryRun = false, options 
     console.log(`[DRY RUN] Telegram -> ${chatId}: ${prefixed.slice(0, 120)}...`);
     return { ok: true };
   }
-  const body = {
-    chat_id: chatId,
-    text: prefixed,
-    disable_web_page_preview: true,
-  };
-  // Optional: post into a specific forum topic thread. Omitted entirely when
-  // no threadId is passed, so behaviour is unchanged for every existing caller.
-  if (threadId != null) body.message_thread_id = threadId;
-  const r = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await r.json();
-  if (!data.ok) throw new Error(`Telegram send: ${data.description || r.status}`);
-  return data;
+
+  const chunks = chunkTelegramText(prefixed, 3800);
+  let lastData = { ok: true };
+  for (const chunk of chunks) {
+    const body = {
+      chat_id: chatId,
+      text: chunk,
+      disable_web_page_preview: true,
+    };
+    if (threadId != null) body.message_thread_id = threadId;
+    const r = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    if (!data.ok) throw new Error(`Telegram send: ${data.description || r.status}`);
+    lastData = data;
+  }
+  return lastData;
 }
 
 export async function telegramSendWithKeyboard(token, chatId, text, replyMarkup, dryRun = false, options = {}) {
@@ -74,9 +95,17 @@ export async function telegramSendWithKeyboard(token, chatId, text, replyMarkup,
     console.log(`[DRY RUN] Telegram (keyboard) -> ${chatId}: ${cleanedText.slice(0, 120)}...`);
     return { ok: true };
   }
+
+  const chunks = chunkTelegramText(cleanedText, 3800);
+  // If there are multiple chunks, send preceding chunks as normal text and final chunk with keyboard
+  for (let i = 0; i < chunks.length - 1; i++) {
+    await telegramSend(token, chatId, chunks[i], dryRun, { threadId, untagged: true });
+  }
+
+  const finalChunk = chunks[chunks.length - 1] || cleanedText;
   const body = {
     chat_id: chatId,
-    text: cleanedText,
+    text: finalChunk,
     disable_web_page_preview: true,
     reply_markup: replyMarkup,
   };
@@ -91,9 +120,12 @@ export async function telegramSendWithKeyboard(token, chatId, text, replyMarkup,
   return data;
 }
 
-export async function telegramAnswerCallbackQuery(token, callbackQueryId, text = '') {
+export async function telegramAnswerCallbackQuery(token, callbackQueryId, text = '', options = {}) {
   const body = { callback_query_id: callbackQueryId };
   if (text) body.text = text.slice(0, 200);
+  // showAlert turns the easy-to-miss toast into a pop-up JB has to dismiss —
+  // used when a tap did NOT go through, so a failure is never silent.
+  if (options?.showAlert) body.show_alert = true;
   const r = await fetch(`${TELEGRAM_API}${token}/answerCallbackQuery`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -127,6 +159,59 @@ export async function telegramEditMessageReplyMarkup(token, chatId, messageId, r
   });
   const data = await r.json();
   if (!data.ok) throw new Error(`Telegram editMessageReplyMarkup: ${data.description || r.status}`);
+  return data;
+}
+
+/** Rewrites an already-sent message's text (HTML parse mode). Used to turn an
+ * approval card into a permanent receipt after JB taps a button. Pass
+ * replyMarkup to keep/replace buttons; omit it to drop them. Telegram's
+ * "message is not modified" (same text re-sent, e.g. a double tap) is not a
+ * failure — the card already shows what we wanted. */
+export async function telegramEditMessageText(token, chatId, messageId, html, options = {}) {
+  const body = {
+    chat_id: chatId,
+    message_id: messageId,
+    text: html,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+  };
+  if (options.replyMarkup) body.reply_markup = options.replyMarkup;
+  const r = await fetch(`${TELEGRAM_API}${token}/editMessageText`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json();
+  if (!data.ok && /message is not modified/i.test(String(data.description || ''))) {
+    return { ok: true, unchanged: true };
+  }
+  if (!data.ok) throw new Error(`Telegram editMessageText: ${data.description || r.status}`);
+  return data;
+}
+
+/** Sends one HTML message (parse_mode HTML, no tag prefix, no markdown
+ * cleaning — the caller escapes its own text). Optional reply-to and
+ * inline keyboard. Returns Telegram's response (result.message_id). */
+export async function telegramSendHtml(token, chatId, html, options = {}) {
+  const { threadId, replyToMessageId, replyMarkup } = options || {};
+  const body = {
+    chat_id: chatId,
+    text: html,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+  };
+  if (threadId != null) body.message_thread_id = threadId;
+  if (replyToMessageId != null) {
+    body.reply_parameters = { message_id: replyToMessageId, allow_sending_without_reply: true };
+  }
+  if (replyMarkup) body.reply_markup = replyMarkup;
+  const r = await fetch(`${TELEGRAM_API}${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json();
+  if (!data.ok) throw new Error(`Telegram send (html): ${data.description || r.status}`);
   return data;
 }
 

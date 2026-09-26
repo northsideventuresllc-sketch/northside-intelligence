@@ -69,6 +69,12 @@ export function PrivacyPolicyContent() {
             digits of your card.
           </li>
           <li>Billing address</li>
+          <li>
+            If you pay an Intelligence Services deposit, we keep a{" "}
+            <strong className="text-white/90">saved payment method</strong> — a Stripe customer reference and
+            payment method reference only, never your card number — so NI can charge the remaining balance to that
+            method when your Service is marked complete.
+          </li>
         </ul>
 
         <p className="mb-2 font-medium text-white/80">Smart Store Orders:</p>
@@ -145,6 +151,27 @@ export function PrivacyPolicyContent() {
             another OAuth provider (email and profile basics only)
           </li>
         </ul>
+
+        <h3 className="mb-2 mt-4 text-base font-medium text-white/90">
+          2.4 AI Agent and Machine Interface
+        </h3>
+        <p className="mb-3">
+          NI operates a public machine interface (an MCP endpoint) that lets AI agents purchase NI products and
+          Services on a person&apos;s behalf. When an agent calls this interface, we log:
+        </p>
+        <ul className="mb-3 list-disc space-y-2 pl-5">
+          <li>The tool the agent called and the parameters it sent</li>
+          <li>The agent&apos;s self-reported name and signature header</li>
+          <li>
+            A <strong className="text-white/90">one-way hashed</strong> network identifier — not your raw IP address
+            — used only for rate limiting and abuse prevention
+          </li>
+        </ul>
+        <p>
+          We use this information to enforce rate limits, prevent abuse of the machine interface, and investigate
+          fraudulent or malicious agent activity. See our Terms of Service Section 6.6 for the purchase terms that
+          apply when an AI agent buys on your behalf.
+        </p>
       </section>
 
       <section>
@@ -429,6 +456,10 @@ export function PrivacyPolicyContent() {
               <tr>
                 <td>Intelligence Services project data</td>
                 <td>Per service agreement, minimum 1 year</td>
+              </tr>
+              <tr>
+                <td>AI agent / machine interface call logs</td>
+                <td>90 days</td>
               </tr>
             </tbody>
           </table>

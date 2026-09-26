@@ -8,7 +8,7 @@ function getSiteUpdatedDateValue(): Date {
     }
   }
 
-  return new Date();
+  return new Date("2026-09-23");
 }
 
 export function getSiteUpdatedDate(): string {

@@ -12,6 +12,8 @@ const NAV_ITEMS = [
   { href: "/ops#revenue", label: "Revenue Tracker" },
   { href: "/ops#links", label: "Quick Links" },
   { href: "/ops/trust", label: "Trust & Morality", exact: true },
+  { href: "/ops/morality", label: "Morality Amendments", exact: true },
+  { href: "/ops/artifacts", label: "Review Artifacts", exact: true },
 ];
 
 export function OpsSidebar() {

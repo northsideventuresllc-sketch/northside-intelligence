@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { getPlanFromPriceId, ensureReplyflowBillingEnvHydrated, stripe } from "@/lib/replyflow/stripe";
 import type { UserPlan } from "@/lib/replyflow/tier";
 import { createServiceClient } from "@/lib/supabase/server";
+import { claimWebmcpReplyflowSubscription } from "@/lib/replyflow/webmcp-claim";
 
 function webhookSecret(): string | undefined {
   return process.env.STRIPE_REPLYFLOW_WEBHOOK_SECRET ?? process.env.STRIPE_WEBHOOK_SECRET;
@@ -50,6 +51,31 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
+        if (!userId && session.metadata?.source === "webmcp" && session.metadata?.tool === "ni_replyflow_subscribe") {
+          // Agent-storefront guest purchase: link now if an account with this email exists;
+          // otherwise it is linked automatically when the buyer signs in or signs up.
+          const email = (session.customer_details?.email ?? session.customer_email ?? "").trim().toLowerCase();
+          if (email) {
+            const { data: profile } = await supabase.from("replyflow_profiles").select("id").ilike("email", email).maybeSingle();
+            if (profile?.id) {
+              await claimWebmcpReplyflowSubscription(supabase, profile.id, email);
+            } else {
+              // No account yet: record the email actually used to pay, so the sign-in check finds
+              // this purchase even if it differs from the email the agent sent.
+              const { data: acct } = await supabase.from("axon_accounts").select("id").limit(1).maybeSingle();
+              if (acct?.id) {
+                await supabase.from("axon_agent_messages").insert({
+                  account_id: acct.id,
+                  thread: "webmcp_ingress",
+                  sender: "stripe-webhook",
+                  content: "WebMCP ReplyFlow purchase awaiting account link",
+                  meta: { tool_name: "ni_replyflow_subscribe", parameters: { account_email: email }, result_status: "paid", checkout_session: session.id },
+                });
+              }
+            }
+          }
+          break;
+        }
         if (!userId || !session.subscription) break;
         const sub = await stripe.subscriptions.retrieve(session.subscription as string);
         const plan = getPlanFromPriceId(sub.items.data[0]?.price.id);

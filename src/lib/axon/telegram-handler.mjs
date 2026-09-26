@@ -11,6 +11,7 @@ import {
 } from './telegram-conversations.mjs';
 import { parseCommand, telegramSend } from './telegram.mjs';
 import { welcomeMessage, statusMessage } from './telegram-commands.mjs';
+import { isAuthorizedChat } from './telegram-auth.mjs';
 
 const COMMAND_WITH_ID = new Set(['/approve', '/reject', '/sent_li']);
 
@@ -118,7 +119,16 @@ export async function handleTelegramMessage(cfg, sb, msg) {
   if (!text) return null;
 
   const chatId = String(msg.chat.id);
-  if (cfg.telegramChatId && chatId !== String(cfg.telegramChatId)) {
+  // TELEGRAM-APPROVALS-TO-DM-0924: use the shared isAuthorizedChat check
+  // (telegramChatId OR telegramDmChatId OR telegramGroupChatId) instead of a
+  // raw equality against telegramChatId alone. This handler predates
+  // telegram-auth.mjs and never picked it up — a direct equality check meant
+  // that whenever config resolved telegramChatId to something other than
+  // JB's private chat, a command he typed from the private chat would be
+  // silently dropped here. Now that config.mjs always resolves telegramChatId
+  // to the private DM (see loadTelegramConfig), this mostly changes nothing
+  // in practice, but it closes the same class of bug for good.
+  if (!isAuthorizedChat(cfg, chatId)) {
     return null;
   }
 

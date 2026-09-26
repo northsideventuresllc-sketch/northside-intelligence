@@ -1,3 +1,4 @@
+import { reconcileBalanceFollowUpPaid } from "@/lib/services/balance-billing";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import {
@@ -20,6 +21,7 @@ import { recordPromoConversion } from "@/lib/promos/email-campaigns";
 import { sendServiceInvoiceEmail } from "@/lib/resend";
 import { getServiceBySlug } from "@/lib/services/offerings";
 import { createServiceClient } from "@/lib/supabase/server";
+import { DEPOSIT_META } from "@/lib/services/deposit";
 
 async function maybeProvisionAxonAccess(
   userId: string,
@@ -81,6 +83,11 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        // Service balance follow-up links carry no userId — reconcile them before the userId gate.
+        if (session.metadata?.serviceBalance === "true") {
+          await reconcileBalanceFollowUpPaid(session);
+          break;
+        }
         const userId = session.metadata?.userId;
         if (!userId) break;
 
@@ -160,10 +167,69 @@ export async function POST(req: NextRequest) {
             .from("ni_service_quotes")
             .update({ status: "paid", updated_at: now })
             .eq("id", quoteId);
-          await supabase
-            .from("ni_service_requests")
-            .update({ status: "accepted", updated_at: now })
-            .eq("stripe_session_id", session.id);
+
+          const isDeposit = session.metadata?.[DEPOSIT_META.flag] === "true";
+
+          if (isDeposit) {
+            // No CHECK-constraint row for "deposit_paid" on ni_service_requests.status —
+            // reuse "accepted" and record the deposit state in payload.deposit.state instead.
+            const paymentIntentId =
+              typeof session.payment_intent === "string"
+                ? session.payment_intent
+                : (session.payment_intent?.id ?? null);
+
+            let paymentMethodId: string | null = null;
+            if (paymentIntentId) {
+              try {
+                const paymentIntent = await billingStripe.paymentIntents.retrieve(paymentIntentId);
+                paymentMethodId =
+                  typeof paymentIntent.payment_method === "string"
+                    ? paymentIntent.payment_method
+                    : (paymentIntent.payment_method?.id ?? null);
+              } catch (piError) {
+                console.error("[services/webhook] deposit payment_intent retrieve failed:", piError);
+              }
+            }
+
+            const { data: existingRequest } = await supabase
+              .from("ni_service_requests")
+              .select("payload")
+              .eq("stripe_session_id", session.id)
+              .maybeSingle();
+            const existingPayload = (existingRequest?.payload as Record<string, unknown>) ?? {};
+
+            const customerId =
+              typeof session.customer === "string" ? session.customer : (session.customer?.id ?? null);
+            const depositCents = parseInt(session.metadata?.[DEPOSIT_META.depositCents] ?? "0", 10);
+            const balanceCents = parseInt(session.metadata?.[DEPOSIT_META.balanceCents] ?? "0", 10);
+            const totalCents = parseInt(session.metadata?.[DEPOSIT_META.totalCents] ?? "0", 10);
+
+            await supabase
+              .from("ni_service_requests")
+              .update({
+                status: "accepted",
+                payload: {
+                  ...existingPayload,
+                  deposit: {
+                    state: "deposit_paid",
+                    customer_id: customerId,
+                    payment_intent_id: paymentIntentId,
+                    payment_method_id: paymentMethodId,
+                    deposit_cents: depositCents,
+                    balance_cents: balanceCents,
+                    total_cents: totalCents,
+                    paid_at: now,
+                  },
+                },
+                updated_at: now,
+              })
+              .eq("stripe_session_id", session.id);
+          } else {
+            await supabase
+              .from("ni_service_requests")
+              .update({ status: "accepted", updated_at: now })
+              .eq("stripe_session_id", session.id);
+          }
 
           const { data: quote } = await supabase
             .from("ni_service_quotes")
