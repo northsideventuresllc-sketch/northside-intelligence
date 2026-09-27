@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/ops#matchfit", label: "Match Fit" },
   { href: "/ops#revenue", label: "Revenue Tracker" },
   { href: "/ops#links", label: "Quick Links" },
+  { href: "/ops/trust", label: "Trust & Morality", exact: true },
   { href: "/ops/morality", label: "Morality Amendments", exact: true },
   { href: "/ops/artifacts", label: "Review Artifacts", exact: true },
 ];
