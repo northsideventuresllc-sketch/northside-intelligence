@@ -15,7 +15,9 @@
     "sync:cj-catalog": "npx tsx scripts/run-cj-catalog-sync.ts",
     "test:content-machine-brand-fix": "npx tsx scripts/test-content-machine-brand-fix.ts",
     "test:content-machine-slot-time-budget": "npx tsx scripts/test-content-machine-slot-time-budget.ts",
-    "test:ni-services-artifact": "npx tsx scripts/test-ni-services-artifact.ts"
+    "test:ni-services-artifact": "npx tsx scripts/test-ni-services-artifact.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@remotion/player": "^4.0.515",
@@ -42,6 +44,7 @@
     "eslint-config-next": "^14.2.28",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.9"
   }
 }
