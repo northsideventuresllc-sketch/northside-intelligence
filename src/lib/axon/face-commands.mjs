@@ -200,7 +200,7 @@ function toNeedsMeItem(row) {
 }
 
 /** Queue statuses that mean the job is finished with, so it is not waiting on anybody. */
-const CLOSED_STATUSES = new Set(['done', 'rejected', 'skipped']);
+const CLOSED_STATUSES = new Set(['done', 'rejected', 'skipped', 'cancelled']);
 
 /**
  * Everything waiting on JB, newest first.
@@ -208,6 +208,12 @@ const CLOSED_STATUSES = new Set(['done', 'rejected', 'skipped']);
  * Two things count: a job parked in the waiting-on-JB status, and a job flagged as needing
  * his approval that has not been closed out. A closed job with the approval flag still set
  * is not waiting on anybody and is dropped.
+ *
+ * BUILD-JB-ANSWERED-BUT-STUCK-0926: a row with a verified `approve_token` (stamped only by
+ * the DB trigger fn_dispatch_tap_resume on a real, validated Telegram tap) means JB already
+ * answered it, even if its other jb-bound columns haven't all caught up yet for one write
+ * cycle. Mirrors AXON's lib/axon-v0/face-commands.mjs (kept in sync via
+ * scripts/sync-portal-ui.mjs) and nv-vault's scripts/lib/jb-waiting-count.mjs.
  *
  * @param {object[] | null | undefined} rows
  */
@@ -218,6 +224,10 @@ export function shapeNeedsMe(rows) {
     .filter((row) => {
       const status = String(row?.status ?? '').toLowerCase().trim();
       if (CLOSED_STATUSES.has(status)) return false;
+      const approveToken = row?.approve_token;
+      if (approveToken !== null && approveToken !== undefined && String(approveToken).trim() !== '') {
+        return false;
+      }
       return status === 'needs_jb' || status === 'needs_jb_approval' || row?.needs_jb_approval === true;
     })
     .map(toNeedsMeItem);
