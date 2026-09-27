@@ -55,3 +55,19 @@ export function mediaStatusLabel(mediaStatus: string | undefined | null): string
   if (!mediaStatus) return undefined;
   return MEDIA_STATUS_LABELS[mediaStatus] ?? 'Waiting for media from the Mac mini';
 }
+
+/**
+ * FRONTIER-09-JB-HEALTH-DASHBOARD — one word for an agent's traffic-light
+ * color, never a raw status code or a health_status enum value on screen.
+ */
+export type AgentHealthColor = 'green' | 'yellow' | 'red';
+
+const HEALTH_COLOR_LABELS: Record<AgentHealthColor, string> = {
+  green: 'Working fine',
+  yellow: 'Slow to check in',
+  red: 'Not responding',
+};
+
+export function healthColorLabel(color: AgentHealthColor): string {
+  return HEALTH_COLOR_LABELS[color];
+}
