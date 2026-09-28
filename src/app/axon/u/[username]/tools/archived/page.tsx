@@ -6,7 +6,8 @@ import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ArchivedItsPage({ params }: { params: { username: string } }) {
+export default async function ArchivedItsPage(props: { params: Promise<{ username: string }> }) {
+  const params = await props.params;
   const { user } = await requireAxonPortalUser(params.username);
   const billing = await getUserBillingState(user.id);
 

@@ -4,11 +4,12 @@ import { requireAxonPortalUser } from '@/lib/axon/portal-guard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AxonNiContentPage({
-  params,
-}: {
-  params: { username: string };
-}) {
+export default async function AxonNiContentPage(
+  props: {
+    params: Promise<{ username: string }>;
+  }
+) {
+  const params = await props.params;
   await requireAxonPortalUser(params.username);
   const posts = await listNiPosts().catch(() => []);
   return <NiContentEngineTool initialPosts={posts} />;

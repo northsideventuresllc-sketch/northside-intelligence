@@ -5,7 +5,8 @@ import { requireAxonPortalUser } from '@/lib/axon/portal-guard';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AxonBrainPage({ params }: { params: { username: string } }) {
+export default async function AxonBrainPage(props: { params: Promise<{ username: string }> }) {
+  const params = await props.params;
   const { username } = await requireAxonPortalUser(params.username);
   const clusters = await loadBrainGraph().catch(() => []);
   return <BrainGalaxyTool clusters={clusters} basePath={axonPublicPath(username)} />;
