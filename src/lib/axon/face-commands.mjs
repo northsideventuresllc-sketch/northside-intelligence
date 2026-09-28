@@ -211,9 +211,12 @@ const CLOSED_STATUSES = new Set(['done', 'rejected', 'skipped', 'cancelled']);
  *
  * BUILD-JB-ANSWERED-BUT-STUCK-0926: a row with a verified `approve_token` (stamped only by
  * the DB trigger fn_dispatch_tap_resume on a real, validated Telegram tap) means JB already
- * answered it, even if its other jb-bound columns haven't all caught up yet for one write
- * cycle. Mirrors AXON's lib/axon-v0/face-commands.mjs (kept in sync via
- * scripts/sync-portal-ui.mjs) and nv-vault's scripts/lib/jb-waiting-count.mjs.
+ * answered it, even if its other jb-bound columns (status='needs_jb' before a requeue,
+ * needs_jb_approval, jb_ask) haven't all caught up yet for one write cycle. This list must
+ * never count or show a row like that as still waiting on him — same rule as
+ * nv-vault's scripts/lib/jb-waiting-count.mjs (isActuallyWaitingOnJb), ported here since
+ * this repo cannot import across the repo boundary. Live incident (2026-09-26): JB said "9
+ * items waiting, no Telegram" and 8 of the 9 already carried a verified approve_token.
  *
  * @param {object[] | null | undefined} rows
  */
