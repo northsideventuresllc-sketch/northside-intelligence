@@ -6,7 +6,7 @@ export function AutopilotComingSoonCard() {
     >
       <h2 className="text-sm font-semibold text-white/90">Autopilot — Coming Soon</h2>
       <p className="mt-1 text-sm text-white/60">
-        Autopilot is not available yet. We will let you know here when it is ready.
+        Autopilot is not available yet.
       </p>
     </section>
   );
