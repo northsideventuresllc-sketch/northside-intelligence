@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 import { useRouter } from "next/navigation";
 import { GrantBotBackground } from "@/components/grantbot/GrantBotBackground";
 import { GrantBotNav } from "@/components/grantbot/GrantBotNav";
@@ -335,6 +336,7 @@ export default function DashboardClient({
       <Sector3LoadingBar loading={isGenerating} variant="grantbot" />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
+        <AutopilotComingSoonCard />
         {gated && gateContent ? (
           gateContent
         ) : (

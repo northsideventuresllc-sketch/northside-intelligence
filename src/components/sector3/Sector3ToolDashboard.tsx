@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sector3ToolBackground } from "@/components/sector3/Sector3ToolBackground";
+import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 import { Sector3ToolNav } from "@/components/sector3/Sector3ToolNav";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
@@ -288,6 +289,7 @@ export function Sector3ToolDashboard({
       <Sector3LoadingBar loading={loading} />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
+        <AutopilotComingSoonCard />
         {gated && gateContent ? (
           gateContent
         ) : (
