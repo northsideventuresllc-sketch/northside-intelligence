@@ -1,45 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
+import { processItFeedback, type ItFeedbackSubmission } from "@/lib/feedback/bug-pipeline";
+import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
-/**
- * In-App Feedback & Bug Reports API
- * Receives user feedback, bug submissions, and suggestions from all IT tools.
- */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { toolId, feedbackType, title, description, metadata, userId } = body;
+    const supabase = await createServerAuthClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!toolId || !feedbackType || !title || !description) {
-      return NextResponse.json(
-        { error: 'Missing required fields: toolId, feedbackType, title, description' },
-        { status: 400 }
-      );
+    const body = await req.json();
+    const toolSlug = typeof body.toolSlug === "string" ? body.toolSlug.trim() : "general";
+    const type = (body.type as "feedback" | "bug_report" | "feature_request") || "feedback";
+    const subject = typeof body.subject === "string" ? body.subject.trim() : "User Feedback";
+    const details = typeof body.details === "string" ? body.details.trim() : "";
+
+    if (!details) {
+      return NextResponse.json({ error: "Feedback or bug details are required." }, { status: 400 });
     }
 
-    // In a live Supabase environment, write directly to `ni_it_feedback`
-    // If running in local or demo mode, return simulated acknowledgement
-    const submission = {
-      id: crypto.randomUUID(),
-      user_id: userId || null,
-      tool_id: toolId,
-      feedback_type: feedbackType,
-      title,
-      description,
-      metadata: metadata || {},
-      status: 'new',
-      priority_score: feedbackType === 'bug' ? 2 : 1,
-      created_at: new Date().toISOString(),
+    const submission: ItFeedbackSubmission = {
+      toolSlug,
+      userId: user?.id,
+      userEmail: user?.email,
+      type,
+      subject,
+      details,
+      systemContext: typeof body.systemContext === "object" ? body.systemContext : undefined,
     };
+
+    const result = await processItFeedback(submission);
 
     return NextResponse.json({
       success: true,
-      message: 'Feedback received and queued for weekly AI synthesis review.',
-      feedback: submission,
+      reportId: result.reportId,
+      status: result.status,
+      message:
+        type === "bug_report"
+          ? "Bug report received. Our autonomous repair pipeline is analyzing the issue now."
+          : "Thank you for your feedback! It has been logged for our product team.",
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Failed to submit feedback' },
-      { status: 500 }
-    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

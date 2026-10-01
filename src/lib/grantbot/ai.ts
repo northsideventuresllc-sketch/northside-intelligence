@@ -1,6 +1,9 @@
 import { generateTextGeminiFirst } from "@/lib/ai/gemini-first";
-import { parseGrantListings, type GrantListing } from "@/lib/grantbot/listings";
+import { type GrantListing } from "@/lib/grantbot/listings";
 import { parseClarifyingQuestions, type ClarifyingQuestion } from "@/lib/grantbot/questions";
+import { searchVerifiedGrantOpportunities, scrapeRfpRequirements } from "@/lib/grantbot/scraper-grep";
+import { getPastWinnerBenchmark } from "@/lib/grantbot/past-winners";
+import { buildGrantDeliverableSuite, type GrantDeliverablePackage } from "@/lib/grantbot/deliverables";
 
 function handleAiError(err: unknown): never {
   const message = err instanceof Error ? err.message : "AI generation failed";
@@ -12,11 +15,25 @@ function handleAiError(err: unknown): never {
   throw new Error(message);
 }
 
+/**
+ * Safely strips markdown code fences and cleans JSON returned by LLMs.
+ */
+export function parseJsonFromLlm<T>(text: string): T {
+  let cleaned = text.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+  }
+  return JSON.parse(cleaned.trim()) as T;
+}
+
+/**
+ * Dynamically sizes follow-up questions based on profile gaps (not hardcoded to 4).
+ */
 export async function generateClarifyingQuestions(
   category: string,
   orgDescription: string
 ): Promise<ClarifyingQuestion[]> {
-  const systemPrompt = `You are a grant intake specialist. Based on the applicant profile below, generate follow-up questions that will help match them to the right funding opportunities.
+  const systemPrompt = `You are an elite grant intake auditor. Analyze the applicant profile below and identify genuine information gaps needed to match them with verified funding opportunities.
 
 Return ONLY valid JSON — no markdown, no commentary.
 
@@ -24,85 +41,104 @@ Schema:
 {
   "questions": [
     {
-      "id": "budget",
-      "question": "What is your annual operating budget or project size?",
-      "placeholder": "e.g. $250K annual budget"
+      "id": "budget_scale",
+      "question": "Clear, direct question asking for the missing detail",
+      "hint": "Brief sentence explaining why grant funders look for this",
+      "options": ["Option A", "Option B", "Option C"]
     }
   ]
 }
 
 Rules:
-- Generate exactly 4 questions tailored to category: ${category}
-- Ask about gaps in the profile: geography, budget size, timeline, target population, prior grant experience, specific project goals
-- Each question must be concise and answerable in 1-2 sentences
-- Include helpful placeholders where useful
-- Use short snake_case ids (e.g. location, budget, timeline)`;
+- Generate 2 to 6 questions depending strictly on missing details (if the profile is detailed, ask fewer).
+- Always include options where appropriate, plus a freeform custom answer slot.
+- Cover missing: 501(c)(3) / tax status, target beneficiaries, annual operating budget, or geographical reach.`;
 
   try {
     const { text } = await generateTextGeminiFirst({
       system: systemPrompt,
-      prompt: orgDescription,
+      prompt: `Category: ${category}\n\nOrganization Description:\n${orgDescription}`,
       maxOutputTokens: 1200,
     });
 
-    const questions = parseClarifyingQuestions(text.trim());
-    if (questions.length === 0) {
-      throw new Error("Could not generate follow-up questions. Please try again.");
-    }
-    return questions;
+    const parsed = parseJsonFromLlm<{ questions?: ClarifyingQuestion[] }>(text);
+    return parseClarifyingQuestions(parsed);
   } catch (err) {
-    if (err instanceof Error && err.message.startsWith("Could not generate")) {
-      throw err;
-    }
     handleAiError(err);
   }
 }
 
+export interface InterviewTurnInput {
+  category: string;
+  orgDescription: string;
+  transcriptHistory: Array<{ role: "assistant" | "user"; content: string }>;
+  currentAnswer: string;
+  turnIndex: number;
+}
+
+export interface InterviewTurnOutput {
+  nextQuestion: string | null;
+  isComplete: boolean;
+  summaryNotes?: string;
+}
+
+/**
+ * Executes a single turn of an adaptive, conversational grant interview.
+ * Concludes naturally after 4-6 high-yield questions without fatiguing the applicant.
+ */
+export async function conductStructuredInterviewTurn(
+  params: InterviewTurnInput
+): Promise<InterviewTurnOutput> {
+  const systemPrompt = `You are a warm, highly experienced senior grant director conducting a structured interview with an applicant.
+Your goal is to draw out all essential details needed for a winning grant application: mission, community impact, budget justification, track record, and measurable outcomes.
+
+Return ONLY valid JSON:
+{
+  "nextQuestion": "Your next follow-up question here (or null if interview is complete)",
+  "isComplete": false,
+  "summaryNotes": "Key bullet points gathered so far"
+}
+
+Rules:
+- Ask ONE targeted question at a time.
+- React directly to what the applicant just said before asking your next question.
+- Conclude the interview (set isComplete: true) after 4-6 high-yield exchanges once sufficient detail is gathered.`;
+
+  try {
+    const { text } = await generateTextGeminiFirst({
+      system: systemPrompt,
+      prompt: JSON.stringify(params),
+      maxOutputTokens: 800,
+    });
+    return parseJsonFromLlm<InterviewTurnOutput>(text);
+  } catch (err) {
+    return {
+      nextQuestion: "Could you describe the primary measurable outcomes this grant will achieve in your community?",
+      isComplete: false,
+    };
+  }
+}
+
+/**
+ * Searches live verified grant databases and web sources.
+ * Replaces hallucinated LLM memories with verified programs, real deadlines, and URLs.
+ */
 export async function searchGrantListings(
   category: string,
   orgDescription: string
 ): Promise<GrantListing[]> {
-  const systemPrompt = `You are a grant research expert. Return ONLY valid JSON — no markdown, no commentary.
+  const verifiedListings = await searchVerifiedGrantOpportunities(category, orgDescription);
 
-Schema:
-{
-  "grants": [
-    {
-      "name": "Grant program name",
-      "funder": "Funding organization",
-      "platform": "Portal or program name (e.g. Grants.gov, NEA, Ford Foundation)",
-      "platformUrl": "https://official-link-to-program-page",
-      "awardRange": "Typical award range",
-      "fitReason": "Why this fits the applicant (1-2 sentences)",
-      "nextStep": "One concrete next step"
-    }
-  ]
-}
-
-Rules:
-- Suggest exactly 5 realistic grants for category: ${category}
-- Each grant MUST include a real https:// platformUrl to the official program or funder page
-- Do not invent fake domains — use well-known public programs when possible
-- platformUrl must be a full URL the applicant can open`;
-
-  try {
-    const { text } = await generateTextGeminiFirst({
-      system: systemPrompt,
-      prompt: orgDescription,
-      maxOutputTokens: 2500,
-    });
-
-    const listings = parseGrantListings(text.trim());
-    if (listings.length === 0) {
-      throw new Error("Could not parse grant listings. Please try again.");
-    }
-    return listings;
-  } catch (err) {
-    if (err instanceof Error && err.message.startsWith("Could not parse")) {
-      throw err;
-    }
-    handleAiError(err);
-  }
+  return verifiedListings.map((g) => ({
+    id: g.id,
+    name: g.name,
+    funder: g.funder,
+    platform: `${g.platform} (${g.activeStatus})`,
+    platformUrl: g.platformUrl,
+    awardRange: `${g.awardRange} · Deadline: ${g.deadline}`,
+    fitReason: g.fitReason,
+    nextStep: g.nextStep,
+  }));
 }
 
 export interface DraftGrantInput {
@@ -111,36 +147,88 @@ export interface DraftGrantInput {
   platform: string;
   platformUrl: string;
   awardRange: string;
-  fitReason: string;
   orgDescription: string;
+  orgName?: string;
+  requestedAmount?: string;
+  personnelCost?: string;
+  directCost?: string;
+  adminCost?: string;
 }
 
-export async function draftGrantApplication(input: DraftGrantInput): Promise<string> {
-  const systemPrompt = `You are an expert grant writer. Draft a complete grant application for the organization described below.
+export interface DraftGrantResult {
+  fullNarrative: string;
+  deliverablesPackage: GrantDeliverablePackage;
+  pastWinnerBenchmarks: string[];
+}
 
-Grant: ${input.grantTitle}
-Funder: ${input.funder}
-Platform: ${input.platform} (${input.platformUrl})
-Typical award: ${input.awardRange}
-Why it fits: ${input.fitReason}
+/**
+ * Generates an institutional-grade, multi-part grant proposal suite.
+ */
+export async function draftGrantApplication(
+  input: DraftGrantInput
+): Promise<DraftGrantResult> {
+  const [rfp, benchmark] = await Promise.all([
+    scrapeRfpRequirements(input.platformUrl, input.grantTitle, input.funder),
+    getPastWinnerBenchmark(input.funder, input.grantTitle),
+  ]);
 
-Write polished draft content with these sections:
-1. Executive Summary
-2. Organization Background
-3. Project Description & Goals
-4. Expected Impact
-5. Budget Overview (high level, no fabricated numbers)
-6. Sustainability Plan
+  const applicantName = input.orgName?.trim() || input.orgDescription.split("\n")[0].slice(0, 80).trim() || "Applicant Organization";
 
-Be specific to the organization but honest — do not fabricate statistics, awards, or partnerships. Use markdown headings.`;
+  const systemPrompt = `You are an elite, winning grant writer with a 90%+ funding record. Write a complete, comprehensive grant application proposal for the opportunity below.
+
+TARGET OPPORTUNITY:
+- Title: ${input.grantTitle}
+- Funder: ${input.funder}
+- Award Range: ${input.awardRange}
+- Submission Deadline: ${rfp.submissionDeadline}
+
+RFP GUIDELINE REQUIREMENTS:
+Required Sections:
+${rfp.requiredSections.map((s) => `- ${s}`).join("\n")}
+Scoring Rubric Criteria to maximize:
+${rfp.scoringRubric.map((r) => `- ${r}`).join("\n")}
+
+CRITICAL WINNING BENCHMARKS:
+Incorporate these verified qualities favored by ${input.funder}:
+${benchmark.winningQualities.map((q) => `- ${q}`).join("\n")}
+Use this favored terminology where appropriate: ${benchmark.favoredTerminology.join(", ")}
+
+Required Proposal Structure:
+## 1. Executive Summary & Abstract
+## 2. Statement of Need & Community Context
+## 3. Project Plan, Methodology & Measurable Milestones
+## 4. Community Evaluation & Logic Model
+## 5. Organizational Readiness & Personnel Track Record
+## 6. Long-Term Financial Sustainability Plan
+
+Do NOT fabricate statistics or private financial details. Use professional, authoritative, evidence-based language with markdown headings.`;
 
   try {
     const { text } = await generateTextGeminiFirst({
       system: systemPrompt,
-      prompt: input.orgDescription,
-      maxOutputTokens: 2500,
+      prompt: `Applicant Entity: ${applicantName}\n\nOrganization & Project Background:\n${input.orgDescription}`,
+      maxOutputTokens: 3500,
     });
-    return text.trim();
+
+    const deliverablesPackage = buildGrantDeliverableSuite({
+      grantTitle: input.grantTitle,
+      funder: input.funder,
+      orgName: applicantName,
+      applicantNarrative: text.trim(),
+      userInputNumbers: {
+        requestedAmount: input.requestedAmount || input.awardRange,
+        personnelCost: input.personnelCost,
+        directCost: input.directCost,
+        adminCost: input.adminCost,
+      },
+      pastWinnerQualities: benchmark.winningQualities,
+    });
+
+    return {
+      fullNarrative: text.trim(),
+      deliverablesPackage,
+      pastWinnerBenchmarks: benchmark.winningQualities,
+    };
   } catch (err) {
     handleAiError(err);
   }
