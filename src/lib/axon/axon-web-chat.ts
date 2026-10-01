@@ -1,7 +1,6 @@
 import { loadConfig } from './config.mjs';
 import {
   buildToneInstructions,
-  fetchMemories,
   fetchTopSignals,
   getOperatorProfile,
   insertChatMessage,
@@ -9,6 +8,7 @@ import {
   updateOperatorProfile,
   upsertSignal,
 } from './axon-profile';
+import { fetchMemoriesGated } from './axon-inhibitor';
 import {
   applyBriefingUpdates,
   applyTodoUpdates,
@@ -55,12 +55,18 @@ export async function generateAxonReply(
   const { sbSelect } = createSupabaseClient(key);
   const cfg = await loadConfig(sbSelect);
 
-  const [profile, signals, memories, workspace] = await Promise.all([
+  const recentTurnsText = history
+    .slice(-12)
+    .map((m) => `${m.role}: ${m.content}`)
+    .join('\n');
+
+  const [profile, signals, gatedMemories, workspace] = await Promise.all([
     getOperatorProfile(operatorId),
     fetchTopSignals(operatorId),
-    fetchMemories(operatorId, 15),
+    fetchMemoriesGated({ taskText: userMessage, recentTurnsText, channel }, operatorId),
     getWorkspace(operatorId),
   ]);
+  const memories = gatedMemories.memories;
 
   const toneBlock = buildToneInstructions(profile.tone_preset, signals);
   const memoryBlock = memories.length
