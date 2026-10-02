@@ -12,6 +12,7 @@ export interface NiTierConfig {
   annualMonthlyUsd: number;
   annualTotalUsd: number;
   toolSlots: number | null;
+  agenticSlots: number | null;
   description: string;
 }
 
@@ -23,6 +24,7 @@ export const NI_TIERS: Record<NiTier, NiTierConfig> = {
     annualMonthlyUsd: 0,
     annualTotalUsd: 0,
     toolSlots: 0,
+    agenticSlots: 0,
     description: "Limited usage across NI tools. Purchase individual tools or upgrade your plan.",
   },
   core: {
@@ -32,7 +34,8 @@ export const NI_TIERS: Record<NiTier, NiTierConfig> = {
     annualMonthlyUsd: 13,
     annualTotalUsd: 159,
     toolSlots: 3,
-    description: "3 intelligence tools with unlimited usage under your plan.",
+    agenticSlots: 1,
+    description: "3 intelligence tools with unlimited SaaS usage + 1 autonomous Agentic headless worker slot.",
   },
   pro: {
     tier: "pro",
@@ -41,7 +44,8 @@ export const NI_TIERS: Record<NiTier, NiTierConfig> = {
     annualMonthlyUsd: 27,
     annualTotalUsd: 324,
     toolSlots: 10,
-    description: "10 intelligence tools with unlimited usage under your plan.",
+    agenticSlots: 3,
+    description: "10 intelligence tools with unlimited SaaS usage + 3 autonomous Agentic headless worker slots & MCP keys.",
   },
   power: {
     tier: "power",
@@ -50,7 +54,8 @@ export const NI_TIERS: Record<NiTier, NiTierConfig> = {
     annualMonthlyUsd: 47,
     annualTotalUsd: 559,
     toolSlots: null,
-    description: "Unlimited intelligence tools with unlimited usage.",
+    agenticSlots: null,
+    description: "Unlimited intelligence tools with unlimited SaaS usage + unlimited autonomous Agentic headless worker execution.",
   },
 };
 
@@ -79,6 +84,10 @@ export function tierHasUnlimitedToolAccess(tier: string | null | undefined): boo
 
 export function getToolSlotLimit(tier: string | null | undefined): number | null {
   return NI_TIERS[normalizeNiTier(tier)].toolSlots;
+}
+
+export function getAgenticSlotLimit(tier: string | null | undefined): number | null {
+  return NI_TIERS[normalizeNiTier(tier)].agenticSlots;
 }
 
 export function formatNiPrice(usd: number): string {

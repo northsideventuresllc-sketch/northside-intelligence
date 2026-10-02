@@ -30,6 +30,41 @@ export interface Sector3FreeTierSpec {
   features: string[];
 }
 
+export interface Sector3DefaultMcp {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+export const SECTOR3_DEFAULT_MCPS: Record<string, Sector3DefaultMcp[]> = {
+  replyflow: [
+    { id: "mcp-gmail", name: "Gmail MCP", description: "Ingest customer emails & draft 1-click replies", icon: "✉️" },
+    { id: "mcp-zendesk", name: "Zendesk MCP", description: "Sync tickets and resolve inquiries autonomously", icon: "🎧" },
+    { id: "mcp-slack", name: "Slack MCP", description: "Monitor support channels and answer customer leads", icon: "💬" },
+  ],
+  grantbot: [
+    { id: "mcp-grants-gov", name: "Grants.gov MCP", description: "Live federal & foundation grant RFP search", icon: "🏛️" },
+    { id: "mcp-doc-parser", name: "Doc Parser MCP", description: "Extract guidelines, criteria, and budget sheets", icon: "📄" },
+    { id: "mcp-google-docs", name: "Google Docs MCP", description: "Export formatted grant proposals directly to docs", icon: "📝" },
+  ],
+  signaldesk: [
+    { id: "mcp-serp-search", name: "SERP Search MCP", description: "Autonomous competitor and market move scanner", icon: "🔍" },
+    { id: "mcp-hn-ph", name: "HN / ProductHunt MCP", description: "Track launch sentiment and developer trend shifts", icon: "🚀" },
+    { id: "mcp-github-trends", name: "GitHub Trends MCP", description: "Monitor open-source velocity and repository shifts", icon: "⭐" },
+  ],
+  gapscan: [
+    { id: "mcp-lighthouse", name: "Lighthouse MCP", description: "Deep performance, SEO, and conversion friction audits", icon: "⚡" },
+    { id: "mcp-site-crawler", name: "Site Crawler MCP", description: "Map entire user funnels and identify drop-off gaps", icon: "🕷️" },
+    { id: "mcp-dom-inspector", name: "DOM Inspector MCP", description: "Detect layout shifts, form failures, and broken UX", icon: "🔬" },
+  ],
+  bridgeai: [
+    { id: "mcp-multi-llm", name: "Multi-LLM Router MCP", description: "Dynamic dispatch between Claude, Gemini, and AXON", icon: "🧠" },
+    { id: "mcp-zapier-bridge", name: "Zapier Bridge MCP", description: "Trigger 5,000+ app webhooks and automated workflows", icon: "⚡" },
+    { id: "mcp-supabase-db", name: "Supabase DB MCP", description: "Idempotent database sync and data pipeline updates", icon: "💾" },
+  ],
+};
+
 const DEFAULT_FREE_TIER_FEATURES = [
   "Add to your NI Toolkit",
   "Core AI features included",
@@ -41,12 +76,12 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     toolSlug: "replyflow",
     name: "ReplyFlow",
     targetAudience: "SMBs, creators, and support teams automating customer replies",
-    marketTier: "entry",
-    baseMonthlyUsd: 15,
+    marketTier: "premium",
+    baseMonthlyUsd: 149,
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "medium",
-    freeTierMonthlyCap: 10,
+    freeTierMonthlyCap: 0,
     freeTierUnit: "replies",
   },
   {
@@ -134,4 +169,20 @@ export function formatFreeTierHeroLabel(toolSlug: string): string {
   const { monthlyCap, unit } = getSector3FreeTierSpec(toolSlug);
   const unitTitle = unit.charAt(0).toUpperCase() + unit.slice(1);
   return `${monthlyCap} ${unitTitle}/Mo`;
+}
+
+export interface Sector3AgenticPricing {
+  standardMonthlyUsd: number;
+  agenticMonthlyUsd: number;
+  mcps: Sector3DefaultMcp[];
+}
+
+export function getSector3AgenticPricing(toolSlug: string): Sector3AgenticPricing {
+  const profile = getSector3ToolProfile(toolSlug);
+  const base = profile?.baseMonthlyUsd ?? 20;
+  return {
+    standardMonthlyUsd: base,
+    agenticMonthlyUsd: Math.round(base * 2.5),
+    mcps: SECTOR3_DEFAULT_MCPS[toolSlug] ?? [],
+  };
 }

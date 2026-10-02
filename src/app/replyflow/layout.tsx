@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sector3BackToHome } from "@/components/sector3/Sector3BackToHome";
+import { UniversalITFeedbackWidget } from "@/components/feedback/UniversalITFeedbackWidget";
 
 export const metadata: Metadata = {
   title: "ReplyFlow — AI Customer Service Replies",
@@ -18,6 +19,7 @@ export default function ReplyFlowLayout({ children }: { children: React.ReactNod
     <div className="replyflow-root flex min-h-screen flex-col bg-rf-bg text-white antialiased">
       <div className="flex-1">{children}</div>
       <Sector3BackToHome variant="replyflow" />
+      <UniversalITFeedbackWidget toolSlug="replyflow" toolName="ReplyFlow" />
     </div>
   );
 }
