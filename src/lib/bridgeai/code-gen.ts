@@ -72,7 +72,7 @@ def execute_bridge(payload: dict) -> dict:
     dest_url = "${destination.baseUrl}${destination.commonEndpoints[0]?.path || ""}"
     headers = {
         "Content-Type": "application/json",
-        "${destination.authHeaderName}": f"${destination.authHeaderType == "Bearer" and "Bearer " or ""}{dest_key}",
+        "${destination.authHeaderName}": f"${destination.authHeaderType === "Bearer" ? "Bearer " : ""}{dest_key}",
     }
 
     res = requests.post(dest_url, json=payload, headers=headers, timeout=10)

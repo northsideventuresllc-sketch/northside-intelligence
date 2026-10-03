@@ -204,3 +204,7 @@ export async function sendServiceInvoiceEmail({
 
   return {};
 }
+
+export function getResendClient(): Resend | null {
+  return resend;
+}

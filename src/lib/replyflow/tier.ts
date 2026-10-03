@@ -31,3 +31,37 @@ export const PLAN_LABELS: Record<UserPlan, string> = {
   team: "Team",
   agency: "Agency",
 };
+
+export interface ReplyFlowTierPlan {
+  name: string;
+  description: string;
+  priceMonthlyUsd: number;
+  features: string[];
+}
+
+export const REPLYFLOW_TIERS: Record<"core" | "done_with_you", ReplyFlowTierPlan> = {
+  core: {
+    name: "Core SaaS",
+    description: "Autonomous customer reply drafting and inbox triage for founders and operators.",
+    priceMonthlyUsd: 149,
+    features: [
+      "Full ReplyFlow web dashboard & analytics",
+      "Unlimited AI reply generation & auto-drafting",
+      "Email & support ticket integration",
+      "Custom brand voice & sentiment tuning",
+      "Standard email & chat support",
+    ],
+  },
+  done_with_you: {
+    name: "Done-With-You",
+    description: "Guided onboarding, customized prompt engineering, and custom webhook integration.",
+    priceMonthlyUsd: 299,
+    features: [
+      "Everything in Core SaaS",
+      "Dedicated 1-on-1 onboarding & prompt audit",
+      "Custom workflow & ticketing system integration",
+      "Priority SLA and engineering channel support",
+      "Bi-weekly performance & accuracy reviews",
+    ],
+  },
+};

@@ -30,6 +30,12 @@ export function ReplyFlowNav({ email, planLabel, onSignOut }: Props) {
                   {planLabel}
                 </span>
               )}
+              <Link
+                href="/replyflow/settings"
+                className="text-xs font-medium text-rf-muted transition hover:text-white flex items-center gap-1"
+              >
+                <span>⚙️ Settings</span>
+              </Link>
               <AccountMenuDropdown variant="replyflow" triggerLabel="NI Account" />
               {onSignOut && (
                 <button

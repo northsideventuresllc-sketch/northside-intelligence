@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const priceId = plan ? REPLYFLOW_PRICE_IDS[plan as keyof typeof REPLYFLOW_PRICE_IDS] : undefined;
+  const resolvedPlan = plan === "core" ? "solo" : plan === "done_with_you" ? "team" : plan;
+  const priceId = resolvedPlan ? REPLYFLOW_PRICE_IDS[resolvedPlan as keyof typeof REPLYFLOW_PRICE_IDS] : undefined;
   if (!priceId) return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
 
   try {

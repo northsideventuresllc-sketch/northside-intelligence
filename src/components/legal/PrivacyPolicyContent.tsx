@@ -69,12 +69,6 @@ export function PrivacyPolicyContent() {
             digits of your card.
           </li>
           <li>Billing address</li>
-          <li>
-            If you pay an Intelligence Services deposit, we keep a{" "}
-            <strong className="text-white/90">saved payment method</strong> — a Stripe customer reference and
-            payment method reference only, never your card number — so NI can charge the remaining balance to that
-            method when your Service is marked complete.
-          </li>
         </ul>
 
         <p className="mb-2 font-medium text-white/80">Smart Store Orders:</p>
@@ -151,27 +145,6 @@ export function PrivacyPolicyContent() {
             another OAuth provider (email and profile basics only)
           </li>
         </ul>
-
-        <h3 className="mb-2 mt-4 text-base font-medium text-white/90">
-          2.4 AI Agent and Machine Interface
-        </h3>
-        <p className="mb-3">
-          NI operates a public machine interface (an MCP endpoint) that lets AI agents purchase NI products and
-          Services on a person&apos;s behalf. When an agent calls this interface, we log:
-        </p>
-        <ul className="mb-3 list-disc space-y-2 pl-5">
-          <li>The tool the agent called and the parameters it sent</li>
-          <li>The agent&apos;s self-reported name and signature header</li>
-          <li>
-            A <strong className="text-white/90">one-way hashed</strong> network identifier — not your raw IP address
-            — used only for rate limiting and abuse prevention
-          </li>
-        </ul>
-        <p>
-          We use this information to enforce rate limits, prevent abuse of the machine interface, and investigate
-          fraudulent or malicious agent activity. See our Terms of Service Section 6.6 for the purchase terms that
-          apply when an AI agent buys on your behalf.
-        </p>
       </section>
 
       <section>
@@ -245,22 +218,16 @@ export function PrivacyPolicyContent() {
             in your browser and may be temporarily stored to support session continuity.
           </li>
           <li>
-            <strong className="text-white/90">We do not train AI models on your User Content</strong> without your
-            explicit, separate consent.
+            <strong className="text-white/90">We do not train AI models on your User Content</strong>. We maintain an absolute zero-training policy for all user inputs, prompts, headless agent payloads, and generated tool results. We never sell or license your content to third parties for model training or RLHF.
           </li>
           <li>
-            <strong className="text-white/90">Anthropic&apos;s data handling</strong> for API calls is governed by
-            Anthropic&apos;s own API data usage policies. NI does not control how Anthropic processes data at the
-            API level. You should review Anthropic&apos;s privacy practices at{" "}
-            <a
-              href="https://www.anthropic.com"
-              className="text-cyan-400 hover:text-cyan-300"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              anthropic.com
-            </a>
-            .
+            <strong className="text-white/90">Agentic Headless &amp; FastMCP Execution:</strong> When utilizing the Agentic Service Tier via dedicated Agent API Keys (<code>ni_agt_...</code>) or FastMCP connectors, inputs are authenticated securely, processed through ephemeral stateless execution containers, and scrubbed for sensitive system credentials prior to execution.
+          </li>
+          <li>
+            <strong className="text-white/90">Bring Your Own Key (BYOK) Data Routing:</strong> If you supply your personal third-party API key (such as OpenAI, Anthropic, or Google Gemini), generation requests route directly from our execution environment to your provider&apos;s commercial API endpoints. Your interactions are governed exclusively by your direct customer agreement and privacy terms with that provider.
+          </li>
+          <li>
+            <strong className="text-white/90">Third-Party LLM Infrastructure:</strong> When using standard NI compute, workloads are processed via commercial enterprise API agreements (including Anthropic Claude and Google Gemini) which guarantee zero training on API customer data.
           </li>
           <li>
             <strong className="text-white/90">Retention:</strong> Tool inputs and outputs are retained for a
@@ -456,10 +423,6 @@ export function PrivacyPolicyContent() {
               <tr>
                 <td>Intelligence Services project data</td>
                 <td>Per service agreement, minimum 1 year</td>
-              </tr>
-              <tr>
-                <td>AI agent / machine interface call logs</td>
-                <td>90 days</td>
               </tr>
             </tbody>
           </table>

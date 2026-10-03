@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { getDeploymentTier, getPlanLimits, type UserPlan } from "@/lib/replyflow/tier";
+import { getDeploymentTier, getPlanLimits, normalizeUserPlan, type UserPlan } from "@/lib/replyflow/tier";
 import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 
 let stripeClient: Stripe | null = null;
@@ -52,7 +52,7 @@ export const REPLYFLOW_PRICE_IDS: Record<"solo" | "team" | "agency", string> = {
 
 export function getPlanFromPriceId(priceId: string | undefined): UserPlan {
   if (!priceId) return "free";
-  const match = (Object.entries(REPLYFLOW_PRICE_IDS) as [UserPlan, string][]).find(
+  const match = (Object.entries(REPLYFLOW_PRICE_IDS) as [string, string][]).find(
     ([, id]) => id === priceId
   );
   if (!match) {
@@ -61,5 +61,5 @@ export function getPlanFromPriceId(priceId: string | undefined): UserPlan {
     });
     return "free";
   }
-  return match[0];
+  return normalizeUserPlan(match[0]);
 }

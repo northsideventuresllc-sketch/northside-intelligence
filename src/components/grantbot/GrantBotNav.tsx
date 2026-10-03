@@ -35,6 +35,12 @@ export function GrantBotNav({ email, planLabel, onSignOut }: Props) {
                   {planLabel}
                 </span>
               )}
+              <Link
+                href="/grantbot/settings"
+                className="text-xs font-medium text-gb-muted transition hover:text-white flex items-center gap-1"
+              >
+                <span>⚙️ Settings</span>
+              </Link>
               <AccountMenuDropdown variant="grantbot" triggerLabel="NI Account" />
               {onSignOut && (
                 <button

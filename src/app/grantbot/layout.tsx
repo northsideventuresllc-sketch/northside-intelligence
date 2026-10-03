@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sector3BackToHome } from "@/components/sector3/Sector3BackToHome";
+import { UniversalITFeedbackWidget } from "@/components/feedback/UniversalITFeedbackWidget";
 
 export const metadata: Metadata = {
   title: "GrantBot — AI Grant Finder & Drafter",
@@ -15,6 +16,7 @@ export default function GrantBotLayout({ children }: { children: React.ReactNode
     <div className="grantbot-root flex min-h-screen flex-col bg-gb-bg text-white antialiased">
       <div className="flex-1">{children}</div>
       <Sector3BackToHome variant="grantbot" />
+      <UniversalITFeedbackWidget toolSlug="grantbot" toolName="GrantBot" />
     </div>
   );
 }

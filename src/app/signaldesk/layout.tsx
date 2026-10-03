@@ -1,4 +1,5 @@
 import { Sector3BackToHome } from "@/components/sector3/Sector3BackToHome";
+import { UniversalITFeedbackWidget } from "@/components/feedback/UniversalITFeedbackWidget";
 import { SIGNALDESK_CONFIG } from "@/lib/sector3-tools/configs";
 import { sector3ToolMetadata, Sector3ToolLayoutShell } from "@/lib/sector3-tools/layout-shell";
 
@@ -13,6 +14,7 @@ export default function SignalDeskLayout({ children }: { children: React.ReactNo
       <div className="flex min-h-screen flex-col">
         <div className="flex-1">{children}</div>
         <Sector3BackToHome variant="portal" />
+        <UniversalITFeedbackWidget toolSlug="signaldesk" toolName="Signal Desk" />
       </div>
     </Sector3ToolLayoutShell>
   );
