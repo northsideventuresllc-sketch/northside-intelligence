@@ -643,7 +643,7 @@ export function Sector3ToolSettingsClient({
                     <div className="py-4 text-center text-xs text-white/40">Loading keys...</div>
                   ) : agentKeys.length === 0 ? (
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-xs text-white/50">
-                      No active agent API keys generated yet. Click "+ Generate New Agent Key" above to create one.
+                      No active agent API keys generated yet. Click &quot;+ Generate New Agent Key&quot; above to create one.
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
