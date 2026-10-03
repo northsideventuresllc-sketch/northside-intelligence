@@ -218,20 +218,6 @@ export function userHasUnlimitedToolAccess(state: UserBillingState, toolSlug: st
   return false;
 }
 
-export function userHasAgenticAccess(state: UserBillingState, toolSlug: string): boolean {
-  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
-  if (tierHasUnlimitedToolAccess(state.niTier)) return userHasToolInCase(state, toolSlug);
-  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
-  if (!entry) return false;
-  if (entry.accessType === "tool_subscription") {
-    if (!entry.expiresAt) return true;
-    return isSubscriptionInGracePeriod(entry.expiresAt) || new Date(entry.expiresAt) > new Date();
-  }
-  if (entry.accessType === "ni_plan" && (state.niTier === "core" || state.niTier === "pro" || state.niTier === "power")) {
-    return true;
-  }
-  return false;
-}
 
 export function shouldHideToolSubscriptions(state: UserBillingState, toolSlug: string): boolean {
   if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
@@ -336,11 +322,18 @@ export function userHasAgenticAccess(
   toolSlug: string,
   toolProfileTier?: string
 ): boolean {
-  if (billingState.isMasterAccount) return true;
+  if (masterAccountHasProductAccess(billingState.isMasterAccount, toolSlug)) return true;
   if (billingState.niTier === "power" || billingState.niTier === "pro") return true;
   if (toolProfileTier === "agentic" || toolProfileTier === "pro") return true;
+  if (tierHasUnlimitedToolAccess(billingState.niTier)) return userHasToolInCase(billingState, toolSlug);
   const toolEntry = billingState.toolkit.find((t) => t.toolSlug === toolSlug);
-  if (toolEntry && (toolEntry.accessType === "lifetime" || toolEntry.accessType === "tool_subscription")) {
+  if (!toolEntry) return false;
+  if (toolEntry.accessType === "lifetime") return true;
+  if (toolEntry.accessType === "tool_subscription") {
+    if (!toolEntry.expiresAt) return true;
+    return isSubscriptionInGracePeriod(toolEntry.expiresAt) || new Date(toolEntry.expiresAt) > new Date();
+  }
+  if (toolEntry.accessType === "ni_plan" && (billingState.niTier === "core" || billingState.niTier === "pro" || billingState.niTier === "power")) {
     return true;
   }
   return false;

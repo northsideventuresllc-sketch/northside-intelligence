@@ -1,3 +1,4 @@
+import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 "use client";
 
 import { useState } from "react";
@@ -84,6 +85,7 @@ export default function GapScanDashboardClient({
       <GapScanNav email={email} planLabel={planLabel} />
 
       <main className="relative z-10 mx-auto max-w-6xl px-6 py-10 space-y-8">
+        <AutopilotComingSoonCard />
         {/* Tier Switcher & Header Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

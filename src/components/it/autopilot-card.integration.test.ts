@@ -21,11 +21,7 @@ describe("Autopilot Coming Soon card wiring (source-level)", () => {
     expect(count(src("src/lib/sector3-tools/create-dashboard-page.tsx"), "<Sector3ToolDashboard")).toBe(2);
   });
 
-  it.each(["gapscan", "signaldesk", "bridgeai"])("%s dashboard page goes through createSector3DashboardPage", (slug) => {
-    expect(src(`src/app/${slug}/dashboard/page.tsx`)).toContain("createSector3DashboardPage");
-  });
-
-  it.each(["grantbot", "replyflow"])("%s DashboardClient renders the card", (slug) => {
+  it.each(["grantbot", "replyflow", "gapscan", "signaldesk", "bridgeai"])("%s DashboardClient renders the card", (slug) => {
     expect(count(src(`src/app/${slug}/dashboard/DashboardClient.tsx`), "<AutopilotComingSoonCard")).toBe(1);
   });
 });
