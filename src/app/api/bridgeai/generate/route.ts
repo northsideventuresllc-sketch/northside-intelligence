@@ -44,15 +44,17 @@ export async function POST(req: NextRequest) {
     });
 
     // Save recipe to Supabase
-    const svc = createServiceClient();
-    await svc.from("bridgeai_recipes").insert({
-      user_id: user.id,
-      recipe_name: blueprint.recipeName,
-      source_service: sourcePreset.name,
-      destination_service: destPreset.name,
-      node_code: blueprint.nodeCode,
-      created_at: new Date().toISOString(),
-    }).catch(() => {});
+    try {
+      const svc = createServiceClient();
+      await svc.from("bridgeai_recipes").insert({
+        user_id: user.id,
+        recipe_name: blueprint.recipeName,
+        source_service: sourcePreset.name,
+        destination_service: destPreset.name,
+        node_code: blueprint.nodeCode,
+        created_at: new Date().toISOString(),
+      });
+    } catch {}
 
     return NextResponse.json({
       recipe: blueprint,

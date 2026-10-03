@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
       const rawQuestions = Array.isArray(body.clarifyingQuestions) ? (body.clarifyingQuestions as ClarifyingQuestion[]) : [];
       const answers = parseAnswers(body.clarifyingAnswers);
       const enrichedProfile = rawQuestions.length > 0 && Object.keys(answers).length > 0
-        ? buildEnrichedOrgProfile(orgDescription, serializeClarifyingAnswers(rawQuestions, answers))
+        ? buildEnrichedOrgProfile(orgDescription, rawQuestions, answers)
         : orgDescription;
 
       const draftResult = await draftGrantApplication({

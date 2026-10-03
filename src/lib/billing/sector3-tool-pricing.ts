@@ -174,15 +174,20 @@ export function formatFreeTierHeroLabel(toolSlug: string): string {
 export interface Sector3AgenticPricing {
   standardMonthlyUsd: number;
   agenticMonthlyUsd: number;
+  saasMonthlyPrice: number;
+  agenticMonthlyPrice: number;
   mcps: Sector3DefaultMcp[];
 }
 
 export function getSector3AgenticPricing(toolSlug: string): Sector3AgenticPricing {
   const profile = getSector3ToolProfile(toolSlug);
   const base = profile?.baseMonthlyUsd ?? 20;
+  const agentic = Math.round(base * 2.5);
   return {
     standardMonthlyUsd: base,
-    agenticMonthlyUsd: Math.round(base * 2.5),
+    agenticMonthlyUsd: agentic,
+    saasMonthlyPrice: base,
+    agenticMonthlyPrice: agentic,
     mcps: SECTOR3_DEFAULT_MCPS[toolSlug] ?? [],
   };
 }

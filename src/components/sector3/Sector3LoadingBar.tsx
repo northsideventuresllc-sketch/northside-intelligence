@@ -9,15 +9,20 @@ const BAR_GRADIENT: Record<Sector3ToolVariant, string> = {
 };
 
 interface Sector3LoadingBarProps {
-  loading: boolean;
+  loading?: boolean;
   variant?: Sector3ToolVariant;
+  active?: boolean;
+  brandColor?: string;
 }
 
 export function Sector3LoadingBar({
   loading,
   variant = "default",
+  active,
+  brandColor,
 }: Sector3LoadingBarProps) {
-  if (!loading) return null;
+  const isLoading = loading ?? active ?? false;
+  if (!isLoading) return null;
 
   return (
     <div
@@ -28,6 +33,7 @@ export function Sector3LoadingBar({
     >
       <div
         className={`h-full w-1/3 animate-sector3-loading bg-gradient-to-r ${BAR_GRADIENT[variant]}`}
+        style={brandColor ? { background: brandColor } : undefined}
       />
     </div>
   );
