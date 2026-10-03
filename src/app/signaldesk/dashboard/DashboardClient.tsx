@@ -1,5 +1,6 @@
-import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 "use client";
+
+import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 
 import { useState } from "react";
 import Link from "next/link";
