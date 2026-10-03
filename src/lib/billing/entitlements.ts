@@ -333,7 +333,7 @@ export function userHasAgenticAccess(
     if (!toolEntry.expiresAt) return true;
     return isSubscriptionInGracePeriod(toolEntry.expiresAt) || new Date(toolEntry.expiresAt) > new Date();
   }
-  if (toolEntry.accessType === "ni_plan" && (billingState.niTier === "core" || billingState.niTier === "pro" || billingState.niTier === "power")) {
+  if (toolEntry.accessType === "ni_plan" && billingState.niTier === "core") {
     return true;
   }
   return false;
