@@ -1,28 +1,55 @@
-import { createSector3DashboardPage } from "@/lib/sector3-tools/create-dashboard-page";
-import { BRIDGEAI_CONFIG } from "@/lib/sector3-tools/configs";
+import { getUserBillingState, userHasUnlimitedToolAccess, userHasAgenticAccess } from "@/lib/billing/entitlements";
+import { getSector3FreeTierSpec } from "@/lib/billing/sector3-tool-pricing";
+import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import BridgeAIDashboardClient from "./DashboardClient";
 
-export default createSector3DashboardPage(BRIDGEAI_CONFIG, {
-  apiPath: "/api/bridgeai/generate",
-  primaryLabel: "Generate Orchestration Plan",
-  usageColumn: "workflows_used_this_month",
-  fields: [
-    {
-      id: "sourceSystem",
-      label: "Source System",
-      placeholder: "e.g. HubSpot, Gmail, Airtable",
-      required: true,
-    },
-    {
-      id: "targetSystem",
-      label: "Target System",
-      placeholder: "e.g. Stripe, Slack, Supabase",
-      required: true,
-    },
-    {
-      id: "goal",
-      label: "Integration Goal",
-      placeholder: "What should happen when data moves between these systems?",
-      multiline: true,
-    },
-  ],
-});
+export default async function BridgeAIDashboardPage() {
+  const supabase = await createServerAuthClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <BridgeAIDashboardClient
+        email=""
+        planLabel="Free Community Tier"
+        workflowsUsed={0}
+        workflowsLimit={10}
+        hasUnlimitedAccess={false}
+        niTier="free"
+        isAgenticUser={false}
+      />
+    );
+  }
+
+  const billingState = await getUserBillingState(user.id);
+  const hasUnlimited = userHasUnlimitedToolAccess(billingState, "bridgeai");
+  const isAgentic = userHasAgenticAccess(billingState, "bridgeai");
+  const spec = getSector3FreeTierSpec("bridgeai");
+
+  const { data: profile } = await supabase
+    .from("bridgeai_profiles")
+    .select("workflows_used_this_month")
+    .eq("id", user.id)
+    .single();
+
+  const workflowsUsed = profile?.workflows_used_this_month || 0;
+  const planLabel = isAgentic
+    ? "Agentic Headless Tier"
+    : hasUnlimited
+      ? "SaaS Unlimited Plan"
+      : "Free Community Tier";
+
+  return (
+    <BridgeAIDashboardClient
+      email={user.email ?? ""}
+      planLabel={planLabel}
+      workflowsUsed={workflowsUsed}
+      workflowsLimit={hasUnlimited ? null : spec.monthlyCap}
+      hasUnlimitedAccess={hasUnlimited}
+      niTier={billingState.niTier}
+      isAgenticUser={isAgentic}
+    />
+  );
+}

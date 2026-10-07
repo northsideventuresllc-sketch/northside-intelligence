@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const keywords = Array.isArray(body.keywords)
       ? body.keywords.map(String)
       : typeof body.keywords === "string"
-      ? body.keywords.split(",").map((s) => s.trim())
+      ? body.keywords.split(",").map((s: string) => s.trim())
       : [category];
     const competitorUrls = Array.isArray(body.competitorUrls) ? body.competitorUrls.map(String) : [];
     const dispatchEmail = Boolean(body.dispatchEmail);
@@ -51,15 +51,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Persist briefing in user's saved intelligence reports
-    const svc = createServiceClient();
-    await svc.from("signaldesk_reports").insert({
-      user_id: user.id,
-      category,
-      threat_level: briefing.threatLevel,
-      executive_summary: briefing.executiveSummary,
-      report_data: briefing,
-      created_at: new Date().toISOString(),
-    }).catch(() => {});
+    try {
+      const svc = createServiceClient();
+      await svc.from("signaldesk_reports").insert({
+        user_id: user.id,
+        category,
+        threat_level: briefing.threatLevel,
+        executive_summary: briefing.executiveSummary,
+        report_data: briefing,
+        created_at: new Date().toISOString(),
+      });
+    } catch {}
 
     return NextResponse.json({
       briefing,

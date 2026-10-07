@@ -218,6 +218,7 @@ export function userHasUnlimitedToolAccess(state: UserBillingState, toolSlug: st
   return false;
 }
 
+
 export function shouldHideToolSubscriptions(state: UserBillingState, toolSlug: string): boolean {
   if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
   if (tierHasUnlimitedToolAccess(state.niTier)) return true;
@@ -315,3 +316,25 @@ export async function setNiSubscription(params: {
 }
 
 type BillingInterval = "monthly" | "annual";
+
+export function userHasAgenticAccess(
+  billingState: UserBillingState,
+  toolSlug: string,
+  toolProfileTier?: string
+): boolean {
+  if (masterAccountHasProductAccess(billingState.isMasterAccount, toolSlug)) return true;
+  if (billingState.niTier === "power" || billingState.niTier === "pro") return true;
+  if (toolProfileTier === "agentic" || toolProfileTier === "pro") return true;
+  if (tierHasUnlimitedToolAccess(billingState.niTier)) return userHasToolInCase(billingState, toolSlug);
+  const toolEntry = billingState.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!toolEntry) return false;
+  if (toolEntry.accessType === "lifetime") return true;
+  if (toolEntry.accessType === "tool_subscription") {
+    if (!toolEntry.expiresAt) return true;
+    return isSubscriptionInGracePeriod(toolEntry.expiresAt) || new Date(toolEntry.expiresAt) > new Date();
+  }
+  if (toolEntry.accessType === "ni_plan" && billingState.niTier === "core") {
+    return true;
+  }
+  return false;
+}

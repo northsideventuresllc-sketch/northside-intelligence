@@ -32,39 +32,43 @@ export async function processItFeedback(
   const reportId = `rep-${submission.toolSlug}-${Date.now()}`;
 
   // 1. Ingest into centralized feedback table
-  await svc.from("it_feedback_reports").insert({
-    id: reportId,
-    tool_slug: submission.toolSlug,
-    user_id: submission.userId || null,
-    user_email: submission.userEmail || null,
-    report_type: submission.type,
-    subject: submission.subject,
-    details: submission.details,
-    system_context: submission.systemContext || {},
-    created_at: new Date().toISOString(),
-  }).catch((err) => {
+  try {
+    await svc.from("it_feedback_reports").insert({
+      id: reportId,
+      tool_slug: submission.toolSlug,
+      user_id: submission.userId || null,
+      user_email: submission.userEmail || null,
+      report_type: submission.type,
+      subject: submission.subject,
+      details: submission.details,
+      system_context: submission.systemContext || {},
+      created_at: new Date().toISOString(),
+    });
+  } catch (err: unknown) {
     console.warn("[Bug Pipeline] Warning: Could not save report row:", err);
-  });
+  }
 
   // 2. If it's a bug report, trigger the Autonomous Bug Repair Workflow
   if (submission.type === "bug_report") {
     // Queue background repair job for local Mac mini / cloud agent runner
-    await svc.from("agent_dispatch").insert({
-      agent_name: "AutonomousBugRepairAgent",
-      task_type: "SECTOR3_INSTANT_BUG_REPAIR",
-      payload: {
-        reportId,
-        toolSlug: submission.toolSlug,
-        errorDetails: submission.details,
-        systemContext: submission.systemContext,
-        targetRepo: "northside-intelligence",
-      },
-      needs_jb_approval: true,
-      jb_ask: `Bug reported in ${submission.toolSlug}: "${submission.subject}". Autonomous repair agent has a plan ready at 90% confidence. Approve test and ship?`,
-      jb_options: ["Approve & Auto-Deploy", "Review PR First", "Reject"],
-      status: "pending",
-      created_at: new Date().toISOString(),
-    }).catch(() => {});
+    try {
+      await svc.from("agent_dispatch").insert({
+        agent_name: "AutonomousBugRepairAgent",
+        task_type: "SECTOR3_INSTANT_BUG_REPAIR",
+        payload: {
+          reportId,
+          toolSlug: submission.toolSlug,
+          errorDetails: submission.details,
+          systemContext: submission.systemContext,
+          targetRepo: "northside-intelligence",
+        },
+        needs_jb_approval: true,
+        jb_ask: `Bug reported in ${submission.toolSlug}: "${submission.subject}". Autonomous repair agent has a plan ready at 90% confidence. Approve test and ship?`,
+        jb_options: ["Approve & Auto-Deploy", "Review PR First", "Reject"],
+        status: "pending",
+        created_at: new Date().toISOString(),
+      });
+    } catch {}
 
     return {
       reportId,

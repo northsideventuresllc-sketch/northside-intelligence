@@ -4,12 +4,9 @@ import { GAPSCAN_CONFIG } from "@/lib/sector3-tools/configs";
 export default createSector3LandingPage(GAPSCAN_CONFIG, {
   headline: "Find the Gaps",
   headlineAccent: "Before They Cost You",
-  subhead:
-    "Describe a workflow, product, or market — GapScan surfaces severity-ranked gaps and quick wins.",
-  previewLabel: "Live Preview",
-  previewInput:
-    "Onboarding: users sign up, verify email, then stall before first value. Competitors offer instant templates.",
-  previewOutput:
-    "Critical gap: no guided first-run within 60 seconds. Moderate: missing template library at signup.",
-  tags: ["Workflow", "Onboarding", "Product"],
+  subhead: "Continuous performance audits, SEO drift detection, and competitive intelligence for modern web apps.",
+  previewLabel: "Latest Scan Sample",
+  previewInput: "Audited https://example.com — 3 critical funnel drop-offs and 2 broken API schemas found.",
+  previewOutput: "Generated remediation patch and Jira ticket export.",
+  tags: ["Lighthouse", "SEO Drift", "Funnel Leaks", "Schema Check"],
 });

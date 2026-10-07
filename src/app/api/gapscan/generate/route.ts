@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const competitorUrls: string[] = Array.isArray(body.competitorUrls)
       ? body.competitorUrls.map(String).filter(Boolean)
       : typeof body.competitorUrls === "string"
-      ? body.competitorUrls.split(",").map((s) => s.trim()).filter(Boolean)
+      ? body.competitorUrls.split(",").map((s: string) => s.trim()).filter(Boolean)
       : ["competitor.com"];
 
     // Check plan tier for depth (Free = surface scan; SaaS/Agentic = deep_dive)
@@ -52,15 +52,17 @@ export async function POST(req: NextRequest) {
     });
 
     // Save report in Supabase
-    const svc = createServiceClient();
-    await svc.from("gapscan_reports").insert({
-      user_id: user.id,
-      niche_sector: nicheSector,
-      competitors_scanned: allowedUrls,
-      scan_depth: scanDepth,
-      build_spec_markdown: buildSpec.markdownDoc,
-      created_at: new Date().toISOString(),
-    }).catch(() => {});
+    try {
+      const svc = createServiceClient();
+      await svc.from("gapscan_reports").insert({
+        user_id: user.id,
+        niche_sector: nicheSector,
+        competitors_scanned: allowedUrls,
+        scan_depth: scanDepth,
+        build_spec_markdown: buildSpec.markdownDoc,
+        created_at: new Date().toISOString(),
+      });
+    } catch {}
 
     return NextResponse.json({
       nicheSector,
