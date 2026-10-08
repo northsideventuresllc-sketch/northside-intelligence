@@ -8,14 +8,31 @@ import {
 import { portalSignInUrl } from "@/lib/replyflow/auth";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import DashboardClient from "./DashboardClient";
-import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
+import { ReplyFlowPricingSection } from "@/components/replyflow/ReplyFlowPricingSection";
 
 export default async function ReplyFlowDashboardPage() {
   const supabase = await createServerAuthClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(portalSignInUrl());
+  if (!user) {
+    return (
+      <div className="relative min-h-screen">
+        <DashboardClient
+          email=""
+          plan="none"
+          planLabel="Subscription Required"
+          repliesUsed={0}
+          repliesLimit={0}
+          hasUnlimitedAccess={false}
+          niTier="free"
+          history={[]}
+          gated
+          gateContent={<ReplyFlowPricingSection />}
+        />
+      </div>
+    );
+  }
 
   const access = await getReplyFlowAccess(user.id);
 
@@ -32,7 +49,7 @@ export default async function ReplyFlowDashboardPage() {
           niTier={access.niTier}
           history={[]}
           gated
-          gateContent={<AddToToolCasePrompt toolSlug="replyflow" toolName="ReplyFlow" variant="replyflow" />}
+          gateContent={<ReplyFlowPricingSection />}
         />
       </div>
     );

@@ -1,24 +1,68 @@
 /** User subscription tier stored in Supabase (`replyflow_profiles.plan`). */
-export type UserPlan = "free" | "solo" | "team" | "agency";
+export type UserPlan = "core" | "done_with_you" | "free" | "solo" | "team" | "agency";
+
+/** Active public subscription tier configuration */
+export interface ReplyFlowTierConfig {
+  id: "core" | "done_with_you";
+  name: string;
+  priceMonthlyUsd: number;
+  setupFeeUsd: number;
+  description: string;
+  features: string[];
+}
+
+export const REPLYFLOW_TIERS: Record<"core" | "done_with_you", ReplyFlowTierConfig> = {
+  core: {
+    id: "core",
+    name: "Core",
+    priceMonthlyUsd: 149,
+    setupFeeUsd: 500,
+    description: "Self-serve AI customer reply automation for modern teams.",
+    features: [
+      "Unlimited AI reply generation",
+      "Tone & scenario customization",
+      "One-click response copy & editing",
+      "Full reply history & session reload",
+      "$500 one-time setup & onboarding",
+    ],
+  },
+  done_with_you: {
+    id: "done_with_you",
+    name: "Done-With-You",
+    priceMonthlyUsd: 299,
+    setupFeeUsd: 500,
+    description: "Hands-on implementation, custom voice calibration, and dedicated workflow integrations.",
+    features: [
+      "Everything in Core",
+      "Custom brand voice & persona calibration",
+      "Dedicated workflow & MCP integration (Gmail, Zendesk, Slack)",
+      "Monthly strategy & response tuning",
+      "$500 one-time setup & guided implementation",
+    ],
+  },
+};
 
 /** Deployment tier from env — caps limits for all users on this instance. */
 export type DeploymentTier = "lite" | "pro";
 
-const USER_PLANS: UserPlan[] = ["free", "solo", "team", "agency"];
+const USER_PLANS: UserPlan[] = ["core", "done_with_you", "free", "solo", "team", "agency"];
 
 export function getDeploymentTier(): DeploymentTier {
   return process.env.TIER === "lite" ? "lite" : "pro";
 }
 
 export function normalizeUserPlan(plan: string | null | undefined): UserPlan {
+  if (plan === "done-with-you") return "done_with_you";
   if (plan && USER_PLANS.includes(plan as UserPlan)) return plan as UserPlan;
-  return "free";
+  return "core";
 }
 
 export function getPlanLimits(deployment: DeploymentTier): Record<UserPlan, number> {
   const isLite = deployment === "lite";
   return {
-    free: isLite ? 5 : 10,
+    core: isLite ? 500 : 999999,
+    done_with_you: 999999,
+    free: 10, // Free tier baseline (10 replies/month)
     solo: isLite ? 25 : 100,
     team: isLite ? 100 : 1000,
     agency: isLite ? 250 : 999999,
@@ -26,42 +70,10 @@ export function getPlanLimits(deployment: DeploymentTier): Record<UserPlan, numb
 }
 
 export const PLAN_LABELS: Record<UserPlan, string> = {
-  free: "Free",
-  solo: "Solo",
-  team: "Team",
-  agency: "Agency",
-};
-
-export interface ReplyFlowTierPlan {
-  name: string;
-  description: string;
-  priceMonthlyUsd: number;
-  features: string[];
-}
-
-export const REPLYFLOW_TIERS: Record<"core" | "done_with_you", ReplyFlowTierPlan> = {
-  core: {
-    name: "Core SaaS",
-    description: "Autonomous customer reply drafting and inbox triage for founders and operators.",
-    priceMonthlyUsd: 149,
-    features: [
-      "Full ReplyFlow web dashboard & analytics",
-      "Unlimited AI reply generation & auto-drafting",
-      "Email & support ticket integration",
-      "Custom brand voice & sentiment tuning",
-      "Standard email & chat support",
-    ],
-  },
-  done_with_you: {
-    name: "Done-With-You",
-    description: "Guided onboarding, customized prompt engineering, and custom webhook integration.",
-    priceMonthlyUsd: 299,
-    features: [
-      "Everything in Core SaaS",
-      "Dedicated 1-on-1 onboarding & prompt audit",
-      "Custom workflow & ticketing system integration",
-      "Priority SLA and engineering channel support",
-      "Bi-weekly performance & accuracy reviews",
-    ],
-  },
+  core: "Core",
+  done_with_you: "Done-With-You",
+  free: "Free Tier",
+  solo: "Solo (Legacy)",
+  team: "Team (Legacy)",
+  agency: "Agency (Legacy)",
 };

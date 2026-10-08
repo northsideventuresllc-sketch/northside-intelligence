@@ -12,6 +12,7 @@ import type { ToolPricing } from "@/lib/billing/tool-pricing";
 import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
 import { getSector3ToolProfile } from "@/lib/billing/sector3-tool-pricing";
 import type { Sector3ToolRuntimeConfig } from "@/lib/sector3-tools/types";
+import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 
 interface Props {
   config: Sector3ToolRuntimeConfig;
@@ -87,11 +88,18 @@ export function Sector3ToolPricingSection({ config, pricing }: Props) {
                 variant="portal"
               />
             ) : userHasUnlimitedToolAccess(billingState, config.slug) ? (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-                <LoggedInSubscriptionActions
-                  billingState={billingState}
-                  context="tool"
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+                  <LoggedInSubscriptionActions
+                    billingState={billingState}
+                    context="tool"
+                    toolSlug={config.slug}
+                    variant="portal"
+                  />
+                </div>
+                <AgenticTierComingSoonCard
                   toolSlug={config.slug}
+                  toolName={config.displayName}
                   variant="portal"
                 />
               </div>

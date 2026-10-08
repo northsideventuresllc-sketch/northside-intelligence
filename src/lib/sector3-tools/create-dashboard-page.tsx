@@ -27,7 +27,23 @@ export function createSector3DashboardPage(
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) redirect(auth.portalSignInUrl());
+    if (!user) {
+      return (
+        <Sector3ToolDashboard
+          config={config}
+          apiPath={options.apiPath}
+          fields={options.fields}
+          primaryLabel={options.primaryLabel}
+          history={[]}
+          email=""
+          planLabel="Free Trial"
+          usageCount={0}
+          usageLimit={config.freeTierCap}
+          hasUnlimitedAccess={false}
+          niTier="free"
+        />
+      );
+    }
 
     const admin = await createSector3ServiceClient();
     await ensureSector3ToolProfile(admin, config, user.id, user.email);

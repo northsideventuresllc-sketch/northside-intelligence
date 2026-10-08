@@ -1,7 +1,5 @@
 "use client";
 
-import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
-
 import { useState } from "react";
 import Link from "next/link";
 import { SignalDeskBackground } from "@/components/signaldesk/SignalDeskBackground";
@@ -10,6 +8,7 @@ import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3TierSwitcher } from "@/components/sector3/Sector3TierSwitcher";
 import { Sector3MCPDrawer } from "@/components/sector3/Sector3MCPDrawer";
 import { UniversalITFeedbackWidget } from "@/components/feedback/UniversalITFeedbackWidget";
+import { TrialCodeRedemptionBox } from "@/components/billing/TrialCodeRedemptionBox";
 
 const FOCUS_AREAS = [
   { id: "Competitor", label: "Competitor Moves", icon: "🎯", desc: "Pricing shifts, new features, and stealth launches" },
@@ -104,7 +103,6 @@ export default function SignalDeskDashboardClient({
       <SignalDeskNav email={email} planLabel={planLabel} />
 
       <main className="relative z-10 mx-auto max-w-6xl px-6 py-10 space-y-8">
-        <AutopilotComingSoonCard />
         {/* Tier Switcher & Header Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -140,6 +138,17 @@ export default function SignalDeskDashboardClient({
             </span>
           </div>
         </div>
+
+        {/* 7-Day Free Trial Code Redemption */}
+        {!hasUnlimitedAccess && (
+          <TrialCodeRedemptionBox
+            toolSlug="signaldesk"
+            toolName="Signal Desk"
+            brandColor="#10B981"
+            variant="signaldesk"
+            isLoggedIn={!!email}
+          />
+        )}
 
         {/* Signal Scanner Input Form */}
         <div className="rounded-3xl border border-white/10 bg-black/60 p-6 md:p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] space-y-6">

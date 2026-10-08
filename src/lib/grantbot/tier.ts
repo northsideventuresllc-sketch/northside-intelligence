@@ -18,7 +18,7 @@ export function normalizeGrantBotTier(tier: string | null | undefined): GrantBot
 export function getTierLimits(deployment: DeploymentTier): Record<GrantBotTier, number> {
   const isLite = deployment === "lite";
   return {
-    free: isLite ? 2 : 5,
+    free: 10,
     lite: isLite ? 10 : 25,
     pro: isLite ? 50 : 999999,
   };

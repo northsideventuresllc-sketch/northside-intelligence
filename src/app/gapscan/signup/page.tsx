@@ -1,9 +1,16 @@
 import { redirect } from "next/navigation";
-import { createSector3ToolAuth } from "@/lib/sector3-tools/auth";
-import { GAPSCAN_CONFIG } from "@/lib/sector3-tools/configs";
 
-const auth = createSector3ToolAuth(GAPSCAN_CONFIG);
-
-export default function GapScanSignupPage() {
-  redirect(auth.portalSignUpUrl());
+export default async function GapScanSignupPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ code?: string; trial?: string; trial_code?: string; trialCode?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const code = params?.code || params?.trial || params?.trial_code || params?.trialCode;
+  const query = new URLSearchParams({
+    returnTo: "/gapscan/dashboard",
+    tool: "gapscan",
+  });
+  if (code) query.set("code", code);
+  redirect(`/auth/signup?${query.toString()}`);
 }

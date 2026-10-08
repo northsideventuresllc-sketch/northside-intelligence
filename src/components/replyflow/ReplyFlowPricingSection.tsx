@@ -6,6 +6,7 @@ import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscr
 import type { UserBillingState } from "@/lib/billing/entitlements";
 import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
 import { REPLYFLOW_TIERS } from "@/lib/replyflow/tier";
+import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 
 interface ReplyFlowPricingSectionProps {
   showTitle?: boolean;
@@ -112,6 +113,11 @@ export function ReplyFlowPricingSection({ showTitle = true }: ReplyFlowPricingSe
                 variant="replyflow"
               />
             </div>
+            <AgenticTierComingSoonCard
+              toolSlug="replyflow"
+              toolName="ReplyFlow"
+              variant="replyflow"
+            />
           </div>
         ) : (
           <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -217,61 +223,12 @@ export function ReplyFlowPricingSection({ showTitle = true }: ReplyFlowPricingSe
               </div>
             </div>
 
-            {/* Agentic Headless Tier (Featured) */}
-            <div className="rf-glass relative flex flex-col justify-between rounded-3xl border-2 border-rf-rose/60 p-6 shadow-rf-glow transition hover:border-rf-rose">
-              <span className="absolute -top-3 right-6 rounded-full bg-gradient-to-r from-rf-rose to-rf-coral px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-rf-glow">
-                Most Powerful
-              </span>
-              <div>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-1.5">
-                    <span>⚡ Agentic Tier</span>
-                  </h3>
-                  <span className="rounded-full border border-cyan-400/40 bg-cyan-950/40 px-2 py-0.5 text-[10px] font-mono text-cyan-300">
-                    24/7 Worker
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-rf-muted">Autonomous headless triage worker + custom MCPs.</p>
-                <div className="mt-4">
-                  <span className="text-3xl font-extrabold text-white">$349</span>
-                  <span className="text-xs font-medium text-rf-muted">/month</span>
-                  <p className="mt-1 text-[11px] text-cyan-300">
-                    Dedicated Agent Key + FastMCP tools
-                  </p>
-                </div>
-                <ul className="mt-5 space-y-2.5 text-xs text-rf-muted">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-cyan-400">✓</span>
-                    <span>Everything in Core SaaS</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-cyan-400">✓</span>
-                    <span>Dedicated Agent API Key (<code className="text-cyan-300">ni_agt_...</code>)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-cyan-400">✓</span>
-                    <span>Gmail & Zendesk headless auto-drafting</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-cyan-400">✓</span>
-                    <span>FastMCP schema for Claude & Antigravity</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 text-cyan-400">✓</span>
-                    <span>Passive edit-diff learning engine sync</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="mt-6">
-                <Link
-                  href="/auth/signup?returnTo=/replyflow/settings"
-                  className="block w-full rounded-xl bg-gradient-to-r from-rf-rose via-rf-coral to-rf-violet py-3 text-center text-xs font-bold text-white shadow-rf-glow transition hover:opacity-95"
-                >
-                  Deploy Agentic Tier ($349/mo)
-                </Link>
-              </div>
-            </div>
+            {/* Agentic Tier Coming Soon (Strictly No Prices) */}
+            <AgenticTierComingSoonCard
+              toolSlug="replyflow"
+              toolName="ReplyFlow"
+              variant="replyflow"
+            />
           </div>
         )}
 

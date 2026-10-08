@@ -1,5 +1,6 @@
 import { ToolFreePricingCard } from "@/components/billing/ToolFreePricingCard";
 import { ToolMonthlyPricingCard } from "@/components/billing/ToolMonthlyPricingCard";
+import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 import type { ToolPricing } from "@/lib/billing/tool-pricing";
 import { getSector3FreeTierSpec } from "@/lib/billing/sector3-tool-pricing";
 
@@ -31,7 +32,7 @@ export function ToolFreemiumPricingGrid({
         Start free with {freeTier.summary}, or subscribe for unlimited access.
       </p>
 
-      <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
+      <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
         <ToolFreePricingCard
           toolSlug={toolSlug}
           toolName={toolName}
@@ -45,6 +46,11 @@ export function ToolFreemiumPricingGrid({
           pricing={pricing}
           isLoggedIn={isLoggedIn}
           returnPath={returnPath}
+          variant={variant}
+        />
+        <AgenticTierComingSoonCard
+          toolSlug={toolSlug}
+          toolName={toolName}
           variant={variant}
         />
       </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 import { useRouter } from "next/navigation";
 import { GrantBotBackground } from "@/components/grantbot/GrantBotBackground";
 import { GrantBotNav } from "@/components/grantbot/GrantBotNav";
@@ -24,6 +23,9 @@ import {
   parseStoredClarifyingAnswers,
   type ClarifyingQuestion,
 } from "@/lib/grantbot/questions";
+import { Sector3TierSwitcher } from "@/components/sector3/Sector3TierSwitcher";
+import { Sector3MCPDrawer } from "@/components/sector3/Sector3MCPDrawer";
+import { TrialCodeRedemptionBox } from "@/components/billing/TrialCodeRedemptionBox";
 import { createBrowserClient } from "@supabase/ssr";
 
 const CATEGORIES = [
@@ -94,6 +96,7 @@ export default function DashboardClient({
   const [used, setUsed] = useState(grantsUsed);
   const [history, setHistory] = useState(initialHistory);
   const [chatOpen, setChatOpen] = useState(false);
+  const [mcpDrawerOpen, setMcpDrawerOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const showResults = listings.length > 0;
@@ -136,6 +139,10 @@ export default function DashboardClient({
     setQuestionsLoading(false);
 
     if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = "/auth/signin?returnTo=/grantbot";
+        return;
+      }
       setError(data.error || "Something went wrong");
       return;
     }
@@ -168,6 +175,10 @@ export default function DashboardClient({
     setSearchLoading(false);
 
     if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = "/auth/signin?returnTo=/grantbot";
+        return;
+      }
       setError(data.error || "Something went wrong");
       return;
     }
@@ -222,6 +233,10 @@ export default function DashboardClient({
     const data = await res.json();
 
     if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = "/auth/signin?returnTo=/grantbot";
+        return;
+      }
       setDrafts((prev) => ({
         ...prev,
         [listing.id]: { loading: false, error: data.error || "Could not generate draft" },
@@ -336,11 +351,17 @@ export default function DashboardClient({
       <Sector3LoadingBar loading={isGenerating} variant="grantbot" />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
-        <AutopilotComingSoonCard />
         {gated && gateContent ? (
           gateContent
         ) : (
           <>
+            <Sector3TierSwitcher
+              toolSlug="grantbot"
+              brandColor={grantbotBrand.brandColor}
+              isAgenticUser={planLabel?.toLowerCase().includes("agentic")}
+              onOpenAgenticDrawer={() => setMcpDrawerOpen(true)}
+            />
+
             <div className="gb-glass rounded-2xl p-5">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-medium text-white/80">Monthly Generations</span>
@@ -372,6 +393,17 @@ export default function DashboardClient({
                 </div>
               )}
             </div>
+
+            {/* 7-Day Free Trial Code Redemption */}
+            {!hasUnlimitedAccess && (
+              <TrialCodeRedemptionBox
+                toolSlug="grantbot"
+                toolName="GrantBot"
+                brandColor={grantbotBrand.brandColor}
+                variant="grantbot"
+                isLoggedIn={!!email}
+              />
+            )}
 
             {!showResults && (
             <>
@@ -607,6 +639,15 @@ export default function DashboardClient({
                 inputs: { orgDescription, category },
                 extra: { listings },
               }}
+            />
+
+            <Sector3MCPDrawer
+              open={mcpDrawerOpen}
+              onClose={() => setMcpDrawerOpen(false)}
+              toolSlug="grantbot"
+              toolName="GrantBot"
+              brandColor={grantbotBrand.brandColor}
+              isAgenticUser={planLabel?.toLowerCase().includes("agentic")}
             />
           </>
         )}

@@ -64,6 +64,29 @@ export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAcces
   const ownsTool = state.ownedToolSlugs.includes("replyflow");
   if (ownsTool) {
     const entry = state.toolkit.find((t) => t.toolSlug === "replyflow");
+    if (entry?.accessType === "trial") {
+      const isTrialValid = !entry.expiresAt || new Date(entry.expiresAt) > new Date();
+      if (isTrialValid) {
+        return {
+          plan: "trial",
+          planLabel: "7-Day Free Trial",
+          repliesLimit: UNLIMITED_REPLIES,
+          hasUnlimitedAccess: true,
+          niTier: state.niTier,
+          ownsTool: true,
+          canUseTool: true,
+        };
+      }
+      return {
+        plan: "free",
+        planLabel: "Free Tier",
+        repliesLimit: 10,
+        hasUnlimitedAccess: false,
+        niTier: state.niTier,
+        ownsTool: true,
+        canUseTool: true,
+      };
+    }
     if (entry?.accessType === "lifetime" || entry?.accessType === "tool_subscription" || entry?.accessType === "ni_plan") {
       return {
         plan: entry.accessType === "ni_plan" ? state.niTier : entry.accessType,
@@ -75,16 +98,39 @@ export async function getReplyFlowAccess(userId: string): Promise<ReplyFlowAcces
         canUseTool: true,
       };
     }
+    if (entry?.accessType === "free") {
+      return {
+        plan: "free",
+        planLabel: "Free Tier",
+        repliesLimit: 10,
+        hasUnlimitedAccess: false,
+        niTier: state.niTier,
+        ownsTool: true,
+        canUseTool: true,
+      };
+    }
+  }
+
+  if (legacyPlan === "core" || legacyPlan === "done_with_you") {
+    return {
+      plan: legacyPlan,
+      planLabel: PLAN_LABELS[legacyPlan] ?? (legacyPlan === "core" ? "Core" : "Done-With-You"),
+      repliesLimit: UNLIMITED_REPLIES,
+      hasUnlimitedAccess: true,
+      niTier: state.niTier,
+      ownsTool: true,
+      canUseTool: true,
+    };
   }
 
   return {
     plan: legacyPlan,
-    planLabel: PLAN_LABELS[legacyPlan],
-    repliesLimit: legacyLimits[legacyPlan],
+    planLabel: PLAN_LABELS[legacyPlan] ?? "Retired Free Tier",
+    repliesLimit: legacyLimits[legacyPlan] ?? 0,
     hasUnlimitedAccess: false,
     niTier: state.niTier,
     ownsTool,
-    canUseTool: true,
+    canUseTool: legacyPlan !== "free" && legacyLimits[legacyPlan] > 0,
   };
 }
 

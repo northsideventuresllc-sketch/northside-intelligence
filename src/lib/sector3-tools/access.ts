@@ -84,6 +84,31 @@ export async function getSector3ToolAccess(
   const ownsTool = state.ownedToolSlugs.includes(config.slug);
   if (ownsTool) {
     const entry = state.toolkit.find((t) => t.toolSlug === config.slug);
+    if (entry?.accessType === "trial") {
+      const isTrialValid = !entry.expiresAt || new Date(entry.expiresAt) > new Date();
+      if (isTrialValid) {
+        return {
+          plan: "trial",
+          planLabel: "7-Day Free Trial",
+          usageLimit: UNLIMITED,
+          hasUnlimitedAccess: true,
+          niTier: state.niTier,
+          ownsTool: true,
+          canUseTool: true,
+          canAccessTechnicalView: true,
+        };
+      }
+      return {
+        plan: "free",
+        planLabel: "Free Tier",
+        usageLimit: config.freeTierCap || 10,
+        hasUnlimitedAccess: false,
+        niTier: state.niTier,
+        ownsTool: true,
+        canUseTool: true,
+        canAccessTechnicalView: false,
+      };
+    }
     if (
       entry?.accessType === "lifetime" ||
       entry?.accessType === "tool_subscription" ||
@@ -99,6 +124,18 @@ export async function getSector3ToolAccess(
         ownsTool: true,
         canUseTool: true,
         canAccessTechnicalView: true,
+      };
+    }
+    if (entry?.accessType === "free") {
+      return {
+        plan: "free",
+        planLabel: "Free Tier",
+        usageLimit: config.freeTierCap || 10,
+        hasUnlimitedAccess: false,
+        niTier: state.niTier,
+        ownsTool: true,
+        canUseTool: true,
+        canAccessTechnicalView: false,
       };
     }
   }

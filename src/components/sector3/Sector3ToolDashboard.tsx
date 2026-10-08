@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sector3ToolBackground } from "@/components/sector3/Sector3ToolBackground";
-import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 import { Sector3ToolNav } from "@/components/sector3/Sector3ToolNav";
 import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3ToolDashboardFooter } from "@/components/sector3/Sector3ToolHelpModal";
@@ -24,6 +23,9 @@ import {
 import type { Sector3ToolRuntimeConfig, Sector3SessionRow } from "@/lib/sector3-tools/types";
 import { Sector3ClarificationPanel } from "@/components/sector3/Sector3ClarificationPanel";
 import type { Sector3ClarifyingQuestion } from "@/lib/sector3-tools/clarification";
+import { Sector3TierSwitcher } from "@/components/sector3/Sector3TierSwitcher";
+import { Sector3MCPDrawer } from "@/components/sector3/Sector3MCPDrawer";
+import { TrialCodeRedemptionBox } from "@/components/billing/TrialCodeRedemptionBox";
 import { createBrowserClient } from "@supabase/ssr";
 
 type FlowStep = "input" | "clarify";
@@ -102,6 +104,7 @@ export function Sector3ToolDashboard({
   const [clarifyingQuestions, setClarifyingQuestions] = useState<Sector3ClarifyingQuestion[]>([]);
   const [clarifyingAnswers, setClarifyingAnswers] = useState<Record<string, string[]>>({});
   const [newChatTrigger, setNewChatTrigger] = useState(0);
+  const [mcpDrawerOpen, setMcpDrawerOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const chatConfig = getSector3ToolChatConfig(config.slug);
@@ -165,6 +168,10 @@ export function Sector3ToolDashboard({
     setLoading(false);
 
     if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = `/auth/signin?returnTo=${encodeURIComponent(config.basePath)}`;
+        return;
+      }
       setError(data.error ?? "Generation failed");
       return;
     }
@@ -219,6 +226,10 @@ export function Sector3ToolDashboard({
     setLoading(false);
 
     if (!assessRes.ok) {
+      if (assessRes.status === 401) {
+        window.location.href = `/auth/signin?returnTo=${encodeURIComponent(config.basePath)}`;
+        return;
+      }
       setError(assessData.error ?? "Assessment failed");
       return;
     }
@@ -289,11 +300,17 @@ export function Sector3ToolDashboard({
       <Sector3LoadingBar loading={loading} />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
-        <AutopilotComingSoonCard />
         {gated && gateContent ? (
           gateContent
         ) : (
           <>
+            <Sector3TierSwitcher
+              toolSlug={config.slug}
+              brandColor={brand.brandColor}
+              isAgenticUser={planLabel?.toLowerCase().includes("agentic")}
+              onOpenAgenticDrawer={() => setMcpDrawerOpen(true)}
+            />
+
             <div
               className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
               style={glassStyle}
@@ -334,6 +351,17 @@ export function Sector3ToolDashboard({
                 </div>
               )}
             </div>
+
+            {/* 7-Day Free Trial Code Redemption */}
+            {!hasUnlimitedAccess && (
+              <TrialCodeRedemptionBox
+                toolSlug={config.slug}
+                toolName={config.name}
+                brandColor={brand.brandColor}
+                variant={(["replyflow", "grantbot", "signaldesk", "gapscan", "bridgeai"].includes(config.slug) ? config.slug : "portal") as any}
+                isLoggedIn={!!email}
+              />
+            )}
 
             {chatConfig?.enabled && (
               <div className="flex justify-end">
@@ -543,6 +571,15 @@ export function Sector3ToolDashboard({
                 inputs: lastContext,
                 result,
               }}
+            />
+
+            <Sector3MCPDrawer
+              open={mcpDrawerOpen}
+              onClose={() => setMcpDrawerOpen(false)}
+              toolSlug={config.slug}
+              toolName={config.displayName}
+              brandColor={brand.brandColor}
+              isAgenticUser={planLabel?.toLowerCase().includes("agentic")}
             />
           </>
         )}

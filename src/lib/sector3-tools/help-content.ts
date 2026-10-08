@@ -33,7 +33,7 @@ const HELP_BY_SLUG: Record<Sector3ToolSlug, Sector3ToolHelpContent> = {
       {
         question: "What counts toward my monthly limit?",
         answer:
-          "Each generated reply counts as one use. Unlimited NI subscribers on ReplyFlow have no cap; free tier includes a monthly allowance shown on your dashboard.",
+          "Each generated reply counts as one use. Active Core ($149/mo) and Done-With-You ($299/mo) subscribers enjoy unlimited generation. The public free tier for cold signups has been retired.",
       },
     ],
   },
