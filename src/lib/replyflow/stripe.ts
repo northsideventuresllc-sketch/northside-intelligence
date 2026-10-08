@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { getDeploymentTier, getPlanLimits, normalizeUserPlan, type UserPlan } from "@/lib/replyflow/tier";
+import { getDeploymentTier, getPlanLimits, type UserPlan } from "@/lib/replyflow/tier";
 import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 
 let stripeClient: Stripe | null = null;
@@ -44,15 +44,25 @@ export { PLAN_LABELS } from "@/lib/replyflow/tier";
  * session) and the webhook (resolving the paid plan) must use the exact same
  * mapping, or a real payment can silently resolve to "free" with no error.
  */
-export const REPLYFLOW_PRICE_IDS: Record<"solo" | "team" | "agency", string> = {
+export const REPLYFLOW_PRICE_IDS: Record<
+  "core" | "done_with_you" | "solo" | "team" | "agency",
+  string
+> = {
+  core: process.env.STRIPE_REPLYFLOW_CORE_PRICE_ID ?? "price_replyflow_core_149",
+  done_with_you: process.env.STRIPE_REPLYFLOW_DWY_PRICE_ID ?? "price_replyflow_dwy_299",
   solo: process.env.STRIPE_SOLO_PRICE_ID ?? "price_1Te0s8QXb5thRQWgqVQdW8Rl",
   team: process.env.STRIPE_TEAM_PRICE_ID ?? "price_1Te0sBQXb5thRQWgYzuWMxTd",
   agency: process.env.STRIPE_AGENCY_PRICE_ID ?? "price_1Te0sEQXb5thRQWgCiAzrClk",
 };
 
+export const REPLYFLOW_SETUP_PRICE_ID =
+  process.env.STRIPE_REPLYFLOW_SETUP_PRICE_ID ?? "price_replyflow_setup_500";
+
 export function getPlanFromPriceId(priceId: string | undefined): UserPlan {
   if (!priceId) return "free";
-  const match = (Object.entries(REPLYFLOW_PRICE_IDS) as [string, string][]).find(
+  if (priceId === REPLYFLOW_PRICE_IDS.core) return "core";
+  if (priceId === REPLYFLOW_PRICE_IDS.done_with_you) return "done_with_you";
+  const match = (Object.entries(REPLYFLOW_PRICE_IDS) as [UserPlan, string][]).find(
     ([, id]) => id === priceId
   );
   if (!match) {
@@ -61,5 +71,5 @@ export function getPlanFromPriceId(priceId: string | undefined): UserPlan {
     });
     return "free";
   }
-  return normalizeUserPlan(match[0]);
+  return match[0];
 }

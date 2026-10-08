@@ -12,7 +12,7 @@ import {
 } from "@/lib/billing/ni-tiers";
 import { createServiceClient } from "@/lib/supabase/server";
 
-export type ToolkitAccessType = "free" | "lifetime" | "tool_subscription" | "ni_plan";
+export type ToolkitAccessType = "free" | "lifetime" | "tool_subscription" | "ni_plan" | "trial";
 
 export const UNLIMITED_SWAP_COOLDOWN_MS = 72 * 60 * 60 * 1000;
 export const BILLING_GRACE_PERIOD_MS = 48 * 60 * 60 * 1000;
@@ -65,7 +65,19 @@ interface SubscriptionRow {
 
 export async function expireStaleEntitlements(): Promise<void> {
   const supabase = createServiceClient();
-  await supabase.rpc("expire_ni_entitlements");
+  try {
+    await supabase.rpc("expire_ni_entitlements");
+  } catch (err) {
+    console.warn("RPC expire_ni_entitlements error:", err);
+  }
+
+  // Safety net: ensure any trial entries whose expires_at < now() are marked 'free'
+  const now = new Date().toISOString();
+  await supabase
+    .from("ni_toolkit")
+    .update({ access_type: "free", expires_at: null, updated_at: now })
+    .eq("access_type", "trial")
+    .lt("expires_at", now);
 }
 
 /** Keep master account toolkit rows in sync with the current intelligence tool catalog. */
@@ -211,6 +223,10 @@ export function userHasUnlimitedToolAccess(state: UserBillingState, toolSlug: st
   if (!entry) return false;
   if (entry.accessType === "free") return false;
   if (entry.accessType === "lifetime") return true;
+  if (entry.accessType === "trial") {
+    if (!entry.expiresAt) return true;
+    return new Date(entry.expiresAt) > new Date();
+  }
   if (entry.accessType === "tool_subscription" || entry.accessType === "ni_plan") {
     if (!entry.expiresAt) return true;
     return isSubscriptionInGracePeriod(entry.expiresAt) || new Date(entry.expiresAt) > new Date();
@@ -218,6 +234,35 @@ export function userHasUnlimitedToolAccess(state: UserBillingState, toolSlug: st
   return false;
 }
 
+export function userHasActiveTrial(state: UserBillingState, toolSlug: string): boolean {
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry || entry.accessType !== "trial") return false;
+  if (!entry.expiresAt) return true;
+  return new Date(entry.expiresAt) > new Date();
+}
+
+export function getTrialDaysRemaining(state: UserBillingState, toolSlug: string): number | null {
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry || entry.accessType !== "trial" || !entry.expiresAt) return null;
+  const diff = new Date(entry.expiresAt).getTime() - Date.now();
+  if (diff <= 0) return 0;
+  return Math.ceil(diff / (24 * 60 * 60 * 1000));
+}
+
+export function userHasAgenticAccess(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
+  if (tierHasUnlimitedToolAccess(state.niTier)) return userHasToolInCase(state, toolSlug);
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry) return false;
+  if (entry.accessType === "tool_subscription") {
+    if (!entry.expiresAt) return true;
+    return isSubscriptionInGracePeriod(entry.expiresAt) || new Date(entry.expiresAt) > new Date();
+  }
+  if (entry.accessType === "ni_plan" && (state.niTier === "core" || state.niTier === "pro" || state.niTier === "power")) {
+    return true;
+  }
+  return false;
+}
 
 export function shouldHideToolSubscriptions(state: UserBillingState, toolSlug: string): boolean {
   if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
@@ -322,18 +367,11 @@ export function userHasAgenticAccess(
   toolSlug: string,
   toolProfileTier?: string
 ): boolean {
-  if (masterAccountHasProductAccess(billingState.isMasterAccount, toolSlug)) return true;
+  if (billingState.isMasterAccount) return true;
   if (billingState.niTier === "power" || billingState.niTier === "pro") return true;
   if (toolProfileTier === "agentic" || toolProfileTier === "pro") return true;
-  if (tierHasUnlimitedToolAccess(billingState.niTier)) return userHasToolInCase(billingState, toolSlug);
   const toolEntry = billingState.toolkit.find((t) => t.toolSlug === toolSlug);
-  if (!toolEntry) return false;
-  if (toolEntry.accessType === "lifetime") return true;
-  if (toolEntry.accessType === "tool_subscription") {
-    if (!toolEntry.expiresAt) return true;
-    return isSubscriptionInGracePeriod(toolEntry.expiresAt) || new Date(toolEntry.expiresAt) > new Date();
-  }
-  if (toolEntry.accessType === "ni_plan" && billingState.niTier === "core") {
+  if (toolEntry && (toolEntry.accessType === "lifetime" || toolEntry.accessType === "tool_subscription")) {
     return true;
   }
   return false;

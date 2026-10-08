@@ -1,7 +1,5 @@
 "use client";
 
-import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
-
 import { useState } from "react";
 import Link from "next/link";
 import { BridgeAIBackground } from "@/components/bridgeai/BridgeAIBackground";
@@ -10,6 +8,7 @@ import { Sector3LoadingBar } from "@/components/sector3/Sector3LoadingBar";
 import { Sector3TierSwitcher } from "@/components/sector3/Sector3TierSwitcher";
 import { Sector3MCPDrawer } from "@/components/sector3/Sector3MCPDrawer";
 import { UniversalITFeedbackWidget } from "@/components/feedback/UniversalITFeedbackWidget";
+import { TrialCodeRedemptionBox } from "@/components/billing/TrialCodeRedemptionBox";
 
 const SYSTEM_PRESETS = [
   { id: "stripe", name: "Stripe", icon: "💳", category: "Payments" },
@@ -110,7 +109,6 @@ export default function BridgeAIDashboardClient({
       <BridgeAINav email={email} planLabel={planLabel} />
 
       <main className="relative z-10 mx-auto max-w-6xl px-6 py-10 space-y-8">
-        <AutopilotComingSoonCard />
         {/* Tier Switcher & Header Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -146,6 +144,17 @@ export default function BridgeAIDashboardClient({
             </span>
           </div>
         </div>
+
+        {/* 7-Day Free Trial Code Redemption */}
+        {!hasUnlimitedAccess && (
+          <TrialCodeRedemptionBox
+            toolSlug="bridgeai"
+            toolName="BridgeAI"
+            brandColor="#8A2BE2"
+            variant="bridgeai"
+            isLoggedIn={!!email}
+          />
+        )}
 
         {/* Visual Synapse Node Connector Form */}
         <div className="rounded-3xl border border-white/10 bg-black/60 p-6 md:p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] space-y-6">

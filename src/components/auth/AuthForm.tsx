@@ -31,6 +31,16 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [pendingId, setPendingId] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const initialTrialCode = useMemo(() => {
+    return (
+      searchParams.get("code") ||
+      searchParams.get("trial") ||
+      searchParams.get("trialCode") ||
+      searchParams.get("trial_code") ||
+      ""
+    ).toUpperCase().trim();
+  }, [searchParams]);
+  const [trialCode, setTrialCode] = useState(initialTrialCode);
 
   const alternateHref = useMemo(() => {
     const other: AuthMode = mode === "signup" ? "signin" : "signup";
@@ -101,7 +111,11 @@ export function AuthForm({ mode }: AuthFormProps) {
       const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, pendingId: pendingId || undefined }),
+        body: JSON.stringify({
+          code,
+          pendingId: pendingId || undefined,
+          trialCode: trialCode || undefined,
+        }),
       });
 
       const data = (await res.json()) as { error?: string; returnTo?: string };
@@ -221,6 +235,30 @@ export function AuthForm({ mode }: AuthFormProps) {
                   placeholder="At least 8 characters"
                 />
               </div>
+              {mode === "signup" && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="trialCode" className="block text-sm text-ni-muted">
+                      7-Day Free Trial Code
+                    </label>
+                    <span className="text-[11px] font-semibold text-cyan-400">
+                      Optional Pass
+                    </span>
+                  </div>
+                  <input
+                    id="trialCode"
+                    type="text"
+                    value={trialCode}
+                    onChange={(e) => setTrialCode(e.target.value.toUpperCase())}
+                    autoComplete="off"
+                    className="w-full uppercase font-mono tracking-wider rounded-xl border border-white/10 bg-ni-bg/80 px-4 py-3 text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                    placeholder="e.g. NORTHSIDE-7DAY"
+                  />
+                  <p className="mt-1 text-[11px] text-white/50">
+                    Received an outreach access pass? Enter it here to unlock 7 days of full tool access.
+                  </p>
+                </div>
+              )}
               {mode === "signup" && (
                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
                   <input

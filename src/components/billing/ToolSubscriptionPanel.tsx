@@ -4,6 +4,7 @@ import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import type { UserBillingState } from "@/lib/billing/entitlements";
 import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
 import type { ToolPricing } from "@/lib/billing/tool-pricing";
+import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 
 interface ToolSubscriptionPanelProps {
   toolSlug: string;
@@ -87,6 +88,14 @@ export function ToolSubscriptionPanel({
           </div>
         </div>
       )}
+
+      <div className="pt-2">
+        <AgenticTierComingSoonCard
+          toolSlug={toolSlug}
+          toolName={toolName}
+          variant={variant}
+        />
+      </div>
     </div>
   );
 }

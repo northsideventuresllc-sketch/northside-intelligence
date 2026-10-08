@@ -81,7 +81,7 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "medium",
-    freeTierMonthlyCap: 0,
+    freeTierMonthlyCap: 10,
     freeTierUnit: "replies",
   },
   {
@@ -93,7 +93,7 @@ export const SECTOR3_TOOL_PRICING_CATALOG: Sector3ToolPricingProfile[] = [
     annualMonthsFactor: 10,
     lifetimeMonthsFactor: 21,
     demandSignal: "medium",
-    freeTierMonthlyCap: 5,
+    freeTierMonthlyCap: 10,
     freeTierUnit: "grants",
   },
   {
@@ -174,20 +174,15 @@ export function formatFreeTierHeroLabel(toolSlug: string): string {
 export interface Sector3AgenticPricing {
   standardMonthlyUsd: number;
   agenticMonthlyUsd: number;
-  saasMonthlyPrice: number;
-  agenticMonthlyPrice: number;
   mcps: Sector3DefaultMcp[];
 }
 
 export function getSector3AgenticPricing(toolSlug: string): Sector3AgenticPricing {
   const profile = getSector3ToolProfile(toolSlug);
   const base = profile?.baseMonthlyUsd ?? 20;
-  const agentic = Math.round(base * 2.5);
   return {
     standardMonthlyUsd: base,
-    agenticMonthlyUsd: agentic,
-    saasMonthlyPrice: base,
-    agenticMonthlyPrice: agentic,
+    agenticMonthlyUsd: Math.round(base * 2.5),
     mcps: SECTOR3_DEFAULT_MCPS[toolSlug] ?? [],
   };
 }

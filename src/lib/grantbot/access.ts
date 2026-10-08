@@ -69,6 +69,29 @@ export async function getGrantBotAccess(userId: string): Promise<GrantBotAccess>
   const ownsTool = state.ownedToolSlugs.includes("grantbot");
   if (ownsTool) {
     const entry = state.toolkit.find((t) => t.toolSlug === "grantbot");
+    if (entry?.accessType === "trial") {
+      const isTrialValid = !entry.expiresAt || new Date(entry.expiresAt) > new Date();
+      if (isTrialValid) {
+        return {
+          plan: "trial",
+          planLabel: "7-Day Free Trial",
+          grantsLimit: UNLIMITED_GRANTS,
+          hasUnlimitedAccess: true,
+          niTier: state.niTier,
+          ownsTool: true,
+          canUseTool: true,
+        };
+      }
+      return {
+        plan: "free",
+        planLabel: "Free Tier",
+        grantsLimit: 10,
+        hasUnlimitedAccess: false,
+        niTier: state.niTier,
+        ownsTool: true,
+        canUseTool: true,
+      };
+    }
     if (
       entry?.accessType === "lifetime" ||
       entry?.accessType === "tool_subscription" ||
@@ -79,6 +102,17 @@ export async function getGrantBotAccess(userId: string): Promise<GrantBotAccess>
         planLabel: entry.accessType === "ni_plan" ? `NI ${state.niTier}` : "Tool Subscription",
         grantsLimit: UNLIMITED_GRANTS,
         hasUnlimitedAccess: true,
+        niTier: state.niTier,
+        ownsTool: true,
+        canUseTool: true,
+      };
+    }
+    if (entry?.accessType === "free") {
+      return {
+        plan: "free",
+        planLabel: "Free Tier",
+        grantsLimit: 10,
+        hasUnlimitedAccess: false,
         niTier: state.niTier,
         ownsTool: true,
         canUseTool: true,

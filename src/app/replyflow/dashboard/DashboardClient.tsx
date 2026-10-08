@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AutopilotComingSoonCard } from "@/components/it/AutopilotComingSoonCard";
 import { useRouter } from "next/navigation";
 import { ReplyFlowBackground } from "@/components/replyflow/ReplyFlowBackground";
 import { ReplyFlowNav } from "@/components/replyflow/ReplyFlowNav";
@@ -16,6 +15,9 @@ import { replyflowPath } from "@/lib/replyflow/auth";
 import { isHighestPaidNiTier } from "@/lib/billing/subscription-actions";
 import type { NiTier } from "@/lib/billing/ni-tiers";
 import type { ReplyFlowHistoryEntry } from "@/lib/replyflow/history";
+import { Sector3TierSwitcher } from "@/components/sector3/Sector3TierSwitcher";
+import { Sector3MCPDrawer } from "@/components/sector3/Sector3MCPDrawer";
+import { TrialCodeRedemptionBox } from "@/components/billing/TrialCodeRedemptionBox";
 import { createBrowserClient } from "@supabase/ssr";
 
 const TONES = ["Professional", "Friendly", "Empathetic", "Firm"] as const;
@@ -78,6 +80,7 @@ export default function DashboardClient({
   const [used, setUsed] = useState(repliesUsed);
   const [history, setHistory] = useState(initialHistory);
   const [viewMode, setViewMode] = useState<"input" | "results">("input");
+  const [mcpDrawerOpen, setMcpDrawerOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient();
   const showResults = viewMode === "results" && !!reply;
@@ -99,6 +102,10 @@ export default function DashboardClient({
     const data = await res.json();
     setLoading(false);
     if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = `/auth/signin?returnTo=/replyflow`;
+        return;
+      }
       setError(data.error || "Something went wrong");
       return;
     }
@@ -156,11 +163,17 @@ export default function DashboardClient({
       <Sector3LoadingBar loading={loading} variant="replyflow" />
 
       <main className="relative z-10 mx-auto max-w-3xl space-y-6 px-4 py-10">
-        <AutopilotComingSoonCard />
         {gated && gateContent ? (
           gateContent
         ) : (
           <>
+        <Sector3TierSwitcher
+          toolSlug="replyflow"
+          brandColor={replyflowBrand.brandColor}
+          isAgenticUser={planLabel?.toLowerCase().includes("agentic")}
+          onOpenAgenticDrawer={() => setMcpDrawerOpen(true)}
+        />
+
         <div className="rf-glass rounded-2xl p-5">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-white/80">Monthly replies</span>
@@ -192,6 +205,17 @@ export default function DashboardClient({
             </div>
           )}
         </div>
+
+        {/* 7-Day Free Trial Code Redemption */}
+        {!hasUnlimitedAccess && (
+          <TrialCodeRedemptionBox
+            toolSlug="replyflow"
+            toolName="ReplyFlow"
+            brandColor={replyflowBrand.brandColor}
+            variant="replyflow"
+            isLoggedIn={!!email}
+          />
+        )}
 
         {showResults && (
           <Sector3DashboardToolbar
@@ -326,6 +350,15 @@ export default function DashboardClient({
           displayName="ReplyFlow"
           brandColor={replyflowBrand.brandColor}
           faqs={replyflowHelp.faqs}
+        />
+
+        <Sector3MCPDrawer
+          open={mcpDrawerOpen}
+          onClose={() => setMcpDrawerOpen(false)}
+          toolSlug="replyflow"
+          toolName="ReplyFlow"
+          brandColor={replyflowBrand.brandColor}
+          isAgenticUser={planLabel?.toLowerCase().includes("agentic")}
         />
           </>
         )}
