@@ -222,7 +222,7 @@ export default function ITCreatorPage() {
                   <span className="text-[11px] text-zinc-500 block mt-1">Unlimited browser use</span>
                 </div>
                 <div className="p-3 bg-zinc-900 border border-emerald-800/80 rounded-lg bg-emerald-950/20">
-                  <span className="text-emerald-400 block font-bold">⚡ Autopilot Tier (+50%)</span>
+                  <span className="text-emerald-400 block font-bold">⚡ Agentic Access (+50%)</span>
                   <span className="font-bold text-emerald-300 text-sm">${agenticPrice} / mo</span>
                   <span className="text-[11px] text-emerald-400/80 block mt-1">Direct app connections & background work</span>
                 </div>

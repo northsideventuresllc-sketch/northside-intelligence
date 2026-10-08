@@ -6,6 +6,7 @@ import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscr
 import type { UserBillingState } from "@/lib/billing/entitlements";
 import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
 import { REPLYFLOW_TIERS } from "@/lib/replyflow/tier";
+import { ToolFreePricingCard } from "@/components/billing/ToolFreePricingCard";
 import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 
 interface ReplyFlowPricingSectionProps {
@@ -86,7 +87,7 @@ export function ReplyFlowPricingSection({ showTitle = true }: ReplyFlowPricingSe
               Predictable, High-Impact Pricing
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-rf-muted">
-              Retiring public free tier for cold signups. Choose self-serve Core or hands-on Done-With-You to automate customer replies with dedicated onboarding.
+              Start free with capped usage, or subscribe for unlimited access.
             </p>
           </div>
         )}
@@ -121,6 +122,16 @@ export function ReplyFlowPricingSection({ showTitle = true }: ReplyFlowPricingSe
           </div>
         ) : (
           <div className="mt-12 grid gap-6 md:grid-cols-3">
+            
+            {/* Starter Access */}
+            <ToolFreePricingCard
+              toolSlug="replyflow"
+              toolName="ReplyFlow"
+              isLoggedIn={isLoggedIn}
+              returnPath="/replyflow"
+              variant="replyflow"
+            />
+            
             {/* Core Tier */}
             <div className="rf-glass flex flex-col justify-between rounded-3xl border border-white/10 p-6 shadow-rf-violet transition hover:border-white/20">
               <div>
@@ -158,66 +169,14 @@ export function ReplyFlowPricingSection({ showTitle = true }: ReplyFlowPricingSe
                     disabled={checkingOutPlan !== null}
                     className="w-full rounded-xl border border-rf-rose/40 bg-rf-rose/15 py-3 text-xs font-semibold text-white transition hover:bg-rf-rose/25 disabled:opacity-50"
                   >
-                    {checkingOutPlan === "core" ? "Preparing Checkout…" : "Subscribe to Core ($149/mo)"}
+                    {checkingOutPlan === "core" ? "Preparing Checkout…" : "Subscribe to SaaS Access ($149/mo)"}
                   </button>
                 ) : (
                   <Link
                     href="/auth/signup?returnTo=/replyflow"
                     className="block w-full rounded-xl border border-rf-rose/40 bg-rf-rose/15 py-3 text-center text-xs font-semibold text-white transition hover:bg-rf-rose/25"
                   >
-                    Get Started with Core
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            {/* Done-With-You Tier */}
-            <div className="rf-glass relative flex flex-col justify-between rounded-3xl border border-white/15 p-6 shadow-rf-glow transition hover:border-white/30">
-              <div>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white">{REPLYFLOW_TIERS.done_with_you.name}</h3>
-                  <span className="rounded-full border border-rf-rose/40 bg-rf-rose/10 px-2.5 py-0.5 text-[10px] font-medium text-rf-rose">
-                    +$500 setup
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-rf-muted">{REPLYFLOW_TIERS.done_with_you.description}</p>
-                <div className="mt-4">
-                  <span className="text-3xl font-extrabold text-white">
-                    ${REPLYFLOW_TIERS.done_with_you.priceMonthlyUsd}
-                  </span>
-                  <span className="text-xs font-medium text-rf-muted">/month</span>
-                  <p className="mt-1 text-[11px] text-rf-rose/90">
-                    +$500 guided implementation
-                  </p>
-                </div>
-                <ul className="mt-5 space-y-2.5 text-xs text-rf-muted">
-                  {REPLYFLOW_TIERS.done_with_you.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <span className="mt-0.5 text-rf-rose">✓</span>
-                      <span className={feature.startsWith("Everything") ? "font-medium text-white" : ""}>
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-6">
-                {isLoggedIn ? (
-                  <button
-                    type="button"
-                    onClick={() => handleCheckout("done_with_you")}
-                    disabled={checkingOutPlan !== null}
-                    className="w-full rounded-xl border border-rf-rose/40 bg-white/10 py-3 text-xs font-semibold text-white transition hover:bg-white/15 disabled:opacity-50"
-                  >
-                    {checkingOutPlan === "done_with_you" ? "Preparing Checkout…" : "Subscribe ($299/mo)"}
-                  </button>
-                ) : (
-                  <Link
-                    href="/auth/signup?returnTo=/replyflow"
-                    className="block w-full rounded-xl border border-rf-rose/40 bg-white/10 py-3 text-center text-xs font-semibold text-white transition hover:bg-white/15"
-                  >
-                    Get Started with DWY
+                    Get Started with SaaS Access
                   </Link>
                 )}
               </div>
