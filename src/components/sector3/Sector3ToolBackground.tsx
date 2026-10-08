@@ -25,28 +25,6 @@ export function Sector3ToolBackground({ slug }: Props) {
           backgroundImage: `radial-gradient(circle at 50% 0%, ${brand.brandColor}22, transparent 50%)`,
         }}
       />
-
-      {[
-        { top: "16%", left: "10%", delay: "0s", w: "w-28" },
-        { top: "58%", left: "80%", delay: "1.4s", w: "w-32" },
-        { top: "42%", left: "88%", delay: "2.2s", w: "w-24" },
-        { top: "74%", left: "14%", delay: "0.6s", w: "w-32" },
-      ].map((b, i) => (
-        <div
-          key={i}
-          className={`absolute ${b.w} animate-float-bubble rounded-2xl border bg-black/40 px-3 py-2`}
-          style={{ 
-            top: b.top, 
-            left: b.left, 
-            animationDelay: b.delay,
-            borderColor: `${brand.brandColor}40`
-          }}
-        >
-          <div className="mb-1 h-1.5 w-8 rounded-full opacity-60" style={{ backgroundColor: brand.brandColor }} />
-          <div className="h-1 w-full rounded-full bg-white/10" />
-          <div className="mt-1 h-1 w-2/3 rounded-full bg-white/5" />
-        </div>
-      ))}
     </div>
   );
 }

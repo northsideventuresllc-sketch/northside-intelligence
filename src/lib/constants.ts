@@ -54,18 +54,18 @@ export const TOOL_BRAND: Record<
   },
   signaldesk: {
     logo: "/logos/signaldesk.svg",
-    brandColor: "#10b981",
-    brandGradient: "from-emerald-400 to-cyan-400",
+    brandColor: "#38bdf8",
+    brandGradient: "from-sky-400 to-cyan-300",
   },
   gapscan: {
     logo: "/logos/gapscan.svg",
-    brandColor: "#ef4444",
-    brandGradient: "from-red-500 to-orange-500",
+    brandColor: "#f59e0b",
+    brandGradient: "from-amber-400 to-orange-500",
   },
   bridgeai: {
     logo: "/logos/bridgeai.svg",
-    brandColor: "#8b5cf6",
-    brandGradient: "from-purple-500 via-blue-500 to-teal-400",
+    brandColor: "#818cf8",
+    brandGradient: "from-indigo-400 to-purple-400",
   },
 };
 

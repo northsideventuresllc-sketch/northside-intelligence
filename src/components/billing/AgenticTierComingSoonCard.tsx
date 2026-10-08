@@ -53,14 +53,14 @@ export function AgenticTierComingSoonCard({
       <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/60 bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 px-4 py-1 text-xs font-bold uppercase tracking-wider text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.35)]">
           <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
-          Agentic Access Coming Soon
+          Agentic Tier Coming Soon
         </span>
       </div>
 
       <div className="pt-2">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <span>⚡ Agentic Access</span>
+            <span>⚡ Agentic Tier</span>
           </h3>
           <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-cyan-300">
             Autonomous
