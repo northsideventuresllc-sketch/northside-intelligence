@@ -14,7 +14,7 @@ export interface ReplyFlowTierConfig {
 export const REPLYFLOW_TIERS: Record<"core" | "done_with_you", ReplyFlowTierConfig> = {
   core: {
     id: "core",
-    name: "Core",
+    name: "SaaS Access",
     priceMonthlyUsd: 149,
     setupFeeUsd: 500,
     description: "Self-serve AI customer reply automation for modern teams.",
@@ -28,7 +28,7 @@ export const REPLYFLOW_TIERS: Record<"core" | "done_with_you", ReplyFlowTierConf
   },
   done_with_you: {
     id: "done_with_you",
-    name: "Done-With-You",
+    name: "Agentic Access",
     priceMonthlyUsd: 299,
     setupFeeUsd: 500,
     description: "Hands-on implementation, custom voice calibration, and dedicated workflow integrations.",

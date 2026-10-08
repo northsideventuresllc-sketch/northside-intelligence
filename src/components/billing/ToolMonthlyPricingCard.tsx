@@ -76,7 +76,7 @@ export function ToolMonthlyPricingCard({
         ${pricing.monthlyPriceUsd.toFixed(2)}
         <span className={`text-base font-normal ${mutedClass}`}>/mo</span>
       </p>
-      <p className="mt-1 font-semibold text-white">Unlimited Access</p>
+      <p className="mt-1 font-semibold text-white">SaaS Access</p>
       <p className={`mt-2 text-sm ${mutedClass}`}>
         Full {toolName} access with one monthly subscription.
       </p>
