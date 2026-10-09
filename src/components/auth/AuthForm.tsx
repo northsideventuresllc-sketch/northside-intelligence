@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AnimatedBackground } from "@/components/landing/AnimatedBackground";
 import { Logo3D } from "@/components/landing/Logo3D";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { buildPortalAuthUrl, resolvePostAuthRedirect } from "@/lib/ni-auth";
 import { subscribeIfOptedIn } from "@/components/email/EmailListOptIn";
+import { trackEvent } from "@/components/MetaPixel";
 
 type AuthMode = "signin" | "signup";
 type Step = "credentials" | "verify";
@@ -46,6 +47,15 @@ export function AuthForm({ mode }: AuthFormProps) {
     const other: AuthMode = mode === "signup" ? "signin" : "signup";
     return buildPortalAuthUrl(other, returnTo);
   }, [mode, returnTo]);
+
+  const tool = searchParams.get("tool") ?? "ni-portal";
+
+  // Standard Meta event: signup form viewed.
+  useEffect(() => {
+    if (mode === "signup") {
+      trackEvent("Lead", { content_name: tool });
+    }
+  }, [mode, tool]);
 
   async function handleCredentialsSubmit(e: FormEvent) {
     e.preventDefault();
@@ -127,6 +137,10 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       if (mode === "signup" && emailListOptIn) {
         await subscribeIfOptedIn(true);
+      }
+
+      if (mode === "signup") {
+        trackEvent("CompleteRegistration", { content_name: tool });
       }
 
       window.location.href = resolvePostAuthRedirect(data.returnTo ?? returnTo);
