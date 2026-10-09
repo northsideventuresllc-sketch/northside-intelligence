@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AxonWaitlistLanding } from "@/components/axon/AxonWaitlistLanding";
+import { TrackViewContent } from "@/components/tracking/TrackViewContent";
 
 export const metadata: Metadata = {
   title: "AXON — The World's First Neurodivergent AI | Northside Intelligence",
@@ -16,5 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default function AxonWaitlistPage() {
-  return <AxonWaitlistLanding />;
+  return (
+    <>
+      <TrackViewContent contentName="axon" />
+      <AxonWaitlistLanding />
+    </>
+  );
 }
