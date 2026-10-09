@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { TrackViewContent } from "@/components/tracking/TrackViewContent";
+import { TrackBillingSuccess } from "@/components/tracking/TrackBillingSuccess";
 import { ToolkitGrid } from "@/components/billing/ToolkitGrid";
 import { Footer } from "@/components/landing/Footer";
 import { NavServer } from "@/components/landing/NavServer";
@@ -45,6 +48,10 @@ export default async function ToolkitPage() {
 
   return (
     <main className="min-h-screen bg-ni-bg">
+      <TrackViewContent contentName="toolkit" />
+      <Suspense fallback={null}>
+        <TrackBillingSuccess />
+      </Suspense>
       <NavServer />
       <section className="relative px-6 pb-20 pt-24">
         <div className="mx-auto max-w-5xl">
