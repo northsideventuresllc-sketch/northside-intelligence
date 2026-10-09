@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackEvent } from "@/components/MetaPixel";
 
 interface CheckoutButtonProps {
   label: string;
@@ -51,6 +52,10 @@ export function CheckoutButton({
         setError(data.error ?? "Checkout unavailable");
         return;
       }
+      trackEvent("InitiateCheckout", {
+        content_name: toolSlug ?? "ni-subscription",
+        currency: "USD",
+      });
       window.location.href = data.url;
     } catch {
       setError("Network error. Please try again.");
