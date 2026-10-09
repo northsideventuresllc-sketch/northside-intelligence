@@ -7,6 +7,7 @@ import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
 import { getToolBrand } from "@/lib/constants";
 import { createSector3ToolAuth } from "@/lib/sector3-tools/auth";
 import type { Sector3ToolRuntimeConfig } from "@/lib/sector3-tools/types";
+import { TrackViewContent } from "@/components/tracking/TrackViewContent";
 
 interface LandingContent {
   headline: string;
@@ -30,6 +31,7 @@ export function createSector3LandingPage(
 
     return (
       <div className="relative min-h-screen overflow-hidden text-white">
+        <TrackViewContent contentName={config.slug} />
         <Sector3ToolBackground slug={config.slug} />
         <Sector3ToolNav config={config} />
 
