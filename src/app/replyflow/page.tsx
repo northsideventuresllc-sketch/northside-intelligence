@@ -7,6 +7,8 @@ import { portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
 import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
 import { TrackViewContent } from "@/components/tracking/TrackViewContent";
 import { SevenDayTrialBanner } from "@/components/billing/SevenDayTrialBanner";
+import { BetaDisclaimer } from "@/components/it/BetaDisclaimer";
+import { ITFooter } from "@/components/it/ITFooter";
 
 const tones = ["Professional", "Friendly", "Empathetic", "Firm"];
 
@@ -92,6 +94,8 @@ export default async function ReplyFlowHome() {
         </section>
 
         <ReplyFlowPricingSection />
+        <BetaDisclaimer toolName="ReplyFlow" toolSlug="replyflow" />
+      <ITFooter toolName="ReplyFlow" />
       </main>
     </div>
   );

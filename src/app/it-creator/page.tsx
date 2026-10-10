@@ -5,6 +5,8 @@ import { ITFeedbackWidget } from '../../components/it/ITFeedbackWidget';
 import { AgenticTierComingSoonCard } from '@/components/billing/AgenticTierComingSoonCard';
 import { TrackViewContent } from '@/components/tracking/TrackViewContent';
 import { SevenDayTrialBanner } from '@/components/billing/SevenDayTrialBanner';
+import { BetaDisclaimer } from '@/components/it/BetaDisclaimer';
+import { ITFooter } from '@/components/it/ITFooter';
 
 export default function ITCreatorPage() {
   const [toolName, setToolName] = useState('');
@@ -291,6 +293,8 @@ export default function ITCreatorPage() {
       </div>
 
       <ITFeedbackWidget toolId="it-creator" />
+      <BetaDisclaimer toolName="IT Creator" toolSlug="it-creator" />
+      <ITFooter toolName="IT Creator" />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoggedInSubscriptionActions } from "@/components/billing/LoggedInSubscriptionActions";
+import { AddToToolkitButton } from "@/components/billing/AddToToolkitButton";
 import type { UserBillingState } from "@/lib/billing/entitlements";
 import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
 import { REPLYFLOW_TIERS } from "@/lib/replyflow/tier";
@@ -157,14 +158,25 @@ export function ReplyFlowPricingSection({ showTitle = true }: ReplyFlowPricingSe
 
               <div className="mt-6">
                 {isLoggedIn ? (
-                  <button
-                    type="button"
-                    onClick={() => handleCheckout("core")}
-                    disabled={checkingOutPlan !== null}
-                    className="w-full rounded-xl border border-rf-rose/40 bg-rf-rose/15 py-3 text-xs font-semibold text-white transition hover:bg-rf-rose/25 disabled:opacity-50"
-                  >
-                    {checkingOutPlan === "core" ? "Preparing Checkout…" : "Subscribe to SaaS Access ($15/mo)"}
-                  </button>
+                  billingState &&
+                  billingState.niTier !== "free" &&
+                  !billingState.ownedToolSlugs.includes("replyflow") ? (
+                    <AddToToolkitButton
+                      toolSlug="replyflow"
+                      toolName="ReplyFlow"
+                      billingState={billingState}
+                      className="w-full rounded-xl border border-rf-rose/40 bg-rf-rose/15 py-3 text-xs font-semibold text-white transition hover:bg-rf-rose/25 disabled:opacity-50"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleCheckout("core")}
+                      disabled={checkingOutPlan !== null}
+                      className="w-full rounded-xl border border-rf-rose/40 bg-rf-rose/15 py-3 text-xs font-semibold text-white transition hover:bg-rf-rose/25 disabled:opacity-50"
+                    >
+                      {checkingOutPlan === "core" ? "Preparing Checkout…" : "Subscribe to SaaS Access ($15/mo)"}
+                    </button>
+                  )
                 ) : (
                   <Link
                     href="/auth/signup?returnTo=/replyflow"
@@ -186,9 +198,6 @@ export function ReplyFlowPricingSection({ showTitle = true }: ReplyFlowPricingSe
         )}
 
         <div className="mt-12 text-center">
-          <p className="text-xs text-rf-muted">
-            Notice: Public free tier has been retired for cold signups. Existing grandfathered accounts retain current terms.
-          </p>
           {!isLoggedIn && !loading && (
             <p className="mt-4 text-sm text-rf-muted">
               Already have an account?{" "}

@@ -9,6 +9,8 @@ import { createSector3ToolAuth } from "@/lib/sector3-tools/auth";
 import type { Sector3ToolRuntimeConfig } from "@/lib/sector3-tools/types";
 import { TrackViewContent } from "@/components/tracking/TrackViewContent";
 import { SevenDayTrialBanner } from "@/components/billing/SevenDayTrialBanner";
+import { BetaDisclaimer } from "@/components/it/BetaDisclaimer";
+import { ITFooter } from "@/components/it/ITFooter";
 
 interface LandingContent {
   headline: string;
@@ -114,6 +116,8 @@ export function createSector3LandingPage(
           </section>
 
           <Sector3ToolPricingSection config={config} />
+          <BetaDisclaimer toolName={config.displayName} toolSlug={config.slug} />
+          <ITFooter toolName={config.displayName} />
         </main>
       </div>
     );

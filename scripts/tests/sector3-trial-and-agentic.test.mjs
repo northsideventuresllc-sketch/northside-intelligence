@@ -92,13 +92,13 @@ test("AuthForm and Signup pages include 7-day free trial code input and URL auto
   }
 });
 
-test("Agentic Tier Coming Soon badge and card describe required capabilities in plain language", () => {
+test("Agentic Access Coming Soon badge and card describe required capabilities in plain language", () => {
   const cardPath = path.resolve(root, "src/components/billing/AgenticTierComingSoonCard.tsx");
   assert.ok(fs.existsSync(cardPath), "AgenticTierComingSoonCard must exist");
   const card = fs.readFileSync(cardPath, "utf8");
 
   // Exact required badge and capabilities
-  assert.match(card, /Agentic Tier Coming Soon/, "Must include 'Agentic Tier Coming Soon' badge");
+  assert.match(card, /Agentic Access Coming Soon/, "Must include 'Agentic Access Coming Soon' badge");
   assert.match(card, /Autonomous background monitoring/i, "Must list background monitoring capability");
   assert.match(card, /Multi-agent synthesis/i, "Must list multi-agent synthesis capability");
   assert.match(card, /Direct webhook, CRM,/i, "Must list webhook/CRM/comms capability");
@@ -125,7 +125,7 @@ test("STRICT PRICING RULE: Zero pricing numbers or dollar signs on Agentic Tier 
   assert.doesNotMatch(switcher, /⚡\s*Agentic\s*Tier[\s\S]*?\$\d+/i, "Tier switcher button must NOT display a dollar price on agentic tier");
 });
 
-test("All 5 IT tools' pricing grids and drawers include Agentic Tier Coming Soon components", () => {
+test("All 5 IT tools' pricing grids and drawers include Agentic Access Coming Soon components", () => {
   const gridPath = path.resolve(root, "src/components/billing/ToolFreemiumPricingGrid.tsx");
   const grid = fs.readFileSync(gridPath, "utf8");
   assert.match(grid, /AgenticTierComingSoonCard/, "ToolFreemiumPricingGrid must include AgenticTierComingSoonCard");

@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { redeemTrialCode } from "@/lib/billing/trial-codes";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import {
+  sendTrialBegunEmail,
+  notifyPortal,
+} from "@/lib/billing/trial-flow";
+
+const TOOL_LABELS: Record<string, string> = {
+  replyflow: "ReplyFlow",
+  grantbot: "GrantBot",
+  signaldesk: "SignalDesk",
+  gapscan: "GapScan",
+  bridgeai: "BridgeAI",
+};
 
 interface RedeemRequestBody {
   code?: string;
@@ -37,6 +49,26 @@ export async function POST(req: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json({ error: result.error || "Failed to redeem code." }, { status: 400 });
+    }
+
+    // Trial begun: email + portal notification (fire and forget)
+    try {
+      const toolName =
+        result.tools && result.tools.length === 1
+          ? TOOL_LABELS[result.tools[0]] ?? result.tools[0]
+          : "Intelligence Tools";
+      if (user.email && result.expiresAt) {
+        await sendTrialBegunEmail(user.email, toolName, result.expiresAt);
+      }
+      await notifyPortal(
+        user.id,
+        "trial_begun",
+        "Your free trial has begun",
+        `Your 7-day free trial of ${toolName} is active${result.expiresAt ? ` until ${new Date(result.expiresAt).toLocaleDateString()}` : ""}.`,
+        "/toolkit"
+      );
+    } catch (err) {
+      console.error("[redeem] trial-begun notifications failed:", err);
     }
 
     return NextResponse.json({

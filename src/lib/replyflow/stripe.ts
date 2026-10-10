@@ -55,9 +55,6 @@ export const REPLYFLOW_PRICE_IDS: Record<
   agency: process.env.STRIPE_AGENCY_PRICE_ID ?? "price_1Te0sEQXb5thRQWgCiAzrClk",
 };
 
-export const REPLYFLOW_SETUP_PRICE_ID =
-  process.env.STRIPE_REPLYFLOW_SETUP_PRICE_ID ?? "price_replyflow_setup_500";
-
 export function getPlanFromPriceId(priceId: string | undefined): UserPlan {
   if (!priceId) return "free";
   if (priceId === REPLYFLOW_PRICE_IDS.core) return "core";

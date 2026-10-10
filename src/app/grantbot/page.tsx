@@ -7,6 +7,8 @@ import { grantbotPath, portalSignUpUrl } from "@/lib/grantbot/auth";
 import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
 import { TrackViewContent } from "@/components/tracking/TrackViewContent";
 import { SevenDayTrialBanner } from "@/components/billing/SevenDayTrialBanner";
+import { BetaDisclaimer } from "@/components/it/BetaDisclaimer";
+import { ITFooter } from "@/components/it/ITFooter";
 
 const categories = ["Nonprofit", "Creator", "Research", "Small Business", "Arts & Culture"];
 
@@ -106,6 +108,8 @@ export default async function GrantBotHome() {
         </section>
 
         <GrantBotPricingSection />
+        <BetaDisclaimer toolName="GrantBot" toolSlug="grantbot" />
+      <ITFooter toolName="GrantBot" />
       </main>
     </div>
   );

@@ -54,7 +54,7 @@ export async function validateTrialCode(
   const supabase = createServiceClient();
   const { data: record, error } = await supabase
     .from("trial_codes")
-    .select("code, tool_slug, used_at, duration_days")
+    .select("code, tool_slug, used_at, duration_days, metadata")
     .ilike("code", normalized)
     .maybeSingle();
 
@@ -66,6 +66,16 @@ export async function validateTrialCode(
     return {
       valid: false,
       error: "This trial code has already been redeemed and cannot be reused.",
+    };
+  }
+
+  // 48-hour entry window: codes expire if never redeemed in time
+  const codeExpiresAt = (record.metadata as { code_expires_at?: string } | null)
+    ?.code_expires_at;
+  if (codeExpiresAt && new Date(codeExpiresAt).getTime() < Date.now()) {
+    return {
+      valid: false,
+      error: "This trial code has expired. Codes are valid for 48 hours.",
     };
   }
 

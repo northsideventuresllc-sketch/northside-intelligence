@@ -28,8 +28,8 @@ export function SevenDayTrialBanner({ toolName }: SevenDayTrialBannerProps) {
       <span className="inline-block h-2 w-2 rounded-full bg-amber-300 animate-pulse" aria-hidden="true" />
       <p className="text-xs font-medium tracking-wide text-amber-200 sm:text-sm">
         Limited-time offer: <span className="font-bold">7-day free trial</span> on{" "}
-        {toolName ? `${toolName} ` : "any IT "}subscription — nothing charged until the
-        trial ends. <span className="whitespace-nowrap">Ends Nov 30.</span>
+        {toolName ? `${toolName} ` : "any IT "}subscription.{" "}
+        <span className="whitespace-nowrap">Ends Nov 30.</span>
       </p>
     </div>
   );

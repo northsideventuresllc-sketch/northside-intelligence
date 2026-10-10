@@ -10,6 +10,7 @@ import { userHasUnlimitedToolAccess } from "@/lib/billing/entitlements";
 import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
 import type { ToolPricing } from "@/lib/billing/tool-pricing";
 import { AddToToolCasePrompt } from "@/components/billing/AddToToolCasePrompt";
+import { AddToToolkitButton } from "@/components/billing/AddToToolkitButton";
 import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 
 interface GrantBotPricingSectionProps {
@@ -84,7 +85,15 @@ export function GrantBotPricingSection({ pricing }: GrantBotPricingSectionProps)
         ) : isLoggedIn && billingState ? (
           <div className="mx-auto mt-12 max-w-md space-y-6">
             {!billingState.ownedToolSlugs.includes("grantbot") ? (
-              <AddToToolCasePrompt toolSlug="grantbot" toolName="GrantBot" variant="grantbot" />
+              billingState.niTier !== "free" ? (
+                <AddToToolkitButton
+                  toolSlug="grantbot"
+                  toolName="GrantBot"
+                  billingState={billingState}
+                />
+              ) : (
+                <AddToToolCasePrompt toolSlug="grantbot" toolName="GrantBot" variant="grantbot" />
+              )
             ) : userHasUnlimitedToolAccess(billingState, "grantbot") ? (
               <div className="space-y-6">
                 <div className="gb-glass rounded-2xl p-8">
