@@ -67,6 +67,13 @@ export type GeminiFirstArgs = {
    * quality-gate regen loop, up to 3 attempts) MUST pass this — the router's own default
    * (130s/155s, sized for a single-shot caller) would blow a shared maxDuration across
    * multiple attempts otherwise. See NI-AXONGEN-ALL-TIERS-DOWN-0907.
+   *
+   * When the caller does not pass it, generateTextGeminiFirst defaults it to 60s
+   * (WS13-2026-10-09): a down/locked mini otherwise holds the local tier up to 130s
+   * (RELAY_LOCAL_MAX_WAIT_MS) before failover, which blows the Vercel function timeout
+   * on the client-facing IT generate routes before the chain ever reaches the working
+   * API tiers. 60s still lets a healthy mini answer (warm calls finish in seconds) while
+   * failing over fast when it is down.
    */
   localTimeoutMs?: number;
 };
@@ -78,7 +85,9 @@ export type GeminiFirstArgs = {
 export async function generateTextGeminiFirst(
   args: GeminiFirstArgs
 ): Promise<{ text: string; provider: GeneratedTextProvider }> {
-  const { system, prompt, maxOutputTokens, jsonMode = false, agentName = "ni-portal", localTimeoutMs } = args;
+  const { system, prompt, maxOutputTokens, jsonMode = false, agentName = "ni-portal" } = args;
+  // WS13-2026-10-09: bound the local tier when the caller didn't. See GeminiFirstArgs.
+  const localTimeoutMs = args.localTimeoutMs ?? 60_000;
 
   const supabaseKey = await resolveSupabaseKey();
 
