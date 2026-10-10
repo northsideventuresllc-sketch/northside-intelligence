@@ -1,1 +1,36 @@
-InVzZSBjbGllbnQiOwoKaW1wb3J0IHsgdXNlU3RhdGUgfSBmcm9tICJyZWFjdCI7CgovKioKICogV29ya3N0cmVhbSA2IOKAlCA3LWRheSBmcmVlLXRyaWFsIHByb21vIGJhbm5lci4KICoKICogRGF0ZS1nYXRlZCBjbGllbnQtc2lkZSBzbyBpdCBzdG9wcyByZW5kZXJpbmcgYXV0b21hdGljYWxseSBhZnRlcgogKiAyMDI2LTEyLTAxIDAwOjAwIFVUQywgZXZlbiBpZiB0aGUgcGFnZSBIVE1MIHdhcyBzdGF0aWNhbGx5IGdlbmVyYXRlZAogKiB3aGlsZSB0aGUgcHJvbW8gd2FzIGxpdmUuIEtlZXAgdGhlIGNvcHkgZ2VuZXJpYyBzbyBpdCB3b3JrcyBvbiBldmVyeQogKiBJVCBsYW5kaW5nIHBhZ2UuCiAqLwpleHBvcnQgY29uc3QgU0VWRU5fREFZX1RSSUFMX1BST01PX0VORF9UUyA9IERhdGUucGFyc2UoIjIwMjYtMTItMDFUMDA6MDA6MDAuMDAwWiIpOwoKaW50ZXJmYWNlIFNldmVuRGF5VHJpYWxCYW5uZXJQcm9wcyB7CiAgdG9vbE5hbWU/OiBzdHJpbmc7Cn0KCmV4cG9ydCBmdW5jdGlvbiBTZXZlbkRheVRyaWFsQmFubmVyKHsgdG9vbE5hbWUgfTogU2V2ZW5EYXlUcmlhbEJhbm5lclByb3BzKSB7CiAgY29uc3QgW2FjdGl2ZV0gPSB1c2VTdGF0ZSgoKSA9PiBEYXRlLm5vdygpIDwgU0VWRU5fREFZX1RSSUFMX1BST01PX0VORF9UUyk7CiAgaWYgKCFhY3RpdmUpIHJldHVybiBudWxsOwoKICByZXR1cm4gKAogICAgPGRpdgogICAgICByb2xlPSJzdGF0dXMiCiAgICAgIGNsYXNzTmFtZT0icmVsYXRpdmUgei0zMCBmbGV4IHctZnVsbCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgZ2FwLTIgYm9yZGVyLWIgYm9yZGVyLWFtYmVyLTQwMC8zMCBiZy1ncmFkaWVudC10by1yIGZyb20tYW1iZXItNTAwLzE1IHZpYS1hbWJlci00MDAvMjAgdG8tYW1iZXItNTAwLzE1IHB4LTQgcHktMi41IHRleHQtY2VudGVyIgogICAgPgogICAgICA8c3BhbiBjbGFzc05hbWU9ImlubGluZS1ibG9jayBoLTIgdy0yIHJvdW5kZWQtZnVsbCBiZy1hbWJlci0zMDAgYW5pbWF0ZS1wdWxzZSIgYXJpYS1oaWRkZW49InRydWUiIC8+CiAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC14cyBmb250LW1lZGl1bSB0cmFja2luZy13aWRlIHRleHQtYW1iZXItMjAwIHNtOnRleHQtc20iPgogICAgICAgIExpbWl0ZWQtdGltZSBvZmZlcjogPHNwYW4gY2xhc3NOYW1lPSJmb250LWJvbGQiPjctZGF5IGZyZWUgdHJpYWw8L3NwYW4+IG9ueyIgIn0KICAgICAgICB7dG9vbE5hbWUgPyBgJHt0b29sTmFtZX0gYCA6ICJhbnkgSVQgIn1zdWJzY3JpcHRpb24g4oCUIG5vdGhpbmcgY2hhcmdlZCB1bnRpbCB0aGUKICAgICAgICB0cmlhbCBlbmRzLiA8c3BhbiBjbGFzc05hbWU9IndoaXRlc3BhY2Utbm93cmFwIj5FbmRzIE5vdiAzMC48L3NwYW4+CiAgICAgIDwvcD4KICAgIDwvZGl2PgogICk7Cn0K
+"use client";
+
+import { useState } from "react";
+
+/**
+ * Workstream 6 — 7-day free-trial promo banner.
+ *
+ * Date-gated client-side so it stops rendering automatically after
+ * 2026-12-01 00:00 UTC, even if the page HTML was statically generated
+ * while the promo was live. Keep the copy generic so it works on every
+ * IT landing page.
+ */
+export const SEVEN_DAY_TRIAL_PROMO_END_TS = Date.parse("2026-12-01T00:00:00.000Z");
+
+interface SevenDayTrialBannerProps {
+  toolName?: string;
+}
+
+export function SevenDayTrialBanner({ toolName }: SevenDayTrialBannerProps) {
+  const [active] = useState(() => Date.now() < SEVEN_DAY_TRIAL_PROMO_END_TS);
+  if (!active) return null;
+
+  return (
+    <div
+      role="status"
+      className="relative z-30 flex w-full items-center justify-center gap-2 border-b border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-amber-400/20 to-amber-500/15 px-4 py-2.5 text-center"
+    >
+      <span className="inline-block h-2 w-2 rounded-full bg-amber-300 animate-pulse" aria-hidden="true" />
+      <p className="text-xs font-medium tracking-wide text-amber-200 sm:text-sm">
+        Limited-time offer: <span className="font-bold">7-day free trial</span> on{" "}
+        {toolName ? `${toolName} ` : "any IT "}subscription — nothing charged until the
+        trial ends. <span className="whitespace-nowrap">Ends Nov 30.</span>
+      </p>
+    </div>
+  );
+}

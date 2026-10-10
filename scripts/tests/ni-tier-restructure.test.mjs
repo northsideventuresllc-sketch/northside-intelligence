@@ -1,1 +1,123 @@
-Ly8gVGlja2V0OiBOSS1USUVSLVJFU1RSVUNUVVJFICgyMDI2LTEwLTA5KSDigJQgSkIgdGllciByZXN0cnVjdHVyZToKLy8gRnJlZTogMCBidW5kbGVkIElUcyAoYnV5IGVhY2ggSVQgaW5kaXZpZHVhbGx5KQovLyBDb3JlOiAyIFNhYVMgKyAxIGFnZW50aWMKLy8gUHJvOiA0IFNhYVMgKyAxIGFnZW50aWMKLy8gUG93ZXI6IDggU2FhUyArIDQgYWdlbnRpYyArIDUwJSBvZmYgYWRkaXRpb25hbCBJVHMgb25jZSBzbG90cyBhcmUgZnVsbAovLyBSdWxlOiBhbiBhZ2VudGljIHNsb3QgY292ZXJzIEJPVEggU2FhUyBhbmQgYWdlbnRpYyBmb3IgdGhhdCB0b29sIChubyBTYWFTIHNsb3QgY29uc3VtZWQpCgppbXBvcnQgYXNzZXJ0IGZyb20gIm5vZGU6YXNzZXJ0L3N0cmljdCI7CmltcG9ydCB7IHRlc3QgfSBmcm9tICJub2RlOnRlc3QiOwppbXBvcnQgZnMgZnJvbSAibm9kZTpmcyI7CmltcG9ydCBwYXRoIGZyb20gIm5vZGU6cGF0aCI7Cgpjb25zdCB0aWVycyA9IGZzLnJlYWRGaWxlU3luYygKICBwYXRoLnJlc29sdmUocHJvY2Vzcy5jd2QoKSwgInNyYy9saWIvYmlsbGluZy9uaS10aWVycy50cyIpLAogICJ1dGY4IgopOwpjb25zdCBlbnRpdGxlbWVudHMgPSBmcy5yZWFkRmlsZVN5bmMoCiAgcGF0aC5yZXNvbHZlKHByb2Nlc3MuY3dkKCksICJzcmMvbGliL2JpbGxpbmcvZW50aXRsZW1lbnRzLnRzIiksCiAgInV0ZjgiCik7Cgp0ZXN0KCJOSV9USUVSUyBzbG90IG51bWJlcnM6IEZyZWUgMC8wLCBDb3JlIDIvMSwgUHJvIDQvMSwgUG93ZXIgOC80IiwgKCkgPT4gewogIC8vIEZyZWUKICBhc3NlcnQubWF0Y2godGllcnMsIC9mcmVlOlxzKlx7W1xzXFNdKj90b29sU2xvdHM6XHMqMCwvLCAiRnJlZSB0b29sU2xvdHMgPSAwIik7CiAgYXNzZXJ0Lm1hdGNoKHRpZXJzLCAvZnJlZTpccypce1tcc1xTXSo/YWdlbnRpY1Nsb3RzOlxzKjAsLywgIkZyZWUgYWdlbnRpY1Nsb3RzID0gMCIpOwogIC8vIENvcmUKICBhc3NlcnQubWF0Y2godGllcnMsIC9jb3JlOlxzKlx7W1xzXFNdKj90b29sU2xvdHM6XHMqMiwvLCAiQ29yZSB0b29sU2xvdHMgPSAyIik7CiAgYXNzZXJ0Lm1hdGNoKHRpZXJzLCAvY29yZTpccypce1tcc1xTXSo/YWdlbnRpY1Nsb3RzOlxzKjEsLywgIkNvcmUgYWdlbnRpY1Nsb3RzID0gMSIpOwogIC8vIFBybwogIGFzc2VydC5tYXRjaCh0aWVycywgL3Bybzpccypce1tcc1xTXSo/dG9vbFNsb3RzOlxzKjQsLywgIlBybyB0b29sU2xvdHMgPSA0Iik7CiAgYXNzZXJ0Lm1hdGNoKHRpZXJzLCAvcHJvOlxzKlx7W1xzXFNdKj9hZ2VudGljU2xvdHM6XHMqMSwvLCAiUHJvIGFnZW50aWNTbG90cyA9IDEiKTsKICAvLyBQb3dlcgogIGFzc2VydC5tYXRjaCh0aWVycywgL3Bvd2VyOlxzKlx7W1xzXFNdKj90b29sU2xvdHM6XHMqOCwvLCAiUG93ZXIgdG9vbFNsb3RzID0gOCIpOwogIGFzc2VydC5tYXRjaCh0aWVycywgL3Bvd2VyOlxzKlx7W1xzXFNdKj9hZ2VudGljU2xvdHM6XHMqNCwvLCAiUG93ZXIgYWdlbnRpY1Nsb3RzID0gNCIpOwogIGFzc2VydC5tYXRjaCh0aWVycywgL3Bvd2VyOlxzKlx7W1xzXFNdKj9vdmVyYWdlRGlzY291bnQ6XHMqMFwuNSwvLCAiUG93ZXIgb3ZlcmFnZURpc2NvdW50ID0gMC41Iik7Cn0pOwoKdGVzdCgiTm8gdGllciBoYXMgdW5saW1pdGVkIHRvb2wgYWNjZXNzIGFueW1vcmUiLCAoKSA9PiB7CiAgYXNzZXJ0Lm1hdGNoKAogICAgdGllcnMsCiAgICAvZXhwb3J0IGZ1bmN0aW9uIHRpZXJIYXNVbmxpbWl0ZWRUb29sQWNjZXNzXChbXildKlwpW157XSpce1xzKnJldHVybiBmYWxzZTsvLAogICAgInRpZXJIYXNVbmxpbWl0ZWRUb29sQWNjZXNzIG11c3QgYWx3YXlzIHJldHVybiBmYWxzZSIKICApOwp9KTsKCnRlc3QoIm5pX3BsYW5fYWdlbnRpYyBhY2Nlc3MgdHlwZSBleGlzdHMgYW5kIGNvdmVycyBTYWFTIHRvbyIsICgpID0+IHsKICBhc3NlcnQubWF0Y2goCiAgICBlbnRpdGxlbWVudHMsCiAgICAvIm5pX3BsYW5fYWdlbnRpYyIvLAogICAgIlRvb2xraXRBY2Nlc3NUeXBlIG11c3QgaW5jbHVkZSBuaV9wbGFuX2FnZW50aWMiCiAgKTsKICBhc3NlcnQubWF0Y2goCiAgICBlbnRpdGxlbWVudHMsCiAgICAvYWNjZXNzVHlwZSA9PT0gIm5pX3BsYW5fYWdlbnRpYyJcKSByZXR1cm4gdHJ1ZTsvLAogICAgIm5pX3BsYW5fYWdlbnRpYyBtdXN0IGdyYW50IFNhYVMgYWNjZXNzICh1c2VySGFzVW5saW1pdGVkVG9vbEFjY2VzcykiCiAgKTsKICBhc3NlcnQubWF0Y2goCiAgICBlbnRpdGxlbWVudHMsCiAgICAvY2FuQWRkTmlQbGFuQWdlbnRpY1Rvb2wvLAogICAgIk11c3QgaGF2ZSBjYW5BZGROaVBsYW5BZ2VudGljVG9vbCBmb3IgYWdlbnRpYyBzbG90IGVuZm9yY2VtZW50IgogICk7Cn0pOwoKdGVzdCgiQWdlbnRpYyBzbG90IGFzc2lnbm1lbnQgZG9lcyBub3QgY29uc3VtZSBhIFNhYVMgc2xvdCIsICgpID0+IHsKICAvLyB0b29sU2xvdHNVc2VkIGNvdW50cyBvbmx5IG5pX3BsYW4gZW50cmllcywgbm90IG5pX3BsYW5fYWdlbnRpYwogIGFzc2VydC5tYXRjaCgKICAgIGVudGl0bGVtZW50cywKICAgIC90b29sa2l0XC5maWx0ZXJcKFwodFwpID0+IHRcLmFjY2Vzc1R5cGUgPT09ICJuaV9wbGFuIlwpXC5sZW5ndGgvLAogICAgInRvb2xTbG90c1VzZWQgbXVzdCBjb3VudCBvbmx5IG5pX3BsYW4sIGV4Y2x1ZGluZyBuaV9wbGFuX2FnZW50aWMiCiAgKTsKICBhc3NlcnQubWF0Y2goCiAgICBlbnRpdGxlbWVudHMsCiAgICAvdG9vbGtpdFwuZmlsdGVyXChcKHRcKSA9PiB0XC5hY2Nlc3NUeXBlID09PSAibmlfcGxhbl9hZ2VudGljIlwpXC5sZW5ndGgvLAogICAgIk11c3QgdHJhY2sgbmlfcGxhbl9hZ2VudGljIHNsb3RzIHNlcGFyYXRlbHkiCiAgKTsKfSk7Cgp0ZXN0KCJQb3dlciA1MCUgb3ZlcmFnZSBkaXNjb3VudCBsb2dpYyBleGlzdHMiLCAoKSA9PiB7CiAgYXNzZXJ0Lm1hdGNoKGVudGl0bGVtZW50cywgL2dldE92ZXJhZ2VEaXNjb3VudC8sICJNdXN0IGV4cG9ydCBnZXRPdmVyYWdlRGlzY291bnQiKTsKICBhc3NlcnQubWF0Y2goCiAgICBlbnRpdGxlbWVudHMsCiAgICAvc3RhdGVcLm5pVGllciAhPT0gInBvd2VyIlwpIHJldHVybiAwOy8sCiAgICAiRGlzY291bnQgb25seSBhcHBsaWVzIG9uIFBvd2VyIHRpZXIiCiAgKTsKICBhc3NlcnQubWF0Y2goCiAgICBlbnRpdGxlbWVudHMsCiAgICAvcmV0dXJuIHNhYXNGdWxsICYmIGFnZW50aWNGdWxsIFw/IDBcLjUgOiAwOy8sCiAgICAiRGlzY291bnQgYXBwbGllcyBvbmx5IHdoZW4gQUxMIHNsb3RzIGFyZSBmdWxsIgogICk7Cn0pOwoKdGVzdCgiQ2hlY2tvdXQgYXBwbGllcyBQb3dlciBkaXNjb3VudCB2aWEgU3RyaXBlIGNvdXBvbiIsICgpID0+IHsKICBjb25zdCBjaGVja291dCA9IGZzLnJlYWRGaWxlU3luYygKICAgIHBhdGgucmVzb2x2ZShwcm9jZXNzLmN3ZCgpLCAic3JjL2FwcC9hcGkvYmlsbGluZy9jaGVja291dC9yb3V0ZS50cyIpLAogICAgInV0ZjgiCiAgKTsKICBhc3NlcnQubWF0Y2goY2hlY2tvdXQsIC9nZXRPdmVyYWdlRGlzY291bnRcKHN0YXRlXCkvLCAiQ2hlY2tvdXQgbXVzdCBjaGVjayBvdmVyYWdlIGRpc2NvdW50Iik7CiAgYXNzZXJ0Lm1hdGNoKGNoZWNrb3V0LCAvbmlfcG93ZXJfb3ZlcmFnZV81MC8sICJNdXN0IHVzZSByZXVzYWJsZSBQb3dlciBvdmVyYWdlIGNvdXBvbiIpOwogIGFzc2VydC5tYXRjaChjaGVja291dCwgL3BlcmNlbnRfb2ZmOlxzKjUwLywgIkNvdXBvbiBtdXN0IGJlIDUwJSBvZmYiKTsKfSk7Cgp0ZXN0KCJBZ2VudGljIHNsb3QgYXNzaWdubWVudCBBUEkgcm91dGUgZXhpc3RzIHdpdGggZW5mb3JjZW1lbnQiLCAoKSA9PiB7CiAgY29uc3Qgcm91dGUgPSBmcy5yZWFkRmlsZVN5bmMoCiAgICBwYXRoLnJlc29sdmUocHJvY2Vzcy5jd2QoKSwgInNyYy9hcHAvYXBpL2JpbGxpbmcvdG9vbGtpdC9hZGQtYWdlbnRpYy9yb3V0ZS50cyIpLAogICAgInV0ZjgiCiAgKTsKICBhc3NlcnQubWF0Y2gocm91dGUsIC9jYW5BZGROaVBsYW5BZ2VudGljVG9vbC8sICJNdXN0IGVuZm9yY2UgYWdlbnRpYyBzbG90IGxpbWl0Iik7CiAgYXNzZXJ0Lm1hdGNoKHJvdXRlLCAvYWNjZXNzVHlwZTpccyoibmlfcGxhbl9hZ2VudGljIi8sICJNdXN0IGdyYW50IG5pX3BsYW5fYWdlbnRpYyBhY2Nlc3MiKTsKICBhc3NlcnQubWF0Y2gocm91dGUsIC9ObyBhZ2VudGljIHNsb3RzIHJlbWFpbmluZy8sICJNdXN0IHJldHVybiA0MDMgd2hlbiBzbG90cyBmdWxsIik7Cn0pOwoKdGVzdCgiVGllciBkZXRhaWwgY29weSByZWZsZWN0cyBuZXcgc2xvdCBudW1iZXJzIiwgKCkgPT4gewogIGNvbnN0IGRldGFpbHMgPSBmcy5yZWFkRmlsZVN5bmMoCiAgICBwYXRoLnJlc29sdmUocHJvY2Vzcy5jd2QoKSwgInNyYy9saWIvYmlsbGluZy9uaS10aWVyLWRldGFpbHMudHMiKSwKICAgICJ1dGY4IgogICk7CiAgYXNzZXJ0Lm1hdGNoKGRldGFpbHMsIC8yIFNhYVMgQWNjZXNzIElUIHNsb3RzLywgIkNvcmUgY29weTogMiBTYWFTIHNsb3RzIik7CiAgYXNzZXJ0Lm1hdGNoKGRldGFpbHMsIC80IFNhYVMgQWNjZXNzIElUIHNsb3RzLywgIlBybyBjb3B5OiA0IFNhYVMgc2xvdHMiKTsKICBhc3NlcnQubWF0Y2goZGV0YWlscywgLzggU2FhUyBBY2Nlc3MgSVQgc2xvdHMvLCAiUG93ZXIgY29weTogOCBTYWFTIHNsb3RzIik7CiAgYXNzZXJ0Lm1hdGNoKGRldGFpbHMsIC80IEFnZW50aWMgQWNjZXNzIElUIHNsb3RzLywgIlBvd2VyIGNvcHk6IDQgYWdlbnRpYyBzbG90cyIpOwogIGFzc2VydC5tYXRjaChkZXRhaWxzLCAvNTAlIG9mZiBhbnkgYWRkaXRpb25hbCBJVHMvLCAiUG93ZXIgY29weTogNTAlIG92ZXJhZ2UgZGlzY291bnQiKTsKICBhc3NlcnQuZG9lc05vdE1hdGNoKGRldGFpbHMsIC9VbmxpbWl0ZWQgU3RhbmRhcmQgV2ViIFRvb2wgc2xvdHMvLCAiTm8gdW5saW1pdGVkIGNvcHkiKTsKfSk7Cg==
+// Ticket: NI-TIER-RESTRUCTURE (2026-10-09) — JB tier restructure:
+// Free: 0 bundled ITs (buy each IT individually)
+// Core: 2 SaaS + 1 agentic
+// Pro: 4 SaaS + 1 agentic
+// Power: 8 SaaS + 4 agentic + 50% off additional ITs once slots are full
+// Rule: an agentic slot covers BOTH SaaS and agentic for that tool (no SaaS slot consumed)
+
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import fs from "node:fs";
+import path from "node:path";
+
+const tiers = fs.readFileSync(
+  path.resolve(process.cwd(), "src/lib/billing/ni-tiers.ts"),
+  "utf8"
+);
+const entitlements = fs.readFileSync(
+  path.resolve(process.cwd(), "src/lib/billing/entitlements.ts"),
+  "utf8"
+);
+
+test("NI_TIERS slot numbers: Free 0/0, Core 2/1, Pro 4/1, Power 8/4", () => {
+  // Free
+  assert.match(tiers, /free:\s*\{[\s\S]*?toolSlots:\s*0,/, "Free toolSlots = 0");
+  assert.match(tiers, /free:\s*\{[\s\S]*?agenticSlots:\s*0,/, "Free agenticSlots = 0");
+  // Core
+  assert.match(tiers, /core:\s*\{[\s\S]*?toolSlots:\s*2,/, "Core toolSlots = 2");
+  assert.match(tiers, /core:\s*\{[\s\S]*?agenticSlots:\s*1,/, "Core agenticSlots = 1");
+  // Pro
+  assert.match(tiers, /pro:\s*\{[\s\S]*?toolSlots:\s*4,/, "Pro toolSlots = 4");
+  assert.match(tiers, /pro:\s*\{[\s\S]*?agenticSlots:\s*1,/, "Pro agenticSlots = 1");
+  // Power
+  assert.match(tiers, /power:\s*\{[\s\S]*?toolSlots:\s*8,/, "Power toolSlots = 8");
+  assert.match(tiers, /power:\s*\{[\s\S]*?agenticSlots:\s*4,/, "Power agenticSlots = 4");
+  assert.match(tiers, /power:\s*\{[\s\S]*?overageDiscount:\s*0\.5,/, "Power overageDiscount = 0.5");
+});
+
+test("No tier has unlimited tool access anymore", () => {
+  assert.match(
+    tiers,
+    /export function tierHasUnlimitedToolAccess\([^)]*\)[^{]*\{\s*return false;/,
+    "tierHasUnlimitedToolAccess must always return false"
+  );
+});
+
+test("ni_plan_agentic access type exists and covers SaaS too", () => {
+  assert.match(
+    entitlements,
+    /"ni_plan_agentic"/,
+    "ToolkitAccessType must include ni_plan_agentic"
+  );
+  assert.match(
+    entitlements,
+    /accessType === "ni_plan_agentic"\) return true;/,
+    "ni_plan_agentic must grant SaaS access (userHasUnlimitedToolAccess)"
+  );
+  assert.match(
+    entitlements,
+    /canAddNiPlanAgenticTool/,
+    "Must have canAddNiPlanAgenticTool for agentic slot enforcement"
+  );
+});
+
+test("Agentic slot assignment does not consume a SaaS slot", () => {
+  // toolSlotsUsed counts only ni_plan entries, not ni_plan_agentic
+  assert.match(
+    entitlements,
+    /toolkit\.filter\(\(t\) => t\.accessType === "ni_plan"\)\.length/,
+    "toolSlotsUsed must count only ni_plan, excluding ni_plan_agentic"
+  );
+  assert.match(
+    entitlements,
+    /toolkit\.filter\(\(t\) => t\.accessType === "ni_plan_agentic"\)\.length/,
+    "Must track ni_plan_agentic slots separately"
+  );
+});
+
+test("Power 50% overage discount logic exists", () => {
+  assert.match(entitlements, /getOverageDiscount/, "Must export getOverageDiscount");
+  assert.match(
+    entitlements,
+    /state\.niTier !== "power"\) return 0;/,
+    "Discount only applies on Power tier"
+  );
+  assert.match(
+    entitlements,
+    /return saasFull && agenticFull \? 0\.5 : 0;/,
+    "Discount applies only when ALL slots are full"
+  );
+});
+
+test("Checkout applies Power discount via Stripe coupon", () => {
+  const checkout = fs.readFileSync(
+    path.resolve(process.cwd(), "src/app/api/billing/checkout/route.ts"),
+    "utf8"
+  );
+  assert.match(checkout, /getOverageDiscount\(state\)/, "Checkout must check overage discount");
+  assert.match(checkout, /ni_power_overage_50/, "Must use reusable Power overage coupon");
+  assert.match(checkout, /percent_off:\s*50/, "Coupon must be 50% off");
+});
+
+test("Agentic slot assignment API route exists with enforcement", () => {
+  const route = fs.readFileSync(
+    path.resolve(process.cwd(), "src/app/api/billing/toolkit/add-agentic/route.ts"),
+    "utf8"
+  );
+  assert.match(route, /canAddNiPlanAgenticTool/, "Must enforce agentic slot limit");
+  assert.match(route, /accessType:\s*"ni_plan_agentic"/, "Must grant ni_plan_agentic access");
+  assert.match(route, /No agentic slots remaining/, "Must return 403 when slots full");
+});
+
+test("Tier detail copy reflects new slot numbers", () => {
+  const details = fs.readFileSync(
+    path.resolve(process.cwd(), "src/lib/billing/ni-tier-details.ts"),
+    "utf8"
+  );
+  assert.match(details, /2 SaaS Access IT slots/, "Core copy: 2 SaaS slots");
+  assert.match(details, /4 SaaS Access IT slots/, "Pro copy: 4 SaaS slots");
+  assert.match(details, /8 SaaS Access IT slots/, "Power copy: 8 SaaS slots");
+  assert.match(details, /4 Agentic Access IT slots/, "Power copy: 4 agentic slots");
+  assert.match(details, /50% off any additional ITs/, "Power copy: 50% overage discount");
+  assert.doesNotMatch(details, /Unlimited Standard Web Tool slots/, "No unlimited copy");
+});

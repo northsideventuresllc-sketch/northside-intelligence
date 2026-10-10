@@ -1,1 +1,158 @@
-aW1wb3J0IHsgZ2V0U2VjdG9yM0J5U2x1ZywgdHlwZSBTZWN0b3IzVG9vbFNsdWcgfSBmcm9tICJAL2xpYi9zZWN0b3IzLXJlZ2lzdHJ5IjsKCmV4cG9ydCBpbnRlcmZhY2UgU2VjdG9yM1Rvb2xIZWxwRmFxIHsKICBxdWVzdGlvbjogc3RyaW5nOwogIGFuc3dlcjogc3RyaW5nOwp9CgpleHBvcnQgaW50ZXJmYWNlIFNlY3RvcjNUb29sSGVscENvbnRlbnQgewogIHN1bW1hcnk6IHN0cmluZzsKICBmYXFzOiBTZWN0b3IzVG9vbEhlbHBGYXFbXTsKfQoKY29uc3QgSEVMUF9CWV9TTFVHOiBSZWNvcmQ8U2VjdG9yM1Rvb2xTbHVnLCBTZWN0b3IzVG9vbEhlbHBDb250ZW50PiA9IHsKICByZXBseWZsb3c6IHsKICAgIHN1bW1hcnk6CiAgICAgICJSZXBseUZsb3cgdHVybnMgY3VzdG9tZXIgbWVzc2FnZXMgaW50byBwb2xpc2hlZCwgb24tYnJhbmQgcmVwbGllcy4gUGFzdGUgYSBtZXNzYWdlLCBjaG9vc2UgdG9uZSBhbmQgc2NlbmFyaW8sIGFuZCBzaGlwIGEgcmVzcG9uc2UgaW4gc2Vjb25kcy4iLAogICAgZmFxczogWwogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJXaGF0IGtpbmRzIG9mIG1lc3NhZ2VzIHdvcmsgYmVzdD8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJTdXBwb3J0IGVtYWlscywgY2hhdCB0cmFuc2NyaXB0cywgc29jaWFsIERNcywgYW5kIHJldmlldyByZXNwb25zZXMgYWxsIHdvcmsgd2VsbC4gUGFzdGUgdGhlIGZ1bGwgY3VzdG9tZXIgbWVzc2FnZSDigJQgY29udGV4dCBoZWxwcyBSZXBseUZsb3cgbWF0Y2ggdG9uZSBhbmQgaW50ZW50LiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIkhvdyBkbyB0b25lIGFuZCBzY2VuYXJpbyBhZmZlY3QgdGhlIHJlcGx5PyIsCiAgICAgICAgYW5zd2VyOgogICAgICAgICAgIlRvbmUgY29udHJvbHMgdm9pY2UgKFByb2Zlc3Npb25hbCwgRnJpZW5kbHksIEVtcGF0aGV0aWMsIEZpcm0pLiBTY2VuYXJpbyBudWRnZXMgc3RydWN0dXJlIGFuZCBwcmlvcml0aWVzIOKAlCByZWZ1bmRzIGVtcGhhc2l6ZSBwb2xpY3kgYW5kIGVtcGF0aHk7IGNvbXBsYWludHMgbGVhZCB3aXRoIGFja25vd2xlZGdtZW50LiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIkNhbiBJIGVkaXQgdGhlIGdlbmVyYXRlZCByZXBseT8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJZZXMuIENvcHkgdGhlIG91dHB1dCBhbmQgdHdlYWsgaXQgaW4geW91ciBoZWxwIGRlc2sgb3IgaW5ib3guIFJlY2VudCBzZXNzaW9ucyBsZXQgeW91IHJlbG9hZCBwYXN0IGlucHV0cyBhbmQgb3V0cHV0cyBhbnl0aW1lLiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIldoYXQgY291bnRzIHRvd2FyZCBteSBtb250aGx5IGxpbWl0PyIsCiAgICAgICAgYW5zd2VyOgogICAgICAgICAgIkVhY2ggZ2VuZXJhdGVkIHJlcGx5IGNvdW50cyBhcyBvbmUgdXNlLiBBY3RpdmUgQ29yZSAoJDE1L21vKSBhbmQgRG9uZS1XaXRoLVlvdSAoJDE0OS45OS9tbykgc3Vic2NyaWJlcnMgZW5qb3kgdW5saW1pdGVkIGdlbmVyYXRpb24uIiwKICAgICAgfSwKICAgIF0sCiAgfSwKICBncmFudGJvdDogewogICAgc3VtbWFyeToKICAgICAgIkdyYW50Qm90IG1hdGNoZXMgbm9ucHJvZml0cyBhbmQgY3JlYXRvcnMgdG8gcmVsZXZhbnQgZnVuZGluZyBvcHBvcnR1bml0aWVzIGFuZCBkcmFmdHMgYXBwbGljYXRpb24gY29weSB0YWlsb3JlZCB0byB5b3VyIG9yZ2FuaXphdGlvbi4iLAogICAgZmFxczogWwogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJXaGF0IHNob3VsZCBJIHB1dCBpbiB0aGUgb3JnYW5pemF0aW9uIGRlc2NyaXB0aW9uPyIsCiAgICAgICAgYW5zd2VyOgogICAgICAgICAgIkluY2x1ZGUgeW91ciBtaXNzaW9uLCB3aG8geW91IHNlcnZlLCBsb2NhdGlvbiwgcHJvZ3JhbSBnb2FscywgYW5kIHdoYXQgZnVuZGluZyB3b3VsZCB1bmxvY2suIFRoZSBtb3JlIHNwZWNpZmljIHlvdSBhcmUsIHRoZSBiZXR0ZXIgdGhlIGdyYW50IG1hdGNoZXMuIiwKICAgICAgfSwKICAgICAgewogICAgICAgIHF1ZXN0aW9uOiAiV2h5IGRvZXMgR3JhbnRCb3QgYXNrIGZvbGxvdy11cCBxdWVzdGlvbnM/IiwKICAgICAgICBhbnN3ZXI6CiAgICAgICAgICAiQ2xhcmlmeWluZyBxdWVzdGlvbnMgbmFycm93IGVsaWdpYmlsaXR5IOKAlCBidWRnZXQgc2l6ZSwgdGF4IHN0YXR1cywgZ2VvZ3JhcGh5LCBhbmQgZm9jdXMgYXJlYSDigJQgc28gcmVzdWx0cyBhcmUgZ3JhbnRzIHlvdSBjYW4gcmVhbGlzdGljYWxseSBwdXJzdWUuIiwKICAgICAgfSwKICAgICAgewogICAgICAgIHF1ZXN0aW9uOiAiQXJlIGdyYW50IGxpc3RpbmdzIGd1YXJhbnRlZWQgdG8gYmUgb3Blbj8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJHcmFudEJvdCBzdXJmYWNlcyBsaWtlbHkgZml0cyBiYXNlZCBvbiB5b3VyIHByb2ZpbGUuIEFsd2F5cyB2ZXJpZnkgZGVhZGxpbmVzLCBlbGlnaWJpbGl0eSwgYW5kIGFwcGxpY2F0aW9uIHBvcnRhbHMgb24gdGhlIGZ1bmRlcidzIG9mZmljaWFsIHNpdGUgYmVmb3JlIGFwcGx5aW5nLiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIkhvdyBkbyBhcHBsaWNhdGlvbiBkcmFmdHMgd29yaz8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJBZnRlciB5b3UgZmluZCBhIG1hdGNoLCBHcmFudEJvdCBjYW4gZHJhZnQgbmFycmF0aXZlIHNlY3Rpb25zIHlvdSBjYW4gZWRpdC4gRHJhZnRzIGFyZSBzdGFydGluZyBwb2ludHMg4oCUIHJldmlldyByZXF1aXJlbWVudHMgYW5kIGN1c3RvbWl6ZSBiZWZvcmUgc3VibWlzc2lvbi4iLAogICAgICB9LAogICAgXSwKICB9LAogIHNpZ25hbGRlc2s6IHsKICAgIHN1bW1hcnk6CiAgICAgICJTaWduYWwgRGVzayByYW5rcyByYXcgaW50ZWxsaWdlbmNlIOKAlCBuZXdzLCBtZXRyaWNzLCBjb21wZXRpdG9yIG1vdmVzLCBhbmQgbWFya2V0IGNoYXR0ZXIg4oCUIGludG8gYSBwcmlvcml0aXplZCBicmllZiB3aXRoIGNsZWFyIG5leHQgYWN0aW9ucy4iLAogICAgZmFxczogWwogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJXaGF0IHNob3VsZCBJIHBhc3RlIGludG8gcmF3IHNpZ25hbHM/IiwKICAgICAgICBhbnN3ZXI6CiAgICAgICAgICAiSGVhZGxpbmVzLCBLUEkgc25hcHNob3RzLCBjb21wZXRpdG9yIGFubm91bmNlbWVudHMsIGN1c3RvbWVyIHF1b3Rlcywgc29jaWFsIHRocmVhZHMsIG9yIGludGVybmFsIG5vdGVzLiBCdWxsZXQgcG9pbnRzIGFuZCBmcmFnbWVudHMgYXJlIGZpbmUg4oCUIFNpZ25hbCBEZXNrIHN5bnRoZXNpemVzIHRoZW0uIiwKICAgICAgfSwKICAgICAgewogICAgICAgIHF1ZXN0aW9uOiAiSG93IGRvIGZvY3VzIGFyZWFzIGNoYW5nZSB0aGUgYnJpZWY/IiwKICAgICAgICBhbnN3ZXI6CiAgICAgICAgICAiRm9jdXMgYXJlYSBzdGVlcnMgZW1waGFzaXM6IE1hcmtldCB3ZWlnaHRzIHRyZW5kcyBhbmQgZGVtYW5kOyBDb21wZXRpdGl2ZSBoaWdobGlnaHRzIHJpdmFsIG1vdmVzOyBQcm9kdWN0IGNlbnRlcnMgcm9hZG1hcCBpbXBsaWNhdGlvbnM7IFJlZ3VsYXRvcnkgZmxhZ3MgY29tcGxpYW5jZSByaXNrLiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIkhvdyBhcmUgc2lnbmFscyBwcmlvcml0aXplZD8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJFYWNoIHJ1biByYW5rcyBpdGVtcyBieSB1cmdlbmN5IChIaWdoIC8gTWVkaXVtIC8gTG93KSB3aXRoIGV2aWRlbmNlIGFuZCByZWNvbW1lbmRlZCBhY3Rpb25zLiBSZS1ydW4gd2hlbiB5b3UgYWRkIG5ldyBzaWduYWxzIG9yIHNoaWZ0IGZvY3VzLiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIkNhbiBJIHVzZSB0aGlzIGZvciB3ZWVrbHkgdGVhbSB1cGRhdGVzPyIsCiAgICAgICAgYW5zd2VyOgogICAgICAgICAgIlllcy4gTWFueSB0ZWFtcyBwYXN0ZSBhIHdlZWsncyB3b3J0aCBvZiBpbnB1dHMgYW5kIHVzZSB0aGUgRXhlY3V0aXZlIFN1bW1hcnkgYW5kIFJlY29tbWVuZGVkIEFjdGlvbnMgc2VjdGlvbnMgaW4gc3RhbmR1cHMgb3IgbGVhZGVyc2hpcCBtZW1vcy4iLAogICAgICB9LAogICAgXSwKICB9LAogIGdhcHNjYW46IHsKICAgIHN1bW1hcnk6CiAgICAgICJHYXBTY2FuIHN1cmZhY2VzIHNldmVyaXR5LXJhbmtlZCBnYXBzIGluIHdvcmtmbG93cywgcHJvZHVjdHMsIGFuZCBtYXJrZXRzIOKAlCBwbHVzIHF1aWNrIHdpbnMgeW91IGNhbiBhY3Qgb24gYmVmb3JlIGZyaWN0aW9uIGNvbXBvdW5kcy4iLAogICAgZmFxczogWwogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJXaGF0IHNjYW4gdHlwZSBzaG91bGQgSSBjaG9vc2U/IiwKICAgICAgICBhbnN3ZXI6CiAgICAgICAgICAiV29ya2Zsb3cgc2NhbnMgcHJvY2VzcyBhbmQgaGFuZG9mZiBmcmljdGlvbjsgUHJvZHVjdCBzY2FucyBmZWF0dXJlIGFuZCBVWCBnYXBzOyBNYXJrZXQgc2NhbnMgY29tcGV0aXRpdmUgd2hpdGVzcGFjZSBhbmQgdW5tZXQgZGVtYW5kIGluIHlvdXIgY2F0ZWdvcnkuIiwKICAgICAgfSwKICAgICAgewogICAgICAgIHF1ZXN0aW9uOiAiV2hhdCBtYWtlcyBnb29kIGNvbnRleHQgdG8gc2Nhbj8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJEZXNjcmliZSB0aGUgY3VycmVudCBzdGF0ZSwgd2hlcmUgdXNlcnMgc3RhbGwsIHdoYXQgY29tcGV0aXRvcnMgb2ZmZXIsIGFuZCB3aGF0IG91dGNvbWVzIHlvdSB3YW50LiBJbmNsdWRlIHN0ZXBzLCB0b29scywgYW5kIHBhaW4gcG9pbnRzIOKAlCBub3QganVzdCBzeW1wdG9tcy4iLAogICAgICB9LAogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJIb3cgc2hvdWxkIEkgcmVhZCBzZXZlcml0eSByYXRpbmdzPyIsCiAgICAgICAgYW5zd2VyOgogICAgICAgICAgIkNyaXRpY2FsIGdhcHMgYmxvY2sgdmFsdWUgb3IgcmV2ZW51ZSBub3c7IE1vZGVyYXRlIGdhcHMgY3JlYXRlIGRyYWcgb3IgY2h1cm4gcmlzazsgTWlub3IgZ2FwcyBhcmUgcG9saXNoIG9yIG5pY2UtdG8taGF2ZXMuIFF1aWNrIFdpbnMgYXJlIGZpeGVzIHdpdGggb3V0c2l6ZWQgaW1wYWN0LiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIkNhbiBJIHNjYW4gdGhlIHNhbWUgd29ya2Zsb3cgdHdpY2U/IiwKICAgICAgICBhbnN3ZXI6CiAgICAgICAgICAiWWVzLiBSZS1zY2FuIGFmdGVyIGNoYW5nZXMgdG8gY29tcGFyZSBpbXByb3ZlbWVudHMgb3IgcGFzdGUgdXBkYXRlZCBjb250ZXh0LiBSZWNlbnQgcnVucyBzdGF5IGluIHlvdXIgc2Vzc2lvbiBoaXN0b3J5IGZvciByZWZlcmVuY2UuIiwKICAgICAgfSwKICAgIF0sCiAgfSwKICBicmlkZ2VhaTogewogICAgc3VtbWFyeToKICAgICAgIkJyaWRnZUFJIGRlc2lnbnMgc3RlcC1ieS1zdGVwIG9yY2hlc3RyYXRpb24gcGxhbnMgdG8gY29ubmVjdCB0d28gc3lzdGVtcyDigJQgQ1JNIHRvIGJpbGxpbmcsIGluYm94IHRvIENSTSwgc3ByZWFkc2hlZXRzIHRvIEFQSXMg4oCUIHdpdGggcmlza3MgYW5kIGRhdGEgbWFwcGluZyBub3Rlcy4iLAogICAgZmFxczogWwogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJXaGF0IGRvIEkgcHV0IGZvciBzb3VyY2UgYW5kIHRhcmdldCBzeXN0ZW1zPyIsCiAgICAgICAgYW5zd2VyOgogICAgICAgICAgIk5hbWUgdGhlIHRvb2xzIG9yIHBsYXRmb3JtcyAoZS5nLiBIdWJTcG90LCBTdHJpcGUsIEdtYWlsLCBBaXJ0YWJsZSkuIEluY2x1ZGUgcmVsZXZhbnQgb2JqZWN0cyDigJQgZGVhbHMsIHN1YnNjcmlwdGlvbnMsIGNvbnRhY3RzIOKAlCBpZiB5b3Uga25vdyB0aGVtLiIsCiAgICAgIH0sCiAgICAgIHsKICAgICAgICBxdWVzdGlvbjogIkhvdyBkZXRhaWxlZCBzaG91bGQgbXkgaW50ZWdyYXRpb24gZ29hbCBiZT8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJTdGF0ZSB0aGUgdHJpZ2dlciwgZXhwZWN0ZWQgb3V0Y29tZSwgYW5kIGVkZ2UgY2FzZXMuIEV4YW1wbGU6IHdoZW4gYSBkZWFsIGhpdHMgQ2xvc2VkIFdvbiwgY3JlYXRlIGEgU3RyaXBlIHN1YnNjcmlwdGlvbiBhbmQgc3luYyBtZXRhZGF0YSBmb3Igc3VwcG9ydC4iLAogICAgICB9LAogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJEb2VzIEJyaWRnZUFJIHdyaXRlIHByb2R1Y3Rpb24gY29kZT8iLAogICAgICAgIGFuc3dlcjoKICAgICAgICAgICJCcmlkZ2VBSSBvdXRwdXRzIGFuIGFyY2hpdGVjdHVyZSBvdmVydmlldywgc3RlcC1ieS1zdGVwIHBsYW4sIGRhdGEgbWFwcGluZywgYW5kIHN1Z2dlc3RlZCBBUElzLiBZb3VyIHRlYW0gaW1wbGVtZW50cyBvciBoYW5kcyB0aGUgcGxhbiB0byBhIGRldmVsb3Blci4iLAogICAgICB9LAogICAgICB7CiAgICAgICAgcXVlc3Rpb246ICJXaGF0IGlmIG15IHN0YWNrIHVzZXMgY3VzdG9tIGludGVybmFsIHRvb2xzPyIsCiAgICAgICAgYW5zd2VyOgogICAgICAgICAgIkRlc2NyaWJlIHRoZSBpbnRlcm5hbCBzeXN0ZW0gbGlrZSBhbnkgb3RoZXIgc291cmNlIG9yIHRhcmdldC4gQnJpZGdlQUkgd2lsbCBwcm9wb3NlIHdlYmhvb2ssIHF1ZXVlLCBvciBBUEkgcGF0dGVybnMgZXZlbiB3aGVuIGV4YWN0IHByb2R1Y3RzIGFyZSBub24tc3RhbmRhcmQuIiwKICAgICAgfSwKICAgIF0sCiAgfSwKfTsKCmV4cG9ydCBmdW5jdGlvbiBnZXRTZWN0b3IzVG9vbEhlbHBDb250ZW50KHNsdWc6IHN0cmluZyk6IFNlY3RvcjNUb29sSGVscENvbnRlbnQgfCBudWxsIHsKICBpZiAoIShzbHVnIGluIEhFTFBfQllfU0xVRykpIHJldHVybiBudWxsOwogIGNvbnN0IGVudHJ5ID0gZ2V0U2VjdG9yM0J5U2x1ZyhzbHVnIGFzIFNlY3RvcjNUb29sU2x1Zyk7CiAgY29uc3QgY29udGVudCA9IEhFTFBfQllfU0xVR1tzbHVnIGFzIFNlY3RvcjNUb29sU2x1Z107CiAgcmV0dXJuIHsKICAgIHN1bW1hcnk6IGNvbnRlbnQuc3VtbWFyeSB8fCBlbnRyeS5kZXNjcmlwdGlvbiwKICAgIGZhcXM6IGNvbnRlbnQuZmFxcywKICB9Owp9CgpleHBvcnQgZnVuY3Rpb24gaXNWYWxpZFNlY3RvcjNIZWxwU2x1ZyhzbHVnOiBzdHJpbmcpOiBzbHVnIGlzIFNlY3RvcjNUb29sU2x1ZyB7CiAgcmV0dXJuIHNsdWcgaW4gSEVMUF9CWV9TTFVHOwp9Cg==
+import { getSector3BySlug, type Sector3ToolSlug } from "@/lib/sector3-registry";
+
+export interface Sector3ToolHelpFaq {
+  question: string;
+  answer: string;
+}
+
+export interface Sector3ToolHelpContent {
+  summary: string;
+  faqs: Sector3ToolHelpFaq[];
+}
+
+const HELP_BY_SLUG: Record<Sector3ToolSlug, Sector3ToolHelpContent> = {
+  replyflow: {
+    summary:
+      "ReplyFlow turns customer messages into polished, on-brand replies. Paste a message, choose tone and scenario, and ship a response in seconds.",
+    faqs: [
+      {
+        question: "What kinds of messages work best?",
+        answer:
+          "Support emails, chat transcripts, social DMs, and review responses all work well. Paste the full customer message — context helps ReplyFlow match tone and intent.",
+      },
+      {
+        question: "How do tone and scenario affect the reply?",
+        answer:
+          "Tone controls voice (Professional, Friendly, Empathetic, Firm). Scenario nudges structure and priorities — refunds emphasize policy and empathy; complaints lead with acknowledgment.",
+      },
+      {
+        question: "Can I edit the generated reply?",
+        answer:
+          "Yes. Copy the output and tweak it in your help desk or inbox. Recent sessions let you reload past inputs and outputs anytime.",
+      },
+      {
+        question: "What counts toward my monthly limit?",
+        answer:
+          "Each generated reply counts as one use. Active Core ($15/mo) and Done-With-You ($149.99/mo) subscribers enjoy unlimited generation.",
+      },
+    ],
+  },
+  grantbot: {
+    summary:
+      "GrantBot matches nonprofits and creators to relevant funding opportunities and drafts application copy tailored to your organization.",
+    faqs: [
+      {
+        question: "What should I put in the organization description?",
+        answer:
+          "Include your mission, who you serve, location, program goals, and what funding would unlock. The more specific you are, the better the grant matches.",
+      },
+      {
+        question: "Why does GrantBot ask follow-up questions?",
+        answer:
+          "Clarifying questions narrow eligibility — budget size, tax status, geography, and focus area — so results are grants you can realistically pursue.",
+      },
+      {
+        question: "Are grant listings guaranteed to be open?",
+        answer:
+          "GrantBot surfaces likely fits based on your profile. Always verify deadlines, eligibility, and application portals on the funder's official site before applying.",
+      },
+      {
+        question: "How do application drafts work?",
+        answer:
+          "After you find a match, GrantBot can draft narrative sections you can edit. Drafts are starting points — review requirements and customize before submission.",
+      },
+    ],
+  },
+  signaldesk: {
+    summary:
+      "Signal Desk ranks raw intelligence — news, metrics, competitor moves, and market chatter — into a prioritized brief with clear next actions.",
+    faqs: [
+      {
+        question: "What should I paste into raw signals?",
+        answer:
+          "Headlines, KPI snapshots, competitor announcements, customer quotes, social threads, or internal notes. Bullet points and fragments are fine — Signal Desk synthesizes them.",
+      },
+      {
+        question: "How do focus areas change the brief?",
+        answer:
+          "Focus area steers emphasis: Market weights trends and demand; Competitive highlights rival moves; Product centers roadmap implications; Regulatory flags compliance risk.",
+      },
+      {
+        question: "How are signals prioritized?",
+        answer:
+          "Each run ranks items by urgency (High / Medium / Low) with evidence and recommended actions. Re-run when you add new signals or shift focus.",
+      },
+      {
+        question: "Can I use this for weekly team updates?",
+        answer:
+          "Yes. Many teams paste a week's worth of inputs and use the Executive Summary and Recommended Actions sections in standups or leadership memos.",
+      },
+    ],
+  },
+  gapscan: {
+    summary:
+      "GapScan surfaces severity-ranked gaps in workflows, products, and markets — plus quick wins you can act on before friction compounds.",
+    faqs: [
+      {
+        question: "What scan type should I choose?",
+        answer:
+          "Workflow scans process and handoff friction; Product scans feature and UX gaps; Market scans competitive whitespace and unmet demand in your category.",
+      },
+      {
+        question: "What makes good context to scan?",
+        answer:
+          "Describe the current state, where users stall, what competitors offer, and what outcomes you want. Include steps, tools, and pain points — not just symptoms.",
+      },
+      {
+        question: "How should I read severity ratings?",
+        answer:
+          "Critical gaps block value or revenue now; Moderate gaps create drag or churn risk; Minor gaps are polish or nice-to-haves. Quick Wins are fixes with outsized impact.",
+      },
+      {
+        question: "Can I scan the same workflow twice?",
+        answer:
+          "Yes. Re-scan after changes to compare improvements or paste updated context. Recent runs stay in your session history for reference.",
+      },
+    ],
+  },
+  bridgeai: {
+    summary:
+      "BridgeAI designs step-by-step orchestration plans to connect two systems — CRM to billing, inbox to CRM, spreadsheets to APIs — with risks and data mapping notes.",
+    faqs: [
+      {
+        question: "What do I put for source and target systems?",
+        answer:
+          "Name the tools or platforms (e.g. HubSpot, Stripe, Gmail, Airtable). Include relevant objects — deals, subscriptions, contacts — if you know them.",
+      },
+      {
+        question: "How detailed should my integration goal be?",
+        answer:
+          "State the trigger, expected outcome, and edge cases. Example: when a deal hits Closed Won, create a Stripe subscription and sync metadata for support.",
+      },
+      {
+        question: "Does BridgeAI write production code?",
+        answer:
+          "BridgeAI outputs an architecture overview, step-by-step plan, data mapping, and suggested APIs. Your team implements or hands the plan to a developer.",
+      },
+      {
+        question: "What if my stack uses custom internal tools?",
+        answer:
+          "Describe the internal system like any other source or target. BridgeAI will propose webhook, queue, or API patterns even when exact products are non-standard.",
+      },
+    ],
+  },
+};
+
+export function getSector3ToolHelpContent(slug: string): Sector3ToolHelpContent | null {
+  if (!(slug in HELP_BY_SLUG)) return null;
+  const entry = getSector3BySlug(slug as Sector3ToolSlug);
+  const content = HELP_BY_SLUG[slug as Sector3ToolSlug];
+  return {
+    summary: content.summary || entry.description,
+    faqs: content.faqs,
+  };
+}
+
+export function isValidSector3HelpSlug(slug: string): slug is Sector3ToolSlug {
+  return slug in HELP_BY_SLUG;
+}

@@ -1,1 +1,94 @@
-InVzZSBjbGllbnQiOwoKaW1wb3J0IExpbmsgZnJvbSAibmV4dC9saW5rIjsKaW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VSZWYsIHVzZVN0YXRlIH0gZnJvbSAicmVhY3QiOwoKLy8gTGl2ZSBBWE9OIGFwcCAodGhlIG5ldyBBWE9OLCBub3QgdGhlIG9sZCBlbWJlZGRlZC1kYXNoIGNvcHkgdGhpcyBwb3J0YWwKLy8gdXNlZCB0byBsaW5rIHRvKS4gTm8gY3VzdG9tIGRvbWFpbiBjb25maWd1cmVkIHlldCAtIFZlcmNlbCBkZWZhdWx0IFVSTC4KY29uc3QgQVhPTl9BUFBfVVJMID0gImh0dHBzOi8vYXhvbi1ub3J0aHNpZGV2ZW50dXJlc2xsYy1za2V0Y2hzLXByb2plY3RzLnZlcmNlbC5hcHAvYXhvbiI7CgppbnRlcmZhY2UgQXhvbk5hdkRyb3Bkb3duUHJvcHMgewogIGNhbkVudGVyQXhvbkRhc2g6IGJvb2xlYW47CiAgcG9ydGFsVXNlcm5hbWU6IHN0cmluZyB8IG51bGw7CiAgLyoqIFdoZW4gdHJ1ZSwgcmVuZGVycyBub3RoaW5nIHVubGVzcyB0aGUgdXNlciBjYW4gZW50ZXIgdGhlIEFYT04gZGFzaCAobWFzdGVyIGFjY291bnQpLiAqLwogIHJlbmRlck9ubHlGb3JNYXN0ZXI/OiBib29sZWFuOwp9CgpleHBvcnQgZnVuY3Rpb24gQXhvbk5hdkRyb3Bkb3duKHsgY2FuRW50ZXJBeG9uRGFzaCwgcG9ydGFsVXNlcm5hbWUsIHJlbmRlck9ubHlGb3JNYXN0ZXIgPSBmYWxzZSB9OiBBeG9uTmF2RHJvcGRvd25Qcm9wcykgewogIGNvbnN0IFtvcGVuLCBzZXRPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTsKICBjb25zdCBjb250YWluZXJSZWYgPSB1c2VSZWY8SFRNTERpdkVsZW1lbnQ+KG51bGwpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgZnVuY3Rpb24gaGFuZGxlQ2xpY2tPdXRzaWRlKGV2ZW50OiBNb3VzZUV2ZW50KSB7CiAgICAgIGlmIChjb250YWluZXJSZWYuY3VycmVudCAmJiAhY29udGFpbmVyUmVmLmN1cnJlbnQuY29udGFpbnMoZXZlbnQudGFyZ2V0IGFzIE5vZGUpKSB7CiAgICAgICAgc2V0T3BlbihmYWxzZSk7CiAgICAgIH0KICAgIH0KICAgIGZ1bmN0aW9uIGhhbmRsZUVzY2FwZShldmVudDogS2V5Ym9hcmRFdmVudCkgewogICAgICBpZiAoZXZlbnQua2V5ID09PSAiRXNjYXBlIikgc2V0T3BlbihmYWxzZSk7CiAgICB9CiAgICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCJtb3VzZWRvd24iLCBoYW5kbGVDbGlja091dHNpZGUpOwogICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigia2V5ZG93biIsIGhhbmRsZUVzY2FwZSk7CiAgICByZXR1cm4gKCkgPT4gewogICAgICBkb2N1bWVudC5yZW1vdmVFdmVudExpc3RlbmVyKCJtb3VzZWRvd24iLCBoYW5kbGVDbGlja091dHNpZGUpOwogICAgICBkb2N1bWVudC5yZW1vdmVFdmVudExpc3RlbmVyKCJrZXlkb3duIiwgaGFuZGxlRXNjYXBlKTsKICAgIH07CiAgfSwgW10pOwoKICBjb25zdCBjYW5PcGVuQXhvbiA9IGNhbkVudGVyQXhvbkRhc2ggJiYgQm9vbGVhbihwb3J0YWxVc2VybmFtZSk7CiAgaWYgKHJlbmRlck9ubHlGb3JNYXN0ZXIgJiYgIWNhbk9wZW5BeG9uKSByZXR1cm4gbnVsbDsKCiAgcmV0dXJuICgKICAgIDxkaXYgcmVmPXtjb250YWluZXJSZWZ9IGNsYXNzTmFtZT0icmVsYXRpdmUiPgogICAgICA8YnV0dG9uCiAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgIG9uQ2xpY2s9eygpID0+IHNldE9wZW4oKHYpID0+ICF2KX0KICAgICAgICBhcmlhLWV4cGFuZGVkPXtvcGVufQogICAgICAgIGFyaWEtaGFzcG9wdXA9Im1lbnUiCiAgICAgICAgY2xhc3NOYW1lPSJ0ZXh0LXNtIGZvbnQtc2VtaWJvbGQgdGV4dC1jeWFuLTMwMCB0cmFuc2l0aW9uIGhvdmVyOnRleHQtY3lhbi0yMDAiCiAgICAgID4KICAgICAgICBBWE9OCiAgICAgIDwvYnV0dG9uPgoKICAgICAge29wZW4gJiYgKAogICAgICAgIDxkaXYKICAgICAgICAgIGNsYXNzTmFtZT0iYWJzb2x1dGUgcmlnaHQtMCB0b3AtZnVsbCB6LTUwIG10LTIgdy01MiBvdmVyZmxvdy1oaWRkZW4gcm91bmRlZC14bCBib3JkZXIgYm9yZGVyLXdoaXRlLzEwIGJnLW5pLWJnLzk1IHNoYWRvdy14bCBiYWNrZHJvcC1ibHVyLXhsIgogICAgICAgICAgcm9sZT0ibWVudSIKICAgICAgICA+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0icHktMSI+CiAgICAgICAgICAgIDxMaW5rCiAgICAgICAgICAgICAgaHJlZj0iL2F4b24iCiAgICAgICAgICAgICAgcm9sZT0ibWVudWl0ZW0iCiAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0T3BlbihmYWxzZSl9CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJibG9jayBweC00IHB5LTIuNSB0ZXh0LXNtIHRleHQtbmktbXV0ZWQgdHJhbnNpdGlvbiBob3ZlcjpiZy13aGl0ZS81IGhvdmVyOnRleHQtY3lhbi0zMDAiCiAgICAgICAgICAgID4KICAgICAgICAgICAgICBBWE9OIEhvbWUKICAgICAgICAgICAgPC9MaW5rPgoKICAgICAgICAgICAge2Nhbk9wZW5BeG9uID8gKAogICAgICAgICAgICAgIDxhCiAgICAgICAgICAgICAgICBocmVmPXtBWE9OX0FQUF9VUkx9CiAgICAgICAgICAgICAgICB0YXJnZXQ9Il9ibGFuayIKICAgICAgICAgICAgICAgIHJlbD0ibm9yZWZlcnJlciIKICAgICAgICAgICAgICAgIHJvbGU9Im1lbnVpdGVtIgogICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0T3BlbihmYWxzZSl9CiAgICAgICAgICAgICAgICBjbGFzc05hbWU9ImJsb2NrIHB4LTQgcHktMi41IHRleHQtc20gdGV4dC1uaS1tdXRlZCB0cmFuc2l0aW9uIGhvdmVyOmJnLXdoaXRlLzUgaG92ZXI6dGV4dC1jeWFuLTMwMCIKICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICBBWE9OIERhc2gKICAgICAgICAgICAgICA8L2E+CiAgICAgICAgICAgICkgOiAoCiAgICAgICAgICAgICAgPHNwYW4KICAgICAgICAgICAgICAgIHJvbGU9Im1lbnVpdGVtIgogICAgICAgICAgICAgICAgYXJpYS1kaXNhYmxlZD0idHJ1ZSIKICAgICAgICAgICAgICAgIHRpdGxlPSJBWE9OIG5vdCBhdmFpbGFibGUsIHZpc2l0IEFYT04gSG9tZSBmb3IgbW9yZSBkZXRhaWxzLiIKICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0iYmxvY2sgY3Vyc29yLW5vdC1hbGxvd2VkIHB4LTQgcHktMi41IHRleHQtc20gaXRhbGljIHRleHQtbmktbXV0ZWQvNDAiCiAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgQVhPTiBEYXNoCiAgICAgICAgICAgICAgPC9zcGFuPgogICAgICAgICAgICApfQogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CiAgICAgICl9CiAgICA8L2Rpdj4KICApOwp9Cg==
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+
+// Live AXON app (the new AXON, not the old embedded-dash copy this portal
+// used to link to). No custom domain configured yet - Vercel default URL.
+const AXON_APP_URL = "https://axon-northsideventuresllc-sketchs-projects.vercel.app/axon";
+
+interface AxonNavDropdownProps {
+  canEnterAxonDash: boolean;
+  portalUsername: string | null;
+  /** When true, renders nothing unless the user can enter the AXON dash (master account). */
+  renderOnlyForMaster?: boolean;
+}
+
+export function AxonNavDropdown({ canEnterAxonDash, portalUsername, renderOnlyForMaster = false }: AxonNavDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  const canOpenAxon = canEnterAxonDash && Boolean(portalUsername);
+  if (renderOnlyForMaster && !canOpenAxon) return null;
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+      >
+        AXON
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-ni-bg/95 shadow-xl backdrop-blur-xl"
+          role="menu"
+        >
+          <div className="py-1">
+            <Link
+              href="/axon"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-sm text-ni-muted transition hover:bg-white/5 hover:text-cyan-300"
+            >
+              AXON Home
+            </Link>
+
+            {canOpenAxon ? (
+              <a
+                href={AXON_APP_URL}
+                target="_blank"
+                rel="noreferrer"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-ni-muted transition hover:bg-white/5 hover:text-cyan-300"
+              >
+                AXON Dash
+              </a>
+            ) : (
+              <span
+                role="menuitem"
+                aria-disabled="true"
+                title="AXON not available, visit AXON Home for more details."
+                className="block cursor-not-allowed px-4 py-2.5 text-sm italic text-ni-muted/40"
+              >
+                AXON Dash
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

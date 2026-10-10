@@ -66,15 +66,14 @@ function parseCheckoutBody(body: Record<string, unknown>): CheckoutKind | null {
     if (!toolSlug || (interval !== "monthly" && interval !== "annual")) return null;
     return { type: "tool_subscription", toolSlug, interval };
   }
-  if (type === "tool_lifetime") {
-    const toolSlug = body.toolSlug as string;
-    if (!toolSlug) return null;
-    return { type: "tool_lifetime", toolSlug };
-  }
   return null;
 }
 
 export async function POST(req: NextRequest) {
+  const rawBody = await req.json().catch(() => ({})) as Record<string, unknown>;
+  if ((rawBody as { type?: string }).type === "tool_lifetime") {
+    return NextResponse.json({ error: "Lifetime access is no longer available for purchase." }, { status: 410 });
+  }
   await ensureBillingEnvHydrated();
   const billingConfigError = getBillingConfigError();
   if (billingConfigError) {
@@ -87,13 +86,7 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  let body: Record<string, unknown>;
-  try {
-    body = (await req.json()) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
-
+  const body = rawBody;
   const checkout = parseCheckoutBody(body);
   if (!checkout) return NextResponse.json({ error: "Invalid checkout request" }, { status: 400 });
 
@@ -135,23 +128,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      if (checkout.type === "tool_lifetime") {
-        const lifetimeStatus = await getLifetimeLaunchStatus();
-        const randomOffer = shouldShowPermanentAccessOffer(checkout.toolSlug, user.id);
-        if (!lifetimeStatus.active && !randomOffer) {
-          return NextResponse.json(
-            { error: lifetimeStatus.active ? lifetimeStatus.reason : "Permanent access is not available right now" },
-            { status: 403 }
-          );
-        }
-
-        priceId = getToolPriceIdFromDb(pricing, "lifetime");
-        mode = "payment";
-        metadata.toolSlug = checkout.toolSlug;
-        metadata.accessType = "lifetime";
-        successUrl = `${base}/toolkit?purchased=${checkout.toolSlug}`;
-        cancelUrl = `${base}/tools/${checkout.toolSlug}`;
-      } else {
+      {
         if (
           state.hasNiPaidPlan &&
           canAddNiPlanTool(state) &&

@@ -15,6 +15,8 @@ interface ToolkitGridProps {
   niTier: NiTier;
   toolSlotsUsed: number;
   toolSlotLimit: number | null;
+  agenticSlotsUsed: number;
+  agenticSlotLimit: number | null;
   canAddNiPlanTool: boolean;
   availableToAdd: string[];
   isMasterAccount?: boolean;
@@ -37,6 +39,8 @@ export function ToolkitGrid({
   niTier,
   toolSlotsUsed,
   toolSlotLimit,
+  agenticSlotsUsed,
+  agenticSlotLimit,
   canAddNiPlanTool,
   availableToAdd,
   isMasterAccount = false,
@@ -278,6 +282,8 @@ export function ToolkitGrid({
                           ownedToolSlugs: Array.from(ownedSlugs),
                           toolSlotsUsed,
                           toolSlotLimit,
+                          agenticSlotsUsed,
+                          agenticSlotLimit,
                           hasNiPaidPlan: niTier !== "free",
                           lastUnlimitedSwapAt: null,
                           canSwapUnlimitedTool,

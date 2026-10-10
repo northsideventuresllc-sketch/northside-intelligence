@@ -1,1 +1,89 @@
-aW1wb3J0IHR5cGUgeyBNZXRhZGF0YSB9IGZyb20gIm5leHQiOwppbXBvcnQgeyByZWRpcmVjdCB9IGZyb20gIm5leHQvbmF2aWdhdGlvbiI7CmltcG9ydCB7IFN1c3BlbnNlIH0gZnJvbSAicmVhY3QiOwppbXBvcnQgeyBUcmFja1ZpZXdDb250ZW50IH0gZnJvbSAiQC9jb21wb25lbnRzL3RyYWNraW5nL1RyYWNrVmlld0NvbnRlbnQiOwppbXBvcnQgeyBUcmFja0JpbGxpbmdTdWNjZXNzIH0gZnJvbSAiQC9jb21wb25lbnRzL3RyYWNraW5nL1RyYWNrQmlsbGluZ1N1Y2Nlc3MiOwppbXBvcnQgeyBUb29sa2l0R3JpZCB9IGZyb20gIkAvY29tcG9uZW50cy9iaWxsaW5nL1Rvb2xraXRHcmlkIjsKaW1wb3J0IHsgRm9vdGVyIH0gZnJvbSAiQC9jb21wb25lbnRzL2xhbmRpbmcvRm9vdGVyIjsKaW1wb3J0IHsgTmF2U2VydmVyIH0gZnJvbSAiQC9jb21wb25lbnRzL2xhbmRpbmcvTmF2U2VydmVyIjsKaW1wb3J0IHsgY2FuQWRkTmlQbGFuVG9vbCwgZ2V0VXNlckJpbGxpbmdTdGF0ZSB9IGZyb20gIkAvbGliL2JpbGxpbmcvZW50aXRsZW1lbnRzIjsKaW1wb3J0IHsgc2hvdWxkU2hvd1Blcm1hbmVudEFjY2Vzc09mZmVyIH0gZnJvbSAiQC9saWIvYmlsbGluZy9wZXJtYW5lbnQtYWNjZXNzLW9mZmVyIjsKaW1wb3J0IHsgSU5URUxMSUdFTkNFX1RPT0xfU0xVR1MsIG1hcERiUHJpY2luZyB9IGZyb20gIkAvbGliL2JpbGxpbmcvdG9vbC1wcmljaW5nIjsKaW1wb3J0IHsgY3JlYXRlU2VydmVyQXV0aENsaWVudCB9IGZyb20gIkAvbGliL3N1cGFiYXNlL3NlcnZlci1hdXRoIjsKaW1wb3J0IHsgY3JlYXRlU2VydmljZUNsaWVudCB9IGZyb20gIkAvbGliL3N1cGFiYXNlL3NlcnZlciI7CgpleHBvcnQgY29uc3QgbWV0YWRhdGE6IE1ldGFkYXRhID0gewogIHRpdGxlOiAiVG9vbGtpdCB8IE5vcnRoc2lkZSBJbnRlbGxpZ2VuY2UiLAogIGRlc2NyaXB0aW9uOiAiWW91ciBJbnRlbGxpZ2VuY2UgVG9vbHMgY29sbGVjdGlvbiIsCn07CgpleHBvcnQgZGVmYXVsdCBhc3luYyBmdW5jdGlvbiBUb29sa2l0UGFnZSgpIHsKICBjb25zdCBzdXBhYmFzZSA9IGF3YWl0IGNyZWF0ZVNlcnZlckF1dGhDbGllbnQoKTsKICBjb25zdCB7CiAgICBkYXRhOiB7IHVzZXIgfSwKICB9ID0gYXdhaXQgc3VwYWJhc2UuYXV0aC5nZXRVc2VyKCk7CgogIGlmICghdXNlcikgewogICAgcmVkaXJlY3QoIi9hdXRoL3NpZ25pbj9yZXR1cm5Ubz0vdG9vbGtpdCIpOwogIH0KCiAgY29uc3Qgc3RhdGUgPSBhd2FpdCBnZXRVc2VyQmlsbGluZ1N0YXRlKHVzZXIuaWQpOwogIGNvbnN0IG93bmVkID0gbmV3IFNldCgKICAgIHN0YXRlLmlzTWFzdGVyQWNjb3VudCA/IElOVEVMTElHRU5DRV9UT09MX1NMVUdTIDogc3RhdGUub3duZWRUb29sU2x1Z3MKICApOwogIGNvbnN0IGF2YWlsYWJsZVRvQWRkID0gSU5URUxMSUdFTkNFX1RPT0xfU0xVR1MuZmlsdGVyKChzbHVnKSA9PiAhb3duZWQuaGFzKHNsdWcpKTsKCiAgY29uc3Qgc2VydmljZSA9IGNyZWF0ZVNlcnZpY2VDbGllbnQoKTsKICBjb25zdCB7IGRhdGE6IHByaWNpbmdSb3dzIH0gPSBhd2FpdCBzZXJ2aWNlLmZyb20oIm5pX3Rvb2xfcHJpY2luZyIpLnNlbGVjdCgiKiIpOwogIGNvbnN0IHRvb2xQcmljaW5nQnlTbHVnID0gT2JqZWN0LmZyb21FbnRyaWVzKAogICAgKHByaWNpbmdSb3dzID8/IFtdKS5tYXAoKHJvdykgPT4gW1N0cmluZyhyb3cudG9vbF9zbHVnKSwgbWFwRGJQcmljaW5nKHJvdyldKQogICk7CgogIGNvbnN0IHBlcm1hbmVudE9mZmVyQnlTbHVnID0gT2JqZWN0LmZyb21FbnRyaWVzKAogICAgSU5URUxMSUdFTkNFX1RPT0xfU0xVR1MubWFwKChzbHVnKSA9PiBbCiAgICAgIHNsdWcsCiAgICAgIHNob3VsZFNob3dQZXJtYW5lbnRBY2Nlc3NPZmZlcihzbHVnLCB1c2VyLmlkKSwKICAgIF0pCiAgKTsKCiAgcmV0dXJuICgKICAgIDxtYWluIGNsYXNzTmFtZT0ibWluLWgtc2NyZWVuIGJnLW5pLWJnIj4KICAgICAgPFRyYWNrVmlld0NvbnRlbnQgY29udGVudE5hbWU9InRvb2xraXQiIC8+CiAgICAgIDxTdXNwZW5zZSBmYWxsYmFjaz17bnVsbH0+CiAgICAgICAgPFRyYWNrQmlsbGluZ1N1Y2Nlc3MgLz4KICAgICAgPC9TdXNwZW5zZT4KICAgICAgPE5hdlNlcnZlciAvPgogICAgICA8c2VjdGlvbiBjbGFzc05hbWU9InJlbGF0aXZlIHB4LTYgcGItMjAgcHQtMjQiPgogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJteC1hdXRvIG1heC13LTV4bCI+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibWItMTAgdGV4dC1jZW50ZXIiPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9Im1iLTIgdGV4dC14cyBmb250LXNlbWlib2xkIHVwcGVyY2FzZSB0cmFja2luZy1bMC4yNWVtXSB0ZXh0LW5pLWN5YW4vNjAiPgogICAgICAgICAgICAgIFlvdXIgQ29sbGVjdGlvbgogICAgICAgICAgICA8L3A+CiAgICAgICAgICAgIDxoMSBjbGFzc05hbWU9InRleHQtM3hsIGZvbnQtc2VtaWJvbGQgdGV4dC13aGl0ZSI+VG9vbGtpdDwvaDE+CiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0ibXgtYXV0byBtdC0zIG1heC13LXhsIHRleHQtc20gdGV4dC1uaS1tdXRlZCI+CiAgICAgICAgICAgICAgQWRkIEludGVsbGlnZW5jZSBUb29scyB0byB5b3VyIFRvb2xraXQgdG8gdXNlIHRoZW0uIEFzc2lnbiB1bmxpbWl0ZWQgYWNjZXNzIGZyb20KICAgICAgICAgICAgICB5b3VyIE5JIHBsYW4sIG9yIHN1YnNjcmliZSBwZXIgdG9vbCBhdCBhbnkgdGltZS4KICAgICAgICAgICAgPC9wPgogICAgICAgICAgPC9kaXY+CgogICAgICAgICAgPFRvb2xraXRHcmlkCiAgICAgICAgICAgIHRvb2xraXQ9e3N0YXRlLnRvb2xraXR9CiAgICAgICAgICAgIG5pVGllcj17c3RhdGUubmlUaWVyfQogICAgICAgICAgICB0b29sU2xvdHNVc2VkPXtzdGF0ZS50b29sU2xvdHNVc2VkfQogICAgICAgICAgICB0b29sU2xvdExpbWl0PXtzdGF0ZS50b29sU2xvdExpbWl0fQogICAgICAgICAgICBhZ2VudGljU2xvdHNVc2VkPXtzdGF0ZS5hZ2VudGljU2xvdHNVc2VkfQogICAgICAgICAgICBhZ2VudGljU2xvdExpbWl0PXtzdGF0ZS5hZ2VudGljU2xvdExpbWl0fQogICAgICAgICAgICBjYW5BZGROaVBsYW5Ub29sPXtjYW5BZGROaVBsYW5Ub29sKHN0YXRlKX0KICAgICAgICAgICAgYXZhaWxhYmxlVG9BZGQ9e2F2YWlsYWJsZVRvQWRkfQogICAgICAgICAgICBpc01hc3RlckFjY291bnQ9e3N0YXRlLmlzTWFzdGVyQWNjb3VudH0KICAgICAgICAgICAgY2FuU3dhcFVubGltaXRlZFRvb2w9e3N0YXRlLmNhblN3YXBVbmxpbWl0ZWRUb29sfQogICAgICAgICAgICBuZXh0VW5saW1pdGVkU3dhcEF0PXtzdGF0ZS5uZXh0VW5saW1pdGVkU3dhcEF0fQogICAgICAgICAgICB0b29sUHJpY2luZ0J5U2x1Zz17dG9vbFByaWNpbmdCeVNsdWd9CiAgICAgICAgICAgIHBlcm1hbmVudE9mZmVyQnlTbHVnPXtwZXJtYW5lbnRPZmZlckJ5U2x1Z30KICAgICAgICAgIC8+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvc2VjdGlvbj4KICAgICAgPEZvb3RlciAvPgogICAgPC9tYWluPgogICk7Cn0K
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { TrackViewContent } from "@/components/tracking/TrackViewContent";
+import { TrackBillingSuccess } from "@/components/tracking/TrackBillingSuccess";
+import { ToolkitGrid } from "@/components/billing/ToolkitGrid";
+import { Footer } from "@/components/landing/Footer";
+import { NavServer } from "@/components/landing/NavServer";
+import { canAddNiPlanTool, getUserBillingState } from "@/lib/billing/entitlements";
+import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
+import { INTELLIGENCE_TOOL_SLUGS, mapDbPricing } from "@/lib/billing/tool-pricing";
+import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { createServiceClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Toolkit | Northside Intelligence",
+  description: "Your Intelligence Tools collection",
+};
+
+export default async function ToolkitPage() {
+  const supabase = await createServerAuthClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/auth/signin?returnTo=/toolkit");
+  }
+
+  const state = await getUserBillingState(user.id);
+  const owned = new Set(
+    state.isMasterAccount ? INTELLIGENCE_TOOL_SLUGS : state.ownedToolSlugs
+  );
+  const availableToAdd = INTELLIGENCE_TOOL_SLUGS.filter((slug) => !owned.has(slug));
+
+  const service = createServiceClient();
+  const { data: pricingRows } = await service.from("ni_tool_pricing").select("*");
+  const toolPricingBySlug = Object.fromEntries(
+    (pricingRows ?? []).map((row) => [String(row.tool_slug), mapDbPricing(row)])
+  );
+
+  const permanentOfferBySlug = Object.fromEntries(
+    INTELLIGENCE_TOOL_SLUGS.map((slug) => [
+      slug,
+      shouldShowPermanentAccessOffer(slug, user.id),
+    ])
+  );
+
+  return (
+    <main className="min-h-screen bg-ni-bg">
+      <TrackViewContent contentName="toolkit" />
+      <Suspense fallback={null}>
+        <TrackBillingSuccess />
+      </Suspense>
+      <NavServer />
+      <section className="relative px-6 pb-20 pt-24">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-10 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-ni-cyan/60">
+              Your Collection
+            </p>
+            <h1 className="text-3xl font-semibold text-white">Toolkit</h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-ni-muted">
+              Add Intelligence Tools to your Toolkit to use them. Assign unlimited access from
+              your NI plan, or subscribe per tool at any time.
+            </p>
+          </div>
+
+          <ToolkitGrid
+            toolkit={state.toolkit}
+            niTier={state.niTier}
+            toolSlotsUsed={state.toolSlotsUsed}
+            toolSlotLimit={state.toolSlotLimit}
+            agenticSlotsUsed={state.agenticSlotsUsed}
+            agenticSlotLimit={state.agenticSlotLimit}
+            canAddNiPlanTool={canAddNiPlanTool(state)}
+            availableToAdd={availableToAdd}
+            isMasterAccount={state.isMasterAccount}
+            canSwapUnlimitedTool={state.canSwapUnlimitedTool}
+            nextUnlimitedSwapAt={state.nextUnlimitedSwapAt}
+            toolPricingBySlug={toolPricingBySlug}
+            permanentOfferBySlug={permanentOfferBySlug}
+          />
+        </div>
+      </section>
+      <Footer />
+    </main>
+  );
+}

@@ -1,1 +1,189 @@
-InVzZSBjbGllbnQiOwoKaW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VTdGF0ZSB9IGZyb20gInJlYWN0IjsKaW1wb3J0IExpbmsgZnJvbSAibmV4dC9saW5rIjsKCmludGVyZmFjZSBBZ2VudGljVGllckNvbWluZ1Nvb25DYXJkUHJvcHMgewogIHRvb2xTbHVnPzogc3RyaW5nOwogIHRvb2xOYW1lPzogc3RyaW5nOwogIHZhcmlhbnQ/OiAicG9ydGFsIiB8ICJyZXBseWZsb3ciIHwgImdyYW50Ym90IiB8ICJzaWduYWxkZXNrIiB8ICJnYXBzY2FuIiB8ICJicmlkZ2VhaSI7CiAgY29tcGFjdD86IGJvb2xlYW47CiAgY2xhc3NOYW1lPzogc3RyaW5nOwp9CgpleHBvcnQgZnVuY3Rpb24gQWdlbnRpY1RpZXJDb21pbmdTb29uQ2FyZCh7CiAgdG9vbFNsdWcgPSAidG9vbCIsCiAgdG9vbE5hbWUsCiAgdmFyaWFudCA9ICJwb3J0YWwiLAogIGNvbXBhY3QgPSBmYWxzZSwKICBjbGFzc05hbWUgPSAiIiwKfTogQWdlbnRpY1RpZXJDb21pbmdTb29uQ2FyZFByb3BzKSB7CiAgY29uc3QgW2pvaW5lZFdhaXRsaXN0LCBzZXRKb2luZWRXYWl0bGlzdF0gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgW2lzTG9nZ2VkSW4sIHNldElzTG9nZ2VkSW5dID0gdXNlU3RhdGU8Ym9vbGVhbiB8IG51bGw+KG51bGwpOwogIGNvbnN0IFtzdWJtaXR0aW5nLCBzZXRTdWJtaXR0aW5nXSA9IHVzZVN0YXRlKGZhbHNlKTsKICBjb25zdCBkaXNwbGF5TmFtZSA9CiAgICB0b29sTmFtZSB8fCAodG9vbFNsdWcuY2hhckF0KDApLnRvVXBwZXJDYXNlKCkgKyB0b29sU2x1Zy5zbGljZSgxKSk7CgogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBmZXRjaCgiL2FwaS9hdXRoL21lIikKICAgICAgLnRoZW4oKHJlcykgPT4gcmVzLmpzb24oKSkKICAgICAgLnRoZW4oKGRhdGEpID0+IHsKICAgICAgICBjb25zdCBsb2dnZWRJbiA9ICEhZGF0YT8udXNlcjsKICAgICAgICBzZXRJc0xvZ2dlZEluKGxvZ2dlZEluKTsKICAgICAgICAvLyBSZXR1cm5pbmcgZnJvbSBzaWdudXAgd2l0aCBub3RpZnkgaW50ZW50OiBhdXRvLWpvaW4gbm93IHRoYXQgd2UKICAgICAgICAvLyBoYXZlIGFuIGFjY291bnQgKGFuZCB0aGVyZWZvcmUgYW4gZW1haWwpIG9uIGZpbGUuCiAgICAgICAgaWYgKGxvZ2dlZEluICYmIHR5cGVvZiB3aW5kb3cgIT09ICJ1bmRlZmluZWQiKSB7CiAgICAgICAgICBjb25zdCBwYXJhbXMgPSBuZXcgVVJMU2VhcmNoUGFyYW1zKHdpbmRvdy5sb2NhdGlvbi5zZWFyY2gpOwogICAgICAgICAgaWYgKHBhcmFtcy5nZXQoIm5vdGlmeV9hZ2VudGljIikgPT09IHRvb2xTbHVnKSB7CiAgICAgICAgICAgIGpvaW5XaXRoQWNjb3VudEVtYWlsKCk7CiAgICAgICAgICAgIC8vIENsZWFuIHRoZSBwYXJhbSBzbyByZWZyZXNoIGRvZXNuJ3QgcmUtdHJpZ2dlci4KICAgICAgICAgICAgcGFyYW1zLmRlbGV0ZSgibm90aWZ5X2FnZW50aWMiKTsKICAgICAgICAgICAgY29uc3QgY2xlYW4gPSBgJHt3aW5kb3cubG9jYXRpb24ucGF0aG5hbWV9JHtwYXJhbXMudG9TdHJpbmcoKSA/IGA/JHtwYXJhbXN9YCA6ICIifWA7CiAgICAgICAgICAgIHdpbmRvdy5oaXN0b3J5LnJlcGxhY2VTdGF0ZShudWxsLCAiIiwgY2xlYW4pOwogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfSkKICAgICAgLmNhdGNoKCgpID0+IHNldElzTG9nZ2VkSW4oZmFsc2UpKTsKICAgIC8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZSByZWFjdC1ob29rcy9leGhhdXN0aXZlLWRlcHMKICB9LCBbXSk7CgogIGNvbnN0IGpvaW5XaXRoQWNjb3VudEVtYWlsID0gYXN5bmMgKCkgPT4gewogICAgc2V0U3VibWl0dGluZyh0cnVlKTsKICAgIHRyeSB7CiAgICAgIGF3YWl0IGZldGNoKCIvYXBpL2VtYWlsLWxpc3Qvc3Vic2NyaWJlIiwgeyBtZXRob2Q6ICJQT1NUIiB9KTsKICAgIH0gY2F0Y2ggewogICAgICAvLyBub24tZmF0YWw6IGFjY291bnQgZW1haWwgaXMgc3RpbGwgb24gZmlsZSBmb3IgbGF1bmNoIGFubm91bmNlbWVudHMKICAgIH0gZmluYWxseSB7CiAgICAgIHNldFN1Ym1pdHRpbmcoZmFsc2UpOwogICAgICBzZXRKb2luZWRXYWl0bGlzdCh0cnVlKTsKICAgIH0KICB9OwoKICAvLyBMb2dnZWQtb3V0IHVzZXJzIGdvIHRocm91Z2ggc2lnbnVwIGZpcnN0IOKAlCB0aGF0IGd1YXJhbnRlZXMgYW4gZW1haWwgZW5kcwogIC8vIHVwIG9uIGZpbGUgYmVmb3JlIHdlIGV2ZXIgcHJvbWlzZSBhIG5vdGlmaWNhdGlvbi4KICBjb25zdCBzaWdudXBIcmVmID0KICAgIHR5cGVvZiB3aW5kb3cgIT09ICJ1bmRlZmluZWQiCiAgICAgID8gYC9hdXRoL3NpZ251cD9yZXR1cm5Ubz0ke2VuY29kZVVSSUNvbXBvbmVudChgJHt3aW5kb3cubG9jYXRpb24ucGF0aG5hbWV9P25vdGlmeV9hZ2VudGljPSR7dG9vbFNsdWd9YCl9YAogICAgICA6ICIvYXV0aC9zaWdudXAiOwoKICBjb25zdCBpc1JlcGx5ZmxvdyA9IHZhcmlhbnQgPT09ICJyZXBseWZsb3ciIHx8IHRvb2xTbHVnID09PSAicmVwbHlmbG93IjsKICBjb25zdCBpc0dyYW50Ym90ID0gdmFyaWFudCA9PT0gImdyYW50Ym90IiB8fCB0b29sU2x1ZyA9PT0gImdyYW50Ym90IjsKICBjb25zdCBpc1NpZ25hbGRlc2sgPSB2YXJpYW50ID09PSAic2lnbmFsZGVzayIgfHwgdG9vbFNsdWcgPT09ICJzaWduYWxkZXNrIjsKICBjb25zdCBpc0dhcHNjYW4gPSB2YXJpYW50ID09PSAiZ2Fwc2NhbiIgfHwgdG9vbFNsdWcgPT09ICJnYXBzY2FuIjsKICBjb25zdCBpc0JyaWRnZWFpID0gdmFyaWFudCA9PT0gImJyaWRnZWFpIiB8fCB0b29sU2x1ZyA9PT0gImJyaWRnZWFpIjsKCiAgY29uc3QgYWNjZW50Q29sb3IgPSBpc1JlcGx5ZmxvdwogICAgPyAiZnJvbS1bI2ZmNGI3Ml0gdG8tWyM3OTI4Y2FdIgogICAgOiBpc0dyYW50Ym90CiAgICAgID8gImZyb20tWyMxMGI5ODFdIHRvLVsjZjU5ZTBiXSIKICAgICAgOiBpc1NpZ25hbGRlc2sKICAgICAgICA/ICJmcm9tLVsjMTBiOTgxXSB0by1bIzA2YjZkNF0iCiAgICAgICAgOiBpc0dhcHNjYW4KICAgICAgICAgID8gImZyb20tWyMzYjgyZjZdIHRvLVsjOGI1Y2Y2XSIKICAgICAgICAgIDogaXNCcmlkZ2VhaQogICAgICAgICAgICA/ICJmcm9tLVsjOGI1Y2Y2XSB0by1bI2VjNDg5OV0iCiAgICAgICAgICAgIDogImZyb20tY3lhbi00MDAgdG8taW5kaWdvLTUwMCI7CgogIGNvbnN0IGJvcmRlckNsYXNzID0gaXNSZXBseWZsb3cKICAgID8gImJvcmRlci1yZi1yb3NlLzQwIGhvdmVyOmJvcmRlci1yZi1yb3NlLzcwIgogICAgOiBpc0dyYW50Ym90CiAgICAgID8gImJvcmRlci1nYi1lbWVyYWxkLzQwIGhvdmVyOmJvcmRlci1nYi1lbWVyYWxkLzcwIgogICAgICA6ICJib3JkZXItY3lhbi01MDAvNDAgaG92ZXI6Ym9yZGVyLWN5YW4tNDAwLzcwIjsKCiAgcmV0dXJuICgKICAgIDxkaXYKICAgICAgY2xhc3NOYW1lPXtgcmVsYXRpdmUgZmxleCBmbGV4LWNvbCBqdXN0aWZ5LWJldHdlZW4gcm91bmRlZC0zeGwgYm9yZGVyIGJnLWdyYWRpZW50LXRvLWIgZnJvbS13aGl0ZS9bMC4wN10gdG8td2hpdGUvWzAuMDJdIHAtNiBzaGFkb3ctMnhsIGJhY2tkcm9wLWJsdXIteGwgdHJhbnNpdGlvbiBkdXJhdGlvbi0zMDAgJHtib3JkZXJDbGFzc30gJHtjbGFzc05hbWV9YH0KICAgID4KICAgICAgey8qIFByb21pbmVudCBCYWRnZSAqL30KICAgICAgPGRpdiBjbGFzc05hbWU9ImFic29sdXRlIC10b3AtMy41IGxlZnQtMS8yIC10cmFuc2xhdGUteC0xLzIiPgogICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcm91bmRlZC1mdWxsIGJvcmRlciBib3JkZXItY3lhbi00MDAvNjAgYmctZ3JhZGllbnQtdG8tciBmcm9tLWN5YW4tOTUwIHZpYS1zbGF0ZS05MDAgdG8taW5kaWdvLTk1MCBweC00IHB5LTEgdGV4dC14cyBmb250LWJvbGQgdXBwZXJjYXNlIHRyYWNraW5nLXdpZGVyIHRleHQtY3lhbi0zMDAgc2hhZG93LVswXzBfMjBweF9yZ2JhKDYsMTgyLDIxMiwwLjM1KV0iPgogICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJoLTIgdy0yIHJvdW5kZWQtZnVsbCBiZy1jeWFuLTQwMCBhbmltYXRlLXB1bHNlIiAvPgogICAgICAgICAgQWdlbnRpYyBBY2Nlc3MgQ29taW5nIFNvb24KICAgICAgICA8L3NwYW4+CiAgICAgIDwvZGl2PgoKICAgICAgPGRpdiBjbGFzc05hbWU9InB0LTIiPgogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4iPgogICAgICAgICAgPGgzIGNsYXNzTmFtZT0idGV4dC14bCBmb250LWJvbGQgdGV4dC13aGl0ZSBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiI+CiAgICAgICAgICAgIDxzcGFuPuKaoSBBZ2VudGljIEFjY2Vzczwvc3Bhbj4KICAgICAgICAgIDwvaDM+CiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InJvdW5kZWQtZnVsbCBib3JkZXIgYm9yZGVyLWN5YW4tNTAwLzMwIGJnLWN5YW4tNTAwLzEwIHB4LTIuNSBweS0wLjUgZm9udC1tb25vIHRleHQtWzExcHhdIGZvbnQtc2VtaWJvbGQgdGV4dC1jeWFuLTMwMCI+CiAgICAgICAgICAgIEF1dG9ub21vdXMKICAgICAgICAgIDwvc3Bhbj4KICAgICAgICA8L2Rpdj4KCiAgICAgICAgPHAgY2xhc3NOYW1lPSJtdC0yIHRleHQteHMgdGV4dC13aGl0ZS83MCBsZWFkaW5nLXJlbGF4ZWQiPgogICAgICAgICAgRnVsbCBoZWFkbGVzcyBhZ2VudCBydW50aW1lIHdpdGggbXVsdGktYWdlbnQgb3JjaGVzdHJhdGlvbiBmb3Ige2Rpc3BsYXlOYW1lfS4gT3BlcmF0ZXMgMjQvNyB3aXRob3V0IG1hbnVhbCBwcm9tcHRpbmcuCiAgICAgICAgPC9wPgoKICAgICAgICB7LyogQ2FwYWJpbGl0aWVzIC0gU3RyaWN0bHkgTm8gUHJpY2VzICovfQogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJtdC01IHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItd2hpdGUvMTAgYmctYmxhY2svMzAgcC00Ij4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1bMTFweF0gZm9udC1zZW1pYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdGV4dC1jeWFuLTMwMC85MCBtYi0zIj4KICAgICAgICAgICAgQ29yZSBBZ2VudGljIENhcGFiaWxpdGllcwogICAgICAgICAgPC9wPgogICAgICAgICAgPHVsIGNsYXNzTmFtZT0ic3BhY2UteS0zIHRleHQteHMgdGV4dC13aGl0ZS84MCI+CiAgICAgICAgICAgIDxsaSBjbGFzc05hbWU9ImZsZXggaXRlbXMtc3RhcnQgZ2FwLTIuNSI+CiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJtdC0wLjUgZmxleCBoLTQgdy00IHNocmluay0wIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciByb3VuZGVkLWZ1bGwgYmctY3lhbi01MDAvMjAgdGV4dC1jeWFuLTMwMCB0ZXh0LVsxMHB4XSBmb250LWJvbGQiPgogICAgICAgICAgICAgICAg4pyTCiAgICAgICAgICAgICAgPC9zcGFuPgogICAgICAgICAgICAgIDxzcGFuPgogICAgICAgICAgICAgICAgPHN0cm9uZyBjbGFzc05hbWU9InRleHQtd2hpdGUgZm9udC1tZWRpdW0iPkF1dG9ub21vdXMgYmFja2dyb3VuZCBtb25pdG9yaW5nPC9zdHJvbmc+IGFuZCBzY2hlZHVsZWQgcm91dGluZSBleGVjdXRpb24uCiAgICAgICAgICAgICAgPC9zcGFuPgogICAgICAgICAgICA8L2xpPgogICAgICAgICAgICA8bGkgY2xhc3NOYW1lPSJmbGV4IGl0ZW1zLXN0YXJ0IGdhcC0yLjUiPgogICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0ibXQtMC41IGZsZXggaC00IHctNCBzaHJpbmstMCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcm91bmRlZC1mdWxsIGJnLWN5YW4tNTAwLzIwIHRleHQtY3lhbi0zMDAgdGV4dC1bMTBweF0gZm9udC1ib2xkIj4KICAgICAgICAgICAgICAgIOKckwogICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgICA8c3Bhbj4KICAgICAgICAgICAgICAgIDxzdHJvbmcgY2xhc3NOYW1lPSJ0ZXh0LXdoaXRlIGZvbnQtbWVkaXVtIj5NdWx0aS1hZ2VudCBzeW50aGVzaXM8L3N0cm9uZz4gd2l0aG91dCBtYW51YWwgcHJvbXB0aW5nLgogICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgPC9saT4KICAgICAgICAgICAgPGxpIGNsYXNzTmFtZT0iZmxleCBpdGVtcy1zdGFydCBnYXAtMi41Ij4KICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9Im10LTAuNSBmbGV4IGgtNCB3LTQgc2hyaW5rLTAgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHJvdW5kZWQtZnVsbCBiZy1jeWFuLTUwMC8yMCB0ZXh0LWN5YW4tMzAwIHRleHQtWzEwcHhdIGZvbnQtYm9sZCI+CiAgICAgICAgICAgICAgICDinJMKICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgPHNwYW4+CiAgICAgICAgICAgICAgICA8c3Ryb25nIGNsYXNzTmFtZT0idGV4dC13aGl0ZSBmb250LW1lZGl1bSI+RGlyZWN0IHdlYmhvb2ssIENSTSw8L3N0cm9uZz4gYW5kIGNvbW11bmljYXRpb24gZGlzcGF0Y2guCiAgICAgICAgICAgICAgPC9zcGFuPgogICAgICAgICAgICA8L2xpPgogICAgICAgICAgPC91bD4KICAgICAgICA8L2Rpdj4KICAgICAgPC9kaXY+CgogICAgICB7LyogQWN0aW9uIC8gRnV0dXJlIEF2YWlsYWJpbGl0eSAqL30KICAgICAgPGRpdiBjbGFzc05hbWU9Im10LTYgYm9yZGVyLXQgYm9yZGVyLXdoaXRlLzEwIHB0LTQiPgogICAgICAgIHtqb2luZWRXYWl0bGlzdCA/ICgKICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJyb3VuZGVkLXhsIGJvcmRlciBib3JkZXItZW1lcmFsZC01MDAvNDAgYmctZW1lcmFsZC01MDAvMTAgcHktMi41IHB4LTMgdGV4dC1jZW50ZXIgdGV4dC14cyBmb250LXNlbWlib2xkIHRleHQtZW1lcmFsZC0zMDAiPgogICAgICAgICAgICDinJMgWW91J3JlIG9uIHRoZSBsaXN0IOKAlCB3ZSdsbCBlbWFpbCB5b3UgYXQgbGF1bmNoCiAgICAgICAgICA8L2Rpdj4KICAgICAgICApIDogaXNMb2dnZWRJbiA9PT0gZmFsc2UgPyAoCiAgICAgICAgICA8PgogICAgICAgICAgICA8TGluawogICAgICAgICAgICAgIGhyZWY9e3NpZ251cEhyZWZ9CiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgYmxvY2sgdy1mdWxsIHJvdW5kZWQteGwgYmctZ3JhZGllbnQtdG8tciAke2FjY2VudENvbG9yfSBweS0zIHRleHQtY2VudGVyIHRleHQteHMgZm9udC1ib2xkIHRleHQtd2hpdGUgc2hhZG93LWxnIHRyYW5zaXRpb24gaG92ZXI6b3BhY2l0eS05NSBob3ZlcjpzY2FsZS1bMS4wMV1gfQogICAgICAgICAgICA+CiAgICAgICAgICAgICAgU2lnbiBVcCBmb3IgRWFybHkgQWNjZXNzIFVwZGF0ZXMKICAgICAgICAgICAgPC9MaW5rPgogICAgICAgICAgICA8cCBjbGFzc05hbWU9Im10LTIgdGV4dC1jZW50ZXIgdGV4dC1bMTFweF0gdGV4dC13aGl0ZS81MCI+CiAgICAgICAgICAgICAgQ3JlYXRlIGEgZnJlZSBhY2NvdW50IHNvIHdlIGhhdmUgeW91ciBlbWFpbCBmb3IgdGhlIGxhdW5jaCBhbm5vdW5jZW1lbnQuCiAgICAgICAgICAgIDwvcD4KICAgICAgICAgIDwvPgogICAgICAgICkgOiAoCiAgICAgICAgICA8PgogICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgICAgICAgIG9uQ2xpY2s9e2pvaW5XaXRoQWNjb3VudEVtYWlsfQogICAgICAgICAgICAgIGRpc2FibGVkPXtzdWJtaXR0aW5nIHx8IGlzTG9nZ2VkSW4gPT09IG51bGx9CiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgdy1mdWxsIHJvdW5kZWQteGwgYmctZ3JhZGllbnQtdG8tciAke2FjY2VudENvbG9yfSBweS0zIHRleHQtY2VudGVyIHRleHQteHMgZm9udC1ib2xkIHRleHQtd2hpdGUgc2hhZG93LWxnIHRyYW5zaXRpb24gaG92ZXI6b3BhY2l0eS05NSBob3ZlcjpzY2FsZS1bMS4wMV0gZGlzYWJsZWQ6b3BhY2l0eS01MGB9CiAgICAgICAgICAgID4KICAgICAgICAgICAgICB7c3VibWl0dGluZyA/ICJKb2luaW5n4oCmIiA6ICJHZXQgRWFybHkgQWNjZXNzIFVwZGF0ZXMifQogICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJtdC0yIHRleHQtY2VudGVyIHRleHQtWzExcHhdIHRleHQtd2hpdGUvNTAiPgogICAgICAgICAgICAgIFdlJmFwb3M7bGwgYW5ub3VuY2UgaXQgdG8geW91ciBhY2NvdW50IGVtYWlsLgogICAgICAgICAgICA8L3A+CiAgICAgICAgICA8Lz4KICAgICAgICApfQogICAgICA8L2Rpdj4KICAgIDwvZGl2PgogICk7Cn0K
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+interface AgenticTierComingSoonCardProps {
+  toolSlug?: string;
+  toolName?: string;
+  variant?: "portal" | "replyflow" | "grantbot" | "signaldesk" | "gapscan" | "bridgeai";
+  compact?: boolean;
+  className?: string;
+}
+
+export function AgenticTierComingSoonCard({
+  toolSlug = "tool",
+  toolName,
+  variant = "portal",
+  compact = false,
+  className = "",
+}: AgenticTierComingSoonCardProps) {
+  const [joinedWaitlist, setJoinedWaitlist] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const displayName =
+    toolName || (toolSlug.charAt(0).toUpperCase() + toolSlug.slice(1));
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        const loggedIn = !!data?.user;
+        setIsLoggedIn(loggedIn);
+        // Returning from signup with notify intent: auto-join now that we
+        // have an account (and therefore an email) on file.
+        if (loggedIn && typeof window !== "undefined") {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("notify_agentic") === toolSlug) {
+            joinWithAccountEmail();
+            // Clean the param so refresh doesn't re-trigger.
+            params.delete("notify_agentic");
+            const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ""}`;
+            window.history.replaceState(null, "", clean);
+          }
+        }
+      })
+      .catch(() => setIsLoggedIn(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const joinWithAccountEmail = async () => {
+    setSubmitting(true);
+    try {
+      await fetch("/api/email-list/subscribe", { method: "POST" });
+    } catch {
+      // non-fatal: account email is still on file for launch announcements
+    } finally {
+      setSubmitting(false);
+      setJoinedWaitlist(true);
+    }
+  };
+
+  // Logged-out users go through signup first — that guarantees an email ends
+  // up on file before we ever promise a notification.
+  const signupHref =
+    typeof window !== "undefined"
+      ? `/auth/signup?returnTo=${encodeURIComponent(`${window.location.pathname}?notify_agentic=${toolSlug}`)}`
+      : "/auth/signup";
+
+  const isReplyflow = variant === "replyflow" || toolSlug === "replyflow";
+  const isGrantbot = variant === "grantbot" || toolSlug === "grantbot";
+  const isSignaldesk = variant === "signaldesk" || toolSlug === "signaldesk";
+  const isGapscan = variant === "gapscan" || toolSlug === "gapscan";
+  const isBridgeai = variant === "bridgeai" || toolSlug === "bridgeai";
+
+  const accentColor = isReplyflow
+    ? "from-[#ff4b72] to-[#7928ca]"
+    : isGrantbot
+      ? "from-[#10b981] to-[#f59e0b]"
+      : isSignaldesk
+        ? "from-[#10b981] to-[#06b6d4]"
+        : isGapscan
+          ? "from-[#3b82f6] to-[#8b5cf6]"
+          : isBridgeai
+            ? "from-[#8b5cf6] to-[#ec4899]"
+            : "from-cyan-400 to-indigo-500";
+
+  const borderClass = isReplyflow
+    ? "border-rf-rose/40 hover:border-rf-rose/70"
+    : isGrantbot
+      ? "border-gb-emerald/40 hover:border-gb-emerald/70"
+      : "border-cyan-500/40 hover:border-cyan-400/70";
+
+  return (
+    <div
+      className={`relative flex flex-col justify-between rounded-3xl border bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-6 shadow-2xl backdrop-blur-xl transition duration-300 ${borderClass} ${className}`}
+    >
+      {/* Prominent Badge */}
+      <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/60 bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 px-4 py-1 text-xs font-bold uppercase tracking-wider text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.35)]">
+          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse" />
+          Agentic Access Coming Soon
+        </span>
+      </div>
+
+      <div className="pt-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <span>⚡ Agentic Access</span>
+          </h3>
+          <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-cyan-300">
+            Autonomous
+          </span>
+        </div>
+
+        <p className="mt-2 text-xs text-white/70 leading-relaxed">
+          Full headless agent runtime with multi-agent orchestration for {displayName}. Operates 24/7 without manual prompting.
+        </p>
+
+        {/* Capabilities - Strictly No Prices */}
+        <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-cyan-300/90 mb-3">
+            Core Agentic Capabilities
+          </p>
+          <ul className="space-y-3 text-xs text-white/80">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">
+                ✓
+              </span>
+              <span>
+                <strong className="text-white font-medium">Autonomous background monitoring</strong> and scheduled routine execution.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">
+                ✓
+              </span>
+              <span>
+                <strong className="text-white font-medium">Multi-agent synthesis</strong> without manual prompting.
+              </span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-bold">
+                ✓
+              </span>
+              <span>
+                <strong className="text-white font-medium">Direct webhook, CRM,</strong> and communication dispatch.
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Action / Future Availability */}
+      <div className="mt-6 border-t border-white/10 pt-4">
+        {joinedWaitlist ? (
+          <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2.5 px-3 text-center text-xs font-semibold text-emerald-300">
+            ✓ You're on the list — we'll email you at launch
+          </div>
+        ) : isLoggedIn === false ? (
+          <>
+            <Link
+              href={signupHref}
+              className={`block w-full rounded-xl bg-gradient-to-r ${accentColor} py-3 text-center text-xs font-bold text-white shadow-lg transition hover:opacity-95 hover:scale-[1.01]`}
+            >
+              Sign Up for Early Access Updates
+            </Link>
+            <p className="mt-2 text-center text-[11px] text-white/50">
+              Create a free account so we have your email for the launch announcement.
+            </p>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={joinWithAccountEmail}
+              disabled={submitting || isLoggedIn === null}
+              className={`w-full rounded-xl bg-gradient-to-r ${accentColor} py-3 text-center text-xs font-bold text-white shadow-lg transition hover:opacity-95 hover:scale-[1.01] disabled:opacity-50`}
+            >
+              {submitting ? "Joining…" : "Get Early Access Updates"}
+            </button>
+            <p className="mt-2 text-center text-[11px] text-white/50">
+              We&apos;ll announce it to your account email.
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

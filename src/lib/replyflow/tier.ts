@@ -1,1 +1,74 @@
-LyoqIFVzZXIgc3Vic2NyaXB0aW9uIHRpZXIgc3RvcmVkIGluIFN1cGFiYXNlIChgcmVwbHlmbG93X3Byb2ZpbGVzLnBsYW5gKS4gKi8KZXhwb3J0IHR5cGUgVXNlclBsYW4gPSAiY29yZSIgfCAiZG9uZV93aXRoX3lvdSIgfCAiZnJlZSIgfCAic29sbyIgfCAidGVhbSIgfCAiYWdlbmN5IjsKCi8qKiBBY3RpdmUgcHVibGljIHN1YnNjcmlwdGlvbiB0aWVyIGNvbmZpZ3VyYXRpb24gKi8KZXhwb3J0IGludGVyZmFjZSBSZXBseUZsb3dUaWVyQ29uZmlnIHsKICBpZDogImNvcmUiIHwgImRvbmVfd2l0aF95b3UiOwogIG5hbWU6IHN0cmluZzsKICBwcmljZU1vbnRobHlVc2Q6IG51bWJlcjsKICBkZXNjcmlwdGlvbjogc3RyaW5nOwogIGZlYXR1cmVzOiBzdHJpbmdbXTsKfQoKZXhwb3J0IGNvbnN0IFJFUExZRkxPV19USUVSUzogUmVjb3JkPCJjb3JlIiB8ICJkb25lX3dpdGhfeW91IiwgUmVwbHlGbG93VGllckNvbmZpZz4gPSB7CiAgY29yZTogewogICAgaWQ6ICJjb3JlIiwKICAgIG5hbWU6ICJTYWFTIEFjY2VzcyIsCiAgICBwcmljZU1vbnRobHlVc2Q6IDE1LAogICAgZGVzY3JpcHRpb246ICJTZWxmLXNlcnZlIEFJIGN1c3RvbWVyIHJlcGx5IGF1dG9tYXRpb24g4oCUIHlvdSBydW4gaXQgeW91cnNlbGYsIG5vIGltcGxlbWVudGF0aW9uIG5lZWRlZC4iLAogICAgZmVhdHVyZXM6IFsKICAgICAgIlVubGltaXRlZCBBSSByZXBseSBnZW5lcmF0aW9uIiwKICAgICAgIlRvbmUgJiBzY2VuYXJpbyBjdXN0b21pemF0aW9uIiwKICAgICAgIk9uZS1jbGljayByZXNwb25zZSBjb3B5ICYgZWRpdGluZyIsCiAgICAgICJGdWxsIHJlcGx5IGhpc3RvcnkgJiBzZXNzaW9uIHJlbG9hZCIsCiAgICBdLAogIH0sCiAgZG9uZV93aXRoX3lvdTogewogICAgaWQ6ICJkb25lX3dpdGhfeW91IiwKICAgIG5hbWU6ICJBZ2VudGljIEFjY2VzcyIsCiAgICBwcmljZU1vbnRobHlVc2Q6IDE0OS45OSwKICAgIGRlc2NyaXB0aW9uOiAiRG9uZS13aXRoLXlvdSBpbXBsZW1lbnRhdGlvbjogY3VzdG9tIHZvaWNlIGNhbGlicmF0aW9uIGFuZCBkZWRpY2F0ZWQgd29ya2Zsb3cgaW50ZWdyYXRpb25zLCBzZXQgdXAgaW4geW91ciBzeXN0ZW1zIGJ5IG91ciB0ZWFtLiIsCiAgICBmZWF0dXJlczogWwogICAgICAiRXZlcnl0aGluZyBpbiBDb3JlIiwKICAgICAgIkN1c3RvbSBicmFuZCB2b2ljZSAmIHBlcnNvbmEgY2FsaWJyYXRpb24iLAogICAgICAiRGVkaWNhdGVkIHdvcmtmbG93ICYgTUNQIGludGVncmF0aW9uIChHbWFpbCwgWmVuZGVzaywgU2xhY2spIiwKICAgICAgIk1vbnRobHkgc3RyYXRlZ3kgJiByZXNwb25zZSB0dW5pbmciLAogICAgXSwKICB9LAp9OwoKLyoqIERlcGxveW1lbnQgdGllciBmcm9tIGVudiDigJQgY2FwcyBsaW1pdHMgZm9yIGFsbCB1c2VycyBvbiB0aGlzIGluc3RhbmNlLiAqLwpleHBvcnQgdHlwZSBEZXBsb3ltZW50VGllciA9ICJsaXRlIiB8ICJwcm8iOwoKY29uc3QgVVNFUl9QTEFOUzogVXNlclBsYW5bXSA9IFsiY29yZSIsICJkb25lX3dpdGhfeW91IiwgImZyZWUiLCAic29sbyIsICJ0ZWFtIiwgImFnZW5jeSJdOwoKZXhwb3J0IGZ1bmN0aW9uIGdldERlcGxveW1lbnRUaWVyKCk6IERlcGxveW1lbnRUaWVyIHsKICByZXR1cm4gcHJvY2Vzcy5lbnYuVElFUiA9PT0gImxpdGUiID8gImxpdGUiIDogInBybyI7Cn0KCmV4cG9ydCBmdW5jdGlvbiBub3JtYWxpemVVc2VyUGxhbihwbGFuOiBzdHJpbmcgfCBudWxsIHwgdW5kZWZpbmVkKTogVXNlclBsYW4gewogIGlmIChwbGFuID09PSAiZG9uZS13aXRoLXlvdSIpIHJldHVybiAiZG9uZV93aXRoX3lvdSI7CiAgaWYgKHBsYW4gJiYgVVNFUl9QTEFOUy5pbmNsdWRlcyhwbGFuIGFzIFVzZXJQbGFuKSkgcmV0dXJuIHBsYW4gYXMgVXNlclBsYW47CiAgcmV0dXJuICJjb3JlIjsKfQoKZXhwb3J0IGZ1bmN0aW9uIGdldFBsYW5MaW1pdHMoZGVwbG95bWVudDogRGVwbG95bWVudFRpZXIpOiBSZWNvcmQ8VXNlclBsYW4sIG51bWJlcj4gewogIGNvbnN0IGlzTGl0ZSA9IGRlcGxveW1lbnQgPT09ICJsaXRlIjsKICByZXR1cm4gewogICAgY29yZTogaXNMaXRlID8gNTAwIDogOTk5OTk5LAogICAgZG9uZV93aXRoX3lvdTogOTk5OTk5LAogICAgZnJlZTogMTAsIC8vIEZyZWUgdGllciBiYXNlbGluZSAoMTAgcmVwbGllcy9tb250aCkKICAgIHNvbG86IGlzTGl0ZSA/IDI1IDogMTAwLAogICAgdGVhbTogaXNMaXRlID8gMTAwIDogMTAwMCwKICAgIGFnZW5jeTogaXNMaXRlID8gMjUwIDogOTk5OTk5LAogIH07Cn0KCmV4cG9ydCBjb25zdCBQTEFOX0xBQkVMUzogUmVjb3JkPFVzZXJQbGFuLCBzdHJpbmc+ID0gewogIGNvcmU6ICJDb3JlIiwKICBkb25lX3dpdGhfeW91OiAiRG9uZS1XaXRoLVlvdSIsCiAgZnJlZTogIkZyZWUgVGllciIsCiAgc29sbzogIlNvbG8gKExlZ2FjeSkiLAogIHRlYW06ICJUZWFtIChMZWdhY3kpIiwKICBhZ2VuY3k6ICJBZ2VuY3kgKExlZ2FjeSkiLAp9Owo=
+/** User subscription tier stored in Supabase (`replyflow_profiles.plan`). */
+export type UserPlan = "core" | "done_with_you" | "free" | "solo" | "team" | "agency";
+
+/** Active public subscription tier configuration */
+export interface ReplyFlowTierConfig {
+  id: "core" | "done_with_you";
+  name: string;
+  priceMonthlyUsd: number;
+  description: string;
+  features: string[];
+}
+
+export const REPLYFLOW_TIERS: Record<"core" | "done_with_you", ReplyFlowTierConfig> = {
+  core: {
+    id: "core",
+    name: "SaaS Access",
+    priceMonthlyUsd: 15,
+    description: "Self-serve AI customer reply automation — you run it yourself, no implementation needed.",
+    features: [
+      "Unlimited AI reply generation",
+      "Tone & scenario customization",
+      "One-click response copy & editing",
+      "Full reply history & session reload",
+    ],
+  },
+  done_with_you: {
+    id: "done_with_you",
+    name: "Agentic Access",
+    priceMonthlyUsd: 149.99,
+    description: "Done-with-you implementation: custom voice calibration and dedicated workflow integrations, set up in your systems by our team.",
+    features: [
+      "Everything in Core",
+      "Custom brand voice & persona calibration",
+      "Dedicated workflow & MCP integration (Gmail, Zendesk, Slack)",
+      "Monthly strategy & response tuning",
+    ],
+  },
+};
+
+/** Deployment tier from env — caps limits for all users on this instance. */
+export type DeploymentTier = "lite" | "pro";
+
+const USER_PLANS: UserPlan[] = ["core", "done_with_you", "free", "solo", "team", "agency"];
+
+export function getDeploymentTier(): DeploymentTier {
+  return process.env.TIER === "lite" ? "lite" : "pro";
+}
+
+export function normalizeUserPlan(plan: string | null | undefined): UserPlan {
+  if (plan === "done-with-you") return "done_with_you";
+  if (plan && USER_PLANS.includes(plan as UserPlan)) return plan as UserPlan;
+  return "core";
+}
+
+export function getPlanLimits(deployment: DeploymentTier): Record<UserPlan, number> {
+  const isLite = deployment === "lite";
+  return {
+    core: isLite ? 500 : 999999,
+    done_with_you: 999999,
+    free: 10, // Free tier baseline (10 replies/month)
+    solo: isLite ? 25 : 100,
+    team: isLite ? 100 : 1000,
+    agency: isLite ? 250 : 999999,
+  };
+}
+
+export const PLAN_LABELS: Record<UserPlan, string> = {
+  core: "Core",
+  done_with_you: "Done-With-You",
+  free: "Free Tier",
+  solo: "Solo (Legacy)",
+  team: "Team (Legacy)",
+  agency: "Agency (Legacy)",
+};
