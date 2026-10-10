@@ -14,7 +14,7 @@ export const NI_TIER_DETAILS: Record<NiTier, NiTierDetail> = {
     idealFor: "Exploring NI tools before committing to a plan",
     features: [
       "10 free trial runs across each Intelligence Tool every month",
-      "Purchase individual tools à la carte (monthly or annual)",
+      "Purchase individual tools à la carte (monthly, annual, or lifetime)",
       "Access to the Smart Store and your personal Toolkit",
       "Upgrade anytime for unlimited web runs and Autopilot app connections",
     ],
@@ -24,8 +24,8 @@ export const NI_TIER_DETAILS: Record<NiTier, NiTierDetail> = {
     headline: "Essential access for focused workflows",
     idealFor: "Individuals who rely on a few core tools daily",
     features: [
-      "3 Standard Web Tool slots in your Toolkit",
-      "1 Autopilot App slot included (connects to Gmail, Slack, Twitter)",
+      "2 SaaS Access IT slots in your Toolkit",
+      "1 Agentic Access IT slot included (covers SaaS + agentic for that tool)",
       "Unlimited usage on tools assigned to your plan",
       "Add or swap tools within your slot limit anytime",
       "Direct line to submit new tool ideas and feedback",
@@ -36,8 +36,8 @@ export const NI_TIER_DETAILS: Record<NiTier, NiTierDetail> = {
     headline: "Broader coverage for power users & teams",
     idealFor: "Teams and operators running multiple automated workflows",
     features: [
-      "10 Standard Web Tool slots in your Toolkit",
-      "3 Autopilot App slots included with live outside app integrations",
+      "4 SaaS Access IT slots in your Toolkit",
+      "1 Agentic Access IT slot included (covers SaaS + agentic for that tool)",
       "Priority AI processing speed and higher throughput",
       "Custom app and internal tool connections enabled",
       "Add or swap tools within your slot limit",
@@ -45,11 +45,12 @@ export const NI_TIER_DETAILS: Record<NiTier, NiTierDetail> = {
   },
   power: {
     tier: "power",
-    headline: "Full ecosystem access with zero limits",
+    headline: "Full ecosystem access with overage savings",
     idealFor: "Organizations that need every Intelligence Tool on full autopilot",
     features: [
-      "Unlimited Standard Web Tool slots",
-      "Unlimited Autopilot App slots across all present and future tools",
+      "8 SaaS Access IT slots in your Toolkit",
+      "4 Agentic Access IT slots across all present and future tools",
+      "50% off any additional ITs once your slots are full",
       "Maximum priority AI computing power",
       "Zero swap cooldowns across all tools",
       "Early access to downloadable local software",
