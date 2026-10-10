@@ -7,6 +7,7 @@ import { ensurePortalProfile } from "@/lib/auth/ensure-portal-profile";
 import { isValidUsername, normalizeUsername } from "@/lib/auth/username";
 import { sanitizeReturnTo } from "@/lib/ni-auth";
 import { createServiceClient } from "@/lib/supabase/server";
+import { recordEmailCapture } from "@/lib/tracking/email-capture";
 import { pendingAuthCookieOptions } from "@/lib/supabase/cookie-domain";
 
 const PENDING_COOKIE = "ni_auth_pending";
@@ -95,6 +96,9 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({ step: "verify", email, pendingId });
     response.cookies.set(PENDING_COOKIE, pendingId, pendingAuthCookieOptions());
+
+    // WS10: 72h visitor email capture for follow-up (never blocks signup).
+    void recordEmailCapture({ email, sourceTool: "portal_signup" });
 
     return response;
   } catch (err) {

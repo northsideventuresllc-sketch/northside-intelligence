@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatStorePrice } from "@/lib/store/client";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
+import { captureEmailLead } from "@/lib/tracking/capture-email-client";
 
 interface TrackedOrder {
   ref: string;
@@ -52,6 +53,8 @@ export function StoreTrackPageClient() {
       }
 
       setOrder(json.order ?? null);
+      // WS10: Meta Lead event + server-side 72h capture (never blocks UX).
+      captureEmailLead(nextEmail, "store_order_track");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to find order");
     } finally {
