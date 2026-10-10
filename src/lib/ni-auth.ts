@@ -30,6 +30,15 @@ export function sanitizeReturnTo(returnTo: string | null | undefined): string | 
   if (!returnTo?.trim()) return null;
   const value = returnTo.trim();
   if (value.startsWith("/") && !value.startsWith("//")) {
+    // Browsers treat backslashes as path separators on https URLs, so "/\evil.com"
+    // would resolve off-origin. Reject any backslash, raw or percent-encoded.
+    let decoded = value;
+    try {
+      decoded = decodeURIComponent(value);
+    } catch {
+      return null;
+    }
+    if (decoded.includes("\\")) return null;
     return value;
   }
   if (isAllowedReturnTo(value)) return value;
