@@ -1,6 +1,7 @@
 import { Footer } from "@/components/landing/Footer";
 import { NavServer } from "@/components/landing/NavServer";
 import { AxonWaitlistForm } from "@/components/axon/AxonWaitlistForm";
+import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 
 const DIFFERENTIATORS = [
   {
@@ -69,6 +70,13 @@ export function AxonWaitlistLanding() {
           Neurodivergent AI means anti-generalization architecture — inclusive, without
           gatekeeping.
         </p>
+      </section>
+
+      {/* Agentic tier — coming soon, consistent with every IT landing */}
+      <section className="relative px-6 pb-24">
+        <div className="mx-auto max-w-md">
+          <AgenticTierComingSoonCard toolSlug="axon" toolName="AXON" variant="portal" />
+        </div>
       </section>
 
       <Footer />

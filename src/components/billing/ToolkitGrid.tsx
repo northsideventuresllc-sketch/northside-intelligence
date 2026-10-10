@@ -7,6 +7,7 @@ import { INTELLIGENCE_TOOLS } from "@/lib/constants";
 import type { ToolkitEntry } from "@/lib/billing/entitlements";
 import { NI_TIERS, tierHasUnlimitedToolAccess, type NiTier } from "@/lib/billing/ni-tiers";
 import { ToolSubscriptionPanel } from "@/components/billing/ToolSubscriptionPanel";
+import { AgenticTierComingSoonCard } from "@/components/billing/AgenticTierComingSoonCard";
 import type { ToolPricing } from "@/lib/billing/tool-pricing";
 
 interface ToolkitGridProps {
@@ -370,6 +371,17 @@ export function ToolkitGrid({
           </div>
         </section>
       )}
+
+      {/* Agentic tier — coming soon, consistent with every IT landing */}
+      <section>
+        <div className="mx-auto max-w-md">
+          <AgenticTierComingSoonCard
+            toolSlug="toolkit"
+            toolName="Toolkit"
+            variant="portal"
+          />
+        </div>
+      </section>
     </div>
   );
 }

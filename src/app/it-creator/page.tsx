@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ITFeedbackWidget } from '../../components/it/ITFeedbackWidget';
+import { AgenticTierComingSoonCard } from '@/components/billing/AgenticTierComingSoonCard';
 import { TrackViewContent } from '@/components/tracking/TrackViewContent';
 
 export default function ITCreatorPage() {
@@ -272,6 +273,17 @@ export default function ITCreatorPage() {
             </div>
           </form>
         )}
+      </div>
+
+      {/* Agentic tier — coming soon, consistent with every IT landing */}
+      <div className="max-w-4xl w-full">
+        <div className="mx-auto max-w-md">
+          <AgenticTierComingSoonCard
+            toolSlug="it-creator"
+            toolName="IT Creator"
+            variant="portal"
+          />
+        </div>
       </div>
 
       <ITFeedbackWidget toolId="it-creator" />
