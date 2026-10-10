@@ -2,11 +2,20 @@ import { Resend } from "resend";
 import { renderAxonAccessCodeEmail } from "@/lib/emails/templates/axon-access-code";
 import { PORTAL_URL } from "@/lib/sector3-registry";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// Resolved lazily at send time (not module load) so DB-hydrated secrets
+// (hydratePlatformEnvFromDatabase, e.g. RESEND_API_KEY_NI) take effect even
+// when this module was imported before hydration ran.
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  return apiKey ? new Resend(apiKey) : null;
+}
 
-const AXON_FROM =
-  process.env.AXON_FROM_EMAIL?.trim() ??
-  "Northside Intelligence <noreply@northsideintelligence.com>";
+function getAxonFromEmail(): string {
+  return (
+    process.env.AXON_FROM_EMAIL?.trim() ??
+    "Northside Intelligence <noreply@northsideintelligence.com>"
+  );
+}
 
 export async function sendAxonAccessCodeEmail({
   to,
@@ -15,6 +24,7 @@ export async function sendAxonAccessCodeEmail({
   to: string;
   code: string;
 }): Promise<{ error?: string }> {
+  const resend = getResendClient();
   if (!resend) {
     if (process.env.NODE_ENV === "development") {
       console.info(`[dev] AXON access code for ${to}: ${code}`);
@@ -30,7 +40,7 @@ export async function sendAxonAccessCodeEmail({
 
   const { error } = await resend.emails.send(
     {
-      from: AXON_FROM,
+      from: getAxonFromEmail(),
       to: [to],
       subject: "Your AXON access code",
       html,

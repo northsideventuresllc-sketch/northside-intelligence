@@ -7,12 +7,22 @@ import {
   wrapNiEmailHtml,
 } from "@/lib/email/layout";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+// NOTE: the Resend client and FROM address are resolved lazily at send time,
+// NOT at module load. Routes hydrate RESEND_API_KEY / RESEND_FROM_EMAIL from
+// the platform-secrets DB table (see hydratePlatformEnvFromDatabase, which
+// prefers RESEND_API_KEY_NI) before sending — a module-level client would keep
+// the stale cold-start values and silently defeat that override.
+export function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  return apiKey ? new Resend(apiKey) : null;
+}
 
-const FROM =
-  process.env.RESEND_FROM_EMAIL ?? "Northside Intelligence <onboarding@resend.dev>";
+function getFromEmail(): string {
+  return (
+    process.env.RESEND_FROM_EMAIL?.trim() ||
+    "Northside Intelligence <onboarding@resend.dev>"
+  );
+}
 
 export async function sendOtpEmail({
   to,
@@ -23,6 +33,7 @@ export async function sendOtpEmail({
   code: string;
   purpose: OtpPurpose;
 }): Promise<{ error?: string }> {
+  const resend = getResendClient();
   if (!resend) {
     if (process.env.NODE_ENV === "development") {
       console.info(`[dev] OTP for ${to} (${purpose}): ${code}`);
@@ -44,7 +55,7 @@ export async function sendOtpEmail({
 
   const { error } = await resend.emails.send(
     {
-      from: FROM,
+      from: getFromEmail(),
       to: [to],
       subject: `${code} is your Northside Intelligence verification code`,
       html: wrapNiEmailHtml({
@@ -92,6 +103,7 @@ export async function sendServiceInvoiceEmail({
   lineItems: ServiceInvoiceLineItem[];
   paidAt: string;
 }): Promise<{ error?: string }> {
+  const resend = getResendClient();
   if (!resend) {
     if (process.env.NODE_ENV === "development") {
       console.info(
@@ -184,7 +196,7 @@ export async function sendServiceInvoiceEmail({
 
   const { error } = await resend.emails.send(
     {
-      from: FROM,
+      from: getFromEmail(),
       to: [to],
       subject: `Invoice ${invoiceNumber} — ${serviceName} | Northside Intelligence`,
       html: wrapNiEmailHtml({
@@ -203,8 +215,4 @@ export async function sendServiceInvoiceEmail({
   }
 
   return {};
-}
-
-export function getResendClient(): Resend | null {
-  return resend;
 }
