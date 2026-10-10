@@ -4,6 +4,7 @@ import {
   createAutomatedPromoCampaign,
   sendPromoEmailCampaign,
 } from "@/lib/promos/email-campaigns";
+import { isAutoPromoEnabled } from "@/lib/promos/types";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -32,10 +33,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Create and immediately send a new automated campaign if none were scheduled
+    // Create and immediately send a new automated campaign if none were scheduled.
+    // Disabled (Workstream 7): no new AUTOMATIC promo campaigns while
+    // AUTO_PROMOS_ENABLED is not true. Manually scheduled campaigns above
+    // still send, since those are JB's explicit sends, not auto promos.
     let newCampaignId: string | null = null;
     let newCampaignResult = null;
-    if (!scheduled?.length) {
+    if (!scheduled?.length && isAutoPromoEnabled()) {
       newCampaignId = await createAutomatedPromoCampaign();
       if (newCampaignId) {
         newCampaignResult = await sendPromoEmailCampaign(newCampaignId);

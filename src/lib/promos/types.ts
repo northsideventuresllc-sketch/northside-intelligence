@@ -9,6 +9,22 @@ export type PromoType = (typeof PROMO_TYPES)[number];
 
 export const MAX_AUTO_DISCOUNT_PERCENT = 15;
 
+/**
+ * Master switch for the automatic promo pipeline (Workstream 7, 2026-10-09).
+ *
+ * When `AUTO_PROMOS_ENABLED` is not `"true"`, the promo-generation and
+ * promo-email crons no-op: no weekly auto-issued discounts or free-month
+ * promos, and no automated promo campaigns. Manually created promos
+ * (`is_manual`) and the trial-code system are NOT affected.
+ *
+ * To re-enable: set env var `AUTO_PROMOS_ENABLED=true` (Vercel → Environment
+ * Variables) and redeploy, or delete this guard. No data migration needed —
+ * existing unclaimed promos stay visible on /promos until they expire.
+ */
+export function isAutoPromoEnabled(): boolean {
+  return process.env.AUTO_PROMOS_ENABLED === "true";
+}
+
 export interface UserPromo {
   id: string;
   userId: string;
