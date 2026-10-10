@@ -47,10 +47,11 @@ export const billingStripe = new Proxy({} as Stripe, {
   },
 });
 
+// Lifetime purchases were retired 2026-10-09; the tool_lifetime variant was removed.
+// Existing holders keep their access via ni_toolkit rows (untouched).
 export type CheckoutKind =
   | { type: "ni_subscription"; tier: NiTier; interval: BillingInterval }
-  | { type: "tool_subscription"; toolSlug: string; interval: BillingInterval }
-  | { type: "tool_lifetime"; toolSlug: string };
+  | { type: "tool_subscription"; toolSlug: string; interval: BillingInterval };
 
 function envPrice(key: string): string | undefined {
   const value = process.env[key];

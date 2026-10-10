@@ -7,8 +7,6 @@ import {
   userHasUnlimitedToolAccess,
   canAddNiPlanTool,
 } from "@/lib/billing/entitlements";
-import { getLifetimeLaunchStatus } from "@/lib/billing/lifetime-launch";
-import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
 import {
   billingStripe,
   ensureBillingEnvHydrated,
@@ -47,11 +45,6 @@ function parseCheckoutBody(body: Record<string, unknown>): CheckoutKind | null {
     if (!toolSlug || (interval !== "monthly" && interval !== "annual")) return null;
     return { type: "tool_subscription", toolSlug, interval };
   }
-  if (type === "tool_lifetime") {
-    const toolSlug = body.toolSlug as string;
-    if (!toolSlug) return null;
-    return { type: "tool_lifetime", toolSlug };
-  }
   return null;
 }
 
@@ -76,7 +69,17 @@ export async function POST(req: NextRequest) {
   }
 
   const checkout = parseCheckoutBody(body);
-  if (!checkout) return NextResponse.json({ error: "Invalid checkout request" }, { status: 400 });
+  if (!checkout) {
+    // Lifetime purchases were retired 2026-10-09. Existing holders keep their
+    // access; this route no longer creates lifetime checkout sessions.
+    if (body.type === "tool_lifetime") {
+      return NextResponse.json(
+        { error: "Lifetime access is no longer available for purchase" },
+        { status: 410 }
+      );
+    }
+    return NextResponse.json({ error: "Invalid checkout request" }, { status: 400 });
+  }
 
   try {
     const base = appUrl();
@@ -116,40 +119,22 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      if (checkout.type === "tool_lifetime") {
-        const lifetimeStatus = await getLifetimeLaunchStatus();
-        const randomOffer = shouldShowPermanentAccessOffer(checkout.toolSlug, user.id);
-        if (!lifetimeStatus.active && !randomOffer) {
-          return NextResponse.json(
-            { error: lifetimeStatus.active ? lifetimeStatus.reason : "Permanent access is not available right now" },
-            { status: 403 }
-          );
-        }
-
-        priceId = getToolPriceIdFromDb(pricing, "lifetime");
-        mode = "payment";
-        metadata.toolSlug = checkout.toolSlug;
-        metadata.accessType = "lifetime";
-        successUrl = `${base}/toolkit?purchased=${checkout.toolSlug}`;
-        cancelUrl = `${base}/tools/${checkout.toolSlug}`;
-      } else {
-        if (
-          state.hasNiPaidPlan &&
-          canAddNiPlanTool(state) &&
-          !userHasUnlimitedToolAccess(state, checkout.toolSlug)
-        ) {
-          return NextResponse.json(
-            { error: "Assign unlimited access from your Toolkit under your NI plan" },
-            { status: 400 }
-          );
-        }
-        priceId = getToolPriceIdFromDb(pricing, checkout.interval);
-        metadata.toolSlug = checkout.toolSlug;
-        metadata.accessType = "tool_subscription";
-        metadata.billingInterval = checkout.interval;
-        successUrl = `${base}/toolkit?purchased=${checkout.toolSlug}`;
-        cancelUrl = `${base}/tools/${checkout.toolSlug}`;
+      if (
+        state.hasNiPaidPlan &&
+        canAddNiPlanTool(state) &&
+        !userHasUnlimitedToolAccess(state, checkout.toolSlug)
+      ) {
+        return NextResponse.json(
+          { error: "Assign unlimited access from your Toolkit under your NI plan" },
+          { status: 400 }
+        );
       }
+      priceId = getToolPriceIdFromDb(pricing, checkout.interval);
+      metadata.toolSlug = checkout.toolSlug;
+      metadata.accessType = "tool_subscription";
+      metadata.billingInterval = checkout.interval;
+      successUrl = `${base}/toolkit?purchased=${checkout.toolSlug}`;
+      cancelUrl = `${base}/tools/${checkout.toolSlug}`;
     }
 
     if (!priceId) {

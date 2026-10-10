@@ -14,7 +14,7 @@ export const NI_TIER_DETAILS: Record<NiTier, NiTierDetail> = {
     idealFor: "Exploring NI tools before committing to a plan",
     features: [
       "10 free trial runs across each Intelligence Tool every month",
-      "Purchase individual tools à la carte (monthly, annual, or lifetime)",
+      "Purchase individual tools à la carte (monthly or annual)",
       "Access to the Smart Store and your personal Toolkit",
       "Upgrade anytime for unlimited web runs and Autopilot app connections",
     ],

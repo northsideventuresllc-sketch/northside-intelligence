@@ -85,7 +85,7 @@ function buildFaqItems(): FaqItem[] {
   const individualPricing = SECTOR3_TOOL_PRICING_CATALOG.map((p) => (
     <li key={p.toolSlug}>
       <span className="font-medium text-white/90">{p.name}</span>: ${p.baseMonthlyUsd}/mo (or save with
-      annual or lifetime access)
+      annual access)
     </li>
   ));
 
