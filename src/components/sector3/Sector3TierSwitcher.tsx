@@ -36,7 +36,7 @@ export function Sector3TierSwitcher({
           }`}
         >
           <span>SaaS Standard</span>
-          <span className="text-[11px] text-white/40">${pricing.standardMonthlyUsd}/mo</span>
+          <span className="text-[11px] text-white/40">${pricing.saasMonthlyPrice}/mo</span>
         </button>
 
         <button

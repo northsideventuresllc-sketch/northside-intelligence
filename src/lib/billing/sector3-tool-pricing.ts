@@ -172,8 +172,8 @@ export function formatFreeTierHeroLabel(toolSlug: string): string {
 }
 
 export interface Sector3AgenticPricing {
-  standardMonthlyUsd: number;
-  agenticMonthlyUsd: number;
+  saasMonthlyPrice: number;
+  agenticMonthlyPrice: number;
   mcps: Sector3DefaultMcp[];
 }
 
@@ -181,8 +181,8 @@ export function getSector3AgenticPricing(toolSlug: string): Sector3AgenticPricin
   const profile = getSector3ToolProfile(toolSlug);
   const base = profile?.baseMonthlyUsd ?? 20;
   return {
-    standardMonthlyUsd: base,
-    agenticMonthlyUsd: Math.round(base * 2.5),
+    saasMonthlyPrice: base,
+    agenticMonthlyPrice: Math.round(base * 2.5),
     mcps: SECTOR3_DEFAULT_MCPS[toolSlug] ?? [],
   };
 }

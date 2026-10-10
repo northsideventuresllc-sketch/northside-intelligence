@@ -5,7 +5,7 @@ import type { FulfilHandler, ToolHandler } from "../types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-type ReplyflowPlan = keyof typeof REPLYFLOW_PRICE_IDS; // "solo" | "team" | "agency"
+type ReplyflowPlan = "solo" | "team" | "agency";
 
 const PLAN_LABELS: Record<ReplyflowPlan, string> = {
   solo: "Solo",

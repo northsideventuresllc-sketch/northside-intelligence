@@ -41,6 +41,8 @@
     "dist",
     "build",
     "sector3",
-    "supabase"
+    "supabase",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

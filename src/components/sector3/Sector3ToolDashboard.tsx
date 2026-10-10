@@ -356,7 +356,7 @@ export function Sector3ToolDashboard({
             {!hasUnlimitedAccess && (
               <TrialCodeRedemptionBox
                 toolSlug={config.slug}
-                toolName={config.name}
+                toolName={config.displayName}
                 brandColor={brand.brandColor}
                 variant={(["replyflow", "grantbot", "signaldesk", "gapscan", "bridgeai"].includes(config.slug) ? config.slug : "portal") as any}
                 isLoggedIn={!!email}

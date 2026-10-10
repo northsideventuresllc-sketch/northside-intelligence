@@ -362,17 +362,3 @@ export async function setNiSubscription(params: {
 
 type BillingInterval = "monthly" | "annual";
 
-export function userHasAgenticAccess(
-  billingState: UserBillingState,
-  toolSlug: string,
-  toolProfileTier?: string
-): boolean {
-  if (billingState.isMasterAccount) return true;
-  if (billingState.niTier === "power" || billingState.niTier === "pro") return true;
-  if (toolProfileTier === "agentic" || toolProfileTier === "pro") return true;
-  const toolEntry = billingState.toolkit.find((t) => t.toolSlug === toolSlug);
-  if (toolEntry && (toolEntry.accessType === "lifetime" || toolEntry.accessType === "tool_subscription")) {
-    return true;
-  }
-  return false;
-}

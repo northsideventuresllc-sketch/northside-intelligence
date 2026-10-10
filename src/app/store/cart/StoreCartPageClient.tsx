@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PriceChangeNotices } from "@/components/store/PriceChangeNotices";
 import { StoreCartHeader } from "@/components/store/StoreCartHeader";
@@ -15,6 +15,7 @@ import { useStoreCheckout } from "@/hooks/useStoreCheckout";
 import type { PriceChangeNoticeView } from "@/lib/store/catalog/types";
 import type { ShippingTier } from "@/lib/store/cart/types";
 import { SMART_STORE_NAME } from "@/lib/store/branding";
+import { trackEvent } from "@/components/MetaPixel";
 import { subscribeIfOptedIn } from "@/components/email/EmailListOptIn";
 
 function cartLineKey(item: Pick<CartLineItem, "slug" | "variantId">): string {
@@ -57,9 +58,21 @@ export function StoreCartPageClient() {
     };
   }, []);
 
+  const purchaseFired = useRef(false);
+
   useEffect(() => {
-    if (ordered) clearCart();
-  }, [ordered, clearCart]);
+    if (ordered && !purchaseFired.current) {
+      purchaseFired.current = true;
+      // Fire Purchase with the cart total before the cart is cleared.
+      const doneTotals = calculateCartTotals(items);
+      trackEvent("Purchase", {
+        content_name: "smart-store",
+        value: doneTotals.totalCents / 100,
+        currency: "USD",
+      });
+      clearCart();
+    }
+  }, [ordered, clearCart, items]);
 
   const totals = useMemo(() => calculateCartTotals(items), [items]);
   const allNotices = useMemo(
@@ -77,6 +90,12 @@ export function StoreCartPageClient() {
   async function handleCheckout() {
     setError("");
     setCheckoutNotices([]);
+    const preTotals = calculateCartTotals(items);
+    trackEvent("InitiateCheckout", {
+      content_name: "smart-store",
+      value: preTotals.totalCents / 100,
+      currency: "USD",
+    });
     if (emailListOptIn) {
       await subscribeIfOptedIn(true);
     }
