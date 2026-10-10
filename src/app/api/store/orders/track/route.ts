@@ -3,6 +3,7 @@ import { ensureStoreEnv } from "@/lib/store/env";
 import { getStoreOrderByReferenceAndEmail } from "@/lib/store/orders";
 import { formatOrderReference } from "@/lib/store/checkout-session";
 import { formatStoreOrderStatusLabel, resolveOrderTrackingUrl } from "@/lib/store/tracking";
+import { recordEmailCapture } from "@/lib/tracking/email-capture";
 
 export async function GET(req: NextRequest) {
   await ensureStoreEnv();
@@ -18,6 +19,13 @@ export async function GET(req: NextRequest) {
   if (!order) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
+
+  // WS10: 72h visitor email capture for follow-up (never blocks tracking).
+  void recordEmailCapture({
+    email,
+    sourcePage: "/store/track",
+    sourceTool: "store_order_track",
+  });
 
   return NextResponse.json({
     order: {

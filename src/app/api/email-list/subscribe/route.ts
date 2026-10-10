@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { subscribeUserToEmailList } from "@/lib/email/subscribe-list";
 import { hydratePlatformEnvFromDatabase } from "@/lib/hydrate-platform-env";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { recordEmailCapture } from "@/lib/tracking/email-capture";
 
 export async function POST(req: NextRequest) {
   await hydratePlatformEnvFromDatabase();
@@ -30,6 +31,12 @@ export async function POST(req: NextRequest) {
   if (result.error) {
     return NextResponse.json({ error: result.error }, { status: 500 });
   }
+
+  // WS10: 72h visitor email capture for follow-up (never blocks subscribe).
+  void recordEmailCapture({
+    email: user.email,
+    sourceTool: "email_list",
+  });
 
   return NextResponse.json({
     subscribed: result.subscribed,

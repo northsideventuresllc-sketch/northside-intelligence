@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 import { getServiceBySlug, type AccountType } from "@/lib/services/offerings";
 import { generateServiceQuote } from "@/lib/services/pricing-engine";
+import { recordEmailCapture } from "@/lib/tracking/email-capture";
 
 interface QuoteRequestBody {
   serviceSlug: string;
@@ -139,6 +140,13 @@ export async function POST(request: NextRequest) {
     console.error("Failed to insert quote:", insertError);
     return NextResponse.json({ error: "Failed to generate quote" }, { status: 500 });
   }
+
+  // WS10: 72h visitor email capture for follow-up (never blocks the quote).
+  void recordEmailCapture({
+    email: body.email ?? "",
+    sourcePage: "/services",
+    sourceTool: "service_quote",
+  });
 
   return NextResponse.json({
     quoteId: inserted.id,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { recordEmailCapture } from "@/lib/tracking/email-capture";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,13 @@ export async function POST(req: NextRequest) {
       console.error("axon waitlist insert failed:", error.message);
       return NextResponse.json({ error: "Signup failed. Please try again." }, { status: 500 });
     }
+
+    // WS10: 72h visitor email capture for follow-up (never blocks signup).
+    void recordEmailCapture({
+      email,
+      sourcePage: "/axon",
+      sourceTool: "axon_waitlist",
+    });
 
     return NextResponse.json({ ok: true, message: "You are on the AXON waitlist." });
   } catch (err) {

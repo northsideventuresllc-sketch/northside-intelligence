@@ -51,6 +51,10 @@
     {
       "path": "/api/cron/ni-services-artifact-backfill",
       "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/email-capture-cleanup",
+      "schedule": "0 * * * *"
     }
   ],
   "env": {

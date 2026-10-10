@@ -10,6 +10,7 @@ import {
   type ServiceOffering,
 } from "@/lib/services/offerings";
 import type { ServiceQuoteResult } from "@/lib/services/pricing-engine";
+import { captureEmailLead } from "@/lib/tracking/capture-email-client";
 import { QuoteLoadingScreen } from "@/components/services/QuoteLoadingScreen";
 import { ServiceQuotePanel } from "@/components/services/ServiceQuotePanel";
 
@@ -92,6 +93,8 @@ export function ServiceRequestForm({ service, initialData }: ServiceRequestFormP
 
       setQuote(data);
       setCurrentPriceCents(data.topPriceCents);
+      // WS10: Meta Lead event + server-side 72h capture (never blocks UX).
+      captureEmailLead(email, "service_quote");
       setStep("quote");
     } catch {
       setError("Network error. Please try again.");

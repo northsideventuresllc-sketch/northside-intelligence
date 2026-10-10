@@ -33,6 +33,7 @@ import { buildStoreOrderTrackUrl } from "@/lib/store/tracking";
 import { createNotification } from "@/lib/notifications/service";
 import { recordPromoConversion } from "@/lib/promos/email-campaigns";
 import { createServiceClient } from "@/lib/supabase/server";
+import { recordEmailCapture } from "@/lib/tracking/email-capture";
 
 export interface ProcessStoreCheckoutResult {
   status: "created" | "existing" | "skipped";
@@ -164,6 +165,15 @@ export async function processStoreCheckoutSession(
   const customerEmail = resolveStoreCustomerEmail(session);
   const shipping = resolveStoreShippingDetails(session);
   const customerName = resolveCustomerName(shipping);
+
+  // WS10: 72h visitor email capture for follow-up (never blocks fulfillment).
+  if (customerEmail) {
+    void recordEmailCapture({
+      email: customerEmail,
+      sourcePage: "/store/checkout",
+      sourceTool: "store_checkout",
+    });
+  }
 
   const existingOrderId = await findOrderByCheckoutSessionId(session.id);
   if (existingOrderId) {

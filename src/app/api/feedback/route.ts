@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processItFeedback, type ItFeedbackSubmission } from "@/lib/feedback/bug-pipeline";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import { recordEmailCapture } from "@/lib/tracking/email-capture";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,6 +31,15 @@ export async function POST(req: NextRequest) {
     };
 
     const result = await processItFeedback(submission);
+
+    // WS10: 72h visitor email capture for follow-up (never blocks feedback).
+    if (typeof body.email === "string" && body.email.trim()) {
+      void recordEmailCapture({
+        email: body.email,
+        sourcePage: "/feedback",
+        sourceTool: "feedback",
+      });
+    }
 
     return NextResponse.json({
       success: true,

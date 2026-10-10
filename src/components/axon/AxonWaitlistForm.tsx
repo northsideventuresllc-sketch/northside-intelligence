@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { captureEmailLead } from "@/lib/tracking/capture-email-client";
 
 export function AxonWaitlistForm() {
   const [email, setEmail] = useState("");
@@ -28,6 +29,8 @@ export function AxonWaitlistForm() {
 
       setStatus("success");
       setMessage(data.message ?? "You are on the AXON waitlist.");
+      // WS10: Meta Lead event + server-side 72h capture (never blocks UX).
+      captureEmailLead(email, "axon_waitlist");
       setEmail("");
     } catch {
       setStatus("error");
