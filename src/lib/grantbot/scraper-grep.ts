@@ -24,6 +24,10 @@ export interface ScrapedRfpRequirements {
   scoringRubric: string[];
   requiredAttachments: string[];
   applicationPortalUrl: string;
+  /** True when requirements were extracted from the live grant page. False = template fallback. */
+  scraped: boolean;
+  /** Human-readable note about what was verified vs. estimated. Shown to the user. */
+  scrapeNote: string;
 }
 
 const VERIFIED_PROGRAM_REGISTRY: Record<string, VerifiedGrantOpportunity[]> = {
@@ -412,82 +416,226 @@ export async function searchVerifiedGrantOpportunities(
 /**
  * Parses URL domain and returns real agency RFP/NOFO guidelines.
  */
+/**
+ * Fetches a grant page and extracts clean text content.
+ * Returns null if the page can't be fetched or has too little content (JS-heavy/blocked).
+ */
+async function fetchGrantPageText(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; NorthsideIntelligence-GrantBot/1.0; +https://www.northsideintelligence.com)",
+        Accept: "text/html,application/xhtml+xml",
+      },
+      signal: AbortSignal.timeout(20000),
+      redirect: "follow",
+    });
+    if (!res.ok) return null;
+
+    const html = await res.text();
+    if (html.length < 2000) return null; // Likely a block page or empty
+
+    // Strip scripts, styles, nav, footer — keep main content text
+    let text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<nav[\s\S]*?<\/nav>/gi, " ")
+      .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
+      .replace(/<header[\s\S]*?<\/header>/gi, " ")
+      .replace(/<!--[\s\S]*?-->/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, " ")
+      .trim();
+
+    // Too little text = JS-rendered or blocked
+    if (text.length < 800) return null;
+
+    // Cap at ~12k chars for the LLM
+    return text.slice(0, 12000);
+  } catch (err) {
+    console.warn("[grantbot] grant page fetch failed:", url, err);
+    return null;
+  }
+}
+
+interface ParsedRfpFields {
+  submissionDeadline?: string;
+  requiredSections?: string[];
+  wordLimits?: Record<string, number>;
+  scoringRubric?: string[];
+  requiredAttachments?: string[];
+  eligibility?: string[];
+}
+
+/**
+ * Uses the LLM to extract structured RFP requirements from scraped page text.
+ * Returns null if the text doesn't contain usable requirements.
+ */
+async function parseRfpFromPageText(
+  pageText: string,
+  grantTitle: string,
+  funder: string
+): Promise<ParsedRfpFields | null> {
+  try {
+    const { generateTextGeminiFirst } = await import("@/lib/ai/gemini-first");
+    const { text } = await generateTextGeminiFirst({
+      system: `You extract grant application requirements from a funder's webpage. Return ONLY valid JSON — no markdown, no explanation. Use this exact shape:
+{
+  "submissionDeadline": "string or null if not found",
+  "requiredSections": ["array of required application sections, or empty array"],
+  "wordLimits": {"Section Name": number, or empty object},
+  "scoringRubric": ["array of evaluation criteria, or empty array"],
+  "requiredAttachments": ["array of required documents, or empty array"],
+  "eligibility": ["array of eligibility requirements, or empty array"]
+}
+Only include information EXPLICITLY stated on the page. If a field isn't mentioned, use null/empty. Never invent deadlines, sections, or criteria.`,
+      prompt: `Grant: "${grantTitle}" by ${funder}\n\nPage content:\n${pageText}`,
+      maxOutputTokens: 1500,
+    });
+
+    // Extract JSON from response
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const parsed = JSON.parse(jsonMatch[0]) as ParsedRfpFields;
+
+    // Sanity check: need at least a deadline or sections to count as real data
+    const hasSections = Array.isArray(parsed.requiredSections) && parsed.requiredSections.length > 0;
+    const hasDeadline = typeof parsed.submissionDeadline === "string" && parsed.submissionDeadline.length > 0 && parsed.submissionDeadline.toLowerCase() !== "null";
+    if (!hasSections && !hasDeadline) return null;
+
+    return parsed;
+  } catch (err) {
+    console.warn("[grantbot] RFP parse failed:", err);
+    return null;
+  }
+}
+
+/** Template fallback — clearly marked as NOT scraped. */
+function templateRfpRequirements(
+  grantTitle: string,
+  funder: string,
+  platformUrl: string,
+  reason: string
+): ScrapedRfpRequirements {
+  const urlLower = platformUrl.toLowerCase();
+  const isFederal = urlLower.includes("grants.gov") || urlLower.includes("nsf.gov") || urlLower.includes("nih.gov");
+
+  const base: {
+    submissionDeadline: string;
+    requiredSections: string[];
+    wordLimits: Record<string, number>;
+    scoringRubric: string[];
+    requiredAttachments: string[];
+  } = isFederal
+    ? {
+        submissionDeadline: "Standard Federal Agency Window (5:00 PM Eastern)",
+        requiredSections: [
+          "Project Abstract & Executive Summary",
+          "Project Description & Comprehensive Work Plan",
+          "Statement of Public Impact & Broader Community Benefits",
+          "Itemized Line-Item Budget & Budget Narrative (SF-424A)",
+          "Key Personnel Biosketches & Track Record",
+          "Facilities, Equipment & Other Resources (Form F)",
+        ],
+        wordLimits: {
+          "Project Abstract": 350,
+          "Project Description": 2500,
+          "Broader Impacts": 1000,
+          "Budget Narrative": 800,
+        },
+        scoringRubric: [
+          "Intellectual Merit & Technical Innovation (30 pts)",
+          "Broader Impacts & Societal Benefit (30 pts)",
+          "Investigator Pedigree & Institutional Facilities (20 pts)",
+          "Cost Reasonableness & Budget Efficiency (20 pts)",
+        ],
+        requiredAttachments: [
+          "Standard Form 424 (SF-424) Mandatory Application Header",
+          "IRS 501(c)(3) or Active SAM.gov UEI Entity Registration Validation",
+          "Current and Pending Support Declarations for Key Personnel",
+          "Formal Letters of Institutional Support (min. 2 signed)",
+        ],
+      }
+    : {
+        submissionDeadline: "Rolling Application / Quarterly Review Cycle",
+        requiredSections: [
+          "Executive Summary & Project Abstract",
+          "Statement of Need & Target Beneficiaries",
+          "Project Design, Implementation Plan & Milestones",
+          "Measurable Outcomes & Evaluation Metrics",
+          "Itemized Program Budget & Cost Breakdown",
+          "Organizational Capacity & Sustainability Strategy",
+        ],
+        wordLimits: {
+          "Executive Summary": 350,
+          "Statement of Need": 1000,
+          "Project Design": 1500,
+          "Measurable Outcomes": 800,
+          "Organizational Capacity": 600,
+        },
+        scoringRubric: [
+          "Project Significance & Community Need (25 pts)",
+          "Feasibility & Clear Implementation Milestones (25 pts)",
+          "Organizational Track Record & Leadership Capacity (20 pts)",
+          "Budget Reasonableness & Cost per Beneficiary (15 pts)",
+          "Long-Term Program Sustainability (15 pts)",
+        ],
+        requiredAttachments: [
+          "IRS 501(c)(3) Determination Letter or W-9 Business Form",
+          "Detailed Itemized Line-Item Budget Spreadsheet",
+          "Board of Directors / Key Leadership Team Roster",
+          "Letters of Community Partnership or Recommendation",
+        ],
+      };
+
+  return {
+    grantTitle,
+    funder,
+    ...base,
+    applicationPortalUrl: platformUrl,
+    scraped: false,
+    scrapeNote: `Could not verify requirements from the live grant page (${reason}). The sections, deadlines, and criteria below are standard ${isFederal ? "federal" : "foundation"} templates — confirm the actual requirements on the funder's site before submitting.`,
+  };
+}
+
 export async function scrapeRfpRequirements(
   platformUrl: string,
   grantTitle: string,
   funder: string
 ): Promise<ScrapedRfpRequirements> {
-  const urlLower = platformUrl.toLowerCase();
-
-  // Federal Grants.gov or NSF/NIH specific NOFO rubric
-  if (urlLower.includes("grants.gov") || urlLower.includes("nsf.gov") || urlLower.includes("nih.gov")) {
-    return {
-      grantTitle,
-      funder,
-      submissionDeadline: "Standard Federal Agency Window (5:00 PM Eastern)",
-      requiredSections: [
-        "Project Abstract & Executive Summary",
-        "Project Description & Comprehensive Work Plan",
-        "Statement of Public Impact & Broader Community Benefits",
-        "Itemized Line-Item Budget & Budget Narrative (SF-424A)",
-        "Key Personnel Biosketches & Track Record",
-        "Facilities, Equipment & Other Resources (Form F)",
-      ],
-      wordLimits: {
-        "Project Abstract": 350,
-        "Project Description": 2500,
-        "Broader Impacts": 1000,
-        "Budget Narrative": 800,
-      },
-      scoringRubric: [
-        "Intellectual Merit & Technical Innovation (30 pts)",
-        "Broader Impacts & Societal Benefit (30 pts)",
-        "Investigator Pedigree & Institutional Facilities (20 pts)",
-        "Cost Reasonableness & Budget Efficiency (20 pts)",
-      ],
-      requiredAttachments: [
-        "Standard Form 424 (SF-424) Mandatory Application Header",
-        "IRS 501(c)(3) or Active SAM.gov UEI Entity Registration Validation",
-        "Current and Pending Support Declarations for Key Personnel",
-        "Formal Letters of Institutional Support (min. 2 signed)",
-      ],
-      applicationPortalUrl: platformUrl,
-    };
+  // 1. Try to fetch and parse the REAL grant page
+  const pageText = await fetchGrantPageText(platformUrl);
+  if (pageText) {
+    const parsed = await parseRfpFromPageText(pageText, grantTitle, funder);
+    if (parsed) {
+      return {
+        grantTitle,
+        funder,
+        submissionDeadline: parsed.submissionDeadline || "See funder page for deadline",
+        requiredSections: parsed.requiredSections?.length
+          ? parsed.requiredSections
+          : ["See funder page for required sections"],
+        wordLimits: parsed.wordLimits || {},
+        scoringRubric: parsed.scoringRubric?.length
+          ? parsed.scoringRubric
+          : ["See funder page for evaluation criteria"],
+        requiredAttachments: parsed.requiredAttachments?.length
+          ? parsed.requiredAttachments
+          : ["See funder page for required documents"],
+        applicationPortalUrl: platformUrl,
+        scraped: true,
+        scrapeNote: "Requirements extracted from the live grant page.",
+      };
+    }
+    // Page fetched but no usable requirements found
+    return templateRfpRequirements(grantTitle, funder, platformUrl, "page loaded but requirements not found in content");
   }
 
-  // Foundation & Private Philanthropy NOFO rubric
-  return {
-    grantTitle,
-    funder,
-    submissionDeadline: "Rolling Application / Quarterly Review Cycle",
-    requiredSections: [
-      "Executive Summary & Project Abstract",
-      "Statement of Need & Target Beneficiaries",
-      "Project Design, Implementation Plan & Milestones",
-      "Measurable Outcomes & Evaluation Metrics",
-      "Itemized Program Budget & Cost Breakdown",
-      "Organizational Capacity & Sustainability Strategy",
-    ],
-    wordLimits: {
-      "Executive Summary": 350,
-      "Statement of Need": 1000,
-      "Project Design": 1500,
-      "Measurable Outcomes": 800,
-      "Organizational Capacity": 600,
-    },
-    scoringRubric: [
-      "Project Significance & Community Need (25 pts)",
-      "Feasibility & Clear Implementation Milestones (25 pts)",
-      "Organizational Track Record & Leadership Capacity (20 pts)",
-      "Budget Reasonableness & Cost per Beneficiary (15 pts)",
-      "Long-Term Program Sustainability (15 pts)",
-    ],
-    requiredAttachments: [
-      "IRS 501(c)(3) Determination Letter or W-9 Business Form",
-      "Detailed Itemized Line-Item Budget Spreadsheet",
-      "Board of Directors / Key Leadership Team Roster",
-      "Letters of Community Partnership or Recommendation",
-    ],
-    applicationPortalUrl: platformUrl,
-  };
+  // 2. Page couldn't be fetched (blocked, JS-heavy, or error)
+  return templateRfpRequirements(grantTitle, funder, platformUrl, "page could not be loaded (may require JavaScript or block automated access)");
 }

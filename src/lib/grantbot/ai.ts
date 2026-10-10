@@ -181,8 +181,9 @@ TARGET OPPORTUNITY:
 - Funder: ${input.funder}
 - Award Range: ${input.awardRange}
 - Submission Deadline: ${rfp.submissionDeadline}
+- Requirements source: ${rfp.scraped ? "VERIFIED — extracted from the funder's live page" : "ESTIMATED — " + rfp.scrapeNote}
 
-RFP GUIDELINE REQUIREMENTS:
+RFP GUIDELINE REQUIREMENTS:${rfp.scraped ? "" : "\nNOTE: These requirements could not be verified from the funder's live page. Structure the proposal around them but add a brief disclaimer at the top advising the applicant to confirm actual requirements on the funder's site."}
 Required Sections:
 ${rfp.requiredSections.map((s) => `- ${s}`).join("\n")}
 Scoring Rubric Criteria to maximize:

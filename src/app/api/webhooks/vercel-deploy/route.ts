@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   notifyDeployToAllUsers,
+  notifyGrantBotFix,
+  resetGrantBotMonthlyUsage,
   formatChangelog,
 } from "@/lib/deploy-notifications";
 
@@ -77,9 +79,21 @@ export async function POST(req: NextRequest) {
     projectName,
   });
 
+  // GrantBot-specific: on grantbot-related deploys, notify GrantBot users
+  // about the fix AND reset their monthly usage so they can try it.
+  let grantbotResult: { emailed: number; notified: number; reset: number } | null = null;
+  if (/grantbot/i.test(commitMessage)) {
+    const [notifyRes, resetRes] = await Promise.all([
+      notifyGrantBotFix(commitSha),
+      resetGrantBotMonthlyUsage(),
+    ]);
+    grantbotResult = { ...notifyRes, reset: resetRes.reset };
+  }
+
   return NextResponse.json({
     ok: true,
     changelog: formatChangelog(commitMessage),
     ...result,
+    grantbot: grantbotResult,
   });
 }
