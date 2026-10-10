@@ -64,7 +64,7 @@ export function StoreUserFeaturesPanel() {
           Your Lists
         </p>
         <p className="mt-2 text-sm text-ni-muted">
-          <Link href="/auth/sign-in" className="text-cyan-300 hover:underline">
+          <Link href="/auth/signin" className="text-cyan-300 hover:underline">
             Sign In
           </Link>{" "}
           to save search history, wishlist items, and price watches.

@@ -98,7 +98,11 @@ export const MCPManagerModal: React.FC<MCPManagerModalProps> = ({
               <span className="font-bold text-amber-300 block mb-0.5">Want this tool to connect to your outside apps?</span>
               <span>Upgrade to the <strong>Autopilot Tier</strong> to link your Gmail, Slack, Twitter, and custom apps with 1-click.</span>
             </div>
-            <button className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-4 py-2 rounded-lg text-xs whitespace-nowrap shadow">
+            <button
+              type="button"
+              onClick={() => { window.location.href = "/subscriptions"; }}
+              className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-4 py-2 rounded-lg text-xs whitespace-nowrap shadow"
+            >
               Unlock Autopilot (+50%)
             </button>
           </div>

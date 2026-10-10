@@ -106,14 +106,20 @@ export function PrivacyPolicyContent() {
         <p className="mb-2 font-medium text-white/80">Lead Capture / Activity Tracking:</p>
         <ul className="mb-4 list-disc space-y-2 pl-5">
           <li>
-            If you submit your email address through a lead-capture form, waitlist, demo request, or
-            activity-tracking prompt on our sites, we collect that email address to follow up with you about the
-            relevant tool or Service.
+            If you submit your email address through a lead-capture form, waitlist, demo request, quote request,
+            newsletter signup, feedback form, or store order-tracking lookup on our sites, we collect that email
+            address to follow up with you about the relevant tool or Service.
+          </li>
+          <li>
+            For each capture we store: your email address, a one-way cryptographic hash of it (used only for
+            de-duplication), the page and entry point where it was submitted, and the capture timestamp. Nothing
+            else is stored.
           </li>
           <li>
             Captured emails are retained for <strong className="text-white/90">72 hours</strong> from submission
-            and are then permanently deleted, unless you create an NI account, start a trial, or otherwise consent
-            to ongoing communications — in which case the email is handled under the retention rules in Section 7.
+            and are then permanently deleted by an automated hourly cleanup job, unless you create an NI account,
+            start a trial, or otherwise consent to ongoing communications — in which case the email is handled
+            under the retention rules in Section 7.
           </li>
         </ul>
 
@@ -712,7 +718,7 @@ export function PrivacyPolicyContent() {
         </ul>
         <p>
           By placing a Smart Store order, you consent to these post-fulfillment adjustments. See our{" "}
-          <a href="/terms" className="text-cyan-400 hover:text-cyan-300">
+          <a href="/legal/terms" className="text-cyan-400 hover:text-cyan-300">
             Terms of Service
           </a>{" "}
           Section 7 for full details.
