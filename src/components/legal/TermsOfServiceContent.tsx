@@ -142,6 +142,15 @@ export function TermsOfServiceContent() {
           NI guarantees that <strong className="text-white/90">we do not use your inputs, tool payloads, agent execution prompts, or generated outputs to train, fine-tune, or calibrate public AI foundation models</strong>. While our platform incorporates automated scrubbing routines to detect and redact sensitive credentials and personally identifiable information (PII) in transit, you remain solely responsible for ensuring that any data ingested into the Services complies with applicable privacy laws and third-party confidentiality agreements.
         </p>
 
+        <h3 className="mb-2 mt-4 text-base font-medium text-white/90">4.1.4 AXON Gated Access (Pre-Launch)</h3>
+        <p className="mb-4">
+          <strong className="text-white/90">AXON</strong> is currently in gated pre-launch. Access is granted at
+          NI&apos;s sole discretion — including through waitlist invitations or qualifying paid entitlements — and
+          may require a separate AXON access code. Pre-launch access may be limited, modified, or revoked at any
+          time as AXON moves toward general availability. Unless NI states otherwise in writing, AXON access
+          granted during pre-launch does not create a right to continued access at any particular tier or price.
+        </p>
+
         <h3 className="mb-2 mt-4 text-base font-medium text-white/90">4.2 Smart Store</h3>
         <p>
           A curated e-commerce experience where products are sourced from third-party suppliers. The Smart Store is
@@ -178,6 +187,7 @@ export function TermsOfServiceContent() {
                 <th>Plan</th>
                 <th>Price</th>
                 <th>Tool Slots</th>
+                <th>Agentic Slots</th>
                 <th>Usage</th>
               </tr>
             </thead>
@@ -185,24 +195,28 @@ export function TermsOfServiceContent() {
               <tr>
                 <td>Free</td>
                 <td>$0/mo</td>
-                <td>All tools (limited)</td>
+                <td>0 (per-tool caps apply)</td>
+                <td>0</td>
                 <td>Monthly usage caps per tool</td>
               </tr>
               <tr>
                 <td>Core</td>
                 <td>$20/mo ($13/mo annual)</td>
                 <td>3 tool slots</td>
+                <td>1 agentic slot</td>
                 <td>Unlimited on selected tools</td>
               </tr>
               <tr>
                 <td>Pro</td>
                 <td>$39/mo ($27/mo annual)</td>
                 <td>10 tool slots</td>
+                <td>3 agentic slots</td>
                 <td>Unlimited on selected tools</td>
               </tr>
               <tr>
                 <td>Power</td>
                 <td>$59/mo ($47/mo annual)</td>
+                <td>Unlimited</td>
                 <td>Unlimited</td>
                 <td>Unlimited across all tools</td>
               </tr>
@@ -213,8 +227,10 @@ export function TermsOfServiceContent() {
         <h3 className="mb-2 mt-4 text-base font-medium text-white/90">5.2 À La Carte Tool Access</h3>
         <p className="mb-4">
           Free tier users may purchase individual tool access at the published per-tool monthly rate (e.g., ReplyFlow
-          at $15/mo, GrantBot at $39/mo, Signal Desk at $24/mo, GapScan at $18/mo, BridgeAI at $29/mo). Annual and
-          lifetime options may be available.
+          at $15/mo, GrantBot at $39/mo, Signal Desk at $24/mo, GapScan at $18/mo, BridgeAI at $29/mo). Monthly and
+          annual options may be available. <strong className="text-white/90">Lifetime tool access is no longer
+          offered for new purchases.</strong> If you purchased lifetime tool access before it was discontinued, that
+          purchase is honored under the terms in effect at the time of purchase.
         </p>
 
         <h3 className="mb-2 text-base font-medium text-white/90">5.3 Billing and Payment</h3>
@@ -232,7 +248,50 @@ export function TermsOfServiceContent() {
           <li>You authorize us to charge your payment method on file for all amounts due.</li>
         </ul>
 
-        <h3 className="mb-2 text-base font-medium text-white/90">5.4 Free Trial and Usage Limits</h3>
+        <h3 className="mb-2 text-base font-medium text-white/90">5.4 Free Trial Terms</h3>
+        <p className="mb-3">
+          We may offer a <strong className="text-white/90">7-day free trial</strong> of paid plans. A valid payment
+          method is <strong className="text-white/90">required upfront</strong> to start a free trial. By starting
+          a trial, you authorize NI (via Stripe) to verify your payment method, which may include a temporary
+          authorization hold that is automatically released.
+        </p>
+        <ul className="mb-4 list-disc space-y-2 pl-5">
+          <li>
+            <strong className="text-white/90">No charge during the trial.</strong> You will not be charged during
+            the 7-day trial period.
+          </li>
+          <li>
+            <strong className="text-white/90">Automatic conversion.</strong> If you do not cancel before the trial
+            ends, your payment method will be charged automatically on the day after the trial expires (your first
+            billing date) at the plan&apos;s then-published rate, and your subscription will continue on a recurring
+            basis until canceled.
+          </li>
+          <li>
+            <strong className="text-white/90">How to cancel during the trial.</strong> Cancel anytime during the
+            trial through your account dashboard or by emailing <LegalEmail />. If you cancel before the trial
+            ends, your access continues until the trial period expires and you will not be charged. Canceled trials
+            cannot be reactivated after expiry.
+          </li>
+          <li>
+            <strong className="text-white/90">One trial per user.</strong> Free trials are limited to one per user
+            and per account. Creating additional accounts to obtain extra trials violates Section 3.3 and may result
+            in termination of all associated accounts without refund.
+          </li>
+          <li>
+            <strong className="text-white/90">Failed payment at conversion.</strong> If your payment method cannot
+            be charged when the trial converts, trial access ends and no subscription is created.
+          </li>
+        </ul>
+        <p className="mb-4">
+          <strong className="text-white/90">Trial promotion end date:</strong> the 7-day free trial promotion ends
+          on <strong className="text-white/90">November 30, 2026</strong>. Trials started on or before that date will
+          complete their full 7-day term; new trials cannot be started after that date unless we extend the promotion.
+        </p>
+        <p className="mb-4">
+          Separately, we may distribute <strong className="text-white/90">single-use trial codes</strong> (e.g., for
+          promotional pilots). Trial codes are non-transferable, grant access for 7 days after redemption unless
+          stated otherwise, and are subject to the same one-per-user limit.
+        </p>
         <p className="mb-4">
           Free tier usage limits are defined per tool and subject to change. Exceeding free tier limits will require
           an upgrade. We will not automatically charge you for overages on the Free tier.

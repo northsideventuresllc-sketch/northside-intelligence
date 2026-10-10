@@ -43,6 +43,11 @@ export function PrivacyPolicyContent() {
           <li>Any related products, apps, or communications</li>
         </ul>
         <p className="mt-3">
+          This policy also covers NI Portal marketing and preview pages we host on Northside Ventures Group domains
+          (for example, northsideventuresgroup.vercel.app/ni-outreach and /ni-content), which share the same
+          analytics and tracking described in Section 6.
+        </p>
+        <p className="mt-3">
           By using our Services, you consent to the practices described in this Privacy Policy. If you do not
           agree, please discontinue use of the Services.
         </p>
@@ -98,6 +103,20 @@ export function PrivacyPolicyContent() {
           </li>
         </ul>
 
+        <p className="mb-2 font-medium text-white/80">Lead Capture / Activity Tracking:</p>
+        <ul className="mb-4 list-disc space-y-2 pl-5">
+          <li>
+            If you submit your email address through a lead-capture form, waitlist, demo request, or
+            activity-tracking prompt on our sites, we collect that email address to follow up with you about the
+            relevant tool or Service.
+          </li>
+          <li>
+            Captured emails are retained for <strong className="text-white/90">72 hours</strong> from submission
+            and are then permanently deleted, unless you create an NI account, start a trial, or otherwise consent
+            to ongoing communications — in which case the email is handled under the retention rules in Section 7.
+          </li>
+        </ul>
+
         <p className="mb-2 font-medium text-white/80">Communications:</p>
         <ul className="mb-4 list-disc space-y-2 pl-5">
           <li>Support requests, feedback submissions, bug reports, and ideas submitted through in-platform forms</li>
@@ -127,8 +146,17 @@ export function PrivacyPolicyContent() {
           <li>Session cookies (required for login state)</li>
           <li>Functional cookies (remembering your preferences, e.g., monthly vs. annual pricing toggle)</li>
           <li>Analytics cookies (measuring aggregate usage — see Section 6)</li>
+          <li>
+            Meta pixel cookies (<code>_fbp</code>, <code>_fbc</code>) — set by the Meta pixel for advertising
+            measurement and conversion tracking (see Section 6)
+          </li>
         </ul>
-        <p>We do not use advertising cookies or sell data to advertisers.</p>
+        <p>
+          We use the <strong className="text-white/90">Meta pixel</strong> (Meta Platforms, Inc.) for advertising
+          measurement and conversion tracking. The pixel transmits page views and standard events (e.g., signups,
+          checkouts, purchases) to Meta, where they are governed by Meta&apos;s Privacy Policy. See Section 6 for
+          details and opt-out options. We do not sell your personal information for monetary consideration.
+        </p>
 
         <h3 className="mb-2 mt-4 text-base font-medium text-white/90">2.3 Information From Third Parties</h3>
         <p className="mb-2">We may receive limited information from:</p>
@@ -184,6 +212,11 @@ export function PrivacyPolicyContent() {
           <li>
             Send optional marketing emails: NI newsletters, product launches, promotions (you may opt out at any
             time via the unsubscribe link)
+          </li>
+          <li>
+            Follow up on lead-capture submissions: contact you about the tool or Service you expressed interest in
+            (captured emails are deleted 72 hours after submission unless you create an account or consent to
+            further contact — see Section 2.1)
           </li>
         </ul>
 
@@ -305,12 +338,20 @@ export function PrivacyPolicyContent() {
                 <td>Usage analytics</td>
                 <td>Anonymized/aggregated usage data</td>
               </tr>
+              <tr>
+                <td>
+                  <strong className="text-white/90">Meta (Facebook)</strong>
+                </td>
+                <td>Advertising measurement &amp; conversion tracking</td>
+                <td>Page views, signup/checkout/purchase events, pixel cookies (_fbp, _fbc)</td>
+              </tr>
             </tbody>
           </table>
         </div>
         <p className="mt-3">
-          All service providers are contractually required to protect your data and use it only for the purposes
-          we specify.
+          Our service providers process data under contract and may use it only for the purposes we specify. Data
+          sent to Meta via the pixel is additionally governed by Meta&apos;s Business Tools Terms and Meta&apos;s
+          Privacy Policy.
         </p>
 
         <h3 className="mb-2 mt-4 text-base font-medium text-white/90">5.2 Legal Requirements</h3>
@@ -366,6 +407,13 @@ export function PrivacyPolicyContent() {
                 <td>Measure usage patterns (aggregate, not personal)</td>
                 <td>Yes</td>
               </tr>
+              <tr>
+                <td>
+                  <strong className="text-white/90">Advertising / Pixel (Meta)</strong>
+                </td>
+                <td>Ad measurement and conversion tracking (_fbp, _fbc)</td>
+                <td>Yes — block third-party cookies or adjust Meta ad settings</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -376,8 +424,18 @@ export function PrivacyPolicyContent() {
           you from logging in. Disabling analytics cookies has no effect on Service functionality.
         </p>
         <p>
-          We honor <strong className="text-white/90">Do Not Track (DNT)</strong> browser signals for analytics
-          tracking. We do not serve behavioral advertising cookies.
+          We honor <strong className="text-white/90">Do Not Track (DNT)</strong> browser signals for our first-party
+          analytics. The Meta pixel sets advertising-measurement cookies, and Meta&apos;s handling of that data is
+          governed by Meta&apos;s own policies. To limit Meta&apos;s use of your data, adjust your{" "}
+          <a
+            href="https://www.facebook.com/adpreferences"
+            className="text-cyan-400 hover:text-cyan-300"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Meta ad settings
+          </a>
+          , block third-party cookies in your browser, or use a browser extension that blocks trackers.
         </p>
       </section>
 
@@ -423,6 +481,10 @@ export function PrivacyPolicyContent() {
               <tr>
                 <td>Intelligence Services project data</td>
                 <td>Per service agreement, minimum 1 year</td>
+              </tr>
+              <tr>
+                <td>Captured emails (lead/activity follow-up)</td>
+                <td>72 hours from submission, then permanently deleted</td>
               </tr>
             </tbody>
           </table>
@@ -533,8 +595,12 @@ export function PrivacyPolicyContent() {
             information.
           </li>
           <li>
-            <strong className="text-white/90">Right to Opt Out of Sale or Sharing:</strong> We do not sell or
-            share your personal information for cross-context behavioral advertising.
+            <strong className="text-white/90">Right to Opt Out of Sale or Sharing:</strong> We do not sell your
+            personal information for monetary consideration. We do share limited event data (page views, signup,
+            checkout, and purchase events) with Meta via the Meta pixel for advertising measurement, which may
+            qualify as &quot;sharing&quot; under the CCPA. To opt out of this sharing, email <LegalEmail /> with
+            the subject &quot;Opt Out of Sharing,&quot; block third-party cookies in your browser, or adjust your
+            Meta ad settings.
           </li>
           <li>
             <strong className="text-white/90">Right to Limit Use of Sensitive Personal Information:</strong> We do
@@ -587,8 +653,8 @@ export function PrivacyPolicyContent() {
             improvement (always balanced against your rights)
           </li>
           <li>
-            <strong className="text-white/90">Consent:</strong> Marketing emails and optional analytics (you may
-            withdraw consent at any time)
+            <strong className="text-white/90">Consent:</strong> Marketing emails (you may withdraw consent at any
+            time via the unsubscribe link)
           </li>
           <li>
             <strong className="text-white/90">Legal obligation:</strong> Compliance with applicable law
