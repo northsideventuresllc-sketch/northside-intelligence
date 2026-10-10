@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ITFeedbackWidget } from '../../components/it/ITFeedbackWidget';
 import { AgenticTierComingSoonCard } from '@/components/billing/AgenticTierComingSoonCard';
 import { TrackViewContent } from '@/components/tracking/TrackViewContent';
+import { SevenDayTrialBanner } from '@/components/billing/SevenDayTrialBanner';
 
 export default function ITCreatorPage() {
   const [toolName, setToolName] = useState('');
@@ -72,8 +73,10 @@ export default function ITCreatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center">
       <TrackViewContent contentName="it-creator" />
+      <SevenDayTrialBanner toolName="the IT Creator" />
+      <div className="p-6 w-full flex flex-col items-center">
       <div className="max-w-4xl w-full space-y-6">
         {/* Header */}
         <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-xl flex justify-between items-center">
@@ -284,6 +287,7 @@ export default function ITCreatorPage() {
             variant="portal"
           />
         </div>
+      </div>
       </div>
 
       <ITFeedbackWidget toolId="it-creator" />

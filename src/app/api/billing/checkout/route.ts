@@ -19,6 +19,11 @@ import {
   type CheckoutKind,
 } from "@/lib/billing/stripe";
 import { mapDbPricing } from "@/lib/billing/tool-pricing";
+import {
+  isSevenDayTrialPromoActive,
+  SEVEN_DAY_TRIAL_DAYS,
+  SEVEN_DAY_TRIAL_PROMO_META,
+} from "@/lib/billing/seven-day-trial-promo";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
 
@@ -154,6 +159,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Workstream 6 — 7-day free-trial promo (through Nov 30, 2026).
+    // Server-side date gate: trial_period_days is set only while the promo
+    // is active, so the promo stops applying automatically after Nov 30.
+    // Lifetime (payment-mode) checkouts are never given a trial.
+    const trialPromoActive =
+      mode === "subscription" && isSevenDayTrialPromoActive();
+    if (trialPromoActive) {
+      metadata.trialPromo = SEVEN_DAY_TRIAL_PROMO_META;
+    }
+
     const session = await billingStripe.checkout.sessions.create({
       mode,
       line_items: [{ price: priceId, quantity: 1 }],
@@ -162,7 +177,12 @@ export async function POST(req: NextRequest) {
       customer_email: user.email ?? undefined,
       metadata,
       ...(mode === "subscription"
-        ? { subscription_data: { metadata: { userId: user.id, ...metadata } } }
+        ? {
+            subscription_data: {
+              metadata: { userId: user.id, ...metadata },
+              ...(trialPromoActive ? { trial_period_days: SEVEN_DAY_TRIAL_DAYS } : {}),
+            },
+          }
         : {}),
     });
 

@@ -6,6 +6,7 @@ import { ReplyFlowPricingSection } from "@/components/replyflow/ReplyFlowPricing
 import { portalSignUpUrl, replyflowPath } from "@/lib/replyflow/auth";
 import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
 import { TrackViewContent } from "@/components/tracking/TrackViewContent";
+import { SevenDayTrialBanner } from "@/components/billing/SevenDayTrialBanner";
 
 const tones = ["Professional", "Friendly", "Empathetic", "Firm"];
 
@@ -19,6 +20,7 @@ export default async function ReplyFlowHome() {
     <div className="relative min-h-screen overflow-hidden">
       <TrackViewContent contentName="replyflow" />
       <ReplyFlowBackground />
+      <SevenDayTrialBanner toolName="ReplyFlow" />
       <ReplyFlowNav />
 
       <main className="relative z-10">

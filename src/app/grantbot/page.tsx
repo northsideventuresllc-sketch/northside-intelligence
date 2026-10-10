@@ -6,6 +6,7 @@ import { GrantBotPricingSection } from "@/components/grantbot/GrantBotPricingSec
 import { grantbotPath, portalSignUpUrl } from "@/lib/grantbot/auth";
 import { formatFreeTierHeroLabel } from "@/lib/billing/sector3-tool-pricing";
 import { TrackViewContent } from "@/components/tracking/TrackViewContent";
+import { SevenDayTrialBanner } from "@/components/billing/SevenDayTrialBanner";
 
 const categories = ["Nonprofit", "Creator", "Research", "Small Business", "Arts & Culture"];
 
@@ -19,6 +20,7 @@ export default async function GrantBotHome() {
     <div className="relative min-h-screen overflow-hidden">
       <TrackViewContent contentName="grantbot" />
       <GrantBotBackground />
+      <SevenDayTrialBanner toolName="GrantBot" />
       <GrantBotNav />
 
       <main className="relative z-10">

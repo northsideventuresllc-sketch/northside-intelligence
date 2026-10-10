@@ -7,6 +7,11 @@ import {
   REPLYFLOW_PRICE_IDS,
 } from "@/lib/replyflow/stripe";
 import { createServerAuthClient } from "@/lib/supabase/server-auth";
+import {
+  isSevenDayTrialPromoActive,
+  SEVEN_DAY_TRIAL_DAYS,
+  SEVEN_DAY_TRIAL_PROMO_META,
+} from "@/lib/billing/seven-day-trial-promo";
 
 export async function POST(req: NextRequest) {
   await ensureReplyflowBillingEnvHydrated();
@@ -34,6 +39,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const appUrl = replyflowAppUrl();
+    // Workstream 6 — 7-day free-trial promo (through Nov 30, 2026).
+    // Server-side date gate: trial_period_days is set only while the promo
+    // is active, so the promo stops applying automatically after Nov 30.
+    const trialPromoActive = isSevenDayTrialPromoActive();
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -41,7 +50,14 @@ export async function POST(req: NextRequest) {
       success_url: `${appUrl}/dashboard?upgraded=true`,
       cancel_url: `${appUrl}#pricing`,
       customer_email: user.email,
-      metadata: { userId: user.id },
+      metadata: {
+        userId: user.id,
+        ...(trialPromoActive ? { trialPromo: SEVEN_DAY_TRIAL_PROMO_META } : {}),
+      },
+      subscription_data: {
+        metadata: { userId: user.id },
+        ...(trialPromoActive ? { trial_period_days: SEVEN_DAY_TRIAL_DAYS } : {}),
+      },
     });
 
     if (!session.url) {
