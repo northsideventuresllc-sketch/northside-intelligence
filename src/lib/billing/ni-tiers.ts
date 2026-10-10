@@ -1,1 +1,106 @@
-ZXhwb3J0IHR5cGUgTmlUaWVyID0gImZyZWUiIHwgImNvcmUiIHwgInBybyIgfCAicG93ZXIiOwoKLyoqIEBkZXByZWNhdGVkIExlZ2FjeSB0aWVyIHNsdWdzIGZyb20gcHJlLXJlbmFtZSBzdWJzY3JpcHRpb25zIOKAlCBub3JtYWxpemVkIGF0IHJlYWQgdGltZS4gKi8KZXhwb3J0IHR5cGUgTGVnYWN5TmlUaWVyID0gInN0YW5kYXJkIiB8ICJwcmVtaXVtIiB8ICJ1bHRpbWF0ZSI7CgpleHBvcnQgdHlwZSBCaWxsaW5nSW50ZXJ2YWwgPSAibW9udGhseSIgfCAiYW5udWFsIjsKCmV4cG9ydCBpbnRlcmZhY2UgTmlUaWVyQ29uZmlnIHsKICB0aWVyOiBOaVRpZXI7CiAgbmFtZTogc3RyaW5nOwogIG1vbnRobHlQcmljZVVzZDogbnVtYmVyOwogIGFubnVhbE1vbnRobHlVc2Q6IG51bWJlcjsKICBhbm51YWxUb3RhbFVzZDogbnVtYmVyOwogIHRvb2xTbG90czogbnVtYmVyIHwgbnVsbDsKICBhZ2VudGljU2xvdHM6IG51bWJlciB8IG51bGw7CiAgLyoqIDAtMSBkaXNjb3VudCBvbiBhZGRpdGlvbmFsIElUIHB1cmNoYXNlcyBvbmNlIHNsb3RzIGFyZSBmdWxsIChQb3dlciBvbmx5KS4gKi8KICBvdmVyYWdlRGlzY291bnQ6IG51bWJlcjsKICBkZXNjcmlwdGlvbjogc3RyaW5nOwp9CgpleHBvcnQgY29uc3QgTklfVElFUlM6IFJlY29yZDxOaVRpZXIsIE5pVGllckNvbmZpZz4gPSB7CiAgZnJlZTogewogICAgdGllcjogImZyZWUiLAogICAgbmFtZTogIkZyZWUiLAogICAgbW9udGhseVByaWNlVXNkOiAwLAogICAgYW5udWFsTW9udGhseVVzZDogMCwKICAgIGFubnVhbFRvdGFsVXNkOiAwLAogICAgdG9vbFNsb3RzOiAwLAogICAgYWdlbnRpY1Nsb3RzOiAwLAogICAgb3ZlcmFnZURpc2NvdW50OiAwLAogICAgZGVzY3JpcHRpb246ICJObyBidW5kbGVkIHRvb2xzIOKAlCBwdXJjaGFzZSBlYWNoIElUIGluZGl2aWR1YWxseS4iLAogIH0sCiAgY29yZTogewogICAgdGllcjogImNvcmUiLAogICAgbmFtZTogIkNvcmUiLAogICAgbW9udGhseVByaWNlVXNkOiAyMCwKICAgIGFubnVhbE1vbnRobHlVc2Q6IDEzLAogICAgYW5udWFsVG90YWxVc2Q6IDE1OSwKICAgIHRvb2xTbG90czogMiwKICAgIGFnZW50aWNTbG90czogMSwKICAgIG92ZXJhZ2VEaXNjb3VudDogMCwKICAgIGRlc2NyaXB0aW9uOiAiMiBTYWFTIEFjY2VzcyBJVCBzbG90cyArIDEgQWdlbnRpYyBBY2Nlc3MgSVQgc2xvdC4iLAogIH0sCiAgcHJvOiB7CiAgICB0aWVyOiAicHJvIiwKICAgIG5hbWU6ICJQcm8iLAogICAgbW9udGhseVByaWNlVXNkOiAzOSwKICAgIGFubnVhbE1vbnRobHlVc2Q6IDI3LAogICAgYW5udWFsVG90YWxVc2Q6IDMyNCwKICAgIHRvb2xTbG90czogNCwKICAgIGFnZW50aWNTbG90czogMSwKICAgIG92ZXJhZ2VEaXNjb3VudDogMCwKICAgIGRlc2NyaXB0aW9uOiAiNCBTYWFTIEFjY2VzcyBJVCBzbG90cyArIDEgQWdlbnRpYyBBY2Nlc3MgSVQgc2xvdC4iLAogIH0sCiAgcG93ZXI6IHsKICAgIHRpZXI6ICJwb3dlciIsCiAgICBuYW1lOiAiUG93ZXIiLAogICAgbW9udGhseVByaWNlVXNkOiA1OSwKICAgIGFubnVhbE1vbnRobHlVc2Q6IDQ3LAogICAgYW5udWFsVG90YWxVc2Q6IDU1OSwKICAgIHRvb2xTbG90czogOCwKICAgIGFnZW50aWNTbG90czogNCwKICAgIG92ZXJhZ2VEaXNjb3VudDogMC41LAogICAgZGVzY3JpcHRpb246ICI4IFNhYVMgQWNjZXNzIElUIHNsb3RzICsgNCBBZ2VudGljIEFjY2VzcyBJVCBzbG90cywgcGx1cyA1MCUgb2ZmIGFueSBhZGRpdGlvbmFsIElUcyBvbmNlIHNsb3RzIGFyZSBmdWxsLiIsCiAgfSwKfTsKCmV4cG9ydCBjb25zdCBQQUlEX05JX1RJRVJTOiBOaVRpZXJbXSA9IFsiY29yZSIsICJwcm8iLCAicG93ZXIiXTsKCmNvbnN0IExFR0FDWV9USUVSX01BUDogUmVjb3JkPExlZ2FjeU5pVGllciwgTmlUaWVyPiA9IHsKICBzdGFuZGFyZDogImNvcmUiLAogIHByZW1pdW06ICJwcm8iLAogIHVsdGltYXRlOiAicG93ZXIiLAp9OwoKZXhwb3J0IGZ1bmN0aW9uIG5vcm1hbGl6ZU5pVGllcih0aWVyOiBzdHJpbmcgfCBudWxsIHwgdW5kZWZpbmVkKTogTmlUaWVyIHsKICBpZiAoIXRpZXIpIHJldHVybiAiZnJlZSI7CiAgaWYgKHRpZXIgaW4gTklfVElFUlMpIHJldHVybiB0aWVyIGFzIE5pVGllcjsKICBpZiAodGllciBpbiBMRUdBQ1lfVElFUl9NQVApIHJldHVybiBMRUdBQ1lfVElFUl9NQVBbdGllciBhcyBMZWdhY3lOaVRpZXJdOwogIHJldHVybiAiZnJlZSI7Cn0KCmV4cG9ydCBmdW5jdGlvbiBnZXROaVRpZXJDb25maWcodGllcjogc3RyaW5nIHwgbnVsbCB8IHVuZGVmaW5lZCk6IE5pVGllckNvbmZpZyB7CiAgcmV0dXJuIE5JX1RJRVJTW25vcm1hbGl6ZU5pVGllcih0aWVyKV07Cn0KCi8qKgogKiBObyB0aWVyIGhhcyB1bmxpbWl0ZWQgdG9vbCBhY2Nlc3MgYW55bW9yZSAoUG93ZXIgaXMgOCBTYWFTICsgNCBhZ2VudGljIHNsb3RzKS4KICogTWFzdGVyIGFjY291bnRzIGJ5cGFzcyB2aWEgaXNNYXN0ZXJBY2NvdW50IGNoZWNrcyBlbHNld2hlcmUuIEtlcHQgZm9yCiAqIGJhY2t3YXJkLWNvbXBhdDsgYWx3YXlzIGZhbHNlLgogKi8KZXhwb3J0IGZ1bmN0aW9uIHRpZXJIYXNVbmxpbWl0ZWRUb29sQWNjZXNzKF90aWVyOiBzdHJpbmcgfCBudWxsIHwgdW5kZWZpbmVkKTogYm9vbGVhbiB7CiAgcmV0dXJuIGZhbHNlOwp9CgpleHBvcnQgZnVuY3Rpb24gZ2V0VG9vbFNsb3RMaW1pdCh0aWVyOiBzdHJpbmcgfCBudWxsIHwgdW5kZWZpbmVkKTogbnVtYmVyIHwgbnVsbCB7CiAgcmV0dXJuIE5JX1RJRVJTW25vcm1hbGl6ZU5pVGllcih0aWVyKV0udG9vbFNsb3RzOwp9CgpleHBvcnQgZnVuY3Rpb24gZ2V0QWdlbnRpY1Nsb3RMaW1pdCh0aWVyOiBzdHJpbmcgfCBudWxsIHwgdW5kZWZpbmVkKTogbnVtYmVyIHwgbnVsbCB7CiAgcmV0dXJuIE5JX1RJRVJTW25vcm1hbGl6ZU5pVGllcih0aWVyKV0uYWdlbnRpY1Nsb3RzOwp9CgpleHBvcnQgZnVuY3Rpb24gZm9ybWF0TmlQcmljZSh1c2Q6IG51bWJlcik6IHN0cmluZyB7CiAgcmV0dXJuIHVzZCAlIDEgPT09IDAgPyB1c2QudG9GaXhlZCgwKSA6IHVzZC50b0ZpeGVkKDIpOwp9Cg==
+export type NiTier = "free" | "core" | "pro" | "power";
+
+/** @deprecated Legacy tier slugs from pre-rename subscriptions — normalized at read time. */
+export type LegacyNiTier = "standard" | "premium" | "ultimate";
+
+export type BillingInterval = "monthly" | "annual";
+
+export interface NiTierConfig {
+  tier: NiTier;
+  name: string;
+  monthlyPriceUsd: number;
+  annualMonthlyUsd: number;
+  annualTotalUsd: number;
+  toolSlots: number | null;
+  agenticSlots: number | null;
+  /** 0-1 discount on additional IT purchases once slots are full (Power only). */
+  overageDiscount: number;
+  description: string;
+}
+
+export const NI_TIERS: Record<NiTier, NiTierConfig> = {
+  free: {
+    tier: "free",
+    name: "Free",
+    monthlyPriceUsd: 0,
+    annualMonthlyUsd: 0,
+    annualTotalUsd: 0,
+    toolSlots: 0,
+    agenticSlots: 0,
+    overageDiscount: 0,
+    description: "No bundled tools — purchase each IT individually.",
+  },
+  core: {
+    tier: "core",
+    name: "Core",
+    monthlyPriceUsd: 20,
+    annualMonthlyUsd: 13,
+    annualTotalUsd: 159,
+    toolSlots: 2,
+    agenticSlots: 1,
+    overageDiscount: 0,
+    description: "2 SaaS Access IT slots + 1 Agentic Access IT slot.",
+  },
+  pro: {
+    tier: "pro",
+    name: "Pro",
+    monthlyPriceUsd: 39,
+    annualMonthlyUsd: 27,
+    annualTotalUsd: 324,
+    toolSlots: 4,
+    agenticSlots: 1,
+    overageDiscount: 0,
+    description: "4 SaaS Access IT slots + 1 Agentic Access IT slot.",
+  },
+  power: {
+    tier: "power",
+    name: "Power",
+    monthlyPriceUsd: 59,
+    annualMonthlyUsd: 47,
+    annualTotalUsd: 559,
+    toolSlots: 8,
+    agenticSlots: 4,
+    overageDiscount: 0.5,
+    description: "8 SaaS Access IT slots + 4 Agentic Access IT slots, plus 50% off any additional ITs once slots are full.",
+  },
+};
+
+export const PAID_NI_TIERS: NiTier[] = ["core", "pro", "power"];
+
+const LEGACY_TIER_MAP: Record<LegacyNiTier, NiTier> = {
+  standard: "core",
+  premium: "pro",
+  ultimate: "power",
+};
+
+export function normalizeNiTier(tier: string | null | undefined): NiTier {
+  if (!tier) return "free";
+  if (tier in NI_TIERS) return tier as NiTier;
+  if (tier in LEGACY_TIER_MAP) return LEGACY_TIER_MAP[tier as LegacyNiTier];
+  return "free";
+}
+
+export function getNiTierConfig(tier: string | null | undefined): NiTierConfig {
+  return NI_TIERS[normalizeNiTier(tier)];
+}
+
+/**
+ * No tier has unlimited tool access anymore (Power is 8 SaaS + 4 agentic slots).
+ * Master accounts bypass via isMasterAccount checks elsewhere. Kept for
+ * backward-compat; always false.
+ */
+export function tierHasUnlimitedToolAccess(_tier: string | null | undefined): boolean {
+  return false;
+}
+
+export function getToolSlotLimit(tier: string | null | undefined): number | null {
+  return NI_TIERS[normalizeNiTier(tier)].toolSlots;
+}
+
+export function getAgenticSlotLimit(tier: string | null | undefined): number | null {
+  return NI_TIERS[normalizeNiTier(tier)].agenticSlots;
+}
+
+export function formatNiPrice(usd: number): string {
+  return usd % 1 === 0 ? usd.toFixed(0) : usd.toFixed(2);
+}
