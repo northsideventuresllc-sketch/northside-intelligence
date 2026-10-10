@@ -1,1 +1,231 @@
-aW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gIm5leHQvc2VydmVyIjsKaW1wb3J0IHR5cGUgeyBCaWxsaW5nSW50ZXJ2YWwsIE5pVGllciB9IGZyb20gIkAvbGliL2JpbGxpbmcvbmktdGllcnMiOwppbXBvcnQgeyBQQUlEX05JX1RJRVJTIH0gZnJvbSAiQC9saWIvYmlsbGluZy9uaS10aWVycyI7CmltcG9ydCB7CiAgZ2V0VXNlckJpbGxpbmdTdGF0ZSwKICB1c2VyT3duc1Rvb2wsCiAgdXNlckhhc1VubGltaXRlZFRvb2xBY2Nlc3MsCiAgY2FuQWRkTmlQbGFuVG9vbCwKICBnZXRPdmVyYWdlRGlzY291bnQsCn0gZnJvbSAiQC9saWIvYmlsbGluZy9lbnRpdGxlbWVudHMiOwppbXBvcnQgeyBnZXRMaWZldGltZUxhdW5jaFN0YXR1cyB9IGZyb20gIkAvbGliL2JpbGxpbmcvbGlmZXRpbWUtbGF1bmNoIjsKaW1wb3J0IHsgc2hvdWxkU2hvd1Blcm1hbmVudEFjY2Vzc09mZmVyIH0gZnJvbSAiQC9saWIvYmlsbGluZy9wZXJtYW5lbnQtYWNjZXNzLW9mZmVyIjsKaW1wb3J0IHsKICBiaWxsaW5nU3RyaXBlLAogIGVuc3VyZUJpbGxpbmdFbnZIeWRyYXRlZCwKICBnZXRCaWxsaW5nQ29uZmlnRXJyb3IsCiAgZ2V0TmlTdWJzY3JpcHRpb25QcmljZUlkLAogIGdldFRvb2xQcmljZUlkRnJvbURiLAogIG1hcE5pUGxhblByaWNpbmcsCiAgdHlwZSBDaGVja291dEtpbmQsCn0gZnJvbSAiQC9saWIvYmlsbGluZy9zdHJpcGUiOwppbXBvcnQgeyBtYXBEYlByaWNpbmcgfSBmcm9tICJAL2xpYi9iaWxsaW5nL3Rvb2wtcHJpY2luZyI7CmltcG9ydCB7CiAgaXNTZXZlbkRheVRyaWFsUHJvbW9BY3RpdmUsCiAgU0VWRU5fREFZX1RSSUFMX0RBWVMsCiAgU0VWRU5fREFZX1RSSUFMX1BST01PX01FVEEsCn0gZnJvbSAiQC9saWIvYmlsbGluZy9zZXZlbi1kYXktdHJpYWwtcHJvbW8iOwppbXBvcnQgeyBjcmVhdGVTZXJ2aWNlQ2xpZW50IH0gZnJvbSAiQC9saWIvc3VwYWJhc2Uvc2VydmVyIjsKaW1wb3J0IHsgY3JlYXRlU2VydmVyQXV0aENsaWVudCB9IGZyb20gIkAvbGliL3N1cGFiYXNlL3NlcnZlci1hdXRoIjsKCmZ1bmN0aW9uIGFwcFVybCgpOiBzdHJpbmcgewogIHJldHVybiBwcm9jZXNzLmVudi5ORVhUX1BVQkxJQ19BUFBfVVJMID8/ICJodHRwczovL25vcnRoc2lkZWludGVsbGlnZW5jZS5jb20iOwp9CgovKiogUmV1c2FibGUgNTAlLW9mZiBjb3Vwb24gZm9yIFBvd2VyIG92ZXJhZ2UgSVRzLiBDcmVhdGVkIG9uY2UsIHJldXNlZCBmb3JldmVyLiAqLwphc3luYyBmdW5jdGlvbiBnZXRPckNyZWF0ZVBvd2VyT3ZlcmFnZUNvdXBvbigpOiBQcm9taXNlPHN0cmluZz4gewogIGNvbnN0IGNvdXBvbklkID0gIm5pX3Bvd2VyX292ZXJhZ2VfNTAiOwogIHRyeSB7CiAgICBjb25zdCBleGlzdGluZyA9IGF3YWl0IGJpbGxpbmdTdHJpcGUuY291cG9ucy5yZXRyaWV2ZShjb3Vwb25JZCk7CiAgICBpZiAoZXhpc3RpbmcgJiYgIWV4aXN0aW5nLmRlbGV0ZWQpIHJldHVybiBjb3Vwb25JZDsKICB9IGNhdGNoIHsKICAgIC8vIE5vdCBmb3VuZCDigJQgY3JlYXRlIGl0IGJlbG93LgogIH0KICBjb25zdCBjb3Vwb24gPSBhd2FpdCBiaWxsaW5nU3RyaXBlLmNvdXBvbnMuY3JlYXRlKHsKICAgIGlkOiBjb3Vwb25JZCwKICAgIHBlcmNlbnRfb2ZmOiA1MCwKICAgIGR1cmF0aW9uOiAib25jZSIsCiAgICBuYW1lOiAiUG93ZXIgb3ZlcmFnZTogNTAlIG9mZiBhZGRpdGlvbmFsIElUIiwKICB9KTsKICByZXR1cm4gY291cG9uLmlkOwp9CgpmdW5jdGlvbiBwYXJzZUNoZWNrb3V0Qm9keShib2R5OiBSZWNvcmQ8c3RyaW5nLCB1bmtub3duPik6IENoZWNrb3V0S2luZCB8IG51bGwgewogIGNvbnN0IHR5cGUgPSBib2R5LnR5cGUgYXMgc3RyaW5nIHwgdW5kZWZpbmVkOwogIGlmICh0eXBlID09PSAibmlfc3Vic2NyaXB0aW9uIikgewogICAgY29uc3QgdGllciA9IGJvZHkudGllciBhcyBOaVRpZXI7CiAgICBjb25zdCBpbnRlcnZhbCA9IGJvZHkuaW50ZXJ2YWwgYXMgQmlsbGluZ0ludGVydmFsOwogICAgaWYgKCFQQUlEX05JX1RJRVJTLmluY2x1ZGVzKHRpZXIpIHx8IChpbnRlcnZhbCAhPT0gIm1vbnRobHkiICYmIGludGVydmFsICE9PSAiYW5udWFsIikpIHsKICAgICAgcmV0dXJuIG51bGw7CiAgICB9CiAgICByZXR1cm4geyB0eXBlOiAibmlfc3Vic2NyaXB0aW9uIiwgdGllciwgaW50ZXJ2YWwgfTsKICB9CiAgaWYgKHR5cGUgPT09ICJ0b29sX3N1YnNjcmlwdGlvbiIpIHsKICAgIGNvbnN0IHRvb2xTbHVnID0gYm9keS50b29sU2x1ZyBhcyBzdHJpbmc7CiAgICBjb25zdCBpbnRlcnZhbCA9IGJvZHkuaW50ZXJ2YWwgYXMgQmlsbGluZ0ludGVydmFsOwogICAgaWYgKCF0b29sU2x1ZyB8fCAoaW50ZXJ2YWwgIT09ICJtb250aGx5IiAmJiBpbnRlcnZhbCAhPT0gImFubnVhbCIpKSByZXR1cm4gbnVsbDsKICAgIHJldHVybiB7IHR5cGU6ICJ0b29sX3N1YnNjcmlwdGlvbiIsIHRvb2xTbHVnLCBpbnRlcnZhbCB9OwogIH0KICBpZiAodHlwZSA9PT0gInRvb2xfbGlmZXRpbWUiKSB7CiAgICBjb25zdCB0b29sU2x1ZyA9IGJvZHkudG9vbFNsdWcgYXMgc3RyaW5nOwogICAgaWYgKCF0b29sU2x1ZykgcmV0dXJuIG51bGw7CiAgICByZXR1cm4geyB0eXBlOiAidG9vbF9saWZldGltZSIsIHRvb2xTbHVnIH07CiAgfQogIHJldHVybiBudWxsOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gUE9TVChyZXE6IE5leHRSZXF1ZXN0KSB7CiAgYXdhaXQgZW5zdXJlQmlsbGluZ0Vudkh5ZHJhdGVkKCk7CiAgY29uc3QgYmlsbGluZ0NvbmZpZ0Vycm9yID0gZ2V0QmlsbGluZ0NvbmZpZ0Vycm9yKCk7CiAgaWYgKGJpbGxpbmdDb25maWdFcnJvcikgewogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6IGJpbGxpbmdDb25maWdFcnJvciB9LCB7IHN0YXR1czogNTAzIH0pOwogIH0KCiAgY29uc3Qgc3VwYWJhc2UgPSBhd2FpdCBjcmVhdGVTZXJ2ZXJBdXRoQ2xpZW50KCk7CiAgY29uc3QgewogICAgZGF0YTogeyB1c2VyIH0sCiAgfSA9IGF3YWl0IHN1cGFiYXNlLmF1dGguZ2V0VXNlcigpOwogIGlmICghdXNlcikgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJVbmF1dGhvcml6ZWQiIH0sIHsgc3RhdHVzOiA0MDEgfSk7CgogIGxldCBib2R5OiBSZWNvcmQ8c3RyaW5nLCB1bmtub3duPjsKICB0cnkgewogICAgYm9keSA9IChhd2FpdCByZXEuanNvbigpKSBhcyBSZWNvcmQ8c3RyaW5nLCB1bmtub3duPjsKICB9IGNhdGNoIHsKICAgIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiSW52YWxpZCByZXF1ZXN0IGJvZHkiIH0sIHsgc3RhdHVzOiA0MDAgfSk7CiAgfQoKICBjb25zdCBjaGVja291dCA9IHBhcnNlQ2hlY2tvdXRCb2R5KGJvZHkpOwogIGlmICghY2hlY2tvdXQpIHJldHVybiBOZXh0UmVzcG9uc2UuanNvbih7IGVycm9yOiAiSW52YWxpZCBjaGVja291dCByZXF1ZXN0IiB9LCB7IHN0YXR1czogNDAwIH0pOwoKICB0cnkgewogICAgY29uc3QgYmFzZSA9IGFwcFVybCgpOwogICAgY29uc3Qgc3RhdGUgPSBhd2FpdCBnZXRVc2VyQmlsbGluZ1N0YXRlKHVzZXIuaWQpOwogICAgY29uc3Qgc2VydmljZSA9IGNyZWF0ZVNlcnZpY2VDbGllbnQoKTsKICAgIGNvbnN0IHsgZGF0YTogbmlQbGFuUm93cyB9ID0gYXdhaXQgc2VydmljZS5mcm9tKCJuaV9wbGFuX3ByaWNpbmciKS5zZWxlY3QoIioiKTsKICAgIGNvbnN0IG5pUGxhblByaWNpbmcgPSAobmlQbGFuUm93cyA/PyBbXSkubWFwKG1hcE5pUGxhblByaWNpbmcpOwoKICAgIGxldCBwcmljZUlkOiBzdHJpbmcgfCBudWxsID0gbnVsbDsKICAgIGxldCBtb2RlOiAic3Vic2NyaXB0aW9uIiB8ICJwYXltZW50IiA9ICJzdWJzY3JpcHRpb24iOwogICAgbGV0IHN1Y2Nlc3NVcmwgPSBgJHtiYXNlfS90b29sa2l0P2NoZWNrb3V0PXN1Y2Nlc3NgOwogICAgbGV0IGNhbmNlbFVybCA9IGAke2Jhc2V9LyNwcmljaW5nYDsKICAgIGNvbnN0IG1ldGFkYXRhOiBSZWNvcmQ8c3RyaW5nLCBzdHJpbmc+ID0geyB1c2VySWQ6IHVzZXIuaWQsIGNoZWNrb3V0VHlwZTogY2hlY2tvdXQudHlwZSB9OwoKICAgIGlmIChjaGVja291dC50eXBlID09PSAibmlfc3Vic2NyaXB0aW9uIikgewogICAgICBwcmljZUlkID0gZ2V0TmlTdWJzY3JpcHRpb25QcmljZUlkKGNoZWNrb3V0LnRpZXIsIGNoZWNrb3V0LmludGVydmFsLCBuaVBsYW5QcmljaW5nKTsKICAgICAgbWV0YWRhdGEubmlUaWVyID0gY2hlY2tvdXQudGllcjsKICAgICAgbWV0YWRhdGEuYmlsbGluZ0ludGVydmFsID0gY2hlY2tvdXQuaW50ZXJ2YWw7CiAgICAgIHN1Y2Nlc3NVcmwgPSBgJHtiYXNlfS90b29sa2l0P3VwZ3JhZGVkPSR7Y2hlY2tvdXQudGllcn1gOwogICAgICBjYW5jZWxVcmwgPSBgJHtiYXNlfS8jcHJpY2luZ2A7CiAgICB9IGVsc2UgewogICAgICBjb25zdCB7IGRhdGE6IHJvdyB9ID0gYXdhaXQgc2VydmljZQogICAgICAgIC5mcm9tKCJuaV90b29sX3ByaWNpbmciKQogICAgICAgIC5zZWxlY3QoIioiKQogICAgICAgIC5lcSgidG9vbF9zbHVnIiwgY2hlY2tvdXQudG9vbFNsdWcpCiAgICAgICAgLm1heWJlU2luZ2xlKCk7CgogICAgICBpZiAoIXJvdykgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJUb29sIHByaWNpbmcgbm90IGZvdW5kIiB9LCB7IHN0YXR1czogNDA0IH0pOwogICAgICBjb25zdCBwcmljaW5nID0gbWFwRGJQcmljaW5nKHJvdyk7CgogICAgICBpZiAodXNlck93bnNUb29sKHN0YXRlLCBjaGVja291dC50b29sU2x1ZykpIHsKICAgICAgICBpZiAodXNlckhhc1VubGltaXRlZFRvb2xBY2Nlc3Moc3RhdGUsIGNoZWNrb3V0LnRvb2xTbHVnKSkgewogICAgICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJZb3UgYWxyZWFkeSBoYXZlIHVubGltaXRlZCBhY2Nlc3MgdG8gdGhpcyB0b29sIiB9LCB7IHN0YXR1czogNDAwIH0pOwogICAgICAgIH0KICAgICAgICBpZiAoY2hlY2tvdXQudHlwZSAhPT0gInRvb2xfc3Vic2NyaXB0aW9uIikgewogICAgICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgZXJyb3I6ICJZb3UgYWxyZWFkeSBvd24gdGhpcyB0b29sIiB9LCB7IHN0YXR1czogNDAwIH0pOwogICAgICAgIH0KICAgICAgfQoKICAgICAgaWYgKGNoZWNrb3V0LnR5cGUgPT09ICJ0b29sX2xpZmV0aW1lIikgewogICAgICAgIGNvbnN0IGxpZmV0aW1lU3RhdHVzID0gYXdhaXQgZ2V0TGlmZXRpbWVMYXVuY2hTdGF0dXMoKTsKICAgICAgICBjb25zdCByYW5kb21PZmZlciA9IHNob3VsZFNob3dQZXJtYW5lbnRBY2Nlc3NPZmZlcihjaGVja291dC50b29sU2x1ZywgdXNlci5pZCk7CiAgICAgICAgaWYgKCFsaWZldGltZVN0YXR1cy5hY3RpdmUgJiYgIXJhbmRvbU9mZmVyKSB7CiAgICAgICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgICAgICAgIHsgZXJyb3I6IGxpZmV0aW1lU3RhdHVzLmFjdGl2ZSA/IGxpZmV0aW1lU3RhdHVzLnJlYXNvbiA6ICJQZXJtYW5lbnQgYWNjZXNzIGlzIG5vdCBhdmFpbGFibGUgcmlnaHQgbm93IiB9LAogICAgICAgICAgICB7IHN0YXR1czogNDAzIH0KICAgICAgICAgICk7CiAgICAgICAgfQoKICAgICAgICBwcmljZUlkID0gZ2V0VG9vbFByaWNlSWRGcm9tRGIocHJpY2luZywgImxpZmV0aW1lIik7CiAgICAgICAgbW9kZSA9ICJwYXltZW50IjsKICAgICAgICBtZXRhZGF0YS50b29sU2x1ZyA9IGNoZWNrb3V0LnRvb2xTbHVnOwogICAgICAgIG1ldGFkYXRhLmFjY2Vzc1R5cGUgPSAibGlmZXRpbWUiOwogICAgICAgIHN1Y2Nlc3NVcmwgPSBgJHtiYXNlfS90b29sa2l0P3B1cmNoYXNlZD0ke2NoZWNrb3V0LnRvb2xTbHVnfWA7CiAgICAgICAgY2FuY2VsVXJsID0gYCR7YmFzZX0vdG9vbHMvJHtjaGVja291dC50b29sU2x1Z31gOwogICAgICB9IGVsc2UgewogICAgICAgIGlmICgKICAgICAgICAgIHN0YXRlLmhhc05pUGFpZFBsYW4gJiYKICAgICAgICAgIGNhbkFkZE5pUGxhblRvb2woc3RhdGUpICYmCiAgICAgICAgICAhdXNlckhhc1VubGltaXRlZFRvb2xBY2Nlc3Moc3RhdGUsIGNoZWNrb3V0LnRvb2xTbHVnKQogICAgICAgICkgewogICAgICAgICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKAogICAgICAgICAgICB7IGVycm9yOiAiQXNzaWduIHVubGltaXRlZCBhY2Nlc3MgZnJvbSB5b3VyIFRvb2xraXQgdW5kZXIgeW91ciBOSSBwbGFuIiB9LAogICAgICAgICAgICB7IHN0YXR1czogNDAwIH0KICAgICAgICAgICk7CiAgICAgICAgfQogICAgICAgIHByaWNlSWQgPSBnZXRUb29sUHJpY2VJZEZyb21EYihwcmljaW5nLCBjaGVja291dC5pbnRlcnZhbCk7CiAgICAgICAgbWV0YWRhdGEudG9vbFNsdWcgPSBjaGVja291dC50b29sU2x1ZzsKICAgICAgICBtZXRhZGF0YS5hY2Nlc3NUeXBlID0gInRvb2xfc3Vic2NyaXB0aW9uIjsKICAgICAgICBtZXRhZGF0YS5iaWxsaW5nSW50ZXJ2YWwgPSBjaGVja291dC5pbnRlcnZhbDsKICAgICAgICBzdWNjZXNzVXJsID0gYCR7YmFzZX0vdG9vbGtpdD9wdXJjaGFzZWQ9JHtjaGVja291dC50b29sU2x1Z31gOwogICAgICAgIGNhbmNlbFVybCA9IGAke2Jhc2V9L3Rvb2xzLyR7Y2hlY2tvdXQudG9vbFNsdWd9YDsKICAgICAgfQogICAgfQoKICAgIGlmICghcHJpY2VJZCkgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgICAgeyBlcnJvcjogIlN0cmlwZSBwcmljZSBub3QgY29uZmlndXJlZC4gUnVuIHNjcmlwdHMvc2V0dXAtc3RyaXBlLXByb2R1Y3RzLnRzIiB9LAogICAgICAgIHsgc3RhdHVzOiA1MDMgfQogICAgICApOwogICAgfQoKICAgIC8vIFdvcmtzdHJlYW0gNiDigJQgNy1kYXkgZnJlZS10cmlhbCBwcm9tbyAodGhyb3VnaCBOb3YgMzAsIDIwMjYpLgogICAgLy8gU2VydmVyLXNpZGUgZGF0ZSBnYXRlOiB0cmlhbF9wZXJpb2RfZGF5cyBpcyBzZXQgb25seSB3aGlsZSB0aGUgcHJvbW8KICAgIC8vIGlzIGFjdGl2ZSwgc28gdGhlIHByb21vIHN0b3BzIGFwcGx5aW5nIGF1dG9tYXRpY2FsbHkgYWZ0ZXIgTm92IDMwLgogICAgLy8gTGlmZXRpbWUgKHBheW1lbnQtbW9kZSkgY2hlY2tvdXRzIGFyZSBuZXZlciBnaXZlbiBhIHRyaWFsLgogICAgY29uc3QgdHJpYWxQcm9tb0FjdGl2ZSA9CiAgICAgIG1vZGUgPT09ICJzdWJzY3JpcHRpb24iICYmIGlzU2V2ZW5EYXlUcmlhbFByb21vQWN0aXZlKCk7CiAgICBpZiAodHJpYWxQcm9tb0FjdGl2ZSkgewogICAgICBtZXRhZGF0YS50cmlhbFByb21vID0gU0VWRU5fREFZX1RSSUFMX1BST01PX01FVEE7CiAgICB9CgogICAgLy8gUG93ZXIgNTAlIG92ZXJhZ2UgZGlzY291bnQ6IHdoZW4gYWxsIFNhYVMrYWdlbnRpYyBzbG90cyBhcmUgZnVsbCwgYWRkaXRpb25hbAogICAgLy8gSVQgcHVyY2hhc2VzIGdldCA1MCUgb2ZmIHZpYSBhIHJldXNhYmxlIFN0cmlwZSBjb3Vwb24uCiAgICBjb25zdCBvdmVyYWdlRGlzY291bnQgPSBnZXRPdmVyYWdlRGlzY291bnQoc3RhdGUpOwogICAgbGV0IGRpc2NvdW50czogeyBjb3Vwb246IHN0cmluZyB9W10gfCB1bmRlZmluZWQ7CiAgICBpZiAob3ZlcmFnZURpc2NvdW50ID4gMCAmJiBjaGVja291dC50eXBlID09PSAidG9vbF9zdWJzY3JpcHRpb24iKSB7CiAgICAgIGNvbnN0IGNvdXBvbklkID0gYXdhaXQgZ2V0T3JDcmVhdGVQb3dlck92ZXJhZ2VDb3Vwb24oKTsKICAgICAgZGlzY291bnRzID0gW3sgY291cG9uOiBjb3Vwb25JZCB9XTsKICAgICAgbWV0YWRhdGEub3ZlcmFnZURpc2NvdW50ID0gInBvd2VyXzUwIjsKICAgIH0KCiAgICBjb25zdCBzZXNzaW9uID0gYXdhaXQgYmlsbGluZ1N0cmlwZS5jaGVja291dC5zZXNzaW9ucy5jcmVhdGUoewogICAgICBtb2RlLAogICAgICBsaW5lX2l0ZW1zOiBbeyBwcmljZTogcHJpY2VJZCwgcXVhbnRpdHk6IDEgfV0sCiAgICAgIC4uLihkaXNjb3VudHMgPyB7IGRpc2NvdW50cyB9IDoge30pLAogICAgICBzdWNjZXNzX3VybDogc3VjY2Vzc1VybCwKICAgICAgY2FuY2VsX3VybDogY2FuY2VsVXJsLAogICAgICBjdXN0b21lcl9lbWFpbDogdXNlci5lbWFpbCA/PyB1bmRlZmluZWQsCiAgICAgIG1ldGFkYXRhLAogICAgICAuLi4obW9kZSA9PT0gInN1YnNjcmlwdGlvbiIKICAgICAgICA/IHsKICAgICAgICAgICAgc3Vic2NyaXB0aW9uX2RhdGE6IHsKICAgICAgICAgICAgICBtZXRhZGF0YTogeyB1c2VySWQ6IHVzZXIuaWQsIC4uLm1ldGFkYXRhIH0sCiAgICAgICAgICAgICAgLi4uKHRyaWFsUHJvbW9BY3RpdmUgPyB7IHRyaWFsX3BlcmlvZF9kYXlzOiBTRVZFTl9EQVlfVFJJQUxfREFZUyB9IDoge30pLAogICAgICAgICAgICB9LAogICAgICAgICAgfQogICAgICAgIDoge30pLAogICAgfSk7CgogICAgaWYgKCFzZXNzaW9uLnVybCkgewogICAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oeyBlcnJvcjogIkNoZWNrb3V0IHNlc3Npb24gdW5hdmFpbGFibGUiIH0sIHsgc3RhdHVzOiA1MDIgfSk7CiAgICB9CgogICAgcmV0dXJuIE5leHRSZXNwb25zZS5qc29uKHsgdXJsOiBzZXNzaW9uLnVybCB9KTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUuZXJyb3IoIltiaWxsaW5nL2NoZWNrb3V0XSIsIGVycik7CiAgICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oCiAgICAgIHsgZXJyb3I6ICJVbmFibGUgdG8gc3RhcnQgY2hlY2tvdXQuIFBsZWFzZSB0cnkgYWdhaW4uIiB9LAogICAgICB7IHN0YXR1czogNTAwIH0KICAgICk7CiAgfQp9Cg==
+import { NextRequest, NextResponse } from "next/server";
+import type { BillingInterval, NiTier } from "@/lib/billing/ni-tiers";
+import { PAID_NI_TIERS } from "@/lib/billing/ni-tiers";
+import {
+  getUserBillingState,
+  userOwnsTool,
+  userHasUnlimitedToolAccess,
+  canAddNiPlanTool,
+  getOverageDiscount,
+} from "@/lib/billing/entitlements";
+import { getLifetimeLaunchStatus } from "@/lib/billing/lifetime-launch";
+import { shouldShowPermanentAccessOffer } from "@/lib/billing/permanent-access-offer";
+import {
+  billingStripe,
+  ensureBillingEnvHydrated,
+  getBillingConfigError,
+  getNiSubscriptionPriceId,
+  getToolPriceIdFromDb,
+  mapNiPlanPricing,
+  type CheckoutKind,
+} from "@/lib/billing/stripe";
+import { mapDbPricing } from "@/lib/billing/tool-pricing";
+import {
+  isSevenDayTrialPromoActive,
+  SEVEN_DAY_TRIAL_DAYS,
+  SEVEN_DAY_TRIAL_PROMO_META,
+} from "@/lib/billing/seven-day-trial-promo";
+import { createServiceClient } from "@/lib/supabase/server";
+import { createServerAuthClient } from "@/lib/supabase/server-auth";
+
+function appUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL ?? "https://northsideintelligence.com";
+}
+
+/** Reusable 50%-off coupon for Power overage ITs. Created once, reused forever. */
+async function getOrCreatePowerOverageCoupon(): Promise<string> {
+  const couponId = "ni_power_overage_50";
+  try {
+    const existing = await billingStripe.coupons.retrieve(couponId);
+    if (existing && !existing.deleted) return couponId;
+  } catch {
+    // Not found — create it below.
+  }
+  const coupon = await billingStripe.coupons.create({
+    id: couponId,
+    percent_off: 50,
+    duration: "once",
+    name: "Power overage: 50% off additional IT",
+  });
+  return coupon.id;
+}
+
+function parseCheckoutBody(body: Record<string, unknown>): CheckoutKind | null {
+  const type = body.type as string | undefined;
+  if (type === "ni_subscription") {
+    const tier = body.tier as NiTier;
+    const interval = body.interval as BillingInterval;
+    if (!PAID_NI_TIERS.includes(tier) || (interval !== "monthly" && interval !== "annual")) {
+      return null;
+    }
+    return { type: "ni_subscription", tier, interval };
+  }
+  if (type === "tool_subscription") {
+    const toolSlug = body.toolSlug as string;
+    const interval = body.interval as BillingInterval;
+    if (!toolSlug || (interval !== "monthly" && interval !== "annual")) return null;
+    return { type: "tool_subscription", toolSlug, interval };
+  }
+  if (type === "tool_lifetime") {
+    const toolSlug = body.toolSlug as string;
+    if (!toolSlug) return null;
+    return { type: "tool_lifetime", toolSlug };
+  }
+  return null;
+}
+
+export async function POST(req: NextRequest) {
+  await ensureBillingEnvHydrated();
+  const billingConfigError = getBillingConfigError();
+  if (billingConfigError) {
+    return NextResponse.json({ error: billingConfigError }, { status: 503 });
+  }
+
+  const supabase = await createServerAuthClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let body: Record<string, unknown>;
+  try {
+    body = (await req.json()) as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const checkout = parseCheckoutBody(body);
+  if (!checkout) return NextResponse.json({ error: "Invalid checkout request" }, { status: 400 });
+
+  try {
+    const base = appUrl();
+    const state = await getUserBillingState(user.id);
+    const service = createServiceClient();
+    const { data: niPlanRows } = await service.from("ni_plan_pricing").select("*");
+    const niPlanPricing = (niPlanRows ?? []).map(mapNiPlanPricing);
+
+    let priceId: string | null = null;
+    let mode: "subscription" | "payment" = "subscription";
+    let successUrl = `${base}/toolkit?checkout=success`;
+    let cancelUrl = `${base}/#pricing`;
+    const metadata: Record<string, string> = { userId: user.id, checkoutType: checkout.type };
+
+    if (checkout.type === "ni_subscription") {
+      priceId = getNiSubscriptionPriceId(checkout.tier, checkout.interval, niPlanPricing);
+      metadata.niTier = checkout.tier;
+      metadata.billingInterval = checkout.interval;
+      successUrl = `${base}/toolkit?upgraded=${checkout.tier}`;
+      cancelUrl = `${base}/#pricing`;
+    } else {
+      const { data: row } = await service
+        .from("ni_tool_pricing")
+        .select("*")
+        .eq("tool_slug", checkout.toolSlug)
+        .maybeSingle();
+
+      if (!row) return NextResponse.json({ error: "Tool pricing not found" }, { status: 404 });
+      const pricing = mapDbPricing(row);
+
+      if (userOwnsTool(state, checkout.toolSlug)) {
+        if (userHasUnlimitedToolAccess(state, checkout.toolSlug)) {
+          return NextResponse.json({ error: "You already have unlimited access to this tool" }, { status: 400 });
+        }
+        if (checkout.type !== "tool_subscription") {
+          return NextResponse.json({ error: "You already own this tool" }, { status: 400 });
+        }
+      }
+
+      if (checkout.type === "tool_lifetime") {
+        const lifetimeStatus = await getLifetimeLaunchStatus();
+        const randomOffer = shouldShowPermanentAccessOffer(checkout.toolSlug, user.id);
+        if (!lifetimeStatus.active && !randomOffer) {
+          return NextResponse.json(
+            { error: lifetimeStatus.active ? lifetimeStatus.reason : "Permanent access is not available right now" },
+            { status: 403 }
+          );
+        }
+
+        priceId = getToolPriceIdFromDb(pricing, "lifetime");
+        mode = "payment";
+        metadata.toolSlug = checkout.toolSlug;
+        metadata.accessType = "lifetime";
+        successUrl = `${base}/toolkit?purchased=${checkout.toolSlug}`;
+        cancelUrl = `${base}/tools/${checkout.toolSlug}`;
+      } else {
+        if (
+          state.hasNiPaidPlan &&
+          canAddNiPlanTool(state) &&
+          !userHasUnlimitedToolAccess(state, checkout.toolSlug)
+        ) {
+          return NextResponse.json(
+            { error: "Assign unlimited access from your Toolkit under your NI plan" },
+            { status: 400 }
+          );
+        }
+        priceId = getToolPriceIdFromDb(pricing, checkout.interval);
+        metadata.toolSlug = checkout.toolSlug;
+        metadata.accessType = "tool_subscription";
+        metadata.billingInterval = checkout.interval;
+        successUrl = `${base}/toolkit?purchased=${checkout.toolSlug}`;
+        cancelUrl = `${base}/tools/${checkout.toolSlug}`;
+      }
+    }
+
+    if (!priceId) {
+      return NextResponse.json(
+        { error: "Stripe price not configured. Run scripts/setup-stripe-products.ts" },
+        { status: 503 }
+      );
+    }
+
+    // Workstream 6 — 7-day free-trial promo (through Nov 30, 2026).
+    // Server-side date gate: trial_period_days is set only while the promo
+    // is active, so the promo stops applying automatically after Nov 30.
+    // Lifetime (payment-mode) checkouts are never given a trial.
+    const trialPromoActive =
+      mode === "subscription" && isSevenDayTrialPromoActive();
+    if (trialPromoActive) {
+      metadata.trialPromo = SEVEN_DAY_TRIAL_PROMO_META;
+    }
+
+    // Power 50% overage discount: when all SaaS+agentic slots are full, additional
+    // IT purchases get 50% off via a reusable Stripe coupon.
+    const overageDiscount = getOverageDiscount(state);
+    let discounts: { coupon: string }[] | undefined;
+    if (overageDiscount > 0 && checkout.type === "tool_subscription") {
+      const couponId = await getOrCreatePowerOverageCoupon();
+      discounts = [{ coupon: couponId }];
+      metadata.overageDiscount = "power_50";
+    }
+
+    const session = await billingStripe.checkout.sessions.create({
+      mode,
+      line_items: [{ price: priceId, quantity: 1 }],
+      ...(discounts ? { discounts } : {}),
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer_email: user.email ?? undefined,
+      metadata,
+      ...(mode === "subscription"
+        ? {
+            subscription_data: {
+              metadata: { userId: user.id, ...metadata },
+              ...(trialPromoActive ? { trial_period_days: SEVEN_DAY_TRIAL_DAYS } : {}),
+            },
+          }
+        : {}),
+    });
+
+    if (!session.url) {
+      return NextResponse.json({ error: "Checkout session unavailable" }, { status: 502 });
+    }
+
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    console.error("[billing/checkout]", err);
+    return NextResponse.json(
+      { error: "Unable to start checkout. Please try again." },
+      { status: 500 }
+    );
+  }
+}
