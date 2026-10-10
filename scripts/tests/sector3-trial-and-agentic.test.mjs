@@ -71,12 +71,12 @@ test("TrialCodeRedemptionBox is integrated across all 5 IT dashboards", () => {
   }
 });
 
-test("AuthForm and Signup pages include 7-day free trial code input and URL autofill", () => {
+test("AuthForm and Signup pages must NOT include trial code input (trial flow lives only on /trial-code)", () => {
   const authFormPath = path.resolve(root, "src/components/auth/AuthForm.tsx");
   const authForm = fs.readFileSync(authFormPath, "utf8");
-  assert.match(authForm, /7-Day Free Trial Code/i, "AuthForm must have 7-Day Free Trial Code input label");
-  assert.match(authForm, /trialCode/i, "AuthForm must bind trialCode state");
-  assert.match(authForm, /searchParams\.get\("code"\)/, "AuthForm must autofill from URL search param");
+  assert.doesNotMatch(authForm, /7-Day Free Trial Code/i, "AuthForm must NOT have trial code input label");
+  assert.doesNotMatch(authForm, /trialCode/i, "AuthForm must NOT bind trialCode state");
+  assert.doesNotMatch(authForm, /trial_code/i, "AuthForm must NOT reference trial_code");
 
   const signups = [
     "src/app/replyflow/signup/page.tsx",
@@ -89,7 +89,15 @@ test("AuthForm and Signup pages include 7-day free trial code input and URL auto
   for (const s of signups) {
     const p = path.resolve(root, s);
     assert.ok(fs.existsSync(p), `Signup page ${s} must exist`);
+    const content = fs.readFileSync(p, "utf8");
+    assert.doesNotMatch(content, /trial/i, `Signup page ${s} must NOT forward trial codes`);
   }
+
+  // The dedicated trial-code page must still exist
+  assert.ok(
+    fs.existsSync(path.resolve(root, "src/app/trial-code/page.tsx")),
+    "Dedicated /trial-code page must exist"
+  );
 });
 
 test("Agentic Access Coming Soon badge and card describe required capabilities in plain language", () => {

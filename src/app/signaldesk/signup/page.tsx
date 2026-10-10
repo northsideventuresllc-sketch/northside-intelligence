@@ -1,16 +1,9 @@
 import { redirect } from "next/navigation";
 
-export default async function SignalDeskSignupPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ code?: string; trial?: string; trial_code?: string; trialCode?: string }>;
-}) {
-  const params = searchParams ? await searchParams : {};
-  const code = params?.code || params?.trial || params?.trial_code || params?.trialCode;
+export default async function SignalDeskSignupPage() {
   const query = new URLSearchParams({
     returnTo: "/signaldesk/dashboard",
     tool: "signaldesk",
   });
-  if (code) query.set("code", code);
   redirect(`/auth/signup?${query.toString()}`);
 }

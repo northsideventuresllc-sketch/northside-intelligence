@@ -180,13 +180,196 @@ const VERIFIED_PROGRAM_REGISTRY: Record<string, VerifiedGrantOpportunity[]> = {
 };
 
 /**
- * Searches live grant databases and the web for active funding opportunities.
+ * LIVE grant search via Grants.gov public API (free, no key required).
+ * Queries current federal funding opportunities by keyword.
+ */
+async function fetchGrantsGovOpportunities(
+  keywords: string[]
+): Promise<VerifiedGrantOpportunity[]> {
+  try {
+    const keyword = keywords.slice(0, 5).join(" ") || "community nonprofit";
+    const res = await fetch("https://www.grants.gov/grantsws/rest/opportunities/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        keyword,
+        oppStatuses: ["posted"],
+        rows: 10,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return [];
+
+    const json = (await res.json()) as {
+      oppHits?: Array<{
+        id?: string;
+        number?: string;
+        title?: string;
+        agency?: string;
+        agencyName?: string;
+        openDate?: string;
+        closeDate?: string;
+        awardCeiling?: string | number;
+        awardFloor?: string | number;
+        docType?: string;
+      }>;
+    };
+
+    const hits = json.oppHits ?? [];
+    return hits.slice(0, 8).map((hit, i) => {
+      const title = (hit.title || "Federal Grant Opportunity").trim();
+      const agency = (hit.agencyName || hit.agency || "Federal Agency").trim();
+      const oppNumber = (hit.number || hit.id || "").trim();
+      const closeDate = (hit.closeDate || "").trim();
+      const ceiling = hit.awardCeiling ? `$${Number(hit.awardCeiling).toLocaleString()}` : "";
+      const floor = hit.awardFloor ? `$${Number(hit.awardFloor).toLocaleString()}` : "";
+      const awardRange = ceiling && floor ? `${floor} – ${ceiling}` : ceiling || floor || "Varies by award";
+      const grantsGovUrl = oppNumber
+        ? `https://www.grants.gov/search-results-detail/${oppNumber}`
+        : "https://www.grants.gov/search-grants";
+
+      return {
+        id: `live-gg-${oppNumber || i}-${Date.now()}`,
+        name: title,
+        funder: agency,
+        platform: "Grants.gov",
+        platformUrl: grantsGovUrl,
+        awardRange,
+        deadline: closeDate || "See Grants.gov listing",
+        eligibility: ["See opportunity synopsis on Grants.gov"],
+        activeStatus: "ACTIVE" as const,
+        fitReason: `Live federal opportunity matching your profile keywords. Posted on Grants.gov${closeDate ? `, closes ${closeDate}` : ""}.`,
+        nextStep: "Open the Grants.gov synopsis to verify eligibility and download the Notice of Funding Opportunity.",
+        source: "grants_gov" as const,
+      };
+    });
+  } catch (err) {
+    console.warn("[grantbot] Grants.gov live search failed:", err);
+    return [];
+  }
+}
+
+/**
+ * LIVE web search for foundation and private grants via SerpAPI.
+ * Requires SERPAPI_API_KEY in env (hydrated from platform secrets at runtime).
+ */
+async function searchSerpApiGrants(
+  category: string,
+  keywords: string[]
+): Promise<VerifiedGrantOpportunity[]> {
+  const apiKey = process.env.SERPAPI_API_KEY?.trim();
+  if (!apiKey) {
+    console.warn("[grantbot] SERPAPI_API_KEY not set — skipping live web grant search");
+    return [];
+  }
+
+  const queries = [
+    `foundation grants ${category} nonprofit 2026 apply`,
+    `${keywords.slice(0, 3).join(" ")} grant funding opportunity deadline`,
+  ];
+
+  const results: VerifiedGrantOpportunity[] = [];
+  const seenUrls = new Set<string>();
+
+  for (const query of queries) {
+    try {
+      const params = new URLSearchParams({
+        engine: "google",
+        q: query,
+        api_key: apiKey,
+        num: "8",
+      });
+      const res = await fetch(`https://serpapi.com/search.json?${params.toString()}`, {
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) continue;
+
+      const json = (await res.json()) as {
+        organic_results?: Array<{
+          title?: string;
+          link?: string;
+          snippet?: string;
+          displayed_link?: string;
+        }>;
+      };
+
+      for (const hit of json.organic_results ?? []) {
+        const url = (hit.link || "").trim();
+        if (!url || seenUrls.has(url)) continue;
+        // Skip aggregators and social — want real funder pages
+        if (/facebook\.com|linkedin\.com|instagram\.com|youtube\.com|tiktok\.com/i.test(url)) continue;
+        seenUrls.add(url);
+
+        const title = (hit.title || "Grant Opportunity").trim();
+        const snippet = (hit.snippet || "").trim();
+        const domain = (hit.displayed_link || "").trim() || new URL(url).hostname;
+
+        results.push({
+          id: `live-web-${seenUrls.size}-${Date.now()}`,
+          name: title.slice(0, 120),
+          funder: domain.replace(/^www\./, ""),
+          platform: domain.replace(/^www\./, ""),
+          platformUrl: url,
+          awardRange: "See funder page for award details",
+          deadline: "See funder page for deadline",
+          eligibility: ["See funder page for eligibility"],
+          activeStatus: "VERIFIED",
+          fitReason: snippet
+            ? `Live web result matching your search: ${snippet.slice(0, 200)}`
+            : "Live web result matching your grant search.",
+          nextStep: "Open the funder page to verify the opportunity is current and review application requirements.",
+          source: "web_search",
+        });
+
+        if (results.length >= 10) break;
+      }
+    } catch (err) {
+      console.warn("[grantbot] SerpAPI grant search failed for query:", query, err);
+    }
+    if (results.length >= 10) break;
+  }
+
+  return results;
+}
+
+/**
+ * Searches LIVE grant sources: Grants.gov API (federal) + SerpAPI web search
+ * (foundations, private funders). Returns current, real opportunities.
+ */
+export async function searchLiveGrantOpportunities(
+  category: string,
+  applicantProfile: string
+): Promise<VerifiedGrantOpportunity[]> {
+  const keywordTokens = applicantProfile
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 3);
+
+  const [federal, web] = await Promise.all([
+    fetchGrantsGovOpportunities(keywordTokens),
+    searchSerpApiGrants(category, keywordTokens),
+  ]);
+
+  return [...federal, ...web];
+}
+
+/**
+ * Searches grant opportunities: LIVE sources first (Grants.gov API + web search),
+ * falling back to the verified program registry if live sources fail or return nothing.
  * Uses applicant profile tokens to rank and score the most relevant opportunities.
  */
 export async function searchVerifiedGrantOpportunities(
   category: string,
   applicantProfile: string
 ): Promise<VerifiedGrantOpportunity[]> {
+  // LIVE FIRST: query Grants.gov API + web search for current opportunities.
+  const liveResults = await searchLiveGrantOpportunities(category, applicantProfile);
+  if (liveResults.length > 0) {
+    return liveResults;
+  }
+
+  // FALLBACK: verified program registry (used only when live sources fail).
   const keywordTokens = applicantProfile
     .toLowerCase()
     .replace(/[^a-z0-9 ]/g, " ")
