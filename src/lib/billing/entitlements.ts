@@ -1,1 +1,391 @@
-aW1wb3J0IHsKICBtYXN0ZXJBY2NvdW50SGFzUHJvZHVjdEFjY2VzcywKICBpc01hc3RlckFjY291bnRGbGFnLAp9IGZyb20gIkAvbGliL2JpbGxpbmcvbWFzdGVyLWFjY291bnQiOwppbXBvcnQgeyBJTlRFTExJR0VOQ0VfVE9PTF9TTFVHUyB9IGZyb20gIkAvbGliL2JpbGxpbmcvdG9vbC1wcmljaW5nIjsKaW1wb3J0IHsKICBnZXROaVRpZXJDb25maWcsCiAgZ2V0VG9vbFNsb3RMaW1pdCwKICBnZXRBZ2VudGljU2xvdExpbWl0LAogIG5vcm1hbGl6ZU5pVGllciwKICB0aWVySGFzVW5saW1pdGVkVG9vbEFjY2VzcywKICB0eXBlIE5pVGllciwKfSBmcm9tICJAL2xpYi9iaWxsaW5nL25pLXRpZXJzIjsKaW1wb3J0IHsgY3JlYXRlU2VydmljZUNsaWVudCB9IGZyb20gIkAvbGliL3N1cGFiYXNlL3NlcnZlciI7CgpleHBvcnQgdHlwZSBUb29sa2l0QWNjZXNzVHlwZSA9ICJmcmVlIiB8ICJsaWZldGltZSIgfCAidG9vbF9zdWJzY3JpcHRpb24iIHwgIm5pX3BsYW4iIHwgIm5pX3BsYW5fYWdlbnRpYyIgfCAidHJpYWwiOwoKZXhwb3J0IGNvbnN0IFVOTElNSVRFRF9TV0FQX0NPT0xET1dOX01TID0gNzIgKiA2MCAqIDYwICogMTAwMDsKZXhwb3J0IGNvbnN0IEJJTExJTkdfR1JBQ0VfUEVSSU9EX01TID0gNDggKiA2MCAqIDYwICogMTAwMDsKCmV4cG9ydCBpbnRlcmZhY2UgVG9vbGtpdEVudHJ5IHsKICBpZDogc3RyaW5nOwogIHRvb2xTbHVnOiBzdHJpbmc7CiAgYWNjZXNzVHlwZTogVG9vbGtpdEFjY2Vzc1R5cGU7CiAgZXhwaXJlc0F0OiBzdHJpbmcgfCBudWxsOwogIHB1cmNoYXNlZEF0OiBzdHJpbmc7CiAgc3RyaXBlU3Vic2NyaXB0aW9uSWQ6IHN0cmluZyB8IG51bGw7CiAgdW5saW1pdGVkQXNzaWduZWRBdDogc3RyaW5nIHwgbnVsbDsKfQoKZXhwb3J0IGludGVyZmFjZSBVc2VyQmlsbGluZ1N0YXRlIHsKICBuaVRpZXI6IE5pVGllcjsKICBiaWxsaW5nSW50ZXJ2YWw6ICJtb250aGx5IiB8ICJhbm51YWwiIHwgbnVsbDsKICBjdXJyZW50UGVyaW9kRW5kOiBzdHJpbmcgfCBudWxsOwogIHN0cmlwZUN1c3RvbWVySWQ6IHN0cmluZyB8IG51bGw7CiAgbmlTdHJpcGVTdWJzY3JpcHRpb25JZDogc3RyaW5nIHwgbnVsbDsKICBpc01hc3RlckFjY291bnQ6IGJvb2xlYW47CiAgdG9vbGtpdDogVG9vbGtpdEVudHJ5W107CiAgb3duZWRUb29sU2x1Z3M6IHN0cmluZ1tdOwogIHRvb2xTbG90c1VzZWQ6IG51bWJlcjsKICB0b29sU2xvdExpbWl0OiBudW1iZXIgfCBudWxsOwogIGFnZW50aWNTbG90c1VzZWQ6IG51bWJlcjsKICBhZ2VudGljU2xvdExpbWl0OiBudW1iZXIgfCBudWxsOwogIGhhc05pUGFpZFBsYW46IGJvb2xlYW47CiAgbGFzdFVubGltaXRlZFN3YXBBdDogc3RyaW5nIHwgbnVsbDsKICBjYW5Td2FwVW5saW1pdGVkVG9vbDogYm9vbGVhbjsKICBuZXh0VW5saW1pdGVkU3dhcEF0OiBzdHJpbmcgfCBudWxsOwp9CgppbnRlcmZhY2UgVG9vbGtpdFJvdyB7CiAgaWQ6IHN0cmluZzsKICB0b29sX3NsdWc6IHN0cmluZzsKICBhY2Nlc3NfdHlwZTogVG9vbGtpdEFjY2Vzc1R5cGU7CiAgZXhwaXJlc19hdDogc3RyaW5nIHwgbnVsbDsKICBwdXJjaGFzZWRfYXQ6IHN0cmluZzsKICBzdHJpcGVfc3Vic2NyaXB0aW9uX2lkOiBzdHJpbmcgfCBudWxsOwogIHVubGltaXRlZF9hc3NpZ25lZF9hdDogc3RyaW5nIHwgbnVsbDsKfQoKaW50ZXJmYWNlIFN1YnNjcmlwdGlvblJvdyB7CiAgdGllcjogTmlUaWVyOwogIGJpbGxpbmdfaW50ZXJ2YWw6ICJtb250aGx5IiB8ICJhbm51YWwiIHwgbnVsbDsKICBjdXJyZW50X3BlcmlvZF9lbmQ6IHN0cmluZyB8IG51bGw7CiAgc3RyaXBlX2N1c3RvbWVyX2lkOiBzdHJpbmcgfCBudWxsOwogIHN0cmlwZV9zdWJzY3JpcHRpb25faWQ6IHN0cmluZyB8IG51bGw7CiAgbGFzdF91bmxpbWl0ZWRfc3dhcF9hdDogc3RyaW5nIHwgbnVsbDsKfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGV4cGlyZVN0YWxlRW50aXRsZW1lbnRzKCk6IFByb21pc2U8dm9pZD4gewogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlU2VydmljZUNsaWVudCgpOwogIHRyeSB7CiAgICBhd2FpdCBzdXBhYmFzZS5ycGMoImV4cGlyZV9uaV9lbnRpdGxlbWVudHMiKTsKICB9IGNhdGNoIChlcnIpIHsKICAgIGNvbnNvbGUud2FybigiUlBDIGV4cGlyZV9uaV9lbnRpdGxlbWVudHMgZXJyb3I6IiwgZXJyKTsKICB9CgogIC8vIFNhZmV0eSBuZXQ6IGVuc3VyZSBhbnkgdHJpYWwgZW50cmllcyB3aG9zZSBleHBpcmVzX2F0IDwgbm93KCkgYXJlIG1hcmtlZCAnZnJlZScKICBjb25zdCBub3cgPSBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCk7CiAgYXdhaXQgc3VwYWJhc2UKICAgIC5mcm9tKCJuaV90b29sa2l0IikKICAgIC51cGRhdGUoeyBhY2Nlc3NfdHlwZTogImZyZWUiLCBleHBpcmVzX2F0OiBudWxsLCB1cGRhdGVkX2F0OiBub3cgfSkKICAgIC5lcSgiYWNjZXNzX3R5cGUiLCAidHJpYWwiKQogICAgLmx0KCJleHBpcmVzX2F0Iiwgbm93KTsKfQoKLyoqIEtlZXAgbWFzdGVyIGFjY291bnQgdG9vbGtpdCByb3dzIGluIHN5bmMgd2l0aCB0aGUgY3VycmVudCBpbnRlbGxpZ2VuY2UgdG9vbCBjYXRhbG9nLiAqLwpleHBvcnQgYXN5bmMgZnVuY3Rpb24gc3luY01hc3RlckFjY291bnRUb29sa2l0KHVzZXJJZDogc3RyaW5nKTogUHJvbWlzZTx2b2lkPiB7CiAgY29uc3Qgc3VwYWJhc2UgPSBjcmVhdGVTZXJ2aWNlQ2xpZW50KCk7CiAgY29uc3Qgbm93ID0gbmV3IERhdGUoKS50b0lTT1N0cmluZygpOwoKICBmb3IgKGNvbnN0IHRvb2xTbHVnIG9mIElOVEVMTElHRU5DRV9UT09MX1NMVUdTKSB7CiAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKCJuaV90b29sa2l0IikudXBzZXJ0KAogICAgICB7CiAgICAgICAgdXNlcl9pZDogdXNlcklkLAogICAgICAgIHRvb2xfc2x1ZzogdG9vbFNsdWcsCiAgICAgICAgYWNjZXNzX3R5cGU6ICJsaWZldGltZSIsCiAgICAgICAgZXhwaXJlc19hdDogbnVsbCwKICAgICAgICBwdXJjaGFzZWRfYXQ6IG5vdywKICAgICAgICB1cGRhdGVkX2F0OiBub3csCiAgICAgIH0sCiAgICAgIHsgb25Db25mbGljdDogInVzZXJfaWQsdG9vbF9zbHVnIiB9CiAgICApOwogICAgaWYgKGVycm9yKSB0aHJvdyBuZXcgRXJyb3IoZXJyb3IubWVzc2FnZSk7CiAgfQp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gZ2V0VXNlckJpbGxpbmdTdGF0ZSh1c2VySWQ6IHN0cmluZyk6IFByb21pc2U8VXNlckJpbGxpbmdTdGF0ZT4gewogIGF3YWl0IGV4cGlyZVN0YWxlRW50aXRsZW1lbnRzKCk7CgogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlU2VydmljZUNsaWVudCgpOwoKICBjb25zdCBbeyBkYXRhOiBzdWIgfSwgeyBkYXRhOiBwcm9maWxlIH1dID0gYXdhaXQgUHJvbWlzZS5hbGwoWwogICAgc3VwYWJhc2UKICAgICAgLmZyb20oIm5pX3N1YnNjcmlwdGlvbnMiKQogICAgICAuc2VsZWN0KAogICAgICAgICJ0aWVyLCBiaWxsaW5nX2ludGVydmFsLCBjdXJyZW50X3BlcmlvZF9lbmQsIHN0cmlwZV9jdXN0b21lcl9pZCwgc3RyaXBlX3N1YnNjcmlwdGlvbl9pZCwgbGFzdF91bmxpbWl0ZWRfc3dhcF9hdCIKICAgICAgKQogICAgICAuZXEoImlkIiwgdXNlcklkKQogICAgICAubWF5YmVTaW5nbGUoKSwKICAgIHN1cGFiYXNlCiAgICAgIC5mcm9tKCJuaV9wb3J0YWxfcHJvZmlsZXMiKQogICAgICAuc2VsZWN0KCJpc19tYXN0ZXJfYWNjb3VudCIpCiAgICAgIC5lcSgiaWQiLCB1c2VySWQpCiAgICAgIC5tYXliZVNpbmdsZSgpLAogIF0pOwoKICBjb25zdCBpc01hc3RlckFjY291bnQgPSBpc01hc3RlckFjY291bnRGbGFnKHByb2ZpbGU/LmlzX21hc3Rlcl9hY2NvdW50KTsKCiAgaWYgKGlzTWFzdGVyQWNjb3VudCkgewogICAgYXdhaXQgc3luY01hc3RlckFjY291bnRUb29sa2l0KHVzZXJJZCk7CiAgfQoKICBjb25zdCB7IGRhdGE6IHRvb2xraXRSb3dzIH0gPSBhd2FpdCBzdXBhYmFzZQogICAgLmZyb20oIm5pX3Rvb2xraXQiKQogICAgLnNlbGVjdCgKICAgICAgImlkLCB0b29sX3NsdWcsIGFjY2Vzc190eXBlLCBleHBpcmVzX2F0LCBwdXJjaGFzZWRfYXQsIHN0cmlwZV9zdWJzY3JpcHRpb25faWQsIHVubGltaXRlZF9hc3NpZ25lZF9hdCIKICAgICkKICAgIC5lcSgidXNlcl9pZCIsIHVzZXJJZCkKICAgIC5vcmRlcigicHVyY2hhc2VkX2F0IiwgeyBhc2NlbmRpbmc6IGZhbHNlIH0pOwoKICBjb25zdCBzdWJzY3JpcHRpb24gPSAoc3ViID8/IHsgdGllcjogImZyZWUiIH0pIGFzIFN1YnNjcmlwdGlvblJvdzsKICBjb25zdCBuaVRpZXIgPSBub3JtYWxpemVOaVRpZXIoc3Vic2NyaXB0aW9uLnRpZXIpOwogIGNvbnN0IHRpZXJDb25maWcgPSBnZXROaVRpZXJDb25maWcobmlUaWVyKTsKICBjb25zdCB0b29sa2l0ID0gKCh0b29sa2l0Um93cyA/PyBbXSkgYXMgVG9vbGtpdFJvd1tdKS5tYXAoKHJvdykgPT4gKHsKICAgIGlkOiByb3cuaWQsCiAgICB0b29sU2x1Zzogcm93LnRvb2xfc2x1ZywKICAgIGFjY2Vzc1R5cGU6IHJvdy5hY2Nlc3NfdHlwZSwKICAgIGV4cGlyZXNBdDogcm93LmV4cGlyZXNfYXQsCiAgICBwdXJjaGFzZWRBdDogcm93LnB1cmNoYXNlZF9hdCwKICAgIHN0cmlwZVN1YnNjcmlwdGlvbklkOiByb3cuc3RyaXBlX3N1YnNjcmlwdGlvbl9pZCA/PyBudWxsLAogICAgdW5saW1pdGVkQXNzaWduZWRBdDogcm93LnVubGltaXRlZF9hc3NpZ25lZF9hdCA/PyBudWxsLAogIH0pKTsKCiAgY29uc3Qgb3duZWRUb29sU2x1Z3MgPSB0b29sa2l0Lm1hcCgodCkgPT4gdC50b29sU2x1Zyk7CiAgY29uc3QgbmlQbGFuU2xvdHMgPSB0b29sa2l0LmZpbHRlcigodCkgPT4gdC5hY2Nlc3NUeXBlID09PSAibmlfcGxhbiIpLmxlbmd0aDsKICBjb25zdCBuaVBsYW5BZ2VudGljU2xvdHMgPSB0b29sa2l0LmZpbHRlcigodCkgPT4gdC5hY2Nlc3NUeXBlID09PSAibmlfcGxhbl9hZ2VudGljIikubGVuZ3RoOwogIGNvbnN0IHN3YXBTdGF0ZSA9IGdldFVubGltaXRlZFN3YXBTdGF0ZSgKICAgIHN1YnNjcmlwdGlvbi5sYXN0X3VubGltaXRlZF9zd2FwX2F0ID8/IG51bGwsCiAgICBuaVRpZXIsCiAgICBpc01hc3RlckFjY291bnQKICApOwoKICByZXR1cm4gewogICAgbmlUaWVyLAogICAgYmlsbGluZ0ludGVydmFsOiBzdWJzY3JpcHRpb24uYmlsbGluZ19pbnRlcnZhbCA/PyBudWxsLAogICAgY3VycmVudFBlcmlvZEVuZDogc3Vic2NyaXB0aW9uLmN1cnJlbnRfcGVyaW9kX2VuZCA/PyBudWxsLAogICAgc3RyaXBlQ3VzdG9tZXJJZDogc3Vic2NyaXB0aW9uLnN0cmlwZV9jdXN0b21lcl9pZCA/PyBudWxsLAogICAgbmlTdHJpcGVTdWJzY3JpcHRpb25JZDogc3Vic2NyaXB0aW9uLnN0cmlwZV9zdWJzY3JpcHRpb25faWQgPz8gbnVsbCwKICAgIGlzTWFzdGVyQWNjb3VudCwKICAgIHRvb2xraXQsCiAgICBvd25lZFRvb2xTbHVncywKICAgIHRvb2xTbG90c1VzZWQ6IG5pUGxhblNsb3RzLAogICAgdG9vbFNsb3RMaW1pdDogaXNNYXN0ZXJBY2NvdW50ID8gbnVsbCA6IHRpZXJDb25maWcudG9vbFNsb3RzLAogICAgYWdlbnRpY1Nsb3RzVXNlZDogbmlQbGFuQWdlbnRpY1Nsb3RzLAogICAgYWdlbnRpY1Nsb3RMaW1pdDogaXNNYXN0ZXJBY2NvdW50ID8gbnVsbCA6IHRpZXJDb25maWcuYWdlbnRpY1Nsb3RzLAogICAgaGFzTmlQYWlkUGxhbjogaXNNYXN0ZXJBY2NvdW50IHx8IG5pVGllciAhPT0gImZyZWUiLAogICAgbGFzdFVubGltaXRlZFN3YXBBdDogc3Vic2NyaXB0aW9uLmxhc3RfdW5saW1pdGVkX3N3YXBfYXQgPz8gbnVsbCwKICAgIGNhblN3YXBVbmxpbWl0ZWRUb29sOiBzd2FwU3RhdGUuY2FuU3dhcCwKICAgIG5leHRVbmxpbWl0ZWRTd2FwQXQ6IHN3YXBTdGF0ZS5uZXh0U3dhcEF0LAogIH07Cn0KCmV4cG9ydCBmdW5jdGlvbiB1c2VyT3duc1Rvb2woc3RhdGU6IFVzZXJCaWxsaW5nU3RhdGUsIHRvb2xTbHVnOiBzdHJpbmcpOiBib29sZWFuIHsKICBpZiAobWFzdGVyQWNjb3VudEhhc1Byb2R1Y3RBY2Nlc3Moc3RhdGUuaXNNYXN0ZXJBY2NvdW50LCB0b29sU2x1ZykpIHJldHVybiB0cnVlOwogIHJldHVybiBzdGF0ZS5vd25lZFRvb2xTbHVncy5pbmNsdWRlcyh0b29sU2x1Zyk7Cn0KCi8qKiBUb29sIGlzIGluIHRoZSB1c2VyJ3MgVG9vbGtpdCAocmVxdWlyZWQgYmVmb3JlIHVzaW5nIGFueSBTZWN0b3IgMyB0b29sKS4gKi8KZXhwb3J0IGZ1bmN0aW9uIHVzZXJIYXNUb29sSW5DYXNlKHN0YXRlOiBVc2VyQmlsbGluZ1N0YXRlLCB0b29sU2x1Zzogc3RyaW5nKTogYm9vbGVhbiB7CiAgcmV0dXJuIHVzZXJPd25zVG9vbChzdGF0ZSwgdG9vbFNsdWcpOwp9CgpleHBvcnQgZnVuY3Rpb24gdXNlckNhblVzZVRvb2woc3RhdGU6IFVzZXJCaWxsaW5nU3RhdGUsIHRvb2xTbHVnOiBzdHJpbmcpOiBib29sZWFuIHsKICBpZiAobWFzdGVyQWNjb3VudEhhc1Byb2R1Y3RBY2Nlc3Moc3RhdGUuaXNNYXN0ZXJBY2NvdW50LCB0b29sU2x1ZykpIHJldHVybiB0cnVlOwogIHJldHVybiBzdGF0ZS5vd25lZFRvb2xTbHVncy5pbmNsdWRlcyh0b29sU2x1Zyk7Cn0KCmV4cG9ydCBmdW5jdGlvbiBnZXRVbmxpbWl0ZWRTd2FwU3RhdGUoCiAgbGFzdFN3YXBBdDogc3RyaW5nIHwgbnVsbCwKICBuaVRpZXI6IE5pVGllciwKICBpc01hc3RlckFjY291bnQ6IGJvb2xlYW4KKTogeyBjYW5Td2FwOiBib29sZWFuOyBuZXh0U3dhcEF0OiBzdHJpbmcgfCBudWxsIH0gewogIGlmIChpc01hc3RlckFjY291bnQgfHwgdGllckhhc1VubGltaXRlZFRvb2xBY2Nlc3MobmlUaWVyKSkgewogICAgcmV0dXJuIHsgY2FuU3dhcDogdHJ1ZSwgbmV4dFN3YXBBdDogbnVsbCB9OwogIH0KICBpZiAoIWxhc3RTd2FwQXQpIHJldHVybiB7IGNhblN3YXA6IHRydWUsIG5leHRTd2FwQXQ6IG51bGwgfTsKICBjb25zdCBlbGFwc2VkID0gRGF0ZS5ub3coKSAtIG5ldyBEYXRlKGxhc3RTd2FwQXQpLmdldFRpbWUoKTsKICBpZiAoZWxhcHNlZCA+PSBVTkxJTUlURURfU1dBUF9DT09MRE9XTl9NUykgewogICAgcmV0dXJuIHsgY2FuU3dhcDogdHJ1ZSwgbmV4dFN3YXBBdDogbnVsbCB9OwogIH0KICBjb25zdCBuZXh0U3dhcCA9IG5ldyBEYXRlKG5ldyBEYXRlKGxhc3RTd2FwQXQpLmdldFRpbWUoKSArIFVOTElNSVRFRF9TV0FQX0NPT0xET1dOX01TKTsKICByZXR1cm4geyBjYW5Td2FwOiBmYWxzZSwgbmV4dFN3YXBBdDogbmV4dFN3YXAudG9JU09TdHJpbmcoKSB9Owp9CgpleHBvcnQgZnVuY3Rpb24gY291bnRBY3RpdmVVbmxpbWl0ZWROaVBsYW5TbG90cyhzdGF0ZTogVXNlckJpbGxpbmdTdGF0ZSk6IG51bWJlciB7CiAgcmV0dXJuIHN0YXRlLnRvb2xraXQuZmlsdGVyKCh0KSA9PiB0LmFjY2Vzc1R5cGUgPT09ICJuaV9wbGFuIikubGVuZ3RoOwp9CgpleHBvcnQgZnVuY3Rpb24gaXNTdWJzY3JpcHRpb25JbkdyYWNlUGVyaW9kKHBlcmlvZEVuZDogc3RyaW5nIHwgbnVsbCk6IGJvb2xlYW4gewogIGlmICghcGVyaW9kRW5kKSByZXR1cm4gZmFsc2U7CiAgY29uc3QgZ3JhY2VFbmRzID0gbmV3IERhdGUocGVyaW9kRW5kKS5nZXRUaW1lKCkgKyBCSUxMSU5HX0dSQUNFX1BFUklPRF9NUzsKICByZXR1cm4gRGF0ZS5ub3coKSA8IGdyYWNlRW5kczsKfQoKZXhwb3J0IGZ1bmN0aW9uIHVzZXJIYXNVbmxpbWl0ZWRUb29sQWNjZXNzKHN0YXRlOiBVc2VyQmlsbGluZ1N0YXRlLCB0b29sU2x1Zzogc3RyaW5nKTogYm9vbGVhbiB7CiAgaWYgKG1hc3RlckFjY291bnRIYXNQcm9kdWN0QWNjZXNzKHN0YXRlLmlzTWFzdGVyQWNjb3VudCwgdG9vbFNsdWcpKSByZXR1cm4gdHJ1ZTsKICBpZiAodGllckhhc1VubGltaXRlZFRvb2xBY2Nlc3Moc3RhdGUubmlUaWVyKSkgcmV0dXJuIHVzZXJIYXNUb29sSW5DYXNlKHN0YXRlLCB0b29sU2x1Zyk7CiAgY29uc3QgZW50cnkgPSBzdGF0ZS50b29sa2l0LmZpbmQoKHQpID0+IHQudG9vbFNsdWcgPT09IHRvb2xTbHVnKTsKICBpZiAoIWVudHJ5KSByZXR1cm4gZmFsc2U7CiAgaWYgKGVudHJ5LmFjY2Vzc1R5cGUgPT09ICJmcmVlIikgcmV0dXJuIGZhbHNlOwogIGlmIChlbnRyeS5hY2Nlc3NUeXBlID09PSAibGlmZXRpbWUiKSByZXR1cm4gdHJ1ZTsKICAvLyBBZ2VudGljIHNsb3QgY292ZXJzIEJPVEggU2FhUyBhbmQgYWdlbnRpYyBmb3IgdGhpcyB0b29sIOKAlCBkb2VzIG5vdCBjb25zdW1lIGEgU2FhUyBzbG90LgogIGlmIChlbnRyeS5hY2Nlc3NUeXBlID09PSAibmlfcGxhbl9hZ2VudGljIikgcmV0dXJuIHRydWU7CiAgaWYgKGVudHJ5LmFjY2Vzc1R5cGUgPT09ICJ0cmlhbCIpIHsKICAgIGlmICghZW50cnkuZXhwaXJlc0F0KSByZXR1cm4gdHJ1ZTsKICAgIHJldHVybiBuZXcgRGF0ZShlbnRyeS5leHBpcmVzQXQpID4gbmV3IERhdGUoKTsKICB9CiAgaWYgKGVudHJ5LmFjY2Vzc1R5cGUgPT09ICJ0b29sX3N1YnNjcmlwdGlvbiIgfHwgZW50cnkuYWNjZXNzVHlwZSA9PT0gIm5pX3BsYW4iKSB7CiAgICBpZiAoIWVudHJ5LmV4cGlyZXNBdCkgcmV0dXJuIHRydWU7CiAgICByZXR1cm4gaXNTdWJzY3JpcHRpb25JbkdyYWNlUGVyaW9kKGVudHJ5LmV4cGlyZXNBdCkgfHwgbmV3IERhdGUoZW50cnkuZXhwaXJlc0F0KSA+IG5ldyBEYXRlKCk7CiAgfQogIHJldHVybiBmYWxzZTsKfQoKZXhwb3J0IGZ1bmN0aW9uIHVzZXJIYXNBY3RpdmVUcmlhbChzdGF0ZTogVXNlckJpbGxpbmdTdGF0ZSwgdG9vbFNsdWc6IHN0cmluZyk6IGJvb2xlYW4gewogIGNvbnN0IGVudHJ5ID0gc3RhdGUudG9vbGtpdC5maW5kKCh0KSA9PiB0LnRvb2xTbHVnID09PSB0b29sU2x1Zyk7CiAgaWYgKCFlbnRyeSB8fCBlbnRyeS5hY2Nlc3NUeXBlICE9PSAidHJpYWwiKSByZXR1cm4gZmFsc2U7CiAgaWYgKCFlbnRyeS5leHBpcmVzQXQpIHJldHVybiB0cnVlOwogIHJldHVybiBuZXcgRGF0ZShlbnRyeS5leHBpcmVzQXQpID4gbmV3IERhdGUoKTsKfQoKZXhwb3J0IGZ1bmN0aW9uIGdldFRyaWFsRGF5c1JlbWFpbmluZyhzdGF0ZTogVXNlckJpbGxpbmdTdGF0ZSwgdG9vbFNsdWc6IHN0cmluZyk6IG51bWJlciB8IG51bGwgewogIGNvbnN0IGVudHJ5ID0gc3RhdGUudG9vbGtpdC5maW5kKCh0KSA9PiB0LnRvb2xTbHVnID09PSB0b29sU2x1Zyk7CiAgaWYgKCFlbnRyeSB8fCBlbnRyeS5hY2Nlc3NUeXBlICE9PSAidHJpYWwiIHx8ICFlbnRyeS5leHBpcmVzQXQpIHJldHVybiBudWxsOwogIGNvbnN0IGRpZmYgPSBuZXcgRGF0ZShlbnRyeS5leHBpcmVzQXQpLmdldFRpbWUoKSAtIERhdGUubm93KCk7CiAgaWYgKGRpZmYgPD0gMCkgcmV0dXJuIDA7CiAgcmV0dXJuIE1hdGguY2VpbChkaWZmIC8gKDI0ICogNjAgKiA2MCAqIDEwMDApKTsKfQoKZXhwb3J0IGZ1bmN0aW9uIHVzZXJIYXNBZ2VudGljQWNjZXNzKHN0YXRlOiBVc2VyQmlsbGluZ1N0YXRlLCB0b29sU2x1Zzogc3RyaW5nKTogYm9vbGVhbiB7CiAgaWYgKG1hc3RlckFjY291bnRIYXNQcm9kdWN0QWNjZXNzKHN0YXRlLmlzTWFzdGVyQWNjb3VudCwgdG9vbFNsdWcpKSByZXR1cm4gdHJ1ZTsKICBpZiAodGllckhhc1VubGltaXRlZFRvb2xBY2Nlc3Moc3RhdGUubmlUaWVyKSkgcmV0dXJuIHVzZXJIYXNUb29sSW5DYXNlKHN0YXRlLCB0b29sU2x1Zyk7CiAgY29uc3QgZW50cnkgPSBzdGF0ZS50b29sa2l0LmZpbmQoKHQpID0+IHQudG9vbFNsdWcgPT09IHRvb2xTbHVnKTsKICBpZiAoIWVudHJ5KSByZXR1cm4gZmFsc2U7CiAgLy8gQWdlbnRpYyBzbG90IGFzc2lnbm1lbnQgZ3JhbnRzIGFnZW50aWMgYWNjZXNzIChhbmQsIHZpYSB1c2VySGFzVW5saW1pdGVkVG9vbEFjY2VzcywgU2FhUyB0b28pLgogIGlmIChlbnRyeS5hY2Nlc3NUeXBlID09PSAibmlfcGxhbl9hZ2VudGljIikgcmV0dXJuIHRydWU7CiAgaWYgKGVudHJ5LmFjY2Vzc1R5cGUgPT09ICJ0b29sX3N1YnNjcmlwdGlvbiIpIHsKICAgIGlmICghZW50cnkuZXhwaXJlc0F0KSByZXR1cm4gdHJ1ZTsKICAgIHJldHVybiBpc1N1YnNjcmlwdGlvbkluR3JhY2VQZXJpb2QoZW50cnkuZXhwaXJlc0F0KSB8fCBuZXcgRGF0ZShlbnRyeS5leHBpcmVzQXQpID4gbmV3IERhdGUoKTsKICB9CiAgaWYgKGVudHJ5LmFjY2Vzc1R5cGUgPT09ICJuaV9wbGFuIiAmJiAoc3RhdGUubmlUaWVyID09PSAiY29yZSIgfHwgc3RhdGUubmlUaWVyID09PSAicHJvIiB8fCBzdGF0ZS5uaVRpZXIgPT09ICJwb3dlciIpKSB7CiAgICByZXR1cm4gdHJ1ZTsKICB9CiAgcmV0dXJuIGZhbHNlOwp9CgpleHBvcnQgZnVuY3Rpb24gc2hvdWxkSGlkZVRvb2xTdWJzY3JpcHRpb25zKHN0YXRlOiBVc2VyQmlsbGluZ1N0YXRlLCB0b29sU2x1Zzogc3RyaW5nKTogYm9vbGVhbiB7CiAgaWYgKG1hc3RlckFjY291bnRIYXNQcm9kdWN0QWNjZXNzKHN0YXRlLmlzTWFzdGVyQWNjb3VudCwgdG9vbFNsdWcpKSByZXR1cm4gdHJ1ZTsKICBpZiAodGllckhhc1VubGltaXRlZFRvb2xBY2Nlc3Moc3RhdGUubmlUaWVyKSkgcmV0dXJuIHRydWU7CiAgY29uc3QgZW50cnkgPSBzdGF0ZS50b29sa2l0LmZpbmQoKHQpID0+IHQudG9vbFNsdWcgPT09IHRvb2xTbHVnKTsKICBpZiAoIWVudHJ5KSByZXR1cm4gZmFsc2U7CiAgcmV0dXJuIGVudHJ5LmFjY2Vzc1R5cGUgPT09ICJuaV9wbGFuIiB8fCBlbnRyeS5hY2Nlc3NUeXBlID09PSAibmlfcGxhbl9hZ2VudGljIiB8fCBlbnRyeS5hY2Nlc3NUeXBlID09PSAibGlmZXRpbWUiIHx8IGVudHJ5LmFjY2Vzc1R5cGUgPT09ICJ0b29sX3N1YnNjcmlwdGlvbiI7Cn0KCmV4cG9ydCBmdW5jdGlvbiBjYW5BZGROaVBsYW5Ub29sKHN0YXRlOiBVc2VyQmlsbGluZ1N0YXRlKTogYm9vbGVhbiB7CiAgaWYgKHN0YXRlLmlzTWFzdGVyQWNjb3VudCkgcmV0dXJuIGZhbHNlOwogIGlmIChzdGF0ZS5uaVRpZXIgPT09ICJmcmVlIikgcmV0dXJuIGZhbHNlOwogIGlmICh0aWVySGFzVW5saW1pdGVkVG9vbEFjY2VzcyhzdGF0ZS5uaVRpZXIpKSByZXR1cm4gdHJ1ZTsKICBjb25zdCBsaW1pdCA9IGdldFRvb2xTbG90TGltaXQoc3RhdGUubmlUaWVyKTsKICBpZiAobGltaXQgPT09IG51bGwpIHJldHVybiB0cnVlOwogIHJldHVybiBzdGF0ZS50b29sU2xvdHNVc2VkIDwgbGltaXQ7Cn0KCmV4cG9ydCBmdW5jdGlvbiBjYW5BZGROaVBsYW5BZ2VudGljVG9vbChzdGF0ZTogVXNlckJpbGxpbmdTdGF0ZSk6IGJvb2xlYW4gewogIGlmIChzdGF0ZS5pc01hc3RlckFjY291bnQpIHJldHVybiBmYWxzZTsKICBpZiAoc3RhdGUubmlUaWVyID09PSAiZnJlZSIpIHJldHVybiBmYWxzZTsKICBpZiAodGllckhhc1VubGltaXRlZFRvb2xBY2Nlc3Moc3RhdGUubmlUaWVyKSkgcmV0dXJuIHRydWU7CiAgY29uc3QgbGltaXQgPSBnZXRBZ2VudGljU2xvdExpbWl0KHN0YXRlLm5pVGllcik7CiAgaWYgKGxpbWl0ID09PSBudWxsKSByZXR1cm4gdHJ1ZTsKICByZXR1cm4gc3RhdGUuYWdlbnRpY1Nsb3RzVXNlZCA8IGxpbWl0Owp9CgovKiogUG93ZXIgNTAlIG92ZXJhZ2UgZGlzY291bnQ6IGFwcGxpZXMgd2hlbiBhbGwgU2FhUythZ2VudGljIHNsb3RzIGFyZSBmdWxsLiAqLwpleHBvcnQgZnVuY3Rpb24gZ2V0T3ZlcmFnZURpc2NvdW50KHN0YXRlOiBVc2VyQmlsbGluZ1N0YXRlKTogbnVtYmVyIHsKICBpZiAoc3RhdGUubmlUaWVyICE9PSAicG93ZXIiKSByZXR1cm4gMDsKICBjb25zdCBzYWFzRnVsbCA9IHN0YXRlLnRvb2xTbG90TGltaXQgIT09IG51bGwgJiYgc3RhdGUudG9vbFNsb3RzVXNlZCA+PSBzdGF0ZS50b29sU2xvdExpbWl0OwogIGNvbnN0IGFnZW50aWNGdWxsID0gc3RhdGUuYWdlbnRpY1Nsb3RMaW1pdCAhPT0gbnVsbCAmJiBzdGF0ZS5hZ2VudGljU2xvdHNVc2VkID49IHN0YXRlLmFnZW50aWNTbG90TGltaXQ7CiAgcmV0dXJuIHNhYXNGdWxsICYmIGFnZW50aWNGdWxsID8gMC41IDogMDsKfQoKZXhwb3J0IGFzeW5jIGZ1bmN0aW9uIGVuc3VyZU5pU3Vic2NyaXB0aW9uUm93KHVzZXJJZDogc3RyaW5nKTogUHJvbWlzZTx2b2lkPiB7CiAgY29uc3Qgc3VwYWJhc2UgPSBjcmVhdGVTZXJ2aWNlQ2xpZW50KCk7CiAgYXdhaXQgc3VwYWJhc2UuZnJvbSgibmlfc3Vic2NyaXB0aW9ucyIpLnVwc2VydCh7IGlkOiB1c2VySWQsIHRpZXI6ICJmcmVlIiB9LCB7IG9uQ29uZmxpY3Q6ICJpZCIgfSk7Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBncmFudFRvb2xraXRBY2Nlc3MocGFyYW1zOiB7CiAgdXNlcklkOiBzdHJpbmc7CiAgdG9vbFNsdWc6IHN0cmluZzsKICBhY2Nlc3NUeXBlOiBUb29sa2l0QWNjZXNzVHlwZTsKICBleHBpcmVzQXQ/OiBzdHJpbmcgfCBudWxsOwogIHN0cmlwZVN1YnNjcmlwdGlvbklkPzogc3RyaW5nIHwgbnVsbDsKICB1bmxpbWl0ZWRBc3NpZ25lZEF0Pzogc3RyaW5nIHwgbnVsbDsKfSk6IFByb21pc2U8dm9pZD4gewogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlU2VydmljZUNsaWVudCgpOwogIGNvbnN0IG5vdyA9IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKTsKICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKCJuaV90b29sa2l0IikudXBzZXJ0KAogICAgewogICAgICB1c2VyX2lkOiBwYXJhbXMudXNlcklkLAogICAgICB0b29sX3NsdWc6IHBhcmFtcy50b29sU2x1ZywKICAgICAgYWNjZXNzX3R5cGU6IHBhcmFtcy5hY2Nlc3NUeXBlLAogICAgICBleHBpcmVzX2F0OiBwYXJhbXMuZXhwaXJlc0F0ID8/IG51bGwsCiAgICAgIHN0cmlwZV9zdWJzY3JpcHRpb25faWQ6IHBhcmFtcy5zdHJpcGVTdWJzY3JpcHRpb25JZCA/PyBudWxsLAogICAgICB1bmxpbWl0ZWRfYXNzaWduZWRfYXQ6CiAgICAgICAgcGFyYW1zLnVubGltaXRlZEFzc2lnbmVkQXQgPz8KICAgICAgICAocGFyYW1zLmFjY2Vzc1R5cGUgPT09ICJuaV9wbGFuIiB8fCBwYXJhbXMuYWNjZXNzVHlwZSA9PT0gIm5pX3BsYW5fYWdlbnRpYyIgPyBub3cgOiBudWxsKSwKICAgICAgcHVyY2hhc2VkX2F0OiBub3csCiAgICAgIHVwZGF0ZWRfYXQ6IG5vdywKICAgIH0sCiAgICB7IG9uQ29uZmxpY3Q6ICJ1c2VyX2lkLHRvb2xfc2x1ZyIgfQogICk7CiAgaWYgKGVycm9yKSB0aHJvdyBuZXcgRXJyb3IoZXJyb3IubWVzc2FnZSk7Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiByZXZva2VUb29sa2l0VG9vbCh1c2VySWQ6IHN0cmluZywgdG9vbFNsdWc6IHN0cmluZyk6IFByb21pc2U8dm9pZD4gewogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlU2VydmljZUNsaWVudCgpOwogIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlCiAgICAuZnJvbSgibmlfdG9vbGtpdCIpCiAgICAuZGVsZXRlKCkKICAgIC5lcSgidXNlcl9pZCIsIHVzZXJJZCkKICAgIC5lcSgidG9vbF9zbHVnIiwgdG9vbFNsdWcpOwogIGlmIChlcnJvcikgdGhyb3cgbmV3IEVycm9yKGVycm9yLm1lc3NhZ2UpOwp9CgpleHBvcnQgYXN5bmMgZnVuY3Rpb24gc2V0TGFzdFVubGltaXRlZFN3YXBBdCh1c2VySWQ6IHN0cmluZyk6IFByb21pc2U8dm9pZD4gewogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlU2VydmljZUNsaWVudCgpOwogIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlCiAgICAuZnJvbSgibmlfc3Vic2NyaXB0aW9ucyIpCiAgICAudXBkYXRlKHsKICAgICAgbGFzdF91bmxpbWl0ZWRfc3dhcF9hdDogbmV3IERhdGUoKS50b0lTT1N0cmluZygpLAogICAgICB1cGRhdGVkX2F0OiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgICB9KQogICAgLmVxKCJpZCIsIHVzZXJJZCk7CiAgaWYgKGVycm9yKSB0aHJvdyBuZXcgRXJyb3IoZXJyb3IubWVzc2FnZSk7Cn0KCmV4cG9ydCBhc3luYyBmdW5jdGlvbiBzZXROaVN1YnNjcmlwdGlvbihwYXJhbXM6IHsKICB1c2VySWQ6IHN0cmluZzsKICB0aWVyOiBOaVRpZXI7CiAgYmlsbGluZ0ludGVydmFsPzogQmlsbGluZ0ludGVydmFsIHwgbnVsbDsKICBzdHJpcGVDdXN0b21lcklkPzogc3RyaW5nOwogIHN0cmlwZVN1YnNjcmlwdGlvbklkPzogc3RyaW5nIHwgbnVsbDsKICBjdXJyZW50UGVyaW9kRW5kPzogc3RyaW5nIHwgbnVsbDsKfSk6IFByb21pc2U8dm9pZD4gewogIGNvbnN0IHN1cGFiYXNlID0gY3JlYXRlU2VydmljZUNsaWVudCgpOwogIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlLmZyb20oIm5pX3N1YnNjcmlwdGlvbnMiKS51cHNlcnQoCiAgICB7CiAgICAgIGlkOiBwYXJhbXMudXNlcklkLAogICAgICB0aWVyOiBwYXJhbXMudGllciwKICAgICAgYmlsbGluZ19pbnRlcnZhbDogcGFyYW1zLmJpbGxpbmdJbnRlcnZhbCA/PyBudWxsLAogICAgICBzdHJpcGVfY3VzdG9tZXJfaWQ6IHBhcmFtcy5zdHJpcGVDdXN0b21lcklkLAogICAgICBzdHJpcGVfc3Vic2NyaXB0aW9uX2lkOiBwYXJhbXMuc3RyaXBlU3Vic2NyaXB0aW9uSWQgPz8gbnVsbCwKICAgICAgY3VycmVudF9wZXJpb2RfZW5kOiBwYXJhbXMuY3VycmVudFBlcmlvZEVuZCA/PyBudWxsLAogICAgICB1cGRhdGVkX2F0OiBuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCksCiAgICB9LAogICAgeyBvbkNvbmZsaWN0OiAiaWQiIH0KICApOwogIGlmIChlcnJvcikgdGhyb3cgbmV3IEVycm9yKGVycm9yLm1lc3NhZ2UpOwp9Cgp0eXBlIEJpbGxpbmdJbnRlcnZhbCA9ICJtb250aGx5IiB8ICJhbm51YWwiOwoK
+import {
+  masterAccountHasProductAccess,
+  isMasterAccountFlag,
+} from "@/lib/billing/master-account";
+import { INTELLIGENCE_TOOL_SLUGS } from "@/lib/billing/tool-pricing";
+import {
+  getNiTierConfig,
+  getToolSlotLimit,
+  getAgenticSlotLimit,
+  normalizeNiTier,
+  tierHasUnlimitedToolAccess,
+  type NiTier,
+} from "@/lib/billing/ni-tiers";
+import { createServiceClient } from "@/lib/supabase/server";
+
+export type ToolkitAccessType = "free" | "lifetime" | "tool_subscription" | "ni_plan" | "ni_plan_agentic" | "trial";
+
+export const UNLIMITED_SWAP_COOLDOWN_MS = 72 * 60 * 60 * 1000;
+export const BILLING_GRACE_PERIOD_MS = 48 * 60 * 60 * 1000;
+
+export interface ToolkitEntry {
+  id: string;
+  toolSlug: string;
+  accessType: ToolkitAccessType;
+  expiresAt: string | null;
+  purchasedAt: string;
+  stripeSubscriptionId: string | null;
+  unlimitedAssignedAt: string | null;
+}
+
+export interface UserBillingState {
+  niTier: NiTier;
+  billingInterval: "monthly" | "annual" | null;
+  currentPeriodEnd: string | null;
+  stripeCustomerId: string | null;
+  niStripeSubscriptionId: string | null;
+  isMasterAccount: boolean;
+  toolkit: ToolkitEntry[];
+  ownedToolSlugs: string[];
+  toolSlotsUsed: number;
+  toolSlotLimit: number | null;
+  agenticSlotsUsed: number;
+  agenticSlotLimit: number | null;
+  hasNiPaidPlan: boolean;
+  lastUnlimitedSwapAt: string | null;
+  canSwapUnlimitedTool: boolean;
+  nextUnlimitedSwapAt: string | null;
+}
+
+interface ToolkitRow {
+  id: string;
+  tool_slug: string;
+  access_type: ToolkitAccessType;
+  expires_at: string | null;
+  purchased_at: string;
+  stripe_subscription_id: string | null;
+  unlimited_assigned_at: string | null;
+}
+
+interface SubscriptionRow {
+  tier: NiTier;
+  billing_interval: "monthly" | "annual" | null;
+  current_period_end: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  last_unlimited_swap_at: string | null;
+}
+
+export async function expireStaleEntitlements(): Promise<void> {
+  const supabase = createServiceClient();
+  try {
+    await supabase.rpc("expire_ni_entitlements");
+  } catch (err) {
+    console.warn("RPC expire_ni_entitlements error:", err);
+  }
+
+  // Safety net: ensure any trial entries whose expires_at < now() are marked 'free'
+  const now = new Date().toISOString();
+  await supabase
+    .from("ni_toolkit")
+    .update({ access_type: "free", expires_at: null, updated_at: now })
+    .eq("access_type", "trial")
+    .lt("expires_at", now);
+}
+
+/** Keep master account toolkit rows in sync with the current intelligence tool catalog. */
+export async function syncMasterAccountToolkit(userId: string): Promise<void> {
+  const supabase = createServiceClient();
+  const now = new Date().toISOString();
+
+  for (const toolSlug of INTELLIGENCE_TOOL_SLUGS) {
+    const { error } = await supabase.from("ni_toolkit").upsert(
+      {
+        user_id: userId,
+        tool_slug: toolSlug,
+        access_type: "lifetime",
+        expires_at: null,
+        purchased_at: now,
+        updated_at: now,
+      },
+      { onConflict: "user_id,tool_slug" }
+    );
+    if (error) throw new Error(error.message);
+  }
+}
+
+export async function getUserBillingState(userId: string): Promise<UserBillingState> {
+  await expireStaleEntitlements();
+
+  const supabase = createServiceClient();
+
+  const [{ data: sub }, { data: profile }] = await Promise.all([
+    supabase
+      .from("ni_subscriptions")
+      .select(
+        "tier, billing_interval, current_period_end, stripe_customer_id, stripe_subscription_id, last_unlimited_swap_at"
+      )
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase
+      .from("ni_portal_profiles")
+      .select("is_master_account")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+
+  const isMasterAccount = isMasterAccountFlag(profile?.is_master_account);
+
+  if (isMasterAccount) {
+    await syncMasterAccountToolkit(userId);
+  }
+
+  const { data: toolkitRows } = await supabase
+    .from("ni_toolkit")
+    .select(
+      "id, tool_slug, access_type, expires_at, purchased_at, stripe_subscription_id, unlimited_assigned_at"
+    )
+    .eq("user_id", userId)
+    .order("purchased_at", { ascending: false });
+
+  const subscription = (sub ?? { tier: "free" }) as SubscriptionRow;
+  const niTier = normalizeNiTier(subscription.tier);
+  const tierConfig = getNiTierConfig(niTier);
+  const toolkit = ((toolkitRows ?? []) as ToolkitRow[]).map((row) => ({
+    id: row.id,
+    toolSlug: row.tool_slug,
+    accessType: row.access_type,
+    expiresAt: row.expires_at,
+    purchasedAt: row.purchased_at,
+    stripeSubscriptionId: row.stripe_subscription_id ?? null,
+    unlimitedAssignedAt: row.unlimited_assigned_at ?? null,
+  }));
+
+  const ownedToolSlugs = toolkit.map((t) => t.toolSlug);
+  const niPlanSlots = toolkit.filter((t) => t.accessType === "ni_plan").length;
+  const niPlanAgenticSlots = toolkit.filter((t) => t.accessType === "ni_plan_agentic").length;
+  const swapState = getUnlimitedSwapState(
+    subscription.last_unlimited_swap_at ?? null,
+    niTier,
+    isMasterAccount
+  );
+
+  return {
+    niTier,
+    billingInterval: subscription.billing_interval ?? null,
+    currentPeriodEnd: subscription.current_period_end ?? null,
+    stripeCustomerId: subscription.stripe_customer_id ?? null,
+    niStripeSubscriptionId: subscription.stripe_subscription_id ?? null,
+    isMasterAccount,
+    toolkit,
+    ownedToolSlugs,
+    toolSlotsUsed: niPlanSlots,
+    toolSlotLimit: isMasterAccount ? null : tierConfig.toolSlots,
+    agenticSlotsUsed: niPlanAgenticSlots,
+    agenticSlotLimit: isMasterAccount ? null : tierConfig.agenticSlots,
+    hasNiPaidPlan: isMasterAccount || niTier !== "free",
+    lastUnlimitedSwapAt: subscription.last_unlimited_swap_at ?? null,
+    canSwapUnlimitedTool: swapState.canSwap,
+    nextUnlimitedSwapAt: swapState.nextSwapAt,
+  };
+}
+
+export function userOwnsTool(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
+  return state.ownedToolSlugs.includes(toolSlug);
+}
+
+/** Tool is in the user's Toolkit (required before using any Sector 3 tool). */
+export function userHasToolInCase(state: UserBillingState, toolSlug: string): boolean {
+  return userOwnsTool(state, toolSlug);
+}
+
+export function userCanUseTool(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
+  return state.ownedToolSlugs.includes(toolSlug);
+}
+
+export function getUnlimitedSwapState(
+  lastSwapAt: string | null,
+  niTier: NiTier,
+  isMasterAccount: boolean
+): { canSwap: boolean; nextSwapAt: string | null } {
+  if (isMasterAccount || tierHasUnlimitedToolAccess(niTier)) {
+    return { canSwap: true, nextSwapAt: null };
+  }
+  if (!lastSwapAt) return { canSwap: true, nextSwapAt: null };
+  const elapsed = Date.now() - new Date(lastSwapAt).getTime();
+  if (elapsed >= UNLIMITED_SWAP_COOLDOWN_MS) {
+    return { canSwap: true, nextSwapAt: null };
+  }
+  const nextSwap = new Date(new Date(lastSwapAt).getTime() + UNLIMITED_SWAP_COOLDOWN_MS);
+  return { canSwap: false, nextSwapAt: nextSwap.toISOString() };
+}
+
+export function countActiveUnlimitedNiPlanSlots(state: UserBillingState): number {
+  return state.toolkit.filter((t) => t.accessType === "ni_plan").length;
+}
+
+export function isSubscriptionInGracePeriod(periodEnd: string | null): boolean {
+  if (!periodEnd) return false;
+  const graceEnds = new Date(periodEnd).getTime() + BILLING_GRACE_PERIOD_MS;
+  return Date.now() < graceEnds;
+}
+
+export function userHasUnlimitedToolAccess(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
+  if (tierHasUnlimitedToolAccess(state.niTier)) return userHasToolInCase(state, toolSlug);
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry) return false;
+  if (entry.accessType === "free") return false;
+  if (entry.accessType === "lifetime") return true;
+  // Agentic slot covers BOTH SaaS and agentic for this tool — does not consume a SaaS slot.
+  if (entry.accessType === "ni_plan_agentic") return true;
+  if (entry.accessType === "trial") {
+    if (!entry.expiresAt) return true;
+    return new Date(entry.expiresAt) > new Date();
+  }
+  if (entry.accessType === "tool_subscription" || entry.accessType === "ni_plan") {
+    if (!entry.expiresAt) return true;
+    return isSubscriptionInGracePeriod(entry.expiresAt) || new Date(entry.expiresAt) > new Date();
+  }
+  return false;
+}
+
+export function userHasActiveTrial(state: UserBillingState, toolSlug: string): boolean {
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry || entry.accessType !== "trial") return false;
+  if (!entry.expiresAt) return true;
+  return new Date(entry.expiresAt) > new Date();
+}
+
+export function getTrialDaysRemaining(state: UserBillingState, toolSlug: string): number | null {
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry || entry.accessType !== "trial" || !entry.expiresAt) return null;
+  const diff = new Date(entry.expiresAt).getTime() - Date.now();
+  if (diff <= 0) return 0;
+  return Math.ceil(diff / (24 * 60 * 60 * 1000));
+}
+
+export function userHasAgenticAccess(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
+  if (tierHasUnlimitedToolAccess(state.niTier)) return userHasToolInCase(state, toolSlug);
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry) return false;
+  // Agentic slot assignment grants agentic access (and, via userHasUnlimitedToolAccess, SaaS too).
+  if (entry.accessType === "ni_plan_agentic") return true;
+  if (entry.accessType === "tool_subscription") {
+    if (!entry.expiresAt) return true;
+    return isSubscriptionInGracePeriod(entry.expiresAt) || new Date(entry.expiresAt) > new Date();
+  }
+  if (entry.accessType === "ni_plan" && (state.niTier === "core" || state.niTier === "pro" || state.niTier === "power")) {
+    return true;
+  }
+  return false;
+}
+
+export function shouldHideToolSubscriptions(state: UserBillingState, toolSlug: string): boolean {
+  if (masterAccountHasProductAccess(state.isMasterAccount, toolSlug)) return true;
+  if (tierHasUnlimitedToolAccess(state.niTier)) return true;
+  const entry = state.toolkit.find((t) => t.toolSlug === toolSlug);
+  if (!entry) return false;
+  return entry.accessType === "ni_plan" || entry.accessType === "ni_plan_agentic" || entry.accessType === "lifetime" || entry.accessType === "tool_subscription";
+}
+
+export function canAddNiPlanTool(state: UserBillingState): boolean {
+  if (state.isMasterAccount) return false;
+  if (state.niTier === "free") return false;
+  if (tierHasUnlimitedToolAccess(state.niTier)) return true;
+  const limit = getToolSlotLimit(state.niTier);
+  if (limit === null) return true;
+  return state.toolSlotsUsed < limit;
+}
+
+export function canAddNiPlanAgenticTool(state: UserBillingState): boolean {
+  if (state.isMasterAccount) return false;
+  if (state.niTier === "free") return false;
+  if (tierHasUnlimitedToolAccess(state.niTier)) return true;
+  const limit = getAgenticSlotLimit(state.niTier);
+  if (limit === null) return true;
+  return state.agenticSlotsUsed < limit;
+}
+
+/** Power 50% overage discount: applies when all SaaS+agentic slots are full. */
+export function getOverageDiscount(state: UserBillingState): number {
+  if (state.niTier !== "power") return 0;
+  const saasFull = state.toolSlotLimit !== null && state.toolSlotsUsed >= state.toolSlotLimit;
+  const agenticFull = state.agenticSlotLimit !== null && state.agenticSlotsUsed >= state.agenticSlotLimit;
+  return saasFull && agenticFull ? 0.5 : 0;
+}
+
+export async function ensureNiSubscriptionRow(userId: string): Promise<void> {
+  const supabase = createServiceClient();
+  await supabase.from("ni_subscriptions").upsert({ id: userId, tier: "free" }, { onConflict: "id" });
+}
+
+export async function grantToolkitAccess(params: {
+  userId: string;
+  toolSlug: string;
+  accessType: ToolkitAccessType;
+  expiresAt?: string | null;
+  stripeSubscriptionId?: string | null;
+  unlimitedAssignedAt?: string | null;
+}): Promise<void> {
+  const supabase = createServiceClient();
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("ni_toolkit").upsert(
+    {
+      user_id: params.userId,
+      tool_slug: params.toolSlug,
+      access_type: params.accessType,
+      expires_at: params.expiresAt ?? null,
+      stripe_subscription_id: params.stripeSubscriptionId ?? null,
+      unlimited_assigned_at:
+        params.unlimitedAssignedAt ??
+        (params.accessType === "ni_plan" || params.accessType === "ni_plan_agentic" ? now : null),
+      purchased_at: now,
+      updated_at: now,
+    },
+    { onConflict: "user_id,tool_slug" }
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function revokeToolkitTool(userId: string, toolSlug: string): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("ni_toolkit")
+    .delete()
+    .eq("user_id", userId)
+    .eq("tool_slug", toolSlug);
+  if (error) throw new Error(error.message);
+}
+
+export async function setLastUnlimitedSwapAt(userId: string): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("ni_subscriptions")
+    .update({
+      last_unlimited_swap_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId);
+  if (error) throw new Error(error.message);
+}
+
+export async function setNiSubscription(params: {
+  userId: string;
+  tier: NiTier;
+  billingInterval?: BillingInterval | null;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string | null;
+  currentPeriodEnd?: string | null;
+}): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("ni_subscriptions").upsert(
+    {
+      id: params.userId,
+      tier: params.tier,
+      billing_interval: params.billingInterval ?? null,
+      stripe_customer_id: params.stripeCustomerId,
+      stripe_subscription_id: params.stripeSubscriptionId ?? null,
+      current_period_end: params.currentPeriodEnd ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id" }
+  );
+  if (error) throw new Error(error.message);
+}
+
+type BillingInterval = "monthly" | "annual";
+
